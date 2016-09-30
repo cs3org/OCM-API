@@ -1,0 +1,4 @@
+- name: test-parameter 
+  in: query
+  description: Test parameter
+  type: string

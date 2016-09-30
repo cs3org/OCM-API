@@ -1,0 +1,31 @@
+swagger: '2.0'
+info:
+  title: Open Cloud Mesh API
+  description: Open Cloud Mesh API Open API Specification.
+  version: 0.0.1
+host: localhost
+basePath: /v0
+schemes:
+  - https
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /example:
+    get:
+      summary: Test GET Call
+      parameters:
+        $ref: ./params.yaml
+      responses:
+        200:
+          description: OK
+          schema:
+            type: object
+            required:
+              -   message
+            properties:
+              message:
+                description: Response message
+                type: string
+                example: OK
