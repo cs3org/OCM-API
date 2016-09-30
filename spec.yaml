@@ -3,6 +3,8 @@ info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh API Open API Specification.
   version: 0.0.1
+  x-logo:
+    url: https://docs.apiwise.nl/ocm/logo.jpg
 host: localhost
 basePath: /v0
 schemes:
