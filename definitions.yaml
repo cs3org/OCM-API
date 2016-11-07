@@ -1,0 +1,33 @@
+NewShareOffer:
+  xml:
+    name: ShareOffer
+  type: object
+  properties:
+    shareWith:
+      type: string
+      description: User name of the receiving user.
+    token:
+      type: string
+      description: Unique and secret token used to access the file.
+    name:
+      type: string
+      description: Name of the file or folder.
+    remoteId:
+      type: string
+      description: Unique ID to identify the file on the sender side, used for accepting and denying shares.
+    owner:
+      type: string
+      description: User name of the sending user.
+    remote:
+      type: string
+      format: url
+      description: URI of the sending instance.
+
+ShareOffer:
+  type: object
+  allOf:
+    - $ref: "#/NewShareOffer"
+    - properties:
+        uuid:
+          type: string
+          format: uuid

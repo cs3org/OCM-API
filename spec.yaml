@@ -1,33 +1,1209 @@
+# http://lukasreschke.github.io/OpenCloudMeshSpecification/#sending-a-share-offer
+
 swagger: '2.0'
 info:
   title: Open Cloud Mesh API
-  description: Open Cloud Mesh API Open API Specification.
+  description: Open Cloud Mesh Open API Specification.
   version: 0.0.1
   x-logo:
-    url: https://docs.apiwise.nl/ocm/logo.jpg
-host: localhost
-basePath: /v0
+    url: https://docs.apiwise.nl/ocm/logo.png
+host: mock.apiwise.nl
+basePath: /ocm
 schemes:
   - https
 consumes:
-  - application/json
+  - application/x-www-form-urlencoded
 produces:
-  - application/json
+  - application/xml
 paths:
-  /example:
-    get:
-      summary: Test GET Call
+  /cloud/shares:
+    post:
+      summary: Sending a share offer
+      description: This endpoint takes share offers from remote instances, once the recipient has logged-in he is expected to accept or deny the share.
       parameters:
-        $ref: ./params.yaml
+        - name: shareWith
+          in: formData
+          description: User name of the receiving user.
+          required: true
+          type: string
+        - name: token
+          in: formData
+          description: Unique and secret token used to access the file.
+          required: true
+          type: string
+        - name: name
+          in: formData
+          description: Name of the file or folder.
+          required: true
+          type: string
+        - name: remoteId
+          in: formData
+          description: Unique ID to identify the file on the sender side, used for accepting and denying shares.
+          required: true
+          type: string
+        - name: owner
+          in: formData
+          description: User name of the sending user.
+          required: true
+          type: string
+        - name: remote
+          in: formData
+          description: URI of the sending instance.
+          required: true
+          type: string
+          format: url
       responses:
         200:
-          description: OK
+          description: Ok
           schema:
+            $ref: "#/definitions/200"
+        400:
+          description: Invalid parameters.
+          schema:
+            $ref: "#/definitions/400"
+        503:
+          description: If the server does not support Federated Sharing (i.e. disabled by administrator).
+          schema:
+            $ref: "#/definitions/503"
+  /cloud/shares/{remoteId}/accept:
+    post:
+      summary: Accept a share offer
+      description: After a share offer has been received the receiving instance should notify the user in question and give the possibility to accept or deny a share offer. Using this API call a federated share can be accepted. Providers MAY inform the sending user if a share has been accepted.
+      parameters:
+        - name: token
+          in: formData
+          description: Unique and secret token used to access the file.
+          required: true
+          type: string
+        - name: remoteId
+          in: path
+          description: Received remoteId of the share.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        503:
+          description: If the server does not support Federated Sharing (i.e. disabled by administrator).
+          schema:
+            $ref: "#/definitions/503"
+  /cloud/shares/{remoteId}/decline:
+    post:
+      summary: Reject a share
+      description: This endpoint informs the sender that the recipient rejected the share. This endpoint is also intended to be used if the user first accepted the share and later decides to unshare it.
+      parameters:
+        - name: token
+          in: formData
+          description: Unique and secret token used to access the file.
+          required: true
+          type: string
+        - name: remoteId
+          in: path
+          description: Received remoteId of the share.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        400:
+          description: Invalid parameters.
+          schema:
+            $ref: "#/definitions/400"
+        503:
+          description: If the server does not support Federated Sharing (i.e. disabled by administrator).
+          schema:
+            $ref: "#/definitions/503"
+  /cloud/shares/{remoteId}/unshare:
+    post:
+      summary: Unshare a file
+      description: Allows owners of shared files and folders to notify recipient of a revocation of the access permissions.
+      parameters:
+        - name: token
+          in: formData
+          description: Unique and secret token used to access the file.
+          required: true
+          type: string
+        - name: remoteId
+          in: path
+          description: Received remoteId of the share.
+          required: true
+          type: string
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        400:
+          description: Invalid parameters.
+          schema:
+            $ref: "#/definitions/400"
+        503:
+          description: If the server does not support Federated Sharing (i.e. disabled by administrator).
+          schema:
+            $ref: "#/definitions/503"
+  /files_sharing/shares/{shareId}:
+    get:
+      summary: Get information about a share
+      description: Get information about a specific share using the share id.
+      parameters:
+        - name: shareId
+          in: path
+          description: ID of the requested share.
+          type: number
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/Share"
+        404:
+          description: Share does not exist.
+          schema:
+            $ref: "#/definitions/404"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    put:
+      summary: Get information about a share
+      description: Get information about a specific share using the share id.
+      parameters:
+        - name: shareId
+          in: path
+          description: ID of the share to update.
+          type: number
+          required: true
+        - name: publicUpload
+          in: formData
+          description: Whether to allow public upload to a public shared folder.
+          type: boolean
+          default: false
+        - name: password
+          in: formData
+          description: Password to protect a publicly shared file with.
+          type: boolean
+          default: false
+        - name: permissions
+          in: formData
+          description: 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all
+          type: number
+          enum: [1, 2, 4, 8, 16, 31]
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/Share"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        400:
+          description: Invalid parameters.
+          schema:
+            $ref: "#/definitions/400"
+        403:
+          description: Public upload disabled by the admin.
+          schema:
+            $ref: "#/definitions/403"
+        404:
+          description: Share could not get updated.
+          schema:
+            $ref: "#/definitions/404"
+    delete:
+      summary: Unshare an existing share
+      description: Unshares a shared file or folder.
+      parameters:
+        - name: shareId
+          in: path
+          description: ID of the share to revoke.
+          type: number
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/Share"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: Share could not get updated.
+          schema:
+            $ref: "#/definitions/404"
+  /files_sharing/shares:
+    get:
+      summary: List of shares
+      description: Get a list of all shared files for the currently logged-in user.
+      parameters:
+        - name: shared_with_me
+          in: query
+          description: Whether files shared with the user should get displayed. Defaults to false, true to only display shares that the user received.
+          type: boolean
+          default: false
+        - name: path
+          in: query
+          description: Path to folder, if empty no restriction is set.
+          type: string
+          default: "/"
+        - name: reshares
+          in: query
+          description: Whether reshares should get returned.
+          type: boolean
+          default: false
+        - name: subfiles
+          in: query
+          description: Whether all shares within the folder should be returned.
+          type: boolean
+          default: false
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/Share"
+        400:
+          description: Not a folder (if the subfile argument was used).
+          schema:
+            $ref: "#/definitions/400"
+        404:
+          description: User has no shared files or folder does not exist.
+          schema:
+            $ref: "#/definitions/404"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    post:
+      summary: Create a new share
+      description: Shares a file or folder with an user on the same instance.
+      parameters:
+        - name: shareWith
+          in: formData
+          description: User or group id with which the file or folder should be shared.
+          required: true
+          type: string
+        - name: path
+          in: formData
+          description: Absolute path to the file/folder which should be shared.
+          required: true
+          type: string
+        - name: shareType
+          in: formData
+          description: 0 = user; 1 = group; 3 = public link
+          required: true
+          type: number
+          enum: [0, 1, 3]
+        - name: publicUpload
+          in: formData
+          description: Whether to allow public upload to a public shared folder.
+          required: true
+          type: boolean
+          default: false
+        - name: permissions
+          in: formData
+          description: 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all
+          required: true
+          type: number
+          default: 31
+          enum: [1, 2, 4, 8, 16, 31]
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/Share"
+        400:
+          description: Unknown share type.
+          schema:
+            $ref: "#/definitions/400"
+        404:
+          description: File could not get shared.
+          schema:
+            $ref: "#/definitions/404"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/activity:
+    get:
+      summary: Activity
+      description: The "ACTIVITY" module allows consumers to show a list of actions happening on the cloud service. This can for example be a collection of recently created or deleted files. This module has only a list endpoint used to gather this list.
+      parameters:
+        - name: start
+          in: query
+          description: Optional value with which event to start.
+          type: number
+          default: 0
+        - name: count
+          in: query
+          description: Optional value on how many values should get returned.
+          type: number
+          default: 30
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/Activity"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/users:
+    get:
+      summary: Get list of users
+      description: Retrieves a list of users on the server.
+      parameters:
+        - name: search
+          in: query
+          description: Username to search for.
+          type: string
+          required: true
+        - name: limit
+          in: query
+          description: How many users to list.
+          type: number
+          required: true
+        - name: offset
+          in: query
+          description: Optional offset.
+          type: number
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/UserList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    post:
+      summary: Create user
+      description: Creates a new user on the server.
+      parameters:
+        - name: userid
+          in: formData
+          description: Username to create.
+          type: string
+          required: true
+        - name: password
+          in: formData
+          description: Password of the user.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        400:
+          description: User already exists or invalid input data.
+          schema:
+            $ref: "#/definitions/401"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/users/{userId}:
+    get:
+      summary: Get a user
+      description: Retrieves information about a single user.
+      parameters:
+        - name: userId
+          in: path
+          description: User name of the user to lookup.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/User"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: User not found.
+          schema:
+            $ref: "#/definitions/404"
+    put:
+      summary: Edit user attributes
+      description: Edits attributes related to a user. Users are able to edit email, displayname and password; admins can also edit the quota value.
+      parameters:
+        - name: userId
+          in: path
+          description: User name of the user to edit.
+          type: string
+          required: true
+        - name: key
+          in: formData
+          description: Field to edit. One of "email", "quota", "displayname" or "password".
+          type: string
+          enum: [email, quota, displayname, password]
+          required: true
+        - name: value
+          in: formData
+          description: New value for the field.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/User"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    delete:
+      summary: Delete user
+      description: Deletes a user from the instance.
+      parameters:
+        - name: userId
+          in: path
+          description: User name of the user to edit.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/User"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/users/{userId}/groups:
+    get:
+      summary: Get group memberships
+      description: Retrieves a list of groups the specified user is member of.
+      parameters:
+        - name: userId
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/GroupList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    post:
+      summary: Add user to group
+      description: Adds the specified user to the specified group.
+      parameters:
+        - name: userId
+          description: 	User to add to a group.
+          in: path
+          type: string
+          required: true
+        - name: groupid
+          description: ID of the group that the user should get added to.
+          in: formData
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        400:
+          description: Failed to add user to group.
+          schema:
+            $ref: "#/definitions/400"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    delete:
+      summary: Remove user from group
+      description: Removes the specified user to the specified group.
+      parameters:
+        - name: userId
+          description: 	User to remove from a group.
+          in: path
+          type: string
+          required: true
+        - name: groupid
+          description: ID of the group that the user should get removed from.
+          in: formData
+          type: string
+          required: true
+      responses:
+        204:
+          description: No content"
+        400:
+          description: Failed to remove user from group.
+          schema:
+            $ref: "#/definitions/400"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/users/{userId}/subadmins:
+    get:
+      summary: Get subadmin privileges of user
+      description: "Returns the groups in which the user is a subadmin."
+      parameters:
+        - name: userId
+          in: path
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/GroupList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: "User does not exist. @TODO!"
+          schema:
+            $ref: "#/definitions/404"
+    post:
+      summary: Promote user to subadmin
+      description: Makes a user the subadmin of a group.
+      parameters:
+        - name: userId
+          description: 	User to add to a group.
+          in: path
+          type: string
+          required: true
+        - name: groupid
+          description: Group that the user should become subadmin of.
+          in: formData
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: "User or group not found. @TODO!"
+          schema:
+            $ref: "#/definitions/404"
+    delete:
+      summary: Remove subadmin privileges
+      description: Removes the subadmin rights for the user specified from the group specified.
+      parameters:
+        - name: userId
+          description: 	User ID of the user to demote.
+          in: path
+          type: string
+          required: true
+        - name: groupid
+          description: Group that the user should become a regular member of.
+          in: formData
+          type: string
+          required: true
+      responses:
+        204:
+          description: No content
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/groups:
+    get:
+      summary: Get groups on the server
+      description: Retrieves a list of groups from the cloud server.
+      parameters:
+        - name: search
+          in: query
+          description: Filter to search for.
+          type: string
+          required: true
+        - name: limit
+          in: query
+          description: Optional limit.
+          type: number
+          required: true
+        - name: offset
+          in: query
+          description: Optional offset.
+          type: number
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/GroupList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    post:
+      summary: Create a new group
+      description: Creates a new group.
+      parameters:
+        - name: groupid
+          in: formData
+          description: Name of the group to create.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        400:
+          description: "Group already exists. @TODO!"
+          schema:
+            $ref: "#/definitions/400"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/groups/{groupId}:
+    get:
+      summary: Get members of a group
+      description: Retrieves a list of group members.
+      parameters:
+        - name: groupId
+          in: path
+          description: The ID of the group to request membership from.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/MemberList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    delete:
+      summary: Delete a group
+      description: Removes a group.
+      parameters:
+        - name: groupId
+          in: path
+          description: ID of the group to delete.
+          type: string
+          required: true
+      responses:
+        204:
+          description: No content
+        400:
+          description: "Failed to delete group. @TODO!"
+          schema:
+            $ref: "#/definitions/400"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: "Group does not exist. @TODO!"
+          schema:
+            $ref: "#/definitions/404"
+  /cloud/groups/{groupId}/subadmins:
+    get:
+      summary: Get subadmins of a group
+      description: Returns subadmins of the group.
+      parameters:
+        - name: groupId
+          in: path
+          description: The ID of the group to request a list of subadmins from.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/MemberList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: Group does not exist.
+          schema:
+            $ref: "#/definitions/404"
+  /cloud/apps:
+    get:
+      summary: Get list of installed apps
+      description: Returns a list of apps installed on the cloud server.
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/AppList"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /cloud/apps/{appId}:
+    get:
+      summary: Get application information
+      description: Get information about the specified application.
+      parameters:
+        - name: appId
+          in: path
+          description: ID of the app to get more information from.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/App"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+        404:
+          description: Application not found.
+          schema:
+            $ref: "#/definitions/404"
+    post:
+      summary: Enable application
+      description: Enable an app.
+      parameters:
+        - name: appId
+          in: path
+          description: ID of the application to enable.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+    delete:
+      summary: Disable application
+      description: Disables the specified app.
+      parameters:
+        - name: appId
+          in: path
+          description: ID of the application to disable.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /privatedata/setattribute/{storeName}/{key}:
+    post:
+      summary: Set value
+      description: Sets a value in the key-value store for the currently logged-in user.
+      parameters:
+        - name: storeName
+          in: path
+          description: Store under which the value should get stored.
+          type: string
+          required: true
+        - name: key
+          in: path
+          description: Key of the value.
+          type: string
+          required: true
+        - name: value
+          in: formData
+          description: Value of the key.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /privatedata/getattribute/{storeName}/{key}:
+    get:
+      summary: Get values of key
+      description: Get all value of a key stored within a specific store for the currently logged-in user.
+      parameters:
+        - name: storeName
+          in: path
+          description: Store under which the value should get looked-up.
+          type: string
+          required: true
+        - name: key
+          in: path
+          description: Key of the value to look-up.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/KeyValue"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+  /privatedata/deleteattribute/{storeName}/{key}:
+    delete:
+      summary: Delete entry
+      description: Get the value of a key stored within a specific store for the currently logged-in user.
+      parameters:
+        - name: storeName
+          in: path
+          description: Store under which the value should get deleted.
+          type: string
+          required: true
+        - name: key
+          in: path
+          description: Key to delete.
+          type: string
+          required: true
+      responses:
+        200:
+          description: Ok
+          schema:
+            $ref: "#/definitions/200"
+        401:
+          description: Authentication was not successful.
+          schema:
+            $ref: "#/definitions/401"
+definitions:
+  200:
+    xml:
+      name: ocs
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          status:
+            type: string
+            example: ok
+          statusCode:
+            type: number
+            format: integer
+            example: 200
+  400:
+    xml:
+      name: ocs
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          status:
+            type: string
+            example: error
+          statusCode:
+            type: number
+            format: integer
+            example: 400
+  401:
+    xml:
+      name: ocs
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          status:
+            type: string
+            example: error
+          statusCode:
+            type: number
+            format: integer
+            example: 997
+  403:
+    xml:
+      name: ocs
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          status:
+            type: string
+            example: error
+          statusCode:
+            type: number
+            format: integer
+            example: 403
+  404:
+    xml:
+      name: ocs
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          status:
+            type: string
+            example: error
+          statusCode:
+            type: number
+            format: integer
+            example: 404
+  503:
+    xml:
+      name: ocs
+    type: object
+    properties:
+      meta:
+        type: object
+        properties:
+          status:
+            type: string
+            example: error
+          statusCode:
+            type: number
+            format: integer
+            example: 503
+  Activity:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                element:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                      description: Unique identifier for the event.
+                      example: 2
+                    subject:
+                      type: string
+                      description: Subject of the mes.
+                      example: You deleted ownCloudUserManual.pdf
+                    message:
+                      type: string
+                      description: More descriptive text of the action.
+                    file:
+                      type: string
+                      description: The affected file.
+                      example: /ownCloudUserManual.pdf
+                    link:
+                      type: string
+                      description: Link to the file or folder.
+                      example: http://example.org/index.php/apps/files?dir=%2F
+                    date:
+                      type: string
+                      format: datetime
+                      description: Timestamp when the event happened.
+                      example: 2015-06-10T09:42:58+00:00
+  Share:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                element:
+                  type: object
+                  properties:
+                    id:
+                      type: number
+                      description: Unique identifier of the share.
+                      example: 1
+                    item_type:
+                      type: string
+                      description: The item_type either "file" or "folder".
+                      enum: [file, folder]
+                      example: file
+                    share_type:
+                      type: number
+                      description: "'0' = user; '1' = group; '3' = public link."
+                      enum: [0, 1, 3]
+                      example: 2
+                    share_with:
+                      type: string
+                      description: In case when shared with a user or a group the name.
+                      example: Rachel
+                    path:
+                      type: string
+                      description: Path where the share is located.
+                      example: /sharedFile.txt
+                    permissions:
+                      type: number
+                      description: "Permissions: 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)."
+                      example: 1
+                    expiration:
+                      type: string
+                      format: date
+                      description: Date when the share should expire (ISO 8601).
+                      example: 2015-06-12
+                    token:
+                      type: string
+                      description: Unique token that may be used to access the file in case of a public link.
+                    uid_owner:
+                      type: string
+                      example: Oscar
+                    displayname_owner:
+                      type: string
+                      description: Human readable name, may be chosen by the user itself.
+                      example: Oscar Meyer
+  UserList:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
             type: object
-            required:
-              -   message
             properties:
-              message:
-                description: Response message
+              users:
+                type: array
+                items:
+                  type: string
+                  example: admin
+                  xml:
+                    name: element
+  MemberList:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: object
+            properties:
+              groups:
+                type: array
+                items:
+                  type: string
+                  example: admin
+                  xml:
+                    name: element
+  GroupList:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: object
+            properties:
+              users:
+                type: array
+                items:
+                  type: string
+                  example: group1
+                  xml:
+                    name: element
+  AppList:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: object
+            properties:
+              apps:
+                type: array
+                items:
+                  type: string
+                  example: audit_monitor
+                  xml:
+                    name: element
+  User:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: object
+            properties:
+              email:
                 type: string
-                example: OK
+                description: Email address of the user.
+                example: user@example.org
+              enabled:
+                type: boolean
+                description: Whether the user is enabled.
+                example: true
+              quota:
+                type: object
+                properties:
+                  free:
+                    type: number
+                    description: Free storage in byte.
+                    example: 80
+                  used:
+                    type: number
+                    description: Used storage in byte.
+                    example: 80
+                  total:
+                    type: number
+                    description: Total storage, free + used in byte.
+                    example: 80
+                  relative:
+                    type: number
+                    description: Percentage of used storage.
+                    example: 80
+              displayname:
+                type: string
+                description: Human readable name, may be chosen by the user itself.
+                example: Oscar Meyer
+  App:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: object
+            properties:
+              id:
+                type: string
+                description: Id of the application.
+                example: files
+              name:
+                type: string
+                description: Name of the application.
+                example: Files
+              description:
+                type: string
+                description: Description of an application.
+                example: File Management
+  KeyValue:
+    type: object
+    allOf:
+      - $ref: '#/definitions/200'
+      - properties:
+          data:
+            type: array
+            items:
+              type: object
+              properties:
+                element:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                      description: Key of the stored value.
+                      example: MyKey
+                    app:
+                      type: string
+                      description: Store in which the data is stored, internally represented as "app".
+                      example: MyStore
+                    value:
+                      type: string
+                      description: Value to store.
+                      example: ValueToStore
