@@ -9,6 +9,59 @@ info:
     url: https://docs.apiwise.nl/ocm/logo.jpg
 host: mock.apiwise.nl
 basePath: /ocm
+tags:
+  - name: Federated Sharing
+    description: |
+      The `FEDERATED_SHARING` module allows consumers to share files between service providers compatible with this module. This module handles the following tasks:
+
+      1. Sending a share offer to other providers
+      - Accepting a share offer from other providers
+      - Denying a share offer from other providers
+      - Unsharing a previously shared file
+      - f files using WebDAV
+  - name: Sharing
+    description: |
+      The `SHARING` module allows to handle file sharing on the same cloud instance. It offers the following functions:
+
+      1. Get a list of shares
+      - Get a list of shared files in a folder
+      - Get information about a specific share
+      - Create a new share
+      - Delete an existing share
+      - Update an existing share
+  - name: Activity
+    description: |
+      The `ACTIVITY` module allows consumers to show a list of actions happening on the cloud service. This can for example be a collection of recently created or deleted files. This module has only a list endpoint used to gather this list.
+  - name: Provisioning
+    description: |
+      The `PROVISONING` module allows management of users and groups on a service provider. Specifically it supports the following functionalities:
+
+      1. Managing users
+        1. Create users
+        - Edit users
+        - Delete users
+        - List users
+      - Managing groups
+        1. Create groups
+        - Manage subadmin privileges
+        - Manage group members
+        - Delete groups
+        - List groups
+      - Managing applications
+        1. Enable applications
+        - Delete applications
+        - List applications
+
+      This module is likely to require administrative privileges for accessing and service providers SHOULD review their implementation carefully.
+  - name: Private Data
+    description: |
+      The `PRIVATE_DATA` module allows consumers to store data in a key-value storage. The store supports multiple sub-stores. This module handles the following tasks:
+
+      1. Storing values in the store
+      - Reading data from the store
+      - Deleting data from the store
+
+      In case of a server error or connection problem consumers MUST handle this gracefully.
 schemes:
   - https
 consumes:
@@ -18,6 +71,7 @@ produces:
 paths:
   /cloud/shares:
     post:
+      tags: [Federated Sharing]
       summary: Sending a share offer
       description: This endpoint takes share offers from remote instances, once the recipient has logged-in he is expected to accept or deny the share.
       parameters:
@@ -67,6 +121,7 @@ paths:
             $ref: "#/definitions/503"
   /cloud/shares/{remoteId}/accept:
     post:
+      tags: [Federated Sharing]
       summary: Accept a share offer
       description: After a share offer has been received the receiving instance should notify the user in question and give the possibility to accept or deny a share offer. Using this API call a federated share can be accepted. Providers MAY inform the sending user if a share has been accepted.
       parameters:
@@ -91,6 +146,7 @@ paths:
             $ref: "#/definitions/503"
   /cloud/shares/{remoteId}/decline:
     post:
+      tags: [Federated Sharing]
       summary: Reject a share
       description: This endpoint informs the sender that the recipient rejected the share. This endpoint is also intended to be used if the user first accepted the share and later decides to unshare it.
       parameters:
@@ -117,8 +173,9 @@ paths:
           description: If the server does not support Federated Sharing (i.e. disabled by administrator).
           schema:
             $ref: "#/definitions/503"
-  /cloud/shares/{remoteId}/unshare:
+  /cloud/shares/{remoteId}/unshare:    
     post:
+      tags: [Federated Sharing]
       summary: Unshare a file
       description: Allows owners of shared files and folders to notify recipient of a revocation of the access permissions.
       parameters:
@@ -147,6 +204,7 @@ paths:
             $ref: "#/definitions/503"
   /files_sharing/shares/{shareId}:
     get:
+      tags: [Sharing]
       summary: Get information about a share
       description: Get information about a specific share using the share id.
       parameters:
@@ -169,6 +227,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     put:
+      tags: [Sharing]
       summary: Get information about a share
       description: Get information about a specific share using the share id.
       parameters:
@@ -214,6 +273,7 @@ paths:
           schema:
             $ref: "#/definitions/404"
     delete:
+      tags: [Sharing]
       summary: Unshare an existing share
       description: Unshares a shared file or folder.
       parameters:
@@ -237,6 +297,7 @@ paths:
             $ref: "#/definitions/404"
   /files_sharing/shares:
     get:
+      tags: [Sharing]
       summary: List of shares
       description: Get a list of all shared files for the currently logged-in user.
       parameters:
@@ -278,6 +339,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     post:
+      tags: [Sharing]
       summary: Create a new share
       description: Shares a file or folder with an user on the same instance.
       parameters:
@@ -329,6 +391,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/activity:
     get:
+      tags: [Activity] 
       summary: Activity
       description: The "ACTIVITY" module allows consumers to show a list of actions happening on the cloud service. This can for example be a collection of recently created or deleted files. This module has only a list endpoint used to gather this list.
       parameters:
@@ -353,6 +416,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/users:
     get:
+      tags: [Provisioning]
       summary: Get list of users
       description: Retrieves a list of users on the server.
       parameters:
@@ -380,6 +444,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     post:
+      tags: [Provisioning]
       summary: Create user
       description: Creates a new user on the server.
       parameters:
@@ -408,6 +473,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/users/{userId}:
     get:
+      tags: [Provisioning]
       summary: Get a user
       description: Retrieves information about a single user.
       parameters:
@@ -430,6 +496,7 @@ paths:
           schema:
             $ref: "#/definitions/404"
     put:
+      tags: [Provisioning]
       summary: Edit user attributes
       description: Edits attributes related to a user. Users are able to edit email, displayname and password; admins can also edit the quota value.
       parameters:
@@ -459,6 +526,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     delete:
+      tags: [Provisioning]
       summary: Delete user
       description: Deletes a user from the instance.
       parameters:
@@ -478,6 +546,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/users/{userId}/groups:
     get:
+      tags: [Provisioning]
       summary: Get group memberships
       description: Retrieves a list of groups the specified user is member of.
       parameters:
@@ -495,6 +564,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     post:
+      tags: [Provisioning]
       summary: Add user to group
       description: Adds the specified user to the specified group.
       parameters:
@@ -522,6 +592,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     delete:
+      tags: [Provisioning]
       summary: Remove user from group
       description: Removes the specified user to the specified group.
       parameters:
@@ -548,6 +619,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/users/{userId}/subadmins:
     get:
+      tags: [Provisioning]
       summary: Get subadmin privileges of user
       description: "Returns the groups in which the user is a subadmin."
       parameters:
@@ -569,6 +641,7 @@ paths:
           schema:
             $ref: "#/definitions/404"
     post:
+      tags: [Provisioning]
       summary: Promote user to subadmin
       description: Makes a user the subadmin of a group.
       parameters:
@@ -596,6 +669,7 @@ paths:
           schema:
             $ref: "#/definitions/404"
     delete:
+      tags: [Provisioning]
       summary: Remove subadmin privileges
       description: Removes the subadmin rights for the user specified from the group specified.
       parameters:
@@ -618,6 +692,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/groups:
     get:
+      tags: [Provisioning]
       summary: Get groups on the server
       description: Retrieves a list of groups from the cloud server.
       parameters:
@@ -645,6 +720,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     post:
+      tags: [Provisioning]
       summary: Create a new group
       description: Creates a new group.
       parameters:
@@ -668,6 +744,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/groups/{groupId}:
     get:
+      tags: [Provisioning]
       summary: Get members of a group
       description: Retrieves a list of group members.
       parameters:
@@ -686,6 +763,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     delete:
+      tags: [Provisioning]
       summary: Delete a group
       description: Removes a group.
       parameters:
@@ -711,6 +789,7 @@ paths:
             $ref: "#/definitions/404"
   /cloud/groups/{groupId}/subadmins:
     get:
+      tags: [Provisioning]
       summary: Get subadmins of a group
       description: Returns subadmins of the group.
       parameters:
@@ -734,6 +813,7 @@ paths:
             $ref: "#/definitions/404"
   /cloud/apps:
     get:
+      tags: [Provisioning]
       summary: Get list of installed apps
       description: Returns a list of apps installed on the cloud server.
       responses:
@@ -747,6 +827,7 @@ paths:
             $ref: "#/definitions/401"
   /cloud/apps/{appId}:
     get:
+      tags: [Provisioning]
       summary: Get application information
       description: Get information about the specified application.
       parameters:
@@ -769,6 +850,7 @@ paths:
           schema:
             $ref: "#/definitions/404"
     post:
+      tags: [Provisioning]
       summary: Enable application
       description: Enable an app.
       parameters:
@@ -787,6 +869,7 @@ paths:
           schema:
             $ref: "#/definitions/401"
     delete:
+      tags: [Provisioning]
       summary: Disable application
       description: Disables the specified app.
       parameters:
@@ -806,6 +889,7 @@ paths:
             $ref: "#/definitions/401"
   /privatedata/setattribute/{storeName}/{key}:
     post:
+      tags: [Private Data]
       summary: Set value
       description: Sets a value in the key-value store for the currently logged-in user.
       parameters:
@@ -835,6 +919,7 @@ paths:
             $ref: "#/definitions/401"
   /privatedata/getattribute/{storeName}/{key}:
     get:
+      tags: [Private Data]
       summary: Get values of key
       description: Get all value of a key stored within a specific store for the currently logged-in user.
       parameters:
@@ -859,6 +944,7 @@ paths:
             $ref: "#/definitions/401"
   /privatedata/deleteattribute/{storeName}/{key}:
     delete:
+      tags: [Private Data]
       summary: Delete entry
       description: Get the value of a key stored within a specific store for the currently logged-in user.
       parameters:
