@@ -228,8 +228,8 @@ paths:
             $ref: "#/definitions/401"
     put:
       tags: [Sharing]
-      summary: Get information about a share
-      description: Get information about a specific share using the share id.
+      summary: Update an existing share
+      description: Updates an existing share such as adjusting the permissions or the password.
       parameters:
         - name: shareId
           in: path
@@ -1133,6 +1133,7 @@ definitions:
                     permissions:
                       type: number
                       description: "Permissions: 1 = read; 2 = update; 4 = create; 8 = delete; 16 = share; 31 = all (default: 31, for public shares: 1)."
+                      enum: [1, 2, 4, 8, 16, 31]
                       example: 1
                     expiration:
                       type: string
