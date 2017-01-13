@@ -399,12 +399,15 @@ definitions:
       name:
         type: string
         description: Name of the resource (file or folder).
+        example: spec.yaml
       description:
         type: string
         description: Optional description of the resource (file or folder).
+        example: This is the Open API Specification file (in YAML format) of the Open Cloud Mesh API.
       providerId:
         type: string
         description: Identifier to identify the resource at the provider side. This is unique per provider.
+        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       owner:
         description: |
           Provider specific identifier of the user that wants to share the resource. Please note that the 
@@ -431,6 +434,9 @@ definitions:
             description: |
               JSON object with protocol specific options, e.g. `uri`, `access_token`, `password`, `permissions` etc. At the moment
               only `webdav` options are supported, but other (custom) protocol options might be added in the future.
+            example:
+              username: dimitri
+              permissions: 31
   Share:
     type: object
     required: [id, createdAt, _links]
@@ -440,11 +446,12 @@ definitions:
           id:
             type: string
             description: Unique ID to identify the share at the consumer side.
+            example: 3819
           createdAt:
             type: string
             format: datetime
             description: Datetime when the share was created at the consumer side (ISO 8601).
-            example: 2016-12-05T15:06:58Z
+            example: "2016-12-05T15:06:58Z"
           _links:
             type: object
             required: [self]
@@ -481,11 +488,12 @@ definitions:
           id:
             type: string
             description: Unique ID to identify the notification at the receiving side.
+            example: 9303
           createdAt:
             type: string
             format: datetime
             description: Datetime when the notification was created at the receiving side (ISO 8601).
-            example: 2016-12-05T15:06:58Z
+            example: "2016-12-05T15:06:58Z"
           _links:
             type: object
             required: [self]
