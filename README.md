@@ -11,8 +11,8 @@ This repository contains the [OpenAPI](https://github.com/OAI/OpenAPI-Specificat
 The current version is unfinished yet. Currently in progress: 
 
 * ~~Convert [existing documentation](http://lukasreschke.github.io/OpenCloudMeshSpecification/#sending-a-share-offer) to Open API Specification~~
-* Discuss points of improvement for the new spec
-* Finalize specification conforming v1.0 document
+* ~~Discuss points of improvement for the new spec~~
+* ~~Finalize specification conforming v1.0 document~~
 
 ## Documentation
 
