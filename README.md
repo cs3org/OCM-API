@@ -1,6 +1,6 @@
 # Open Cloud Mesh API Specification
 
-![Open Education API](logo.png)
+![Open Cloud Mesh API](logo.png)
 
 This repository contains the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for the Open Cloud Mesh API. This specification describes the RESTful API endpoints which vendors should support to make sharing of resources between different vendors possible.
 
@@ -20,9 +20,8 @@ This repository contains the [OpenAPI](https://github.com/OAI/OpenAPI-Specificat
 
 The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Rebilly/ReDoc):
 
-* [API Reference Documentation](https://rawgit.com/GEANT/OCM-API/docs.html)
+* [API Reference Documentation](https://rawgit.com/GEANT/OCM-API/v1/docs.html)
 
 ## Contributing
 
 The Open Cloud Mesh API specification is an open source, community-driven project. If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md).
-
