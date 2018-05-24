@@ -15,7 +15,7 @@ parameters:
   id:
     name: id
     in: path
-    description:  Unique ID to identify the share at the consumer side.
+    description: Unique ID to identify the share at the consumer side.
     required: true
     type: string
   page:
@@ -24,339 +24,126 @@ parameters:
     type: integer
     required: false
     default: 1
-    description: |
-      Default parameter to handle paging through collections. However, this parameter is NOT mandatory, as clients should use
-      the HAL navigation links (e.g. `_links.next.href`) to paginate. These links enable the possibility to use vendor specific pagination.
+    description: >
+      Default parameter to handle paging through collections. However, this
+      parameter is NOT mandatory, as clients should use
+
+      the HAL navigation links (e.g. `_links.next.href`) to paginate. These
+      links enable the possibility to use vendor specific pagination.
 paths:
-  /shares/{id}:
-    get:
-      summary: Retreive a single share
-      description: |
-        With this call the provider can retreive a single share it created at the consumer side. This is a convenience call 
-        which could be used to check whether everything is still in sync etc.
-      parameters:
-        - $ref: '#/parameters/id'
-      responses:
-        200:
-          description: Representation of the single share.
-          schema:
-            $ref: "#/definitions/Share"
-        401:
-          description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"            
-        403:
-          description: Trusted service is not authorized to retreive one of it's shares.
-          schema:
-            $ref: "#/definitions/Error"
-        404:
-          description: The share cannot be found, probably due to a non-existing id.
-          schema:
-            $ref: "#/definitions/Error"
-        501:
-          description: The consumer doesn't support exposing single shares.
-          schema:
-            $ref: "#/definitions/Error"
-        503:
-          description: The consumer is temporary unavailable (e.g. due to planned maintenance).
-          headers:
-            Retry-After:
-              description: |
-                Indication for the client when the service could be requested again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"
   /shares:
-    get:
-      summary: Retreive all shares
-      description: |
-        With this call the provider can retreive all shares it created at the consumer side. This is a convenience call 
-        which could be used to check whether everything is still in sync etc.
-      parameters:
-        - $ref: '#/parameters/page'
-      responses:
-        200:
-          description: HAL-paginated collection of all shares.
-          headers:
-            X-Page:
-              description: Number of the current page.
-              type: number
-              format: integer
-            X-Per-Page:
-              description: Number of items per page returned.
-              type: number
-              format: integer
-            X-Total:
-              description: Number of total shares matching the filter criteria.
-              type: number
-              format: integer
-          schema:
-            type: object
-            required: [_embedded, _links]
-            properties:
-              _embedded:
-                type: object
-                properties:
-                  shares:
-                    type: array
-                    items:
-                      $ref: "#/definitions/Share"
-              _links:
-                type: object
-                required: [self]
-                properties:
-                  self:
-                    type: object
-                    required: [href]
-                    properties:
-                      href:
-                        type: string
-                        description: Link to current page.
-                        example: /shares
-                  next:
-                    type: object
-                    required: [href]
-                    properties:
-                      href:
-                        type: string
-                        description: Link to next page in the collection.
-                        example: /shares?page=2
-        401:
-          description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"            
-        403:
-          description: Trusted service is not authorized to retreive it's shares.
-          schema:
-            $ref: "#/definitions/Error"
-        501:
-          description: The consumer doesn't support exposing shares.
-          schema:
-            $ref: "#/definitions/Error"
-        503:
-          description: The consumer is temporary unavailable (e.g. due to planned maintenance).
-          headers:
-            Retry-After:
-              description: |
-                Indication for the client when the service could be requested again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"
     post:
       summary: Create a new share
-      description: |
-        After the provider created a local share, it sends a `share` object to the consumer containing the 
-        information which is needed to start synchronization between the two services.
+      description: >
+        After the provider created a local share, it sends a `share` object to
+        the consumer containing the 
+
+        information which is needed to start synchronization between the two
+        services.
       parameters:
         - name: share
           in: body
           description: The JSON object to create a new share at the consumer side.
           required: true
           schema:
-            $ref: "#/definitions/NewShare"
+            $ref: '#/definitions/NewShare'
       responses:
-        201:
-          description: Consumer succesfully received the share and responds with the created unique identifier and datetime of the processed share.
-          headers:
-            Location:
-              description: |
-                The URI where the newly created share can be found at the consumer side (e.g. `/shares/3819`).
-              type: string
+        '201':
+          description: Consumer succesfully received the share.
+        '400':
+          description: >
+            Bad request due to invalid parameters, e.g. when `shareWith` is not
+            found or required properties are missing.
           schema:
-            $ref: "#/definitions/Share"
-        400:
-          description: |
-            Bad request due to invalid parameters, e.g. when `shareWith` is not found or required properties are missing.
-          schema:
-            $ref: "#/definitions/400"
-        401:
+            $ref: '#/definitions/400'
+        '401':
           description: Client cannot be authenticated as a trusted service.
           schema:
-            $ref: "#/definitions/Error"            
-        403:
+            $ref: '#/definitions/Error'
+        '403':
           description: Trusted service is not authorized to create shares.
           schema:
-            $ref: "#/definitions/Error"
-        501:
-          description: The consumer doesn't support incoming external shares.
+            $ref: '#/definitions/Error'
+        '501':
+          description: >-
+            The consumer doesn't support incoming external shares, the share
+            type or the resource type is not supported.
           schema:
-            $ref: "#/definitions/Error"
-        503:
-          description: The consumer is temporary unavailable (e.g. due to planned maintenance).
+            $ref: '#/definitions/Error'
+        '503':
+          description: >-
+            The consumer is temporary unavailable (e.g. due to planned
+            maintenance).
           headers:
             Retry-After:
-              description: |
-                Indication for the client when the service could be requested again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again within 50 minutes).
+              description: >
+                Indication for the client when the service could be requested
+                again in HTTP Date format as used by the 
+
+                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
+                07:28:00 GMT`) or the number of seconds 
+
+                (e.g. 3000 if you the service is expected to be available again
+                within 50 minutes).
               type: string
           schema:
-            $ref: "#/definitions/Error"
-  /notifications/{id}:
-    get:
-      summary: Retreive a single notification
-      description: |
-        With this call the sender can retreive a single notification it created at the receiver side. This is a convenience call 
-        which could be used to check whether everything is still in sync etc.
-      parameters:
-        - $ref: '#/parameters/id'
-      responses:
-        200:
-          description: Representation of the single notification.
-          schema:
-            $ref: "#/definitions/Notification"
-        401:
-          description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"            
-        403:
-          description: Trusted service is not authorized to retreive one of it's notifications.
-          schema:
-            $ref: "#/definitions/Error"
-        404:
-          description: The notification cannot be found, probably due to a non-existing id.
-          schema:
-            $ref: "#/definitions/Error"
-        501:
-          description: The receiver doesn't support exposing single notifications.
-          schema:
-            $ref: "#/definitions/Error"
-        503:
-          description: The receiver is temporary unavailable (e.g. due to planned maintenance).
-          headers:
-            Retry-After:
-              description: |
-                Indication for the client when the service could be requested again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"            
+            $ref: '#/definitions/Error'
   /notifications:
-    get:
-      summary: Retreive all notifications
-      description: |
-        With this call the sender can retreive all notifications it created at the receiver side. This is a convenience call 
-        which could be used to check whether everything is still in sync etc.
-      parameters:
-        - $ref: '#/parameters/page'
-      responses:
-        200:
-          description: HAL-paginated collection of all notifications.
-          headers:
-            X-Page:
-              description: Number of the current page.
-              type: number
-              format: integer
-            X-Per-Page:
-              description: Number of items per page returned.
-              type: number
-              format: integer
-            X-Total:
-              description: Number of total notifications matching the filter criteria.
-              type: number
-              format: integer
-          schema:
-            type: object
-            required: [_embedded, _links]
-            properties:
-              _embedded:
-                type: object
-                properties:
-                  notifications:
-                    type: array
-                    items:
-                      $ref: "#/definitions/Notification"
-              _links:
-                type: object
-                required: [self]
-                properties:
-                  self:
-                    type: object
-                    required: [href]
-                    properties:
-                      href:
-                        type: string
-                        description: Link to current page.
-                        example: /notifications
-                  next:
-                    type: object
-                    required: [href]
-                    properties:
-                      href:
-                        type: string
-                        description: Link to next page in the collection.
-                        example: /notifications?page=2
-        401:
-          description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"            
-        403:
-          description: Trusted service is not authorized to retreive it's notifications.
-          schema:
-            $ref: "#/definitions/Error"
-        501:
-          description: The receiver doesn't support exposing notifications.
-          schema:
-            $ref: "#/definitions/Error"
-        503:
-          description: The receiver is temporary unavailable (e.g. due to planned maintenance).
-          headers:
-            Retry-After:
-              description: |
-                Indication for the client when the service could be requested again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"                        
     post:
       summary: Send a notification to a trusted service
-      description: Should be used to be 'polite', e.g. to let the provider know that a user has removed the share.
+      description: >-
+        Should be used to be 'polite', e.g. to let the provider know that a user
+        has removed the share.
+      parameters:
+        - name: notification
+          in: body
+          description: The JSON object with a new notification
+          required: true
+          schema:
+            $ref: '#/definitions/NewNotification'
       responses:
-        201:
-          description: Receiver succesfully received the notification and responds with the created unique identifier and datetime of the processed notification.
-          headers:
-            Location:
-              description: |
-                The URI where the newly created notification can be found at the receiver side (e.g. `/notifications/9303`).
-              type: string          
+        '201':
+          description: Receiver succesfully received the notification. The response body can contain a JSON object with some resonse data, depending on the specification of the actual notification.
+        '400':
+          description: >
+            Bad request due to invalid parameters, e.g. when `type` is invalid
+            or missing.
           schema:
-            $ref: "#/definitions/Notification"
-        400:
-          description: |
-            Bad request due to invalid parameters, e.g. when `type` is invalid or missing.
-          schema:
-            $ref: "#/definitions/400"            
-        401:
+            $ref: '#/definitions/400'
+        '401':
           description: Client cannot be authenticated as a trusted service.
           schema:
-            $ref: "#/definitions/Error"
-        403:
+            $ref: '#/definitions/Error'
+        '403':
           description: Trusted service is not authorized to create notifications.
           schema:
-            $ref: "#/definitions/Error"
-        501:
-          description: The receiver doesn't support notifications.
+            $ref: '#/definitions/Error'
+        '501':
+          description: >-
+            The receiver doesn't support notifications, the resource type is not
+            supported.
           schema:
-            $ref: "#/definitions/Error"
-        503:
-          description: The receiver is temporary unavailable (e.g. due to planned maintenance).
+            $ref: '#/definitions/Error'
+        '503':
+          description: >-
+            The receiver is temporary unavailable (e.g. due to planned
+            maintenance).
           headers:
             Retry-After:
-              description: |
-                Indication for the client when the service could be requested again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again within 50 minutes).
+              description: >
+                Indication for the client when the service could be requested
+                again in HTTP Date format as used by the 
+
+                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
+                07:28:00 GMT`) or the number of seconds 
+
+                (e.g. 3000 if you the service is expected to be available again
+                within 50 minutes).
               type: string
           schema:
-            $ref: "#/definitions/Error"
+            $ref: '#/definitions/Error'
 definitions:
-  400:
+  '400':
     type: object
     allOf:
       - $ref: '#/definitions/Error'
@@ -371,29 +158,48 @@ definitions:
                   example: shareWith
                 message:
                   type: string
-                  description: |
-                    A validation error message which is understandable for both humans and machines (e.g. no use of 
-                    special characters) providing more information on the cause of the validation error.
+                  description: >
+                    A validation error message which is understandable for both
+                    humans and machines (e.g. no use of 
+
+                    special characters) providing more information on the cause
+                    of the validation error.
                   example: NOT_FOUND
   Error:
     type: object
-    required: [message]
+    required:
+      - message
     properties:
       message:
         type: string
-        description: |
-          An error message which is understandable for both humans and machines (e.g. no use of 
-          special characters) providing more information on the cause of the error.
+        description: >
+          An error message which is understandable for both humans and machines
+          (e.g. no use of 
+
+          special characters) providing more information on the cause of the
+          error.
         example: RESOURCE_NOT_FOUND
   NewShare:
     type: object
-    required: [shareWith, name, providerId, owner, protocol]
+    required:
+      - shareWith
+      - name
+      - providerId
+      - owner
+      - protocol
+      - permission
+      - shareType
+      - resourceType
     properties:
       shareWith:
         type: string
-        description: |
-          Consumer specific identifier of the user or group the provider wants to share the resource with. 
-          This is known in advance. Please note that the consumer service endpoint is known in advance as 
+        description: >
+          Consumer specific identifier of the user or group the provider wants
+          to share the resource with. 
+
+          This is known in advance. Please note that the consumer service
+          endpoint is known in advance as 
+
           well, so this is no part of the request body.
         example: peter.szegedi@geant.org
       name:
@@ -403,106 +209,113 @@ definitions:
       description:
         type: string
         description: Optional description of the resource (file or folder).
-        example: This is the Open API Specification file (in YAML format) of the Open Cloud Mesh API.
+        example: >-
+          This is the Open API Specification file (in YAML format) of the Open
+          Cloud Mesh API.
       providerId:
         type: string
-        description: Identifier to identify the resource at the provider side. This is unique per provider.
+        description: >-
+          Identifier to identify the resource at the provider side. This is
+          unique per provider.
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       owner:
         description: |
-          Provider specific identifier of the user that wants to share the resource. Please note that the 
-          requesting provider is being identified on a higher level, so the former `remote` property 
-          is no part of the request body.
+          Provider specific identifier of the user who owns the resource.
         type: string
         example: dimitri@apiwise.nl
+      sender:
+        description: >
+          Provider specific identifier of the user that wants to share the
+          resource. Please note that the 
+
+          requesting provider is being identified on a higher level, so the
+          former `remote` property 
+
+          is no part of the request body.
+        type: string
+        example: john@apiwise.nl
+      ownerDisplayName:
+        type: string
+        description: |
+          Display name of the owner of the resource
+        example: Dimitri
+      senderDisplayName:
+        type: string
+        description: |
+          Display name of the owner of the resource
+        example: John Doe
+      shareType:
+        type: string
+        description: |
+          Share type (user or group share)
+        example: user
+      resourceType:
+        type: string
+        description: |
+          Resource type (file, calendar, contact,...)
+        example: file
       protocol:
         type: object
-        description: |
-          The protocol which is used to establish synchronisation. At the moment only `webdav` is 
+        description: >
+          The protocol which is used to establish synchronisation. At the moment
+          only `webdav` is 
+
           supported, but other (custom) protocols might be added in the future.
-        required: [name, options]
+        required:
+          - name
+          - options
         properties:
           name:
             type: string
-            description: |
-              The name of the protocol which is used to establish synchronisation. At the moment only `webdav` is 
-              supported, but other (custom) protocols might be added in the future.
-            enum: ['webdav']
+            description: >
+              The name of the protocol which is used to establish
+              synchronisation. At the moment only `webdav` is 
+
+              supported, but other (custom) protocols might be added in the
+              future.
+            enum:
+              - webdav
             example: webdav
           options:
             type: object
-            description: |
-              JSON object with protocol specific options, e.g. `uri`, `access_token`, `password`, `permissions` etc. At the moment
-              only `webdav` options are supported, but other (custom) protocol options might be added in the future.
+            description: >
+              JSON object with protocol specific options, e.g. `uri`,
+              `access_token`, `password`, `permissions` etc. At the moment
+
+              only `webdav` options are supported, but other (custom) protocol
+              options might be added in the future. For backward compatibility the webdav protocol will use the 'sharedSecret" as username and password
             example:
-              username: dimitri
-              permissions: 31
-  Share:
-    type: object
-    required: [id, createdAt, _links]
-    allOf:
-      - $ref: '#/definitions/NewShare'
-      - properties:
-          id:
-            type: string
-            description: Unique ID to identify the share at the consumer side.
-            example: 3819
-          createdAt:
-            type: string
-            format: datetime
-            description: Datetime when the share was created at the consumer side (ISO 8601).
-            example: "2016-12-05T15:06:58Z"
-          _links:
-            type: object
-            required: [self]
-            properties:
-              self:
-                type: object
-                required: [href]
-                properties:
-                  href:
-                    type: string
-                    description: Link to this specific share.
-                    example: /shares/3819
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+              permissions: "{http://open-cloud-mesh.org/ns}share-permissions"
   NewNotification:
     type: object
-    required: [type]
+    required:
+      - notificationType
+      - resourceType
+      - message
     properties:
-      type:
+      notificationType:
+        type: string
+        description: >
+          A notification type which is understandable for both humans and
+          machines (e.g. no use of 
+
+          special characters) providing more information on the cause of the
+          error.
+        example: SHARE_ACCEPTED
+      resourceType:
         type: string
         description: |
-          A notification type which is understandable for both humans and machines (e.g. no use of 
-          special characters) providing more information on the cause of the error.
-        example: SHARE_REMOVED    
-      message:
+          A resource type (e.g. file, calendar, contact)
+        example: file
+      providerId:
         type: string
-        description: An optional message to add more context to the notification (e.g. the reson why 
-          the consuming user removed the share).
-        example: I don't want to use this share anymore.
-  Notification:
-    type: object
-    required: [id, createdAt]
-    allOf:
-      - $ref: '#/definitions/NewNotification'
-      - properties:
-          id:
-            type: string
-            description: Unique ID to identify the notification at the receiving side.
-            example: 9303
-          createdAt:
-            type: string
-            format: datetime
-            description: Datetime when the notification was created at the receiving side (ISO 8601).
-            example: "2016-12-05T15:06:58Z"
-          _links:
-            type: object
-            required: [self]
-            properties:
-              self:
-                type: object
-                required: [href]
-                properties:
-                  href:
-                    type: string
-                    description: Link to this specific notification.
-                    example: /notifications/9303            
+        description: ID of the resource on the provider side
+        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+      notification:
+        type: object
+        description: >
+          optional additional parameters, depending on the notification and the resource type
+        example:
+          message: "Recipient accepted the share"
+          sharedSecret: "hfiuhworzwnur98d3wjiwhr"
