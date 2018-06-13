@@ -49,7 +49,14 @@ paths:
             $ref: '#/definitions/NewShare'
       responses:
         '201':
-          description: Consumer succesfully received the share.
+          description: Consumer successfully received the share. The response might contain the display name of the recipient of the share for general user experience improvement
+          schema:
+            type: object
+            properties:
+              recipientDisplayName:
+                type: string
+                description: display name of the recipient
+                example: John Doe
         '400':
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
