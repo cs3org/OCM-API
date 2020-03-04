@@ -355,6 +355,42 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
+  /invitation/forward:
+    post:
+      summary: Forward information from invitation to the cloud provider.
+      description: Foo
+      parameters:
+        - name: invitation
+          in: body
+          description: The JSON object to send to the cloud provider with the invitaiton information.
+          required: true
+          schema:
+            $ref: "#/definitions/Invitation"
+      responses:
+        200:
+          description: Ok!
+        400:
+          description: Invalid token?
+          schema:
+            $ref: "#/definitions/Error"   
+  /invitation/accept:
+    post:
+      summary: Accept an invitation to a shared document
+      description: Foo
+      parameters:
+        - name: invitation
+          in: body
+          description: The JSON object to notify OCM that an invitation has been accepted.
+          required: true
+          schema:
+            $ref: "#/definitions/AcceptInvitation"
+      responses:
+        200:
+          description: Auth ok!
+        400:
+          description: Invalid token?
+          schema:
+            $ref: "#/definitions/Error"    
 definitions:
   400:
     type: object
@@ -505,4 +541,36 @@ definitions:
                   href:
                     type: string
                     description: Link to this specific notification.
-                    example: /notifications/9303            
+                    example: /notifications/9303       
+  AcceptInvitation:
+    type: object
+    allOf:
+      - properties:
+          userId:
+            type: string //probably uuid?
+            description: Unique ID to identify the person accepting the invitation.
+            example: 9303
+          provider:
+            type: string //probably uuid?
+            description: Id to identify the provider
+            example: abc
+          token:
+            type: string // probably some other kind of token
+            description: Token received in the invitation
+            example: abc-123
+          senderProvider: 
+            type: string //probably uuid?
+            description: Id to identify the provider of the sender
+            example: ddd
+  Invitation:
+    type: object
+    allOf:
+      - properties:
+          token:
+            type: string // probably some other kind of token
+            description: Token received in the invitation
+            example: abc-123
+          senderProvider: 
+            type: string //probably uuid?
+            description: Id to identify the provider of the sender
+            example: ddd
