@@ -317,6 +317,13 @@ paths:
     post:
       summary: Send a notification to a trusted service
       description: Should be used to be 'polite', e.g. to let the provider know that a user has removed the share.
+      parameters:
+        - name: notification
+          in: body
+          description: The JSON object to send a notification.
+          required: true
+          schema:
+            $ref: "#/definitions/NewNotification"
       responses:
         201:
           description: Receiver succesfully received the notification and responds with the created unique identifier and datetime of the processed notification.
@@ -547,19 +554,19 @@ definitions:
     allOf:
       - properties:
           userId:
-            type: string //probably uuid?
+            type: string # probably uuid?
             description: Unique ID to identify the person accepting the invitation.
             example: 9303
           provider:
-            type: string //probably uuid?
+            type: string # probably uuid?
             description: Id to identify the provider
             example: abc
           token:
-            type: string // probably some other kind of token
+            type: string # probably some other kind of token
             description: Token received in the invitation
             example: abc-123
           senderProvider: 
-            type: string //probably uuid?
+            type: string # probably uuid?
             description: Id to identify the provider of the sender
             example: ddd
   Invitation:
@@ -567,10 +574,10 @@ definitions:
     allOf:
       - properties:
           token:
-            type: string // probably some other kind of token
+            type: string # probably some other kind of token
             description: Token received in the invitation
             example: abc-123
           senderProvider: 
-            type: string //probably uuid?
+            type: string # probably uuid?
             description: Id to identify the provider of the sender
             example: ddd
