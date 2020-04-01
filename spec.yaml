@@ -148,7 +148,47 @@ paths:
                 within 50 minutes).
               type: string
           schema:
+<<<<<<< HEAD
             $ref: '#/definitions/Error'
+=======
+            $ref: "#/definitions/Error"
+  /invite/accept:
+    post:
+      summary: Accept an invite to a shared document
+      description: Foo
+      parameters:
+        - name: invite
+          in: body
+          description: The JSON object to notify OCM that an invite has been accepted.
+          required: true
+          schema:
+            $ref: "#/definitions/AcceptInvite"
+      responses:
+        200:
+          description: Auth ok!
+        400:
+          description: Invalid token?
+          schema:
+            $ref: "#/definitions/Error" 
+  invite/forward:
+    post:
+      summary: Forward information from invite to the cloud provider.
+      description: Foo
+      parameters:
+        - name: invite
+          in: body
+          description: The JSON object to send to the cloud provider with the invitaiton information.
+          required: true
+          schema:
+            $ref: "#/definitions/Invite"
+      responses:
+        200:
+          description: Ok!
+        400:
+          description: Invalid token?
+          schema:
+            $ref: "#/definitions/Error" 
+>>>>>>> Add endpoints for accept and forward invite
 definitions:
   '400':
     type: object
@@ -305,10 +345,8 @@ definitions:
         type: string
         description: >
           A notification type which is understandable for both humans and
-          machines (e.g. no use of 
-
-          special characters) providing more information on the cause of the
-          error.
+          machines (e.g. no use of special characters) providing more
+          information on the cause of the error.
         example: SHARE_ACCEPTED
       resourceType:
         type: string
@@ -326,3 +364,35 @@ definitions:
         example:
           message: "Recipient accepted the share"
           sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+  AcceptInvite:
+    type: object
+    allOf:
+      - properties:
+          userId:
+            type: string # probably uuid?
+            description: Unique ID to identify the person accepting the invite.
+            example: 9303
+          provider:
+            type: string # probably uuid?
+            description: Id to identify the provider
+            example: abc
+          token:
+            type: string # probably some other kind of token
+            description: Token received in the invite
+            example: abc-123
+          senderProvider: 
+            type: string # probably uuid?
+            description: Id to identify the provider of the sender
+            example: ddd
+  Invite:
+    type: object
+    allOf:
+      - properties:
+          token:
+            type: string # probably some other kind of token
+            description: Token received in the invite
+            example: abc-123
+          senderProvider: 
+            type: string # probably uuid?
+            description: Id to identify the provider of the sender
+            example: ddd
