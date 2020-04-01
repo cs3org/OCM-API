@@ -355,6 +355,24 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
+  invite/forward:
+    post:
+      summary: Forward information from invite to the cloud provider.
+      description: Foo
+      parameters:
+        - name: invite
+          in: body
+          description: The JSON object to send to the cloud provider with the invitaiton information.
+          required: true
+          schema:
+            $ref: "#/definitions/Invite" # This object is defined in https://github.com/GEANT/OCM-API/pull/41/files
+      responses:
+        200:
+          description: Ok!
+        400:
+          description: Invalid token?
+          schema:
+            $ref: "#/definitions/Error" 
 definitions:
   400:
     type: object
