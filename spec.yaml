@@ -355,7 +355,7 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
-  invite/forward:
+  /invite/forward:
     post:
       summary: Forward an invitation to start sharing
       description: Forwards an invitation received by an out-of-band channel, email for example.
