@@ -358,7 +358,7 @@ paths:
   invite/forward:
     post:
       summary: Forward an invitation to start sharing
-      description: Sends an invitation to an end-user (by mail for example)
+      description: Forwards an invitation received by an out-of-band channel, email for example.
       parameters:
         - name: invite
           in: body
