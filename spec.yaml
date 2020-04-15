@@ -368,16 +368,16 @@ paths:
             $ref: "#/definitions/Invite"
       responses:
         200:
-          description: Invitation sent.
+          description: Invitation forwarded.
         400:
           description: |
-            Bad request due to invalid parameters, e.g. email is not valid.
+            Bad request due to invalid parameters, e.g. provider is not valid.
           schema:
             $ref: "#/definitions/400"            
   /invite/accept:
     post:
       summary: Accept an invititation to start sharing.
-      description: Accepts an invitation to the shared document so the provider can initiate the OCM share creation.
+      description: Accepts an invitation so the user on the sender provider's side can initiate the OCM share creation.
       parameters:
         - name: invite
           in: body
