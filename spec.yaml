@@ -376,7 +376,7 @@ paths:
             $ref: "#/definitions/400"            
   /invites/accept:
     post:
-      summary: Accept an invititation to start sharing.
+      summary: Accept an invitation to start sharing.
       description: Accepts an invitation so the user on the sender provider's side can initiate the OCM share creation.
       parameters:
         - name: invite
@@ -559,7 +559,7 @@ definitions:
             type: string 
             format: url
             description: URL of the OCM sender service.
-            example: https://sender.org/ocm/
+            example: https://sender.org
   AcceptInviteBody:
     type: object
     allOf:
@@ -572,7 +572,7 @@ definitions:
             type: string 
             format: url
             description: URL of the receiver OCM service.
-            example: https://receiver.org/ocm
+            example: https://receiver.org
           token:
             type: string
             description: Token received in the invite
