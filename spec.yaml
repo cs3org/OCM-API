@@ -355,7 +355,7 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
-  /invite/forward:
+  /invites/forward:
     post:
       summary: Forward an invitation to start sharing
       description: Forwards an invitation received by an out-of-band channel, email for example.
@@ -365,7 +365,7 @@ paths:
           description: The JSON object representing an invitation to send to an end-user.
           required: true
           schema:
-            $ref: "#/definitions/Invite"
+            $ref: "#/definitions/ForwardInviteBody"
       responses:
         200:
           description: Invitation forwarded.
@@ -374,7 +374,7 @@ paths:
             Bad request due to invalid parameters, e.g. provider is not valid.
           schema:
             $ref: "#/definitions/400"            
-  /invite/accept:
+  /invites/accept:
     post:
       summary: Accept an invititation to start sharing.
       description: Accepts an invitation so the user on the sender provider's side can initiate the OCM share creation.
@@ -384,14 +384,14 @@ paths:
           description: The JSON object to notify the OCM provider that an invite has been accepted.
           required: true
           schema:
-            $ref: "#/definitions/AcceptInvite"
+            $ref: "#/definitions/AcceptInviteBody"
       responses:
         200:
           description: Invitation accepted.
         400:
           description: The invitation token is invalid.
           schema:
-            $ref: "#/definitions/Error" 
+            $ref: "#/definitions/400" 
         403:
           description: Remote service is not trusted to accept invitations.
           schema:
@@ -546,30 +546,8 @@ definitions:
                   href:
                     type: string
                     description: Link to this specific notification.
-                    example: /notifications/9303            
-  AcceptInvite:
-    type: object
-    allOf:
-      - properties:
-          userId:
-            type: string
-            description: Unique ID to identify the user at the remote provider accepting the invite.
-            example: 9303
-          provider:
-            type: string 
-            format: url
-            description: URL of the receiver OCM service.
-            example: https://receiver.org/ocm
-          token:
-            type: string
-            description: Token received in the invite
-            example: xyz
-          senderProvider: 
-            type: string 
-            format: url
-            description: URL of the OCM sender service.
-            example: https://sender.org/ocm/
-  Invite:
+                    example: /notifications/9303       
+  ForwardInviteBody:
     type: object
     allOf:
       - properties:
@@ -582,3 +560,20 @@ definitions:
             format: url
             description: URL of the OCM sender service.
             example: https://sender.org/ocm/
+  AcceptInviteBody:
+    type: object
+    allOf:
+      - properties:
+          userID:
+            type: string
+            description: Unique ID to identify the user at the remote provider accepting the invite.
+            example: 9303
+          recipientProvider:
+            type: string 
+            format: url
+            description: URL of the receiver OCM service.
+            example: https://receiver.org/ocm
+          token:
+            type: string
+            description: Token received in the invite
+            example: xyz
