@@ -393,10 +393,6 @@ definitions:
     type: object
     allOf:
       - properties:
-          userID:
-            type: string
-            description: Unique ID to identify the user at the remote provider accepting the invite.
-            example: 9303
           recipientProvider:
             type: string 
             format: url
@@ -406,3 +402,15 @@ definitions:
             type: string
             description: Token received in the invite
             example: xyz
+          userID:
+            type: string
+            description: Unique ID to identify the user at the remote provider accepting the invite.
+            example: 9303
+          email:
+            type: string
+            description: Email ID of the user accepting the invite.
+            example: richard@receiver.org
+          name:
+            type: string
+            description: Name of the user accepting the invite.
+            example: Richard Feynman
