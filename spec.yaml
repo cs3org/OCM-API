@@ -155,7 +155,7 @@ paths:
   /invites/forward:
     post:
       summary: Forward an invitation to start sharing
-      description: Forwards an invitation received by an out-of-band channel, email for example.
+      description: Forwards an invitation received through an out-of-band channel, email for example.
       parameters:
         - name: invite
           in: body
