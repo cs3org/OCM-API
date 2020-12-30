@@ -21,7 +21,7 @@ This repository contains the [OpenAPI](https://github.com/OAI/OpenAPI-Specificat
 
 The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc):
 
-* [API Reference Documentation](https://rawgit.com/GEANT/OCM-API/v1/docs.html)
+* [API Reference Documentation](https://cs3org.github.io/OCM-API/docs.html)
 
 ## Contributing
 
