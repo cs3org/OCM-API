@@ -2,7 +2,7 @@
 
 ## Issue tracker
 
-Our [issue tracker](https://github.com/GEANT/OCM-API/issues) can be used to discuss problems or additions to the current or next version of the Open Cloud Mesh API specification.
+Our [issue tracker](https://github.com/cs3org/OCM-API/issues) can be used to discuss problems or additions to the current or next version of the Open Cloud Mesh API specification.
 
 Please follow these guidelines before opening an issue:
 
