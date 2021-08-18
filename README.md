@@ -21,7 +21,7 @@ This repository contains the [OpenAPI](https://github.com/OAI/OpenAPI-Specificat
 
 The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc):
 
-* [API Reference Documentation](https://cs3org.github.io/OCM-API/docs.html?repo=cs3org/OCM-API&branch=develop)
+* [API Reference Documentation](https://cs3org.github.io/OCM-API/docs.html)
 
 ## Contributing
 
@@ -29,4 +29,4 @@ The Open Cloud Mesh API specification is an open source, community-driven projec
 
 To stage the changes of your PR, you can change the repo and branch in the URL.
 For instance to see the proposed changes of https://github.com/cs3org/OCM-API/pull/41, use:
-[https://cs3org.github.io/OCM-API/docs.html?repo=LovisaLugnegard/OCM-API&branch=add-endpoint-to-accept-invite](https://cs3org.github.io/OCM-API/docs.html?repo=LovisaLugnegard/OCM-API&branch=add-endpoint-to-accept-invite)
+[https://cs3org.github.io/OCM-API/docs.html?branch=add-endpoint-to-accept-invite&repo=OCM-API&user=LovisaLugnegard](https://cs3org.github.io/OCM-API/docs.html?branch=add-endpoint-to-accept-invite&repo=OCM-API&user=LovisaLugnegard)

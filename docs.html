@@ -21,12 +21,27 @@
     <redoc></redoc>
     <script>
       const params = new URLSearchParams(window.location.search);
+      const user = params.get('user');
       const repo = params.get('repo');
       const branch = params.get('branch');
-      if (repo === null || branch === null) {
-        window.location = '?repo=cs3org/OCM-API&branch=develop';
+      let changed = false;
+      if (user === null) {
+        params.set('user', 'cs3org');
+        changed = true;
       }
-      document.querySelector('redoc').setAttribute('spec-url', `https://raw.githubusercontent.com/${repo}/${branch}/spec.yaml`);
+      if (repo === null) {
+        params.set('repo', 'OCM-API');
+        changed = true;
+      }
+      if (branch === null) {
+        params.set('branch', 'develop');
+        changed = true;
+      }
+      if (changed) {
+        params.sort();
+        window.location = `?${params.toString()}`;
+      }
+      document.querySelector('redoc').setAttribute('spec-url', `https://raw.githubusercontent.com/${user}/${repo}/${branch}/spec.yaml`);
     </script>
     <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
   </body>
