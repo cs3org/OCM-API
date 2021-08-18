@@ -18,7 +18,16 @@
     </style>
   </head>
   <body>
-    <redoc spec-url='spec.yaml'></redoc>
+    <redoc></redoc>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const repo = params.get('repo');
+      const branch = params.get('branch');
+      if (repo === null || branch === null) {
+        window.location = '?repo=cs3org/OCM-API&branch=develop';
+      }
+      document.querySelector('redoc').setAttribute('spec-url', `https://raw.githubusercontent.com/${repo}/${branch}/spec.yaml`);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"> </script>
   </body>
 </html>
