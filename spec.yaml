@@ -148,10 +148,7 @@ paths:
                 within 50 minutes).
               type: string
           schema:
-<<<<<<< HEAD
             $ref: '#/definitions/Error'
-=======
-            $ref: "#/definitions/Error"
   /invites/forward:
     post:
       summary: Forward an invitation to start sharing
@@ -188,19 +185,11 @@ paths:
         400:
           description: The invitation token is invalid.
           schema:
-<<<<<<< HEAD
             $ref: "#/definitions/Error" 
-<<<<<<< HEAD
->>>>>>> Add endpoints for accept and forward invite
-=======
-=======
-            $ref: "#/definitions/400" 
->>>>>>> Minor updates in the invites API
         403:
           description: Remote service is not trusted to accept invitations.
           schema:
             $ref: "#/definitions/Error"
->>>>>>> ocm: enhance invitation flow
 definitions:
   '400':
     type: object
@@ -329,7 +318,6 @@ definitions:
             description: >
               The name of the protocol which is used to establish
               synchronisation. At the moment only `webdav` is 
-
               supported, but other (custom) protocols might be added in the
               future.
             enum:
