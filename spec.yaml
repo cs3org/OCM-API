@@ -86,10 +86,8 @@ paths:
               description: >
                 Indication for the client when the service could be requested
                 again in HTTP Date format as used by the 
-
                 Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
                 07:28:00 GMT`) or the number of seconds 
-
                 (e.g. 3000 if you the service is expected to be available again
                 within 50 minutes).
               type: string
@@ -140,10 +138,8 @@ paths:
               description: >
                 Indication for the client when the service could be requested
                 again in HTTP Date format as used by the 
-
                 Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
                 07:28:00 GMT`) or the number of seconds 
-
                 (e.g. 3000 if you the service is expected to be available again
                 within 50 minutes).
               type: string
@@ -168,17 +164,17 @@ paths:
             Bad request due to invalid parameters, e.g. provider is not valid.
           schema:
             $ref: "#/definitions/400"            
-  /invites/accept:
+  /invites/accepted:
     post:
-      summary: Accept an invitation to start sharing.
-      description: Accepts an invitation so the user on the sender provider's side can initiate the OCM share creation.
+      summary: Inform the sender that the invitation was accepted to start sharing.
+      description: Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
       parameters:
         - name: invite
           in: body
           description: The JSON object to notify the OCM provider that an invite has been accepted.
           required: true
           schema:
-            $ref: "#/definitions/AcceptInviteBody"
+            $ref: "#/definitions/AcceptedInviteBody"
       responses:
         200:
           description: Invitation accepted.
@@ -364,7 +360,7 @@ definitions:
         example:
           message: "Recipient accepted the share"
           sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-  AcceptInvite:
+  AcceptedInvite:
     type: object
     allOf:
       - properties:
@@ -377,7 +373,7 @@ definitions:
             format: url
             description: URL of the OCM sender service.
             example: https://sender.org
-  AcceptInviteBody:
+  AcceptedInviteBody:
     type: object
     allOf:
       - properties:
