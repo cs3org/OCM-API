@@ -37,7 +37,6 @@ paths:
       description: >
         After the provider created a local share, it sends a `share` object to
         the consumer containing the 
-
         information which is needed to start synchronization between the two
         services.
       parameters:
@@ -296,7 +295,9 @@ definitions:
       resourceType:
         type: string
         description: |
-          Resource type (file, calendar, contact,...)
+          Resource type (file, webapp, calendar, contact, ...). A `webapp` share
+          is an application that can be opened on the remote end, typically
+          to enable collaborative workflows.
         example: file
       protocol:
         type: object
