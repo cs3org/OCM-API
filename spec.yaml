@@ -295,9 +295,7 @@ definitions:
       resourceType:
         type: string
         description: |
-          Resource type (file, webapp, calendar, contact, ...). A `webapp` share
-          is an application that can be opened on the remote end, typically
-          to enable collaborative workflows.
+          Resource type (file, calendar, contact, ...)
         example: file
       protocol:
         type: object
