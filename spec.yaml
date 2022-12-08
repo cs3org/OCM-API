@@ -27,7 +27,6 @@ parameters:
     description: >
       Default parameter to handle paging through collections. However, this
       parameter is NOT mandatory, as clients should use
-
       the HAL navigation links (e.g. `_links.next.href`) to paginate. These
       links enable the possibility to use vendor specific pagination.
 paths:
@@ -144,26 +143,7 @@ paths:
               type: string
           schema:
             $ref: '#/definitions/Error'
-  /invites/forward:
-    post:
-      summary: Forward an invitation to start sharing
-      description: Forwards an invitation received through an out-of-band channel, email for example.
-      parameters:
-        - name: invite
-          in: body
-          description: The JSON object representing an invitation to send to an end-user.
-          required: true
-          schema:
-            $ref: "#/definitions/ForwardInviteBody"
-      responses:
-        200:
-          description: Invitation forwarded.
-        400:
-          description: |
-            Bad request due to invalid parameters, e.g. provider is not valid.
-          schema:
-            $ref: "#/definitions/400"            
-  /invites/accepted:
+  /invite-accepted:
     post:
       summary: Inform the sender that the invitation was accepted to start sharing.
       description: Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
@@ -177,6 +157,21 @@ paths:
       responses:
         200:
           description: Invitation accepted.
+          schema:
+            type: object
+            properties:
+              userID:
+                type: string
+                description: Unique ID to identify the sender at the local provider.
+                example: 9302
+              email:
+                type: string
+                description: Email ID of the user that sent the invite.
+                example: john@sender.org
+              name:
+                type: string
+                description: Name of the user that sent the invite.
+                example: John Doe
         400:
           description: The invitation token is invalid.
           schema:
@@ -300,10 +295,7 @@ definitions:
       protocol:
         type: object
         description: >
-          The protocol which is used to establish synchronisation. At the moment
-          only `webdav` is 
-
-          supported, but other (custom) protocols might be added in the future.
+          The protocol which is used to establish synchronisation.
         required:
           - name
           - options
@@ -312,23 +304,29 @@ definitions:
             type: string
             description: >
               The name of the protocol which is used to establish
-              synchronisation. At the moment only `webdav` is 
-              supported, but other (custom) protocols might be added in the
-              future.
+              synchronisation. The supported protocols are:
+              `webdav`, to access the data
+              `webapp`, to access remote web applications
+              Other custom protocols might be added in the future.
             enum:
               - webdav
+              - webapp
             example: webdav
           options:
             type: object
             description: >
               JSON object with protocol specific options, e.g. `uri`,
-              `access_token`, `password`, `permissions` etc. At the moment
-
-              only `webdav` options are supported, but other (custom) protocol
-              options might be added in the future. For backward compatibility the webdav protocol will use the 'sharedSecret" as username and password
+              `access_token`, `password`, `permissions` etc.
+              For backward compatibility, the webdav protocol will use
+              `sharedSecret` as username and password.
+              The `webapp` protocol is expected to provide a (templated)
+              URI to a client-browsable view of the shared resource, with
+              all relevant applications enabled: implementations may
+              leverage the public link capability for this feature.
             example:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: "{http://open-cloud-mesh.org/ns}share-permissions"
+              permissions: "{https://open-cloud-mesh.org/ns}share-permissions"
+              uriTemplate: "https://open-cloud-mesh.org/s/{path-to-shared-resources}"
   NewNotification:
     type: object
     required:
