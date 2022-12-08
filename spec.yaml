@@ -47,7 +47,10 @@ paths:
             $ref: '#/definitions/NewShare'
       responses:
         '201':
-          description: Consumer successfully received the share. The response might contain the display name of the recipient of the share for general user experience improvement
+          description: >
+            Consumer successfully received the share. The response might contain
+            the display name of the recipient of the share for general
+            user experience improvement
           schema:
             type: object
             properties:
@@ -106,7 +109,10 @@ paths:
             $ref: '#/definitions/NewNotification'
       responses:
         '201':
-          description: Receiver succesfully received the notification. The response body can contain a JSON object with some resonse data, depending on the specification of the actual notification.
+          description: >
+            Receiver succesfully received the notification. The response body
+            can contain a JSON object with some resonse data, depending on the
+            specification of the actual notification.
         '400':
           description: >
             Bad request due to invalid parameters, e.g. when `type` is invalid
@@ -135,11 +141,10 @@ paths:
             Retry-After:
               description: >
                 Indication for the client when the service could be requested
-                again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
-                07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again
-                within 50 minutes).
+                again in HTTP Date format as used by the Internet Message Format
+                [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number
+                of seconds (e.g. 3000 if you the service is expected to be
+                available again within 50 minutes).
               type: string
           schema:
             $ref: '#/definitions/Error'
@@ -158,20 +163,7 @@ paths:
         200:
           description: Invitation accepted.
           schema:
-            type: object
-            properties:
-              userID:
-                type: string
-                description: Unique ID to identify the sender at the local provider.
-                example: 9302
-              email:
-                type: string
-                description: Email ID of the user that sent the invite.
-                example: john@sender.org
-              name:
-                type: string
-                description: Name of the user that sent the invite.
-                example: John Doe
+            $ref: "#/definitions/AcceptedInviteResponse"
         400:
           description: The invitation token is invalid.
           schema:
@@ -198,10 +190,8 @@ definitions:
                   type: string
                   description: >
                     A validation error message which is understandable for both
-                    humans and machines (e.g. no use of 
-
-                    special characters) providing more information on the cause
-                    of the validation error.
+                    humans and machines (e.g. no use of special characters)
+                    providing more information on the cause of the validation error.
                   example: NOT_FOUND
   Error:
     type: object
@@ -212,10 +202,8 @@ definitions:
         type: string
         description: >
           An error message which is understandable for both humans and machines
-          (e.g. no use of 
-
-          special characters) providing more information on the cause of the
-          error.
+          (e.g. no use of special characters) providing more information
+          on the cause of the error.
         example: RESOURCE_NOT_FOUND
   NewShare:
     type: object
@@ -233,12 +221,9 @@ definitions:
         type: string
         description: >
           Consumer specific identifier of the user or group the provider wants
-          to share the resource with. 
-
-          This is known in advance. Please note that the consumer service
-          endpoint is known in advance as 
-
-          well, so this is no part of the request body.
+          to share the resource with. This is known in advance.
+          Please note that the consumer service endpoint is known in advance
+          as well, so this is no part of the request body.
         example: peter.szegedi@geant.org
       name:
         type: string
@@ -264,12 +249,9 @@ definitions:
       sender:
         description: >
           Provider specific identifier of the user that wants to share the
-          resource. Please note that the 
-
-          requesting provider is being identified on a higher level, so the
-          former `remote` property 
-
-          is no part of the request body.
+          resource. Please note that the requesting provider is being
+          identified on a higher level, so the former `remote` property
+          is not part of the request body.
         type: string
         example: john@apiwise.nl
       ownerDisplayName:
@@ -295,7 +277,7 @@ definitions:
       protocol:
         type: object
         description: >
-          The protocol which is used to establish synchronisation.
+          The protocol(s) which is/are used to establish synchronisation.
         required:
           - name
           - options
@@ -305,7 +287,7 @@ definitions:
             items:
               type: string
               description: >
-                The name of the protocol which is used to establish
+                The name of the protocol(s) which is/are used to establish
                 synchronisation. The supported protocols are:
                 `webdav`, to access the data
                 `webapp`, to access remote web applications
@@ -397,3 +379,19 @@ definitions:
             type: string
             description: Name of the user accepting the invite.
             example: Richard Feynman
+  AcceptedInviteResponse:
+    type: object
+    allOf:
+      - properties:
+          userID:
+            type: string
+            description: Unique ID to identify the sender at the local provider.
+            example: 9302
+          email:
+            type: string
+            description: Email ID of the user that sent the invite.
+            example: john@sender.org
+          name:
+            type: string
+            description: Name of the user that sent the invite.
+            example: John Doe
