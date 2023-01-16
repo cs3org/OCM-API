@@ -48,16 +48,7 @@ paths:
       responses:
         '201':
           description: >
-            Consumer successfully received the share. The response might contain
-            the display name of the recipient of the share for general
-            user experience improvement
-          schema:
-            type: object
-            properties:
-              recipientDisplayName:
-                type: string
-                description: display name of the recipient
-                example: John Doe
+            Consumer successfully received the share.
         '400':
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
@@ -267,7 +258,7 @@ definitions:
       shareType:
         type: string
         description: |
-          Share type (user or group share)
+          Recipient share type (user or group)
         example: user
       resourceType:
         type: string
@@ -287,30 +278,38 @@ definitions:
             items:
               type: string
               description: >
-                The name of the protocol(s) which is/are used to establish
+                Name(s) of the protocol(s) which is/are used to establish
                 synchronisation. The supported protocols are:
                 `webdav`, to access the data
                 `webapp`, to access remote web applications
+                `datatx`, to transfer the data to the remote endpoint
                 Other custom protocols might be added in the future.
               enum:
                 - webdav
                 - webapp
+                - datatx
               example: webdav
           options:
             type: object
             description: >
-              JSON object with protocol specific options, e.g. `uri`,
+              JSON object with specific options for each protocol, e.g. `uri`,
               `access_token`, `password`, `permissions` etc.
               For backward compatibility, the webdav protocol will use
               `sharedSecret` as username and password.
-              The `webapp` protocol is expected to provide a (templated)
-              URI to a client-browsable view of the shared resource, with
-              all relevant applications enabled: implementations may
-              leverage the public link capability for this feature.
+              The `webapp` protocol is expected to provide a (templated) URI
+              to a client-browsable view of the shared resource, such that users
+              may use the web applications available at the site: implementations
+              may leverage the public link capability for this feature.
             example:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: "{https://open-cloud-mesh.org/ns}share-permissions"
-              uriTemplate: "https://open-cloud-mesh.org/s/{path-to-shared-resources}"
+              webdav:
+                sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+                permissions: ["read", "write", "share"]
+                uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+              webapp:
+                uriTemplate: "https://open-cloud-mesh.org/s/rglsertgsrt/{relative-path-to-shared-resource}"
+              datatx:
+                sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+                srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
   NewNotification:
     type: object
     required:
