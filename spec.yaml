@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
@@ -44,32 +44,32 @@ paths:
           description: The JSON object to create a new share at the consumer side.
           required: true
           schema:
-            $ref: '#/definitions/NewShare'
+            $ref: "#/definitions/NewShare"
       responses:
-        '201':
+        "201":
           description: >
             Consumer successfully received the share.
-        '400':
+        "400":
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
             found or required properties are missing.
           schema:
-            $ref: '#/definitions/400'
-        '401':
+            $ref: "#/definitions/400"
+        "401":
           description: Client cannot be authenticated as a trusted service.
           schema:
-            $ref: '#/definitions/Error'
-        '403':
+            $ref: "#/definitions/Error"
+        "403":
           description: Trusted service is not authorized to create shares.
           schema:
-            $ref: '#/definitions/Error'
-        '501':
+            $ref: "#/definitions/Error"
+        "501":
           description: >-
             The consumer doesn't support incoming external shares, the share
             type or the resource type is not supported.
           schema:
-            $ref: '#/definitions/Error'
-        '503':
+            $ref: "#/definitions/Error"
+        "503":
           description: >-
             The consumer is temporary unavailable (e.g. due to planned
             maintenance).
@@ -84,7 +84,7 @@ paths:
                 within 50 minutes).
               type: string
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
   /notifications:
     post:
       summary: Send a notification to a trusted service
@@ -97,34 +97,34 @@ paths:
           description: The JSON object with a new notification
           required: true
           schema:
-            $ref: '#/definitions/NewNotification'
+            $ref: "#/definitions/NewNotification"
       responses:
-        '201':
+        "201":
           description: >
             Receiver succesfully received the notification. The response body
             can contain a JSON object with some resonse data, depending on the
             specification of the actual notification.
-        '400':
+        "400":
           description: >
             Bad request due to invalid parameters, e.g. when `type` is invalid
             or missing.
           schema:
-            $ref: '#/definitions/400'
-        '401':
+            $ref: "#/definitions/400"
+        "401":
           description: Client cannot be authenticated as a trusted service.
           schema:
-            $ref: '#/definitions/Error'
-        '403':
+            $ref: "#/definitions/Error"
+        "403":
           description: Trusted service is not authorized to create notifications.
           schema:
-            $ref: '#/definitions/Error'
-        '501':
+            $ref: "#/definitions/Error"
+        "501":
           description: >-
             The receiver doesn't support notifications, the resource type is not
             supported.
           schema:
-            $ref: '#/definitions/Error'
-        '503':
+            $ref: "#/definitions/Error"
+        "503":
           description: >-
             The receiver is temporary unavailable (e.g. due to planned
             maintenance).
@@ -138,7 +138,7 @@ paths:
                 available again within 50 minutes).
               type: string
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
   /invite-accepted:
     post:
       summary: Inform the sender that the invitation was accepted to start sharing.
@@ -158,16 +158,16 @@ paths:
         400:
           description: The invitation token is invalid.
           schema:
-            $ref: "#/definitions/Error" 
+            $ref: "#/definitions/Error"
         403:
           description: Remote service is not trusted to accept invitations.
           schema:
             $ref: "#/definitions/Error"
 definitions:
-  '400':
+  "400":
     type: object
     allOf:
-      - $ref: '#/definitions/Error'
+      - $ref: "#/definitions/Error"
       - properties:
           validationErrors:
             type: array
@@ -310,6 +310,7 @@ definitions:
               datatx:
                 sharedSecret: "hfiuhworzwnur98d3wjiwhr"
                 srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+                size: 1000000000000
   NewNotification:
     type: object
     required:
@@ -345,7 +346,7 @@ definitions:
     allOf:
       - properties:
           recipientProvider:
-            type: string 
+            type: string
             format: url
             description: URL of the receiver OCM service.
             example: https://receiver.org
