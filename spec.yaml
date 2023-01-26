@@ -201,8 +201,9 @@ definitions:
     required:
       - shareWith
       - name
-      - providerId
+      - resourceId
       - owner
+      - sender
       - protocols
       - permission
       - shareType
@@ -226,9 +227,9 @@ definitions:
         example: >-
           This is the Open API Specification file (in YAML format) of the Open
           Cloud Mesh API.
-      providerId:
+      resourceId:
         type: string
-        description: >-
+        description: >
           Identifier to identify the resource at the provider side. This is
           unique per provider.
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
