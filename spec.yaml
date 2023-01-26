@@ -283,14 +283,14 @@ definitions:
           Other custom protocols might be added in the future.
         example:
           webdav:
-            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            sharedSecret: "secret"
             permissions: ["read", "write", "share"]
             uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
           webapp:
-            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-            uriTemplate: "https://open-cloud-mesh.org/s/rglsertgsrt/{relative-path-to-shared-resource}"
+            sharedSecret: "secret"
+            uriTemplate: "https://open-cloud-mesh.org/s/{share-id}/{relative-path-to-shared-resource}"
           datatx:
-            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            sharedSecret: "secret"
             srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
             size: 1000000000000
   NewNotification:
