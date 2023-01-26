@@ -253,7 +253,7 @@ definitions:
       senderDisplayName:
         type: string
         description: |
-          Display name of the owner of the resource
+          Display name of the user that wants to share the resource
         example: John Doe
       shareType:
         type: string
