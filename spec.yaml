@@ -265,52 +265,33 @@ definitions:
         description: |
           Resource type (file, calendar, contact, ...)
         example: file
-      protocol:
+      protocols:
         type: object
         description: >
-          The protocol(s) which is/are used to establish synchronisation.
-        required:
-          - name
-          - options
-        properties:
-          name:
-            type: array
-            items:
-              type: string
-              description: >
-                Name(s) of the protocol(s) which is/are used to establish
-                synchronisation. The supported protocols are:
-                `webdav`, to access the data
-                `webapp`, to access remote web applications
-                `datatx`, to transfer the data to the remote endpoint
-                Other custom protocols might be added in the future.
-              enum:
-                - webdav
-                - webapp
-                - datatx
-              example: webdav
-          options:
-            type: object
-            description: >
-              JSON object with specific options for each protocol, e.g. `uri`,
-              `access_token`, `password`, `permissions` etc.
-              For backward compatibility, the webdav protocol will use
-              `sharedSecret` as username and password.
-              The `webapp` protocol is expected to provide a (templated) URI
-              to a client-browsable view of the shared resource, such that users
-              may use the web applications available at the site: implementations
-              may leverage the public link capability for this feature.
-            example:
-              webdav:
-                sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-                permissions: ["read", "write", "share"]
-                uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
-              webapp:
-                uriTemplate: "https://open-cloud-mesh.org/s/rglsertgsrt/{relative-path-to-shared-resource}"
-              datatx:
-                sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-                srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
-                size: 1000000000000
+          JSON object with specific options for each protocol, e.g. `uri`,
+          `access_token`, `password`, `permissions` etc.
+          For backward compatibility, the webdav protocol will use
+          `sharedSecret` as username and password.
+          The `webapp` protocol is expected to provide a (templated) URI
+          to a client-browsable view of the shared resource, such that users
+          may use the web applications available at the site: implementations
+          may leverage the public link capability for this feature.
+          The supported protocols are:
+          `webdav`, to access the data
+          `webapp`, to access remote web applications
+          `datatx`, to transfer the data to the remote endpoint
+          Other custom protocols might be added in the future.
+        example:
+          webdav:
+            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            permissions: ["read", "write", "share"]
+            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+          webapp:
+            uriTemplate: "https://open-cloud-mesh.org/s/rglsertgsrt/{relative-path-to-shared-resource}"
+          datatx:
+            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+            size: 1000000000000
   NewNotification:
     type: object
     required:
