@@ -257,13 +257,15 @@ definitions:
         example: John Doe
       shareType:
         type: string
+        enum: ["user", "group"]
         description: |
-          Recipient share type (user or group)
+          Recipient share type
         example: user
       resourceType:
         type: string
+        enum: ["file", "folder"]
         description: |
-          Resource type (file, calendar, contact, ...)
+          Resource type
         example: file
       protocols:
         type: object
@@ -281,16 +283,44 @@ definitions:
           `webapp`, to access remote web applications
           `datatx`, to transfer the data to the remote endpoint
           Other custom protocols might be added in the future.
+        additionalProperties:
+          type: object
+          properties:
+            webdav:
+              type: object
+              properties:
+                sharedSecret:
+                  type: string
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["read", "write", "share"]
+                uri:
+                  type: string
+            webapp:
+              type: object
+              properties:
+                uriTemplate:
+                  type: string
+            datatx:
+              type: object
+              properties:
+                sharedSecret:
+                  type: string
+                srcUri:
+                  type: string
+                size:
+                  type: integer
         example:
           webdav:
-            sharedSecret: "secret"
-            permissions: ["read", "write", "share"]
+            sharedSecret: secret
+            permissions: ["read"]
             uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
           webapp:
-            sharedSecret: "secret"
-            uriTemplate: "https://open-cloud-mesh.org/s/{share-id}/{relative-path-to-shared-resource}"
+            uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
           datatx:
-            sharedSecret: "secret"
+            sharedSecret: secret
             srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
             size: 1000000000000
   NewNotification:
