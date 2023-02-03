@@ -264,10 +264,9 @@ definitions:
         example: user
       resourceType:
         type: string
-        enum: ["file", "folder"]
         description: |
-          Resource type
-        example: file
+          Resource type (file, folder, calendar, contact, ...)
+        example: folder
       expiration:
         type: integer
         description: |
