@@ -309,6 +309,9 @@ definitions:
               properties:
                 uriTemplate:
                   type: string
+                viewMode:
+                  type: string
+                  enum: ["view", "read", "write"]
             datatx:
               type: object
               properties:
@@ -325,6 +328,7 @@ definitions:
             uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
           webapp:
             uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
+            viewMode: "write"
           datatx:
             sharedSecret: secret
             srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
