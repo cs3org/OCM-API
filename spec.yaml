@@ -48,7 +48,16 @@ paths:
       responses:
         "201":
           description: >
-            Consumer successfully received the share.
+            Consumer successfully received the share. The response might contain
+            the display name of the recipient of the share for general
+            user experience improvement.
+          schema:
+            type: object
+            properties:
+              recipientDisplayName:
+                type: string
+                description: display name of the recipient
+                example: John Doe
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
@@ -202,6 +211,7 @@ definitions:
       - shareWith
       - name
       - resourceId
+      - providerId
       - owner
       - sender
       - protocols
@@ -232,6 +242,12 @@ definitions:
         description: >
           Identifier to identify the resource at the provider side. This is
           unique per provider.
+        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+      providerId:
+        type: string
+        description: >
+          Identifier to identify the resource at the provider side. This is
+          unique per provider (deprecated).
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       owner:
         description: |
