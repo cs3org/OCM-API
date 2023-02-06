@@ -211,7 +211,6 @@ definitions:
       - shareWith
       - name
       - resourceId
-      - providerId
       - owner
       - sender
       - protocols
