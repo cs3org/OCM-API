@@ -154,7 +154,7 @@ paths:
       description: >
         Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
         To protect the identity of the parties, for shares created following an OCM invitation,
-        the user id SHALL be hashed, and recipients implementing the OCM invitation workflow
+        the user id MAY be hashed, and recipients implementing the OCM invitation workflow
         MAY refuse to process shares coming from unknown parties.
       parameters:
         - name: invite
