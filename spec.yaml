@@ -151,7 +151,11 @@ paths:
   /invite-accepted:
     post:
       summary: Inform the sender that the invitation was accepted to start sharing.
-      description: Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
+      description: >
+        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
+        To protect the identity of the parties, for shares created following an OCM invitation,
+        the user id SHALL be hashed, and recipients implementing the OCM invitation workflow
+        MAY refuse to process shares coming from unknown parties.
       parameters:
         - name: invite
           in: body
@@ -226,7 +230,7 @@ definitions:
           to share the resource with. This is known in advance.
           Please note that the consumer service endpoint is known in advance
           as well, so this is no part of the request body.
-        example: peter.szegedi@geant.org
+        example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
       name:
         type: string
         description: Name of the resource (file or folder).
@@ -253,7 +257,7 @@ definitions:
         description: |
           Provider specific identifier of the user who owns the resource.
         type: string
-        example: dimitri@apiwise.nl
+        example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
       sender:
         description: >
           Provider specific identifier of the user that wants to share the
@@ -261,7 +265,7 @@ definitions:
           identified on a higher level, so the former `remote` property
           is not part of the request body.
         type: string
-        example: john@apiwise.nl
+        example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
       ownerDisplayName:
         type: string
         description: |
@@ -394,7 +398,7 @@ definitions:
           userID:
             type: string
             description: Unique ID to identify the user at the remote provider accepting the invite.
-            example: 9303
+            example: 51dc30ddc473d43a6011e9ebba6ca770
           email:
             type: string
             description: Email ID of the user accepting the invite.
