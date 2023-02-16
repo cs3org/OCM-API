@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
-  version: 1.0.0
+  version: 2.0.0
   x-logo:
     url: logo.png
 schemes:
@@ -30,6 +30,19 @@ parameters:
       the HAL navigation links (e.g. `_links.next.href`) to paginate. These
       links enable the possibility to use vendor specific pagination.
 paths:
+  /ocm-provider:
+    get:
+      summary: Discovery endpoint
+      description: >
+        This endpoint returns a number of properties used to discover the capabilities
+        offered by a remote cloud storage. The endpoint is named `/ocm-provider` owing
+        to already established practices and constraints with the main cloud storages
+        that implement OCM (see https://github.com/cs3org/OCM-API/pull/37#issuecomment-435875108
+        for more details).
+      responses:
+        "200":
+          schema:
+            $ref: "#/definitions/Discovery"
   /shares:
     post:
       summary: Create a new share
@@ -218,6 +231,66 @@ definitions:
           (e.g. no use of special characters) providing more information
           on the cause of the error.
         example: RESOURCE_NOT_FOUND
+  Discovery:
+    type: object
+    required:
+      - enabled
+      - apiVersion
+      - endPoint
+      - resourceTypes
+    properties:
+      enabled:
+        type: boolean
+        description: Whether the OCM service is enabled at this endpoint
+      apiVersion:
+        type: string
+        description: The OCM API version this endpoint supports
+        example: 2.0.0
+      endPoint:
+        type: string
+        description: The URI of the OCM API available at this endpoint
+        example: https://my-cloud-storage.org/ocm
+      provider:
+        type: string
+        description: A friendly branding name of this endpoint
+        example: MyCloudStorage
+      resourceTypes:
+        type: array
+        description: A list of all supported resource types with their access protocols
+        items:
+          type: object
+          properties:
+            name:
+              type: string
+              description: |
+                A supported resource type (file, folder, calendar, contact, ...)
+              example: file
+            shareTypes:
+              type: array
+              description: The supported recipient share types
+              items:
+                type: string
+                enum: ["user", "group", "federation"]
+            protocols:
+              type: object
+              description: |
+                The supported protocols to access shares at this endpoint
+              anyOf:
+                - properties:
+                    webdav:
+                      type: string
+                      description: The top-level WebDAV endpoint
+                      example: https://my-cloud-storage.org/ocm
+                - properties:
+                    webapp:
+                      type: string
+                      description: The top-level endpoint for web apps
+                      example: https://my-cloud-storage.org
+                - properties:
+                    datatx:
+                      type: string
+                      description: The top-level endpoint for data transfers
+                      example: https://my-cloud-storage.org
   NewShare:
     type: object
     required:
