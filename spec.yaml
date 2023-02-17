@@ -1,4 +1,4 @@
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
@@ -44,13 +44,13 @@ paths:
           description: The JSON object to create a new share at the consumer side.
           required: true
           schema:
-            $ref: '#/definitions/NewShare'
+            $ref: "#/definitions/NewShare"
       responses:
-        '201':
+        "201":
           description: >
             Consumer successfully received the share. The response might contain
             the display name of the recipient of the share for general
-            user experience improvement
+            user experience improvement.
           schema:
             type: object
             properties:
@@ -58,27 +58,27 @@ paths:
                 type: string
                 description: display name of the recipient
                 example: John Doe
-        '400':
+        "400":
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
             found or required properties are missing.
           schema:
-            $ref: '#/definitions/400'
-        '401':
+            $ref: "#/definitions/400"
+        "401":
           description: Client cannot be authenticated as a trusted service.
           schema:
-            $ref: '#/definitions/Error'
-        '403':
+            $ref: "#/definitions/Error"
+        "403":
           description: Trusted service is not authorized to create shares.
           schema:
-            $ref: '#/definitions/Error'
-        '501':
+            $ref: "#/definitions/Error"
+        "501":
           description: >-
             The consumer doesn't support incoming external shares, the share
             type or the resource type is not supported.
           schema:
-            $ref: '#/definitions/Error'
-        '503':
+            $ref: "#/definitions/Error"
+        "503":
           description: >-
             The consumer is temporary unavailable (e.g. due to planned
             maintenance).
@@ -93,7 +93,7 @@ paths:
                 within 50 minutes).
               type: string
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
   /notifications:
     post:
       summary: Send a notification to a trusted service
@@ -106,34 +106,34 @@ paths:
           description: The JSON object with a new notification
           required: true
           schema:
-            $ref: '#/definitions/NewNotification'
+            $ref: "#/definitions/NewNotification"
       responses:
-        '201':
+        "201":
           description: >
             Receiver succesfully received the notification. The response body
             can contain a JSON object with some resonse data, depending on the
             specification of the actual notification.
-        '400':
+        "400":
           description: >
             Bad request due to invalid parameters, e.g. when `type` is invalid
             or missing.
           schema:
-            $ref: '#/definitions/400'
-        '401':
+            $ref: "#/definitions/400"
+        "401":
           description: Client cannot be authenticated as a trusted service.
           schema:
-            $ref: '#/definitions/Error'
-        '403':
+            $ref: "#/definitions/Error"
+        "403":
           description: Trusted service is not authorized to create notifications.
           schema:
-            $ref: '#/definitions/Error'
-        '501':
+            $ref: "#/definitions/Error"
+        "501":
           description: >-
             The receiver doesn't support notifications, the resource type is not
             supported.
           schema:
-            $ref: '#/definitions/Error'
-        '503':
+            $ref: "#/definitions/Error"
+        "503":
           description: >-
             The receiver is temporary unavailable (e.g. due to planned
             maintenance).
@@ -147,11 +147,15 @@ paths:
                 available again within 50 minutes).
               type: string
           schema:
-            $ref: '#/definitions/Error'
+            $ref: "#/definitions/Error"
   /invite-accepted:
     post:
       summary: Inform the sender that the invitation was accepted to start sharing.
-      description: Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
+      description: >
+        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
+        To protect the identity of the parties, for shares created following an OCM invitation,
+        the user id MAY be hashed, and recipients implementing the OCM invitation workflow
+        MAY refuse to process shares coming from unknown parties.
       parameters:
         - name: invite
           in: body
@@ -182,10 +186,10 @@ paths:
             $ref: "#/definitions/Error"
 
 definitions:
-  '400':
+  "400":
     type: object
     allOf:
-      - $ref: '#/definitions/Error'
+      - $ref: "#/definitions/Error"
       - properties:
           validationErrors:
             type: array
@@ -219,9 +223,10 @@ definitions:
     required:
       - shareWith
       - name
-      - providerId
+      - shareId
       - owner
-      - protocol
+      - sender
+      - protocols
       - permission
       - shareType
       - resourceType
@@ -233,7 +238,7 @@ definitions:
           to share the resource with. This is known in advance.
           Please note that the consumer service endpoint is known in advance
           as well, so this is no part of the request body.
-        example: peter.szegedi@geant.org
+        example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
       name:
         type: string
         description: Name of the resource (file or folder).
@@ -244,17 +249,18 @@ definitions:
         example: >-
           This is the Open API Specification file (in YAML format) of the Open
           Cloud Mesh API.
-      providerId:
+      shareId:
         type: string
-        description: >-
-          Identifier to identify the resource at the provider side. This is
-          unique per provider.
+        description: >
+          Identifier to identify the shared resource at the provider side. This is
+          unique per provider such that if the same resource is shared twice,
+          this shareId will not be repeated.
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       owner:
         description: |
           Provider specific identifier of the user who owns the resource.
         type: string
-        example: dimitri@apiwise.nl
+        example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
       sender:
         description: >
           Provider specific identifier of the user that wants to share the
@@ -262,7 +268,7 @@ definitions:
           identified on a higher level, so the former `remote` property
           is not part of the request body.
         type: string
-        example: john@apiwise.nl
+        example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
       ownerDisplayName:
         type: string
         description: |
@@ -271,55 +277,84 @@ definitions:
       senderDisplayName:
         type: string
         description: |
-          Display name of the owner of the resource
+          Display name of the user that wants to share the resource
         example: John Doe
       shareType:
         type: string
+        enum: ["user", "group"]
         description: |
-          Share type (user or group share)
+          Recipient share type
         example: user
       resourceType:
         type: string
         description: |
-          Resource type (file, calendar, contact, ...)
-        example: file
-      protocol:
+          Resource type (file, folder, calendar, contact, ...)
+        example: folder
+      expiration:
+        type: integer
+        description: |
+          The expiration time for the ocm share.
+          Represents seconds of UTC time since Unix epoch.
+      protocols:
         type: object
         description: >
-          The protocol(s) which is/are used to establish synchronisation.
-        required:
-          - name
-          - options
-        properties:
-          name:
-            type: array
-            items:
-              type: string
-              description: >
-                The name of the protocol(s) which is/are used to establish
-                synchronisation. The supported protocols are:
-                `webdav`, to access the data
-                `webapp`, to access remote web applications
-                Other custom protocols might be added in the future.
-              enum:
-                - webdav
-                - webapp
-              example: webdav
-          options:
-            type: object
-            description: >
-              JSON object with protocol specific options, e.g. `uri`,
-              `access_token`, `password`, `permissions` etc.
-              For backward compatibility, the webdav protocol will use
-              `sharedSecret` as username and password.
-              The `webapp` protocol is expected to provide a (templated)
-              URI to a client-browsable view of the shared resource, with
-              all relevant applications enabled: implementations may
-              leverage the public link capability for this feature.
-            example:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: "{https://open-cloud-mesh.org/ns}share-permissions"
-              uriTemplate: "https://open-cloud-mesh.org/s/{path-to-shared-resources}"
+          JSON object with specific options for each protocol, e.g. `uri`,
+          `access_token`, `password`, `permissions` etc.
+          For backward compatibility, the webdav protocol will use
+          `sharedSecret` as username and password.
+          The `webapp` protocol is expected to provide a (templated) URI
+          to a client-browsable view of the shared resource, such that users
+          may use the web applications available at the site: implementations
+          may leverage the public link capability for this feature.
+          The supported protocols are:
+          `webdav`, to access the data
+          `webapp`, to access remote web applications
+          `datatx`, to transfer the data to the remote endpoint
+          Other custom protocols might be added in the future.
+        additionalProperties:
+          type: object
+          properties:
+            webdav:
+              type: object
+              properties:
+                sharedSecret:
+                  type: string
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["read", "write", "share"]
+                uri:
+                  type: string
+            webapp:
+              type: object
+              properties:
+                uriTemplate:
+                  type: string
+                viewMode:
+                  type: string
+                  enum: ["view", "read", "write"]
+            datatx:
+              type: object
+              properties:
+                sharedSecret:
+                  type: string
+                srcUri:
+                  type: string
+                size:
+                  type: integer
+        example:
+          webdav:
+            sharedSecret: secret
+            permissions: ["read"]
+            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+          webapp:
+            uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
+            viewMode: "write"
+          datatx:
+            sharedSecret: secret
+            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+            size: 1000000000000
   NewNotification:
     type: object
     required:
@@ -339,9 +374,9 @@ definitions:
         description: |
           A resource type (e.g. file, calendar, contact)
         example: file
-      providerId:
+      shareId:
         type: string
-        description: ID of the resource on the provider side
+        description: ID of the shared resource on the provider side, formerly known as providerId
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       notification:
         type: object
@@ -355,7 +390,7 @@ definitions:
     allOf:
       - properties:
           recipientProvider:
-            type: string 
+            type: string
             format: url
             description: URL of the receiver OCM service.
             example: https://receiver.org
@@ -366,7 +401,7 @@ definitions:
           userID:
             type: string
             description: Unique ID to identify the user at the remote provider accepting the invite.
-            example: 9303
+            example: 51dc30ddc473d43a6011e9ebba6ca770
           email:
             type: string
             description: Email ID of the user accepting the invite.
