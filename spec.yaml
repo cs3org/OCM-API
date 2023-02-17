@@ -244,7 +244,8 @@ definitions:
         type: string
         description: >
           Identifier to identify the shared resource at the provider side. This is
-          unique per provider and per share.
+          unique per provider such that if the same resource is shared twice,
+          this shareId will not be repeated.
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       owner:
         description: |
@@ -366,7 +367,7 @@ definitions:
         example: file
       shareId:
         type: string
-        description: ID of the shared resource on the provider side
+        description: ID of the shared resource on the provider side, formerly known as providerId
         example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
       notification:
         type: object
