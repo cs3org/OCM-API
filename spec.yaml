@@ -234,8 +234,8 @@ definitions:
       shareWith:
         type: string
         description: >
-          Consumer specific identifier of the user or group the provider wants
-          to share the resource with. This is known in advance.
+          Consumer specific identifier of the user, group or federation the provider
+          wants to share the resource with. This is known in advance.
           Please note that the consumer service endpoint is known in advance
           as well, so this is no part of the request body.
         example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
@@ -281,7 +281,7 @@ definitions:
         example: John Doe
       shareType:
         type: string
-        enum: ["user", "group"]
+        enum: ["user", "group", "federation"]
         description: |
           Recipient share type
         example: user
