@@ -1,196 +1,187 @@
-swagger: "2.0"
+openapi: 3.0.1
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
   version: 1.0.0
   x-logo:
     url: logo.png
-schemes:
-  - https
-consumes:
-  - application/json
-produces:
-  - application/hal+json
-parameters:
-  id:
-    name: id
-    in: path
-    description: Unique ID to identify the share at the consumer side.
-    required: true
-    type: string
-  page:
-    name: page
-    in: query
-    type: integer
-    required: false
-    default: 1
-    description: >
-      Default parameter to handle paging through collections. However, this
-      parameter is NOT mandatory, as clients should use
-      the HAL navigation links (e.g. `_links.next.href`) to paginate. These
-      links enable the possibility to use vendor specific pagination.
+servers:
+- url: /
 paths:
   /shares:
     post:
       summary: Create a new share
-      description: >
-        After the provider created a local share, it sends a `share` object to
-        the consumer containing the 
-        information which is needed to start synchronization between the two
-        services.
-      parameters:
-        - name: share
-          in: body
-          description: The JSON object to create a new share at the consumer side.
-          required: true
-          schema:
-            $ref: "#/definitions/NewShare"
+      description: |
+        After the provider created a local share, it sends a `share` object to the consumer containing the  information which is needed to start synchronization between the two services.
+      requestBody:
+        description: The JSON object to create a new share at the consumer side.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewShare'
+        required: true
       responses:
-        "201":
-          description: >
-            Consumer successfully received the share. The response might contain
-            the display name of the recipient of the share for general
-            user experience improvement.
-          schema:
-            type: object
-            properties:
-              recipientDisplayName:
-                type: string
-                description: display name of the recipient
-                example: John Doe
-        "400":
-          description: >
-            Bad request due to invalid parameters, e.g. when `shareWith` is not
-            found or required properties are missing.
-          schema:
-            $ref: "#/definitions/400"
-        "401":
+        201:
+          description: |
+            Consumer successfully received the share. The response might contain the display name of the recipient of the share for general user experience improvement.
+          content:
+            application/hal+json:
+              schema:
+                type: object
+                properties:
+                  recipientDisplayName:
+                    type: string
+                    description: display name of the recipient
+                    example: John Doe
+        400:
+          description: |
+            Bad request due to invalid parameters, e.g. when `shareWith` is not found or required properties are missing.
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/400'
+        401:
           description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"
-        "403":
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
           description: Trusted service is not authorized to create shares.
-          schema:
-            $ref: "#/definitions/Error"
-        "501":
-          description: >-
-            The consumer doesn't support incoming external shares, the share
-            type or the resource type is not supported.
-          schema:
-            $ref: "#/definitions/Error"
-        "503":
-          description: >-
-            The consumer is temporary unavailable (e.g. due to planned
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        501:
+          description: The consumer doesn't support incoming external shares, the
+            share type or the resource type is not supported.
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: The consumer is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
-              description: >
-                Indication for the client when the service could be requested
-                again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
-                07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again
-                within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"
+              description: |
+                Indication for the client when the service could be requested again in HTTP Date format as used by the  Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds  (e.g. 3000 if you the service is expected to be available again within 50 minutes).
+              schema:
+                type: string
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: share
   /notifications:
     post:
       summary: Send a notification to a trusted service
-      description: >-
-        Should be used to be 'polite', e.g. to let the provider know that a user
-        has removed the share.
-      parameters:
-        - name: notification
-          in: body
-          description: The JSON object with a new notification
-          required: true
-          schema:
-            $ref: "#/definitions/NewNotification"
+      description: Should be used to be 'polite', e.g. to let the provider know that
+        a user has removed the share.
+      requestBody:
+        description: The JSON object with a new notification
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewNotification'
+        required: true
       responses:
-        "201":
-          description: >
-            Receiver succesfully received the notification. The response body
-            can contain a JSON object with some resonse data, depending on the
-            specification of the actual notification.
-        "400":
-          description: >
-            Bad request due to invalid parameters, e.g. when `type` is invalid
-            or missing.
-          schema:
-            $ref: "#/definitions/400"
-        "401":
+        201:
+          description: |
+            Receiver succesfully received the notification. The response body can contain a JSON object with some resonse data, depending on the specification of the actual notification.
+          content: {}
+        400:
+          description: |
+            Bad request due to invalid parameters, e.g. when `type` is invalid or missing.
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/400'
+        401:
           description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"
-        "403":
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        403:
           description: Trusted service is not authorized to create notifications.
-          schema:
-            $ref: "#/definitions/Error"
-        "501":
-          description: >-
-            The receiver doesn't support notifications, the resource type is not
-            supported.
-          schema:
-            $ref: "#/definitions/Error"
-        "503":
-          description: >-
-            The receiver is temporary unavailable (e.g. due to planned
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        501:
+          description: The receiver doesn't support notifications, the resource type
+            is not supported.
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        503:
+          description: The receiver is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
-              description: >
-                Indication for the client when the service could be requested
-                again in HTTP Date format as used by the Internet Message Format
-                [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number
-                of seconds (e.g. 3000 if you the service is expected to be
-                available again within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"
+              description: |
+                Indication for the client when the service could be requested again in HTTP Date format as used by the Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds (e.g. 3000 if you the service is expected to be available again within 50 minutes).
+              schema:
+                type: string
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: notification
   /invite-accepted:
     post:
       summary: Inform the sender that the invitation was accepted to start sharing.
-      description: >
-        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
-        To protect the identity of the parties, for shares created following an OCM invitation,
-        the user id MAY be hashed, and recipients implementing the OCM invitation workflow
-        MAY refuse to process shares coming from unknown parties.
-      parameters:
-        - name: invite
-          in: body
-          description: The JSON object to notify the OCM provider that an invite has been accepted.
-          required: true
-          schema:
-            $ref: "#/definitions/AcceptedInvite"
+      description: |
+        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation. To protect the identity of the parties, for shares created following an OCM invitation, the user id MAY be hashed, and recipients implementing the OCM invitation workflow MAY refuse to process shares coming from unknown parties.
+      requestBody:
+        description: The JSON object to notify the OCM provider that an invite has
+          been accepted.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptedInvite'
+        required: true
       responses:
         200:
           description: Invitation accepted.
-          schema:
-            $ref: "#/definitions/AcceptedInviteResponse"
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/AcceptedInviteResponse'
         400:
           description: The invitation token is invalid.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         403:
           description: Remote service is not trusted to accept invitations.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         404:
           description: The invitation token does not exist.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
         409:
           description: User is already known by the OCM provider.
-          schema:
-            $ref: "#/definitions/Error"
-
-definitions:
-  "400":
-    type: object
-    allOf:
-      - $ref: "#/definitions/Error"
-      - properties:
+          content:
+            application/hal+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codegen-request-body-name: invite
+components:
+  schemas:
+    400:
+      allOf:
+      - $ref: '#/components/schemas/Error'
+      - type: object
+        properties:
           validationErrors:
             type: array
             items:
@@ -201,198 +192,181 @@ definitions:
                   example: shareWith
                 message:
                   type: string
-                  description: >
-                    A validation error message which is understandable for both
-                    humans and machines (e.g. no use of special characters)
-                    providing more information on the cause of the validation error.
+                  description: |
+                    A validation error message which is understandable for both humans and machines (e.g. no use of special characters) providing more information on the cause of the validation error.
                   example: NOT_FOUND
-  Error:
-    type: object
-    required:
+    Error:
+      required:
       - message
-    properties:
-      message:
-        type: string
-        description: >
-          An error message which is understandable for both humans and machines
-          (e.g. no use of special characters) providing more information
-          on the cause of the error.
-        example: RESOURCE_NOT_FOUND
-  NewShare:
-    type: object
-    required:
-      - shareWith
+      type: object
+      properties:
+        message:
+          type: string
+          description: |
+            An error message which is understandable for both humans and machines (e.g. no use of special characters) providing more information on the cause of the error.
+          example: RESOURCE_NOT_FOUND
+    NewShare:
+      required:
       - name
-      - shareId
       - owner
-      - sender
       - protocols
-      - permission
-      - shareType
       - resourceType
-    properties:
-      shareWith:
-        type: string
-        description: >
-          Consumer specific identifier of the user, group or federation the provider
-          wants to share the resource with. This is known in advance.
-          Please note that the consumer service endpoint is known in advance
-          as well, so this is no part of the request body.
-        example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-      name:
-        type: string
-        description: Name of the resource (file or folder).
-        example: spec.yaml
-      description:
-        type: string
-        description: Optional description of the resource (file or folder).
-        example: >-
-          This is the Open API Specification file (in YAML format) of the Open
-          Cloud Mesh API.
-      shareId:
-        type: string
-        description: >
-          Identifier to identify the shared resource at the provider side. This is
-          unique per provider such that if the same resource is shared twice,
-          this shareId will not be repeated.
-        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-      owner:
-        description: |
-          Provider specific identifier of the user who owns the resource.
-        type: string
-        example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
-      sender:
-        description: >
-          Provider specific identifier of the user that wants to share the
-          resource. Please note that the requesting provider is being
-          identified on a higher level, so the former `remote` property
-          is not part of the request body.
-        type: string
-        example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
-      ownerDisplayName:
-        type: string
-        description: |
-          Display name of the owner of the resource
-        example: Dimitri
-      senderDisplayName:
-        type: string
-        description: |
-          Display name of the user that wants to share the resource
-        example: John Doe
-      shareType:
-        type: string
-        enum: ["user", "group", "federation"]
-        description: |
-          Recipient share type
-        example: user
-      resourceType:
-        type: string
-        description: |
-          Resource type (file, folder, calendar, contact, ...)
-        example: folder
-      expiration:
-        type: integer
-        description: |
-          The expiration time for the ocm share.
-          Represents seconds of UTC time since Unix epoch.
-      protocols:
-        type: object
-        description: >
-          JSON object with specific options for each protocol, e.g. `uri`,
-          `access_token`, `password`, `permissions` etc.
-          For backward compatibility, the webdav protocol will use
-          `sharedSecret` as username and password.
-          The `webapp` protocol is expected to provide a (templated) URI
-          to a client-browsable view of the shared resource, such that users
-          may use the web applications available at the site: implementations
-          may leverage the public link capability for this feature.
-          The supported protocols are:
-          `webdav`, to access the data
-          `webapp`, to access remote web applications
-          `datatx`, to transfer the data to the remote endpoint
-          Other custom protocols might be added in the future.
-        additionalProperties:
+      - sender
+      - shareId
+      - shareType
+      - shareWith
+      type: object
+      properties:
+        shareWith:
+          type: string
+          description: |
+            Consumer specific identifier of the user, group or federation the provider wants to share the resource with. This is known in advance. Please note that the consumer service endpoint is known in advance as well, so this is no part of the request body.
+          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
+        name:
+          type: string
+          description: Name of the resource (file or folder).
+          example: spec.yaml
+        description:
+          type: string
+          description: Optional description of the resource (file or folder).
+          example: This is the Open API Specification file (in YAML format) of the
+            Open Cloud Mesh API.
+        shareId:
+          type: string
+          description: |
+            Identifier to identify the shared resource at the provider side. This is unique per provider such that if the same resource is shared twice, this shareId will not be repeated.
+          example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        owner:
+          type: string
+          description: |
+            Provider specific identifier of the user who owns the resource.
+          example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
+        sender:
+          type: string
+          description: |
+            Provider specific identifier of the user that wants to share the resource. Please note that the requesting provider is being identified on a higher level, so the former `remote` property is not part of the request body.
+          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
+        ownerDisplayName:
+          type: string
+          description: |
+            Display name of the owner of the resource
+          example: Dimitri
+        senderDisplayName:
+          type: string
+          description: |
+            Display name of the user that wants to share the resource
+          example: John Doe
+        shareType:
+          type: string
+          description: |
+            Recipient share type
+          example: user
+          enum:
+          - user
+          - group
+          - federation
+        resourceType:
+          type: string
+          description: |
+            Resource type (file, folder, calendar, contact, ...)
+          example: folder
+        expiration:
+          type: integer
+          description: |
+            The expiration time for the ocm share.
+            Represents seconds of UTC time since Unix epoch.
+        protocols:
           type: object
-          properties:
-            webdav:
-              type: object
-              properties:
-                sharedSecret:
-                  type: string
-                permissions:
-                  type: array
-                  items:
+          additionalProperties:
+            type: object
+            properties:
+              webdav:
+                type: object
+                properties:
+                  sharedSecret:
                     type: string
-                    enum: ["read", "write", "share"]
-                uri:
-                  type: string
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - read
+                      - write
+                      - share
+                  uri:
+                    type: string
+              webapp:
+                type: object
+                properties:
+                  uriTemplate:
+                    type: string
+                  viewMode:
+                    type: string
+                    enum:
+                    - view
+                    - read
+                    - write
+              datatx:
+                type: object
+                properties:
+                  sharedSecret:
+                    type: string
+                  srcUri:
+                    type: string
+                  size:
+                    type: integer
+          description: |
+            JSON object with specific options for each protocol, e.g. `uri`, `access_token`, `password`, `permissions` etc. For backward compatibility, the webdav protocol will use `sharedSecret` as username and password. The `webapp` protocol is expected to provide a (templated) URI to a client-browsable view of the shared resource, such that users may use the web applications available at the site: implementations may leverage the public link capability for this feature. The supported protocols are: `webdav`, to access the data `webapp`, to access remote web applications `datatx`, to transfer the data to the remote endpoint Other custom protocols might be added in the future.
+          example:
+            webdav:
+              sharedSecret: secret
+              permissions:
+              - read
+              uri: https://open-cloud-mesh.org/remote.php/webdav/path/to/resource
             webapp:
-              type: object
-              properties:
-                uriTemplate:
-                  type: string
-                viewMode:
-                  type: string
-                  enum: ["view", "read", "write"]
+              uriTemplate: https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}
+              viewMode: write
             datatx:
-              type: object
-              properties:
-                sharedSecret:
-                  type: string
-                srcUri:
-                  type: string
-                size:
-                  type: integer
-        example:
-          webdav:
-            sharedSecret: secret
-            permissions: ["read"]
-            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
-          webapp:
-            uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
-            viewMode: "write"
-          datatx:
-            sharedSecret: secret
-            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
-            size: 1000000000000
-  NewNotification:
-    type: object
-    required:
+              sharedSecret: secret
+              srcUri: https://open-cloud-mesh.org/remote.php/webdav/path/to/resource
+              size: 1000000000000
+    NewNotification:
+      required:
       - notificationType
       - resourceType
-      - message
-    properties:
-      notificationType:
-        type: string
-        description: >
-          A notification type which is understandable for both humans and
-          machines (e.g. no use of special characters) providing more
-          information on the cause of the error.
-        example: SHARE_ACCEPTED
-      resourceType:
-        type: string
-        description: |
-          A resource type (e.g. file, calendar, contact)
-        example: file
-      shareId:
-        type: string
-        description: ID of the shared resource on the provider side, formerly known as providerId
-        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-      notification:
-        type: object
-        description: >
-          optional additional parameters, depending on the notification and the resource type
-        example:
-          message: "Recipient accepted the share"
-          sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-  AcceptedInvite:
-    type: object
-    allOf:
-      - properties:
+      type: object
+      properties:
+        notificationType:
+          type: string
+          description: |
+            A notification type which is understandable for both humans and machines (e.g. no use of special characters) providing more information on the cause of the error.
+          example: SHARE_ACCEPTED
+        resourceType:
+          type: string
+          description: |
+            A resource type (e.g. file, calendar, contact)
+          example: file
+        shareId:
+          type: string
+          description: ID of the shared resource on the provider side, formerly known
+            as providerId
+          example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        notification:
+          type: object
+          properties: {}
+          description: |
+            optional additional parameters, depending on the notification and the resource type
+          example:
+            message: Recipient accepted the share
+            sharedSecret: hfiuhworzwnur98d3wjiwhr
+    AcceptedInvite:
+      allOf:
+      - type: object
+        properties:
           recipientProvider:
             type: string
-            format: url
             description: URL of the receiver OCM service.
+            format: url
             example: https://receiver.org
           token:
             type: string
@@ -400,7 +374,8 @@ definitions:
             example: xyz
           userID:
             type: string
-            description: Unique ID to identify the user at the remote provider accepting the invite.
+            description: Unique ID to identify the user at the remote provider accepting
+              the invite.
             example: 51dc30ddc473d43a6011e9ebba6ca770
           email:
             type: string
@@ -410,14 +385,14 @@ definitions:
             type: string
             description: Name of the user accepting the invite.
             example: Richard Feynman
-  AcceptedInviteResponse:
-    type: object
-    allOf:
-      - properties:
+    AcceptedInviteResponse:
+      allOf:
+      - type: object
+        properties:
           userID:
             type: string
             description: Unique ID to identify the sender at the local provider.
-            example: 9302
+            example: "9302"
           email:
             type: string
             description: Email ID of the user that sent the invite.
@@ -426,3 +401,19 @@ definitions:
             type: string
             description: Name of the user that sent the invite.
             example: John Doe
+  parameters:
+    id:
+      name: id
+      in: path
+      description: Unique ID to identify the share at the consumer side.
+      required: true
+      schema:
+        type: string
+    page:
+      name: page
+      in: query
+      description: |
+        Default parameter to handle paging through collections. However, this parameter is NOT mandatory, as clients should use the HAL navigation links (e.g. `_links.next.href`) to paginate. These links enable the possibility to use vendor specific pagination.
+      schema:
+        type: integer
+        default: 1
