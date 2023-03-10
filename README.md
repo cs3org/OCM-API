@@ -21,7 +21,8 @@ This repository contains the [OpenAPI](https://github.com/OAI/OpenAPI-Specificat
 
 The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc):
 
-* [API Reference Documentation](https://cs3org.github.io/OCM-API/docs.html)
+* [version 1.0](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org#/paths/~1shares/post), current official and supported version
+* [develop branch](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org), future version supported by ScienceMesh
 
 ## Contributing
 
