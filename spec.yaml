@@ -263,34 +263,39 @@ definitions:
             name:
               type: string
               description: |
-                A supported resource type (file, folder, calendar, contact, ...)
+                A supported resource type (file, folder, calendar, contact, ...).
+                Implementations MUST support `file` at a minimum.
               example: file
             shareTypes:
               type: array
-              description: The supported recipient share types
+              description: |
+                The supported recipient share types.
+                Implementations MUST support `user` at a minimum.
               items:
                 type: string
                 enum: ["user", "group", "federation"]
+              example: ["user"]
             protocols:
               type: object
               description: |
-                The supported protocols to access shares at this endpoint
+                The supported protocols to access shares at this endpoint.
+                Implementations MUST support `webdav` at a minimum.
               anyOf:
                 - properties:
                     webdav:
                       type: string
                       description: The top-level WebDAV endpoint
-                      example: https://my-cloud-storage.org/ocm
+                      example: https://my-cloud-storage.org/remote.php/dav/ocm
                 - properties:
                     webapp:
                       type: string
                       description: The top-level endpoint for web apps
-                      example: https://my-cloud-storage.org
+                      example: https://my-cloud-storage.org/external/ocm
                 - properties:
                     datatx:
                       type: string
                       description: The top-level endpoint for data transfers
-                      example: https://my-cloud-storage.org
+                      example: https://my-cloud-storage.org/remote.php/dav/ocm
   NewShare:
     type: object
     required:
