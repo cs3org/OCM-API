@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
-  version: 2.0.0
+  version: 1.0.0
   x-logo:
     url: logo.png
 schemes:
@@ -245,7 +245,7 @@ definitions:
       apiVersion:
         type: string
         description: The OCM API version this endpoint supports
-        example: 2.0.0
+        example: 1.0-proposal1
       endPoint:
         type: string
         description: The URI of the OCM API available at this endpoint
