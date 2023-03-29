@@ -337,7 +337,7 @@ definitions:
     properties:
       shareWith:
         type: string
-        description: >
+        description: |
           Consumer specific identifier of the user, group or federation the provider
           wants to share the resource with. This is known in advance.
           Please note that the consumer service endpoint is known in advance
@@ -350,12 +350,12 @@ definitions:
       description:
         type: string
         description: Optional description of the resource (file or folder).
-        example: >-
+        example: |
           This is the Open API Specification file (in YAML format) of the Open
           Cloud Mesh API.
       providerId:
         type: string
-        description: >
+        description: |
           Identifier to identify the shared resource at the provider side. This is
           unique per provider such that if the same resource is shared twice,
           this providerId will not be repeated.
@@ -366,7 +366,7 @@ definitions:
         type: string
         example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
       sender:
-        description: >
+        description: |
           Provider specific identifier of the user that wants to share the
           resource. Please note that the requesting provider is being
           identified on a higher level, so the former `remote` property
@@ -393,45 +393,38 @@ definitions:
         type: string
         description: |
           Resource type (file, folder, calendar, contact, ...)
-        example: folder
+        example: file
       expiration:
         type: integer
         description: |
-          The expiration time for the ocm share.
+          The expiration time for the OCM share.
           Represents seconds of UTC time since Unix epoch.
       protocol:
         type: object
-        description: >
-          JSON object with specific options for each protocol, e.g. `uri`,
-          `access_token`, `password`, `permissions` etc.
-          For backward compatibility, the webdav protocol will use
-          `sharedSecret` as username and password.
-          The `webapp` protocol is expected to provide a (templated) URI
-          to a client-browsable view of the shared resource, such that users
-          may use the web applications available at the site: implementations
-          may leverage the public link capability for this feature.
+        description: |
+          JSON object with specific options for each protocol.
           The supported protocols are:
-          `webdav`, to access the data
-          `webapp`, to access remote web applications
-          `datatx`, to transfer the data to the remote endpoint
+          - `webdav`, to access the data
+          - `webapp`, to access remote web applications
+          - `datatx`, to transfer the data to the remote endpoint
           Other custom protocols might be added in the future.
         required:
           - name
         name:
           type: string
           description: |
-            The name of the protocol. If `multi` is given, multiple protocol
+            The name of the protocol. If `multi` is given, one or more protocol
             endpoints are expected to be defined according to the optional
             properties specified below.
             Otherwise, at least `webdav` is expected to be supported,
-            and its options may be given either via those optional properties
-            (preferred), or as an opaque `options` payload.
+            and its options MAY be given in the opaque `options` payload
+            for backwards compatibility with v1.0 implementations.
         options:
           type: object
           description: |
             This property is now deprecated. Implementations are encouraged to
             transition to the new optional properties defined below, such that
-            this field can be removed in a future version of the spec.
+            this field may be removed in a future major version of the spec.
         additionalProperties:
           type: object
           properties:
@@ -440,28 +433,60 @@ definitions:
               properties:
                 sharedSecret:
                   type: string
+                  description: |
+                    An optional secret to be used to access the resource,
+                    such as a bearer token.
                 permissions:
                   type: array
                   items:
                     type: string
+                    description: |
+                      The permissions granted to the sharee.
+                      - `read` allows read-only access including download of a copy.
+                      - `write` allows create, update, and delete rights on the resource.
+                      - `share` allows re-share rights on the resource.
                     enum: ["read", "write", "share"]
                 uri:
                   type: string
+                  description: |
+                    An URI to access the remote resource. The URI MAY be relative,
+                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
+                    be used, or it may be absolute (recommended).
             webapp:
               type: object
               properties:
                 uriTemplate:
                   type: string
+                  description: |
+                    A templated URI to a client-browsable view of the shared resource,
+                    such that users may use the web applications available at the site
                 viewMode:
                   type: string
+                  description: |
+                    The permissions granted to the sharee.
+                    - `view` allows access to the web app in view-only mode.
+                    - `read` allows read and download access via the web app.
+                    - `write` allows full editing rights via the web app.
                   enum: ["view", "read", "write"]
+                sharedSecret:
+                  type: string
+                  description: |
+                    An optional secret to be used to access the remote web app,
+                    for example in the form of a bearer token.
             datatx:
               type: object
               properties:
                 sharedSecret:
                   type: string
+                  description: |
+                    An optional secret to be used to access the resource,
+                    for example in the form of a bearer token.
                 srcUri:
                   type: string
+                  description: |
+                    An URI to access the remote resource. The URI MAY be relative,
+                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
+                    be used, or it may be absolute (recommended).
                 size:
                   type: integer
         example:
@@ -470,14 +495,14 @@ definitions:
           webdav:
             sharedSecret: secret
             permissions: ["read"]
-            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
+            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
           webapp:
             uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
             viewMode: "write"
           datatx:
             sharedSecret: secret
-            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource"
-            size: 1000000000000
+            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+            size: 100000
   NewNotification:
     type: object
     required:
