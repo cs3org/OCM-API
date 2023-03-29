@@ -284,17 +284,30 @@ definitions:
                 - properties:
                     webdav:
                       type: string
-                      description: The top-level WebDAV endpoint
+                      description: |
+                        The top-level WebDAV endpoint URI. In order to access a
+                        remote shared resource, implementations MAY use this
+                        URI as a prefix: e.g. if in a new share request's payload
+                        a `protocol.options.sharedSecret` property is defined,
+                        it should be appended to this URI to access the resource.
                       example: https://my-cloud-storage.org/remote.php/dav/ocm
                 - properties:
                     webapp:
                       type: string
-                      description: The top-level endpoint for web apps
+                      description: |
+                        The top-level endpoint URI for web apps. This value is
+                        provided for documentation purposes, and it SHALL NOT
+                        be intended as a prefix for share requests.
                       example: https://my-cloud-storage.org/external/ocm
                 - properties:
                     datatx:
                       type: string
-                      description: The top-level endpoint for data transfers
+                      description: |
+                        The top-level endpoint URI for data transfers. This value
+                        is provided for documentation purposes, and it SHALL NOT
+                        be intended as a prefix. Furthermore, implementations
+                        are expected to execute the transfer using WebDAV as
+                        the wire protocol.
                       example: https://my-cloud-storage.org/remote.php/dav/ocm
           capabilities:
             type: array
