@@ -309,16 +309,16 @@ definitions:
                         are expected to execute the transfer using WebDAV as
                         the wire protocol.
                       example: https://my-cloud-storage.org/remote.php/dav/ocm
-          capabilities:
-            type: array
-            description: |
-              The capabilities exposed at this endpoint according to the present
-              specifications. Implementations MUST expose `/shares` at a minimum.
-            items:
-              type: string
-              enum: ["/shares", "/notifications", "/invite-accepted"]
-            example:
-              ["/shares", "/invite-accepted"]
+      capabilities:
+        type: array
+        description: |
+          The capabilities exposed at this endpoint according to the present
+          specifications. Implementations MUST expose `/shares` at a minimum.
+        items:
+          type: string
+          enum: ["/shares", "/notifications", "/invite-accepted"]
+        example:
+          ["/shares", "/invite-accepted"]
   NewShare:
     type: object
     required:
