@@ -407,27 +407,28 @@ definitions:
           - `webdav`, to access the data
           - `webapp`, to access remote web applications
           - `datatx`, to transfer the data to the remote endpoint
+
           Other custom protocols might be added in the future.
-        required:
-          - name
-        name:
-          type: string
-          description: |
-            The name of the protocol. If `multi` is given, one or more protocol
-            endpoints are expected to be defined according to the optional
-            properties specified below.
-            Otherwise, at least `webdav` is expected to be supported,
-            and its options MAY be given in the opaque `options` payload
-            for backwards compatibility with v1.0 implementations.
-        options:
-          type: object
-          description: |
-            This property is now deprecated. Implementations are encouraged to
-            transition to the new optional properties defined below, such that
-            this field may be removed in a future major version of the spec.
         additionalProperties:
           type: object
+          required:
+            - name
           properties:
+            name:
+              type: string
+              description: |
+                The name of the protocol. If `multi` is given, one or more protocol
+                endpoints are expected to be defined according to the optional
+                properties specified below.
+                Otherwise, at least `webdav` is expected to be supported,
+                and its options MAY be given in the opaque `options` payload
+                for backwards compatibility with v1.0 implementations.
+            options:
+              type: object
+              description: |
+                This property is now deprecated. Implementations are encouraged to
+                transition to the new optional properties defined below, such that
+                this field may be removed in a future major version of the spec.
             webdav:
               type: object
               properties:
