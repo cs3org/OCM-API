@@ -420,9 +420,9 @@ definitions:
                 The name of the protocol. If `multi` is given, one or more protocol
                 endpoints are expected to be defined according to the optional
                 properties specified below.
-                Otherwise, at least `webdav` is expected to be supported,
-                and its options MAY be given in the opaque `options` payload
-                for backwards compatibility with v1.0 implementations.
+                Otherwise, at least `webdav` is expected to be supported, and
+                its options MAY be given in the opaque `options` payload for
+                compatibility with v1.0 implementations (see examples).
             options:
               type: object
               description: |
@@ -491,19 +491,31 @@ definitions:
                 size:
                   type: integer
         example:
-          name: 'multi'
-          options:
-          webdav:
-            sharedSecret: secret
-            permissions: ["read"]
-            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
-          webapp:
-            uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
-            viewMode: "write"
-          datatx:
-            sharedSecret: secret
-            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
-            size: 100000
+          singleProtocolLegacy:
+            name: "webdav"
+            options:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+              permissions: "some permissions scheme"
+          singleProtocolNew:
+            name: "multi"
+            webdav:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+              permissions: ["read"]
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+          multipleProtocols:
+            name: "multi"
+            options:
+            webdav:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+              permissions: ["read"]
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+            webapp:
+              uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
+              viewMode: "read"
+            datatx:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+              size: 100000
   NewNotification:
     type: object
     required:
