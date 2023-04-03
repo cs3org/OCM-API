@@ -245,7 +245,7 @@ definitions:
       apiVersion:
         type: string
         description: The OCM API version this endpoint supports
-        example: 1.0-proposal1
+        example: 1.0.0
       endPoint:
         type: string
         description: The URI of the OCM API available at this endpoint
@@ -288,8 +288,9 @@ definitions:
                         The top-level WebDAV endpoint URI. In order to access a
                         remote shared resource, implementations MAY use this
                         URI as a prefix: e.g. if in a new share request's payload
-                        a `protocol.options.sharedSecret` property is defined,
-                        it should be appended to this URI to access the resource.
+                        a `protocol.options.sharedSecret` property is defined
+                        (see singleProtocolLegacy example), it may need to be
+                        appended to this URI to access the resource.
                       example: https://my-cloud-storage.org/remote.php/dav/ocm
                 - properties:
                     webapp:
