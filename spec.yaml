@@ -452,7 +452,9 @@ definitions:
                   description: |
                     An URI to access the remote resource. The URI MAY be relative,
                     in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended).
+                    be used, or it may be absolute (recommended). Additionally, the URI
+                    MAY include a secret hash in the path, in which case there MAY be
+                    no associated `sharedSecret`.
             webapp:
               type: object
               properties:
@@ -460,7 +462,10 @@ definitions:
                   type: string
                   description: |
                     A templated URI to a client-browsable view of the shared resource,
-                    such that users may use the web applications available at the site
+                    such that users may use the web applications available at the site.
+                    The URI MAY include a secret hash in the path. If the path includes
+                    a `{relative-path-to-shared-resource}` placeholder, implementations
+                    MAY replace it with the actual path to ease user interaction.
                 viewMode:
                   type: string
                   description: |
@@ -487,7 +492,8 @@ definitions:
                   description: |
                     An URI to access the remote resource. The URI MAY be relative,
                     in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended).
+                    be used, or it may be absolute (recommended). Additionally, the
+                    URI MAY include a secret hash in the path.
                 size:
                   type: integer
         example:
@@ -499,9 +505,8 @@ definitions:
           singleProtocolNew:
             name: "multi"
             webdav:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-hash/path/to/spec.yaml"
           multipleProtocols:
             name: "multi"
             options:
