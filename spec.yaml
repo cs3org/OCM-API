@@ -285,8 +285,8 @@ definitions:
                     webdav:
                       type: string
                       description: |
-                        The top-level WebDAV endpoint URI. In order to access a
-                        remote shared resource, implementations MAY use this
+                        The top-level WebDAV endpoint full URI. In order to access
+                        a remote shared resource, implementations MAY use this
                         URI as a prefix: e.g. if in a new share request's payload
                         a `protocol.options.sharedSecret` property is defined
                         (see singleProtocolLegacy example), it may need to be
@@ -296,17 +296,17 @@ definitions:
                     webapp:
                       type: string
                       description: |
-                        The top-level endpoint URI for web apps. This value is
-                        provided for documentation purposes, and it SHALL NOT
+                        The top-level endpoint full URI for web apps. This value
+                        is provided for documentation purposes, and it SHALL NOT
                         be intended as a prefix for share requests.
                       example: https://my-cloud-storage.org/external/ocm
                 - properties:
                     datatx:
                       type: string
                       description: |
-                        The top-level endpoint URI for data transfers. This value
-                        is provided for documentation purposes, and it SHALL NOT
-                        be intended as a prefix. Furthermore, implementations
+                        The top-level endpoint full URI for data transfers. This
+                        value is provided for documentation purposes, and it SHALL
+                        NOT be intended as a prefix. Furthermore, implementations
                         are expected to execute the transfer using WebDAV as
                         the wire protocol.
                       example: https://my-cloud-storage.org/remote.php/dav/ocm
@@ -314,12 +314,13 @@ definitions:
         type: array
         description: |
           The capabilities exposed at this endpoint according to the present
-          specifications. Implementations MUST expose `/shares` at a minimum.
+          specifications. As implementations MUST provide `/shares` to be compliant,
+          it is not necessary to expose it as a capability.
         items:
           type: string
-          enum: ["/shares", "/notifications", "/invite-accepted"]
+          enum: ["/notifications", "/invite-accepted"]
         example:
-          ["/shares", "/invite-accepted"]
+          ["/invite-accepted"]
   NewShare:
     type: object
     required:
