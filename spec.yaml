@@ -164,7 +164,7 @@ paths:
             $ref: "#/definitions/Error"
   /invite-accepted:
     post:
-      summary: Inform the sender that the invitation was accepted to start sharing.
+      summary: Inform the sender that an invitation was accepted to start sharing.
       description: >
         Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
         To protect the identity of the parties, for shares created following an OCM invitation,
