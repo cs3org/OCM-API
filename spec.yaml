@@ -257,7 +257,10 @@ definitions:
         example: MyCloudStorage
       resourceTypes:
         type: array
-        description: A list of all supported resource types with their access protocols
+        description: |
+          A list of all supported resource types with their access protocols.
+          Each resource type is identified by its `name`: the list MUST NOT
+          contain more than one resource type object per given `name`.
         items:
           type: object
           properties:
