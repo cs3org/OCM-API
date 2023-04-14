@@ -41,6 +41,7 @@ paths:
         for more details).
       responses:
         "200":
+          description: The capabilities of this OCM service
           schema:
             $ref: "#/definitions/Discovery"
   /shares:
