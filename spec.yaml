@@ -292,8 +292,8 @@ definitions:
                     a remote shared resource, implementations MAY use this
                     URI as a prefix: e.g. if in a new share request's payload
                     a `protocol.options.sharedSecret` property is defined
-                    (see singleProtocolLegacy example), it may need to be
-                    appended to this URI to access the resource.
+                    (see singleProtocolLegacy example), implementations MAY
+                    need to append it to this URI to access the resource.
                   example: https://my-cloud-storage.org/remote.php/dav/ocm
                 webapp:
                   type: string
@@ -314,7 +314,7 @@ definitions:
       capabilities:
         type: array
         description: |
-          The capabilities exposed at this endpoint according to the present
+          The optional capabilities exposed at this endpoint according to the present
           specifications. As implementations MUST provide `/shares` to be compliant,
           it is not necessary to expose it as a capability.
         items:
