@@ -71,6 +71,7 @@ The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types may be user by t
 receiving server to persuarde the sending server to share the same resource with another share recipient.
 TODO: document how receiver.com can know if sender.com understood and processed the
 reshare request.
+
 ### Invite
 If Alice (`alice at sender.com`) and Bob (`bob at receiver.com`) know each other, yet they may not have a mechanism to trust any received share request, as that may be similar to receiving spam.
 
