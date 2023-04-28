@@ -13,7 +13,8 @@ the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specif
   * [Share Deletion](#unshare)
   * [Share Updating](#update)
   * [Resharing](#reshare)
-
+ * [Invite](#invite)
+ 
 * [Contributing](#contributing)
 
 ## Scope and assumptions
