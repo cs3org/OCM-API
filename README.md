@@ -82,6 +82,8 @@ On the receiving end, assuming that Bob wishes to accept the invitation, the rec
 Following this step, both services at `sender.com` and `receiver.com` MAY display, respectively, `bob` and `alice` as trusted or white-listed contacts, and enable sharing between them. Sites MAY enforce a policy to only accept shares between such trusted contacts, or MAY display a warning to users when a share from an unknown party is received.
 
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
+
+
 ## Contributing
 
 The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc):
