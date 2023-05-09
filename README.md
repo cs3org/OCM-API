@@ -67,7 +67,7 @@ equivalent to a `"SHARE_DECLINED"` notification.
 TODO: document `"RESHARE_CHANGE_PERMISSION"`
 
 ### Resharing
-The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types may be user by the
+The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be used by the
 receiving server to persuarde the sending server to share the same resource with another share recipient.
 TODO: document how receiver.com can know if sender.com understood and processed the
 reshare request.
