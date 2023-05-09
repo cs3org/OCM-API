@@ -33,25 +33,7 @@ Authentication between services is already established. This means that this spe
 If a finite whitelist of receiver servers exists on the sender
 side, then this list may already contain all necessary endpoint details.
 
-When a sending server allows sending to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/ocm-provider` well-known URL that receiving servers MAY provide. For instance, if `alice at sender.com` wants to share a resource with `bob at receiver.com` then a GET call can be made to
-`https://receiver.com/ocm-provider` to which the receiving server MAY respond with
-a JSON document containing for instance:
-```json
-{
-  "enabled":true,
-  "apiVersion":"1.0-proposal1",
-  "endPoint": "https://receiver.com/api/ocm",
-  "resourceTypes": [
-    {
-      "name":"file",
-      "shareTypes": ["user", "group"],
-      "protocols": {
-        "webdav": (any string)
-      }
-    }
-  ]
-}
-```
+When a sending server allows sending to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/ocm-provider` well-known URL that receiving servers MAY provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1ocm-provider/get).
 
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
