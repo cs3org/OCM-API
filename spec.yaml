@@ -397,8 +397,9 @@ definitions:
       expiration:
         type: integer
         description: |
-          The expiration time for the OCM share.
-          Represents seconds of UTC time since Unix epoch.
+          The expiration time for the OCM share, in seconds
+          of UTC time since Unix epoch. If omitted, it is assumed
+          that the share does not expire.
       protocol:
         type: object
         description: |
