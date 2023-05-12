@@ -423,7 +423,9 @@ definitions:
                 Otherwise, at least `webdav` is expected to be supported, and
                 its options MAY be given in the opaque `options` payload for
                 compatibility with v1.0 implementations (see examples).
-                CAREFUL: client implementers should be aware that v1.1 servers will support both `webdav` and `multi`, but v1.0 servers will only support `webdav`.
+                CAREFUL: client implementers should be aware that v1.1 servers
+                will support both `webdav` and `multi`, but v1.0 servers will
+                only support `webdav`.
             options:
               type: object
               description: |
