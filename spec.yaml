@@ -400,61 +400,98 @@ definitions:
           The expiration time for the OCM share.
           Represents seconds of UTC time since Unix epoch.
       protocol:
-        type: object
+        $ref: "#/definitions/NewShareProtocol"
+  NewShareProtocol:
+    type: object
+    discriminator: name
+    properties:
+      name:
+        type: string
         description: |
-          JSON object with specific options for each protocol.
-          The supported protocols are:
-          - `webdav`, to access the data
-          - `webapp`, to access remote web applications
-          - `datatx`, to transfer the data to the remote endpoint
-
-          Other custom protocols might be added in the future.
-        additionalProperties:
+          The name of the protocol. If `multi` is given, one or more protocol
+          endpoints are expected to be defined according to the optional
+          properties specified below.
+          Otherwise, at least `webdav` is expected to be supported, and
+          its options MAY be given in the opaque `options` payload for
+          compatibility with v1.0 implementations (see examples).
+    required:
+      - name
+    example:
+      singleProtocolLegacy:
+        name: "webdav"
+        options:
+          sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+          permissions: "some permissions scheme"
+      singleProtocolNew:
+        name: "webdav"
+        options:
+          permissions: ["read"]
+          uri: "https://open-cloud-mesh.org/remote.php/webdav/share-hash/path/to/spec.yaml"
+      multipleProtocols:
+        name: "multi"
+        options:
+          webdav:
+            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            permissions: ["read"]
+            uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+          webapp:
+            uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
+            viewMode: "read"
+          datatx:
+            sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+            size: 100000      
+  Webdav:
+    allOf:
+    - $ref: '#/definitions/NewShareProtocol'
+    - type: object
+      properties:
+        options:
+          $ref: '#/definitions/WebdavOptions'
+  WebdavOptions:
+    type: object
+    properties:
+      sharedSecret:
+        type: string
+        description: |
+          An optional secret to be used to access the resource,
+          such as a bearer token.
+      permissions:
+        type: array
+        items:
+          type: string
+          description: |
+            The permissions granted to the sharee.
+            - `read` allows read-only access including download of a copy.
+            - `write` allows create, update, and delete rights on the resource.
+            - `share` allows re-share rights on the resource.
+          enum: ["read", "write", "share"]
+      uri:
+        type: string
+        description: |
+          An URI to access the remote resource. The URI MAY be relative,
+          in which case the prefix exposed by the `/ocm-provider` endpoint MUST
+          be used, or it may be absolute (recommended). Additionally, the URI
+          MAY include a secret hash in the path, in which case there MAY be
+          no associated `sharedSecret`.    
+  Multi:
+    allOf:
+    - $ref: '#/definitions/NewShareProtocol'
+    - type: object
+      properties:
+        options:
           type: object
-          required:
-            - name
+          description: |
+            JSON object with specific options for each protocol.
+            The supported protocols are:
+            - `webdav`, to access the data
+            - `webapp`, to access remote web applications
+            - `datatx`, to transfer the data to the remote endpoint
+
+            Other custom protocols might be added in the future.
           properties:
-            name:
-              type: string
-              description: |
-                The name of the protocol. If `multi` is given, one or more protocol
-                endpoints are expected to be defined according to the optional
-                properties specified below.
-                Otherwise, at least `webdav` is expected to be supported, and
-                its options MAY be given in the opaque `options` payload for
-                compatibility with v1.0 implementations (see examples).
-            options:
-              type: object
-              description: |
-                This property is now deprecated. Implementations are encouraged to
-                transition to the new optional properties defined below, such that
-                this field may be removed in a future major version of the spec.
             webdav:
-              type: object
-              properties:
-                sharedSecret:
-                  type: string
-                  description: |
-                    An optional secret to be used to access the resource,
-                    such as a bearer token.
-                permissions:
-                  type: array
-                  items:
-                    type: string
-                    description: |
-                      The permissions granted to the sharee.
-                      - `read` allows read-only access including download of a copy.
-                      - `write` allows create, update, and delete rights on the resource.
-                      - `share` allows re-share rights on the resource.
-                    enum: ["read", "write", "share"]
-                uri:
-                  type: string
-                  description: |
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the URI
-                    MAY include a secret hash in the path, in which case there MAY be
-                    no associated `sharedSecret`.
+              $ref: '#/definitions/WebdavOptions'
             webapp:
               type: object
               properties:
@@ -496,31 +533,6 @@ definitions:
                     URI MAY include a secret hash in the path.
                 size:
                   type: integer
-        example:
-          singleProtocolLegacy:
-            name: "webdav"
-            options:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: "some permissions scheme"
-          singleProtocolNew:
-            name: "multi"
-            webdav:
-              permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-hash/path/to/spec.yaml"
-          multipleProtocols:
-            name: "multi"
-            options:
-            webdav:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
-            webapp:
-              uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
-              viewMode: "read"
-            datatx:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
-              size: 100000
   NewNotification:
     type: object
     required:
