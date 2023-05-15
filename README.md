@@ -76,6 +76,11 @@ Following this step, both services at `sender.com` and `receiver.com` MAY displa
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
 
+## Changelog
+
+[Available here](CHANGELOG.md)
+
+
 ## Contributing
 
 The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc) and is available as follows:
@@ -84,10 +89,6 @@ The specification can be rendered as HTML documentation using [ReDoc](https://gi
 * [version 1.0](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org#/paths/~1shares/post) - first official and supported version
 
 The current developments yet to be released are available in the [develop branch](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
-
-## Changelog
-
-[Available here](CHANGELOG.md)
 
 The Open Cloud Mesh API specification is an open source, community-driven project. If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md).
 
