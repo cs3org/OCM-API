@@ -513,20 +513,18 @@ definitions:
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-hash/path/to/resource.txt"
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
             webdav:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource.txt"
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
             webapp:
               uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
               viewMode: "read"
             datatx:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/resource.txt"
+              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
               size: 100000
   NewNotification:
     type: object
