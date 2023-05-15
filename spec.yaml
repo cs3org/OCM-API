@@ -507,8 +507,11 @@ definitions:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: "some permissions scheme"
           singleProtocolNew:
-            name: "multi"
+            name: "webdav"
+            options:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
             webdav:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
               uri: "https://open-cloud-mesh.org/remote.php/webdav/share-hash/path/to/resource.txt"
           multipleProtocols:
