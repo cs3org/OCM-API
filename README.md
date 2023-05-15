@@ -21,7 +21,7 @@ the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specif
 ## Scope and assumptions
 
 * For the core sharing functionality, the provider knows the consumer (both endpoint and user) when it creates a share with the consumer (also see [#26](https://github.com/cs3org/OCM-API/issues/26)). In addition, an optional invitation workflow is available in this specification (see below), which gives the consumer a way to automatically trust a provider (and vice versa). The [ScienceMesh](https://sciencemesh.io) infrastructure provides a managed white list of trusted federated sites.
-* Consumer doesn't have to accept a share, the resource will be available to the consumer immediately (#25).
+* Consumer doesn't have to accept a share, the resource will be available to the consumer immediately ([#25](https://github.com/cs3org/OCM-API/issues/25)).
 * Dealing with incoming shares is a vendor specific implementation. One vendor might use an 'accept before' process while another vendor might use a 'decline after' approach. This is considered part of the UX and thus not part of the interaction between different vendors. However, the consumer could notify the provider by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
 * Reverting access to outgoing shares is a vendor specific implementation. One vendor might delete an entire share while another might invalidate an access token. This is considered part of vendor specific internals and thus not part of the interaction between different vendors. However, the provider could notify the consumer by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
 * The actual file sync isn't a part of this specification. To keep this specification 'future proof', the file sync protocol will be embedded as a separate object in Open Cloud Mesh API calls. This protocol object contains all protocol specific options, e.g. WebDAV specific options.
@@ -45,9 +45,11 @@ In response to a share creation, the receiving server MAY send back a [notificat
 ### Share Access
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
-* If `protocol.name` = `multi`, the receiver SHOULD make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote resource. If `protocol.webdav.sharedSecret` is not empty, the receiver SHOULD pass it as a `Authorization: bearer` header.
+* If `protocol.name` = `multi`, the receiver SHOULD make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver SHOULD pass it as a `Authorization: bearer` header.
 
-* If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<token>:@<host><path>/<rel_path>`, where: `<host>` is the remote server, `<path>` is obtained by querying the [Discovery](#discovery) endpoint and extracting `resourceTypes[0].protocols.webdav`, and optionally `<rel_path>` is the relative path of the resource within the share, when needed.
+* If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<host><path>`, where `<host>` is the remote server, and `<path>` is obtained by querying the [Discovery](#discovery) endpoint at the remote server and extracting the path from `resourceTypes[0].protocols.webdav`.
+
+In both cases, when the share is a folder and the receiver accesses a resource within the share, it SHOULD append its relative path to that URL.
 
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
@@ -74,12 +76,19 @@ Following this step, both services at `sender.com` and `receiver.com` MAY displa
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
 
+## Changelog
+
+[Available here](CHANGELOG.md)
+
+
 ## Contributing
 
-The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc):
+The specification can be rendered as HTML documentation using [ReDoc](https://github.com/Redocly/redoc) and is available as follows:
 
-* [version 1.0](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org#/paths/~1shares/post), current official and supported version
-* [develop branch](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org), future version supported by ScienceMesh
+* [version 1.1](https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1shares/post) - current official version, supported by ScienceMesh
+* [version 1.0](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org#/paths/~1shares/post) - first official and supported version
+
+The current developments yet to be released are available in the [develop branch](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
 
 The Open Cloud Mesh API specification is an open source, community-driven project. If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md).
 

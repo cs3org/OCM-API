@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
-  version: 1.0.0
+  version: 1.1.0
   x-logo:
     url: logo.png
 schemes:
@@ -246,7 +246,7 @@ definitions:
       apiVersion:
         type: string
         description: The OCM API version this endpoint supports
-        example: 1.0.0
+        example: 1.1.0
       endPoint:
         type: string
         description: The URI of the OCM API available at this endpoint
@@ -346,7 +346,7 @@ definitions:
       name:
         type: string
         description: Name of the resource (file or folder).
-        example: spec.yaml
+        example: resource.txt
       description:
         type: string
         description: Optional description of the resource (file or folder).
@@ -397,8 +397,9 @@ definitions:
       expiration:
         type: integer
         description: |
-          The expiration time for the OCM share.
-          Represents seconds of UTC time since Unix epoch.
+          The expiration time for the OCM share, in seconds
+          of UTC time since Unix epoch. If omitted, it is assumed
+          that the share does not expire.
       protocol:
         type: object
         description: |
@@ -506,23 +507,24 @@ definitions:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: "some permissions scheme"
           singleProtocolNew:
-            name: "multi"
+            name: "webdav"
+            options:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
             webdav:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-hash/path/to/spec.yaml"
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
             webdav:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
             webapp:
               uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
               viewMode: "read"
             datatx:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/path/to/spec.yaml"
+              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
               size: 100000
   NewNotification:
     type: object
