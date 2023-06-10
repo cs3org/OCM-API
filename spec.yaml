@@ -288,29 +288,26 @@ definitions:
                 webdav:
                   type: string
                   description: |
-                    The top-level WebDAV endpoint full URI. In order to access
-                    a remote shared resource, implementations MAY use this
-                    URI as a prefix: e.g. if in a new share request's payload
-                    a `protocol.options.sharedSecret` property is defined
-                    (see singleProtocolLegacy example), implementations MAY
-                    need to append it to this URI to access the resource.
-                  example: https://my-cloud-storage.org/remote.php/dav/ocm
+                    The top-level WebDAV path at this endpoint. In order to access
+                    a remote shared resource, implementations MAY use this path
+                    as a prefix, or as the full path (see sharing examples).
+                  example: /remote.php/dav/ocm/
                 webapp:
                   type: string
                   description: |
-                    The top-level endpoint full URI for web apps. This value
+                    The top-level path for web apps at this endpoint. This value
                     is provided for documentation purposes, and it SHALL NOT
                     be intended as a prefix for share requests.
-                  example: https://my-cloud-storage.org/external/ocm
+                  example: /external/ocm/
                 datatx:
                   type: string
                   description: |
-                    The top-level endpoint full URI for data transfers. This
+                    The top-level path to be used for data transfers. This
                     value is provided for documentation purposes, and it SHALL
                     NOT be intended as a prefix. In addition, implementations
                     are expected to execute the transfer using WebDAV as
                     the wire protocol.
-                  example: https://my-cloud-storage.org/remote.php/dav/ocm
+                  example: /remote.php/dav/ocm/
       capabilities:
         type: array
         description: |
