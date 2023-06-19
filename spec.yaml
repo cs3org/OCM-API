@@ -110,10 +110,14 @@ paths:
             $ref: "#/definitions/Error"
   /notifications:
     post:
-      summary: Send a notification to a trusted service
-      description: >-
-        Should be used to be 'polite', e.g. to let the provider know that a user
-        has removed the share.
+      summary: Send a notification to a remote party about a previously known entity
+      description: |
+        Notifications are optional messages. They are expected to be used to inform the
+        other party about a change about a previously known entity, such as a share or
+        a trusted user.
+        For example, a notification MAY be sent by a recipient to let the provider know
+        that the recipient declined a share. Similarly, it MAY be sent by a provider
+        to let the recipient know that the provider removed a given share.
       parameters:
         - name: notification
           in: body
@@ -123,12 +127,12 @@ paths:
             $ref: "#/definitions/NewNotification"
       responses:
         "201":
-          description: >
+          description: |
             Receiver succesfully received the notification. The response body
-            can contain a JSON object with some resonse data, depending on the
+            MAY contain a JSON object with some resonse data, depending on the
             specification of the actual notification.
         "400":
-          description: >
+          description: |
             Bad request due to invalid parameters, e.g. when `type` is invalid
             or missing.
           schema:
@@ -142,18 +146,18 @@ paths:
           schema:
             $ref: "#/definitions/Error"
         "501":
-          description: >-
+          description: |
             The receiver doesn't support notifications, the resource type is not
             supported.
           schema:
             $ref: "#/definitions/Error"
         "503":
-          description: >-
+          description: |
             The receiver is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
-              description: >
+              description: |
                 Indication for the client when the service could be requested
                 again in HTTP Date format as used by the Internet Message Format
                 [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number
@@ -164,7 +168,7 @@ paths:
             $ref: "#/definitions/Error"
   /invite-accepted:
     post:
-      summary: Inform the sender that an invitation was accepted to start sharing.
+      summary: Inform the sender that an invitation was accepted to start sharing
       description: >
         Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
         To protect the identity of the parties, for shares created following an OCM invitation,
@@ -528,29 +532,35 @@ definitions:
     required:
       - notificationType
       - resourceType
-      - message
+      - providerId
     properties:
       notificationType:
         type: string
-        description: >
-          A notification type which is understandable for both humans and
+        description: |
+          A notification type that is understandable for both humans and
           machines (e.g. no use of special characters) providing more
           information on the cause of the error.
-        example: SHARE_ACCEPTED
+          Values that MAY be used by implementations are:
+          `SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,
+          `SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`.
       resourceType:
         type: string
         description: |
-          A resource type (e.g. file, calendar, contact)
-        example: file
+          Resource type (file, folder, calendar, contact, ...)
       providerId:
         type: string
-        description: ID of the shared resource on the provider side
-        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        description: Identifier of the shared resource, see `NewShare/providerId`.
       notification:
         type: object
-        description: >
-          optional additional parameters, depending on the notification and the resource type
-        example:
+        description: |
+          Optional additional parameters, depending on the notification
+          and the resource type.
+    example:
+      shareWasAccepted:
+        notificationType: SHARE_ACCEPTED
+        resourceType: file
+        providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        notification:
           message: "Recipient accepted the share"
           sharedSecret: "hfiuhworzwnur98d3wjiwhr"
   AcceptedInvite:
