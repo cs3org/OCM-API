@@ -116,8 +116,10 @@ paths:
         other party about a change about a previously known entity, such as a share or
         a trusted user.
         For example, a notification MAY be sent by a recipient to let the provider know
-        that the recipient declined a share. Similarly, it MAY be sent by a provider
-        to let the recipient know that the provider removed a given share.
+        that the recipient declined a share. In this case, the provider site MAY mark the
+        share as declined for its user(s).
+        Similarly, it MAY be sent by a provider to let the recipient know that the provider
+        removed a given share, such that the recipient MAY clean it up from its database.
       parameters:
         - name: notification
           in: body
@@ -128,9 +130,8 @@ paths:
       responses:
         "201":
           description: |
-            Receiver succesfully received the notification. The response body
-            MAY contain a JSON object with some resonse data, depending on the
-            specification of the actual notification.
+            Receiver succesfully received the notification. The response body MAY contain
+            a JSON object with some resonse data, depending on the actual notification.
         "400":
           description: |
             Bad request due to invalid parameters, e.g. when `type` is invalid
