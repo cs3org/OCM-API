@@ -74,6 +74,18 @@ Following this step, both services at `sender.com` and `receiver.com` MAY displa
 
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
+### Multi Factor Authentication
+
+
+This specification contains a capability called `/mfa-capable` as well as a permission `mfa-enforced`.
+
+If an OCM provider has the capability `/mfa-capable` it will respond with a HTTP 200 OK on the endpoint `/mfa-capable` to indicate that it will try to comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the sharee OCM provider the sharer MAY set the permission mfa-enforced on a share.
+
+A complient OCM provider that signals that it is mfa-capable MUST not allow access to a resource to a user that has not provided a second factor to establish the identity of the user with greater confidence.
+
+Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification.
+
+
 
 ## Changelog
 

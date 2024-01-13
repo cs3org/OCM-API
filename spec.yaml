@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
-  version: 1.2.0
+  version: 1.1.0
   x-logo:
     url: logo.png
 schemes:
@@ -108,7 +108,7 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
-  /mfa-enforcing:
+  /mfa-capable:
     get:
       summary: Inform the sender that the provider will enforce MFA requirements.
       description: >
@@ -117,10 +117,12 @@ paths:
         NOTE: There is no guarantee that the provider will actually enforce any MFA
         requirements, so a trust must be established before relying on this capability.
       responses:
-        200:
-          description: Whether the OCM service is enforcing MFA requirements.
-          schema:
-            $ref: "#/definitions/IsMFAEnforcing"
+        "200":
+          description: |
+            The OCM service claims that it is capable of enforcing MFA requirements.
+        "404":
+          description: |
+            The OCM service does not have the capability to enforce MFA requirements.
   /notifications:
     post:
       summary: Send a notification to a remote party about a previously known entity
@@ -334,17 +336,9 @@ definitions:
           it is not necessary to expose it as a capability.
         items:
           type: string
-          enum: ["/notifications", "/invite-accepted", "/mfa-enforcing"]
+          enum: ["/notifications", "/invite-accepted", "/mfa-capable"]
         example:
           ["/invite-accepted"]
-  IsMFAEnforcing:
-    type: object
-    required:
-      - isMFAEnforcing
-    properties:
-      isMFAEnforcing:
-        type: boolean
-        description: Whether the OCM service is enforcing MFA requirements.
   NewShare:
     type: object
     required:
@@ -474,7 +468,7 @@ definitions:
                       - `write` allows create, update, and delete rights on the resource.
                       - `share` allows re-share rights on the resource.
                       - `mfa-enforced`, this permission MAY be used if and only if the
-                        OCM provider has the capability `mfa-enforcing`.
+                        OCM provider has the capability `mfa-capable`.
                     enum: ["read", "write", "share", "mfa-enforced"]
                 uri:
                   type: string
@@ -503,7 +497,7 @@ definitions:
                     - `read` allows read and download access via the web app.
                     - `write` allows full editing rights via the web app.
                     - `mfa-enforced`, this permission MAY be used if and only
-                      if the OCM provider has the capability `mfa-enforcing`.
+                      if the OCM provider has the capability `mfa-capable`.
                   enum: ["view", "read", "write", "mfa-enforced"]
                 sharedSecret:
                   type: string
