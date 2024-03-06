@@ -108,21 +108,31 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
-  /mfa-capable:
+  /mfa-enabled:
     get:
-      summary: Inform the sender that the provider will enforce MFA requirements.
+      summary: Request whether the consumer of a share has been authenticated with MFA.
       description: >
-        Signal that this OCM provider has the capability to enforce MFA requirements.
-        A sender MAY set the permission `mfa-enforced` on a share to this provider.
-        NOTE: There is no guarantee that the provider will actually enforce any MFA
+        When a consumer attempts to access a share that was created with the `mfa-enabled`
+        permission, the provider MUST request to the consumer's server whether the consumer
+        has been authenticated with MFA. The consumer server SHOULD enforce that a session
+        exists for the consumer and that it has been authenticated with MFA, or prompt
+        the consumer in order to elevate their session to MFA.
+        Note: There is no guarantee that the consumer service actually enforces any MFA
         requirements, so a trust must be established before relying on this capability.
+      parameters:
+        sharedSecret:
+          type: string
+          description: |
+            The secret identifying the share being accessed.
       responses:
         "200":
           description: |
-            The OCM service claims that it is capable of enforcing MFA requirements.
+            The user accessing the resource via the given `sharedSecret` has been
+            authenticated with MFA.
         "404":
           description: |
-            The OCM service does not have the capability to enforce MFA requirements.
+            There is no user accessing a share with the given `sharedSecret`, or
+            the endpoint does not have the capability to enforce MFA requirements.
   /notifications:
     post:
       summary: Send a notification to a remote party about a previously known entity
@@ -336,7 +346,7 @@ definitions:
           it is not necessary to expose it as a capability.
         items:
           type: string
-          enum: ["/notifications", "/invite-accepted", "/mfa-capable"]
+          enum: ["/notifications", "/invite-accepted", "/mfa-enabled"]
         example:
           ["/invite-accepted"]
   NewShare:
@@ -467,8 +477,9 @@ definitions:
                       - `read` allows read-only access including download of a copy.
                       - `write` allows create, update, and delete rights on the resource.
                       - `share` allows re-share rights on the resource.
-                      - `mfa-enforced`, this permission MAY be used if and only if the
-                        OCM provider has the capability `mfa-capable`.
+                      - `mfa-enforced` requires the user accessing the resource to be
+                        MFA-authenticated. This permission MAY be used if the
+                        provider exposes the `mfa-enabled` capability.
                     enum: ["read", "write", "share", "mfa-enforced"]
                 uri:
                   type: string
@@ -496,8 +507,9 @@ definitions:
                     - `view` allows access to the web app in view-only mode.
                     - `read` allows read and download access via the web app.
                     - `write` allows full editing rights via the web app.
-                    - `mfa-enforced`, this permission MAY be used if and only
-                      if the OCM provider has the capability `mfa-capable`.
+                    - `mfa-enforced` requires the user accessing the resource to be
+                      MFA-authenticated. This permission MAY be used if the
+                      provider exposes the `mfa-enabled` capability.
                   enum: ["view", "read", "write", "mfa-enforced"]
                 sharedSecret:
                   type: string
@@ -533,13 +545,13 @@ definitions:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: ["read"]
+              permissions: ["read", "write"]
               uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
             webdav:
-              permissions: ["read"]
+              permissions: ["read", "mfa-enforced"]
               uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
             webapp:
               uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"

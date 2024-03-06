@@ -50,6 +50,8 @@ To access a share, the receiving server MAY use multiple ways, depending on the 
 
 In both cases, when the share is a folder and the receiver accesses a resource within the share, it SHOULD append its relative path to that URL.
 
+Additionally, if `protocol.<protocolname>.permissions` include `mfa-enabled`, the receiver MUST be ready to receive a callback to the `/mfa-enabled` endpoint ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1mfa-enabled/get)), where it SHOULD confirm that the user accessing the resource has been authenticated with MFA. This implies that the provider MUST have stored the receiver's server address, e.g. via the [Invite](#invite) flow.
+
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
 equivalent to a `"SHARE_DECLINED"` notification.
@@ -75,16 +77,9 @@ Following this step, both services at `sender.com` and `receiver.com` MAY displa
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
 ### Multi Factor Authentication
+If an OCM provider exposes the capability `/mfa-enabled`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which MUST be enforced according to [the endpoint's description](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1mfa-enabled/get). A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource to a user that has not provided a second factor to establish their identity with greater confidence.
 
-
-This specification contains a capability called `/mfa-capable` as well as a permission `mfa-enforced`.
-
-If an OCM provider has the capability `/mfa-capable` it will respond with a HTTP 200 OK on the endpoint `/mfa-capable` to indicate that it will try to comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the sharee OCM provider the sharer MAY set the permission mfa-enforced on a share.
-
-A complient OCM provider that signals that it is mfa-capable MUST not allow access to a resource to a user that has not provided a second factor to establish the identity of the user with greater confidence.
-
-Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification.
-
+Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
 
 
 ## Changelog
