@@ -316,14 +316,14 @@ definitions:
                     The top-level WebDAV path at this endpoint. In order to access
                     a remote shared resource, implementations MAY use this path
                     as a prefix, or as the full path (see sharing examples).
-                  example: /remote.php/dav/ocm/
+                  example: /remote/dav/ocm/
                 webapp:
                   type: string
                   description: |
                     The top-level path for web apps at this endpoint. This value
                     is provided for documentation purposes, and it SHALL NOT
                     be intended as a prefix for share requests.
-                  example: /external/ocm/
+                  example: /app/ocm/
                 datatx:
                   type: string
                   description: |
@@ -332,7 +332,7 @@ definitions:
                     NOT be intended as a prefix. In addition, implementations
                     are expected to execute the transfer using WebDAV as
                     the wire protocol.
-                  example: /remote.php/dav/ocm/
+                  example: /remote/dav/ocm/
       capabilities:
         type: array
         description: |
@@ -549,10 +549,10 @@ definitions:
               permissions: ["read", "mfa-enforced"]
               uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
             webapp:
-              uriTemplate: "https://open-cloud-mesh.org/s/share-hash/{relative-path-to-shared-resource}"
+              uriTemplate: "https://open-cloud-mesh.org/app/ocm/hfiuhworzwnur98d3wjiwhr/{relative-path-to-shared-resource}"
               viewMode: "read"
             datatx:
-              srcUri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
+              srcUri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
               size: 100000
   NewNotification:
     type: object
