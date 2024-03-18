@@ -541,7 +541,7 @@ definitions:
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read", "write"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
+              uri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
