@@ -120,6 +120,10 @@ paths:
         share as declined for its user(s).
         Similarly, it MAY be sent by a provider to let the recipient know that the provider
         removed a given share, such that the recipient MAY clean it up from its database.
+        A notification MAY also be sent to let a recipient know that the provider
+        removed that recipient from the list of trusted users, along with any related share.
+        The recipient MAY reciprocally remove that provider from the list of trusted users,
+        along with any related share.
       parameters:
         - name: notification
           in: body
@@ -543,14 +547,19 @@ definitions:
           information on the cause of the error.
           Values that MAY be used by implementations are:
           `SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,
-          `SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`.
+          `SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`,
+          `USER_REMOVED`.
       resourceType:
         type: string
         description: |
-          Resource type (file, folder, calendar, contact, ...)
+          Resource type (file, folder, user, calendar, contact, ...)
       providerId:
         type: string
-        description: Identifier of the shared resource, see `NewShare/providerId`.
+        description: |
+          Identifier of the shared resource. If the resourceType is `file`,
+          then see `NewShare/providerId` for the required information.
+          If the resourceType is `user`, then this is the user identifier
+          previously sent via `/invite-accepted`.
       notification:
         type: object
         description: |
@@ -558,12 +567,16 @@ definitions:
           and the resource type.
     example:
       shareWasAccepted:
-        notificationType: SHARE_ACCEPTED
-        resourceType: file
-        providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        notificationType: "SHARE_ACCEPTED"
+        resourceType: "file"
+        providerId: "7c084226-d9a1-11e6-bf26-cec0c932ce01"
         notification:
           message: "Recipient accepted the share"
           sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+      userWasRemoved:
+        notificationType: "USER_REMOVED"
+        resourceType: "user"
+        providerId: "51dc30ddc473d43a6011e9ebba6ca770"
   AcceptedInvite:
     type: object
     allOf:
