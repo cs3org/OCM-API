@@ -108,6 +108,26 @@ paths:
               type: string
           schema:
             $ref: "#/definitions/Error"
+  /mfa-capable:
+    get:
+      summary: Inform the sender that the provider will enforce MFA requirements.
+      description: >
+        Signal that this OCM provider has the capability to enforce MFA when accessing
+        remote shares.
+        A sender MAY set the permission `mfa-enforced` on a share to this provider:
+        when a consumer attempts to access such a share, the consumer server SHOULD
+        enforce, prior to access, that a session exists for the consumer and that
+        it has been authenticated with MFA, or prompt the consumer in order to
+        elevate their session to MFA if that is applicable.
+        Note: there is no guarantee that the consumer service actually enforces any MFA
+        requirements, so a trust must be established before relying on this capability.
+      responses:
+        "200":
+          description: |
+            The provider claims that it is capable of enforcing MFA requirements.
+        "404":
+          description: |
+            The provider does not have the capability to enforce MFA requirements.
   /notifications:
     post:
       summary: Send a notification to a remote party about a previously known entity
@@ -325,7 +345,7 @@ definitions:
           it is not necessary to expose it as a capability.
         items:
           type: string
-          enum: ["/notifications", "/invite-accepted"]
+          enum: ["/notifications", "/invite-accepted", "/mfa-capable"]
         example:
           ["/invite-accepted"]
   NewShare:
@@ -456,7 +476,10 @@ definitions:
                       - `read` allows read-only access including download of a copy.
                       - `write` allows create, update, and delete rights on the resource.
                       - `share` allows re-share rights on the resource.
-                    enum: ["read", "write", "share"]
+                      - `mfa-enforced` requires the user accessing the resource to be
+                        MFA-authenticated. This permission MAY be used if the
+                        provider exposes the `mfa-capable` capability.
+                    enum: ["read", "write", "share", "mfa-enforced"]
                 uri:
                   type: string
                   description: |
@@ -483,7 +506,10 @@ definitions:
                     - `view` allows access to the web app in view-only mode.
                     - `read` allows read and download access via the web app.
                     - `write` allows full editing rights via the web app.
-                  enum: ["view", "read", "write"]
+                    - `mfa-enforced` requires the user accessing the resource to be
+                      MFA-authenticated. This permission MAY be used if the
+                      provider exposes the `mfa-capable` capability.
+                  enum: ["view", "read", "write", "mfa-enforced"]
                 sharedSecret:
                   type: string
                   description: |
@@ -518,13 +544,13 @@ definitions:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: ["read"]
+              permissions: ["read", "write"]
               uri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
             webdav:
-              permissions: ["read"]
+              permissions: ["read", "mfa-enforced"]
               uri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
             webapp:
               uriTemplate: "https://open-cloud-mesh.org/app/ocm/hfiuhworzwnur98d3wjiwhr/{relative-path-to-shared-resource}"

@@ -50,6 +50,8 @@ To access a share, the receiving server MAY use multiple ways, depending on the 
 
 In both cases, when the share is a folder and the receiver accesses a resource within the share, it SHOULD append its relative path to that URL.
 
+Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, the receiving host MUST ensure that the user accessing the resource has been authenticated with MFA.
+
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
 equivalent to a `"SHARE_DECLINED"` notification.
@@ -73,6 +75,11 @@ On the receiving end, assuming that Bob wishes to accept the invitation, the rec
 Following this step, both services at `sender.com` and `receiver.com` MAY display, respectively, `bob` and `alice` as trusted or white-listed contacts, and enable sharing between them. Sites MAY enforce a policy to only accept shares between such trusted contacts, or MAY display a warning to users when a share from an unknown party is received.
 
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
+
+### Multi Factor Authentication
+If an OCM provider exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which SHOULD be honored. A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the consumer has not provided a second factor to establish their identity with greater confidence.
+
+Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
 
 
 ## Changelog
