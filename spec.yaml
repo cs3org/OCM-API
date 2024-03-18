@@ -547,7 +547,7 @@ definitions:
             options:
             webdav:
               permissions: ["read", "mfa-enforced"]
-              uri: "https://open-cloud-mesh.org/remote.php/webdav/share-secret/path/to/resource.txt"
+              uri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
             webapp:
               uriTemplate: "https://open-cloud-mesh.org/app/ocm/hfiuhworzwnur98d3wjiwhr/{relative-path-to-shared-resource}"
               viewMode: "read"
