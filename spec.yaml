@@ -30,15 +30,28 @@ parameters:
       the HAL navigation links (e.g. `_links.next.href`) to paginate. These
       links enable the possibility to use vendor specific pagination.
 paths:
-  /ocm-provider:
+  /.well-known/ocm:
     get:
       summary: Discovery endpoint
       description: >
-        This endpoint returns a number of properties used to discover the capabilities
-        offered by a remote cloud storage. The endpoint is named `/ocm-provider` owing
-        to already established practices and constraints with the main cloud storages
-        that implement OCM (see https://github.com/cs3org/OCM-API/pull/37#issuecomment-435875108
-        for more details).
+        Following RFC 8615, this endpoint returns the properties and capabilities
+        offered by a remote cloud storage. This endpoint is to be served as a
+        top-level URL, e.g. as in `https://my-cloud-storage.org/.well-known/ocm`.
+      responses:
+        "200":
+          description: The capabilities of this OCM service
+          schema:
+            $ref: "#/definitions/Discovery"
+  /ocm-provider:
+    get:
+      summary: Legacy discovery endpoint
+      description: >
+        This endpoint returns the properties and capabilities offered by a remote
+        cloud storage. It is a replica of `/.well-known/ocm` and it is required
+        to be supported, owing to previously established practices by the main
+        cloud storages that have implemented OCM (for more details, see
+        https://github.com/cs3org/OCM-API/pull/37#issuecomment-435875108).
+        This endpoint is to be served as a top-level URL.
       responses:
         "200":
           description: The capabilities of this OCM service
