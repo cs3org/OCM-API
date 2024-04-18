@@ -153,6 +153,20 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewNotification'
+            examples:
+              Share was accepted:
+                value:
+                  notificationType: SHARE_ACCEPTED
+                  resourceType: file
+                  providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+                  notification:
+                    message: Recipient accepted the share
+                    sharedSecret: hfiuhworzwnur98d3wjiwhr
+              User was removed:
+                value:
+                  notificationType: USER_REMOVED
+                  resourceType: user
+                  providerId: 51dc30ddc473d43a6011e9ebba6ca770
         required: true
       responses:
         "201":
@@ -605,18 +619,6 @@ components:
           description: |
             Optional additional parameters, depending on the notification
             and the resource type.
-      example:
-        shareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-          notification:
-            message: Recipient accepted the share
-            sharedSecret: hfiuhworzwnur98d3wjiwhr
-        userWasRemoved:
-          notificationType: USER_REMOVED
-          resourceType: user
-          providerId: 51dc30ddc473d43a6011e9ebba6ca770
     AcceptedInvite:
       allOf:
       - type: object
