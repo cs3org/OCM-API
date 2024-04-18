@@ -31,6 +31,38 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewShare'
+            examples:
+              Multiple protocols:
+                value:
+                  name: multi
+                  webdav:
+                    permissions:
+                    - read
+                    - mfa-enforced
+                    uri: https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt
+                  webapp:
+                    uriTemplate: "https://open-cloud-mesh.org/app/ocm/hfiuhworzwnur98d3wjiwhr/{relative-path-to-shared-resource}"
+                    viewMode: read
+                  datatx:
+                    srcUri: https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt
+                    size: 100000
+              Single protocol:
+                value:
+                  name: webdav
+                  options:
+                    sharedSecret: hfiuhworzwnur98d3wjiwhr
+                  webdav:
+                    sharedSecret: hfiuhworzwnur98d3wjiwhr
+                    permissions:
+                    - read
+                    - write
+                    uri: https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt
+              Single legacy protocol:
+                value:
+                  name: webdav
+                  options:
+                    sharedSecret: hfiuhworzwnur98d3wjiwhr
+                    permissions: some permissions scheme
         required: true
       responses:
         "201":
@@ -539,35 +571,6 @@ components:
             - `datatx`, to transfer the data to the remote endpoint
 
             Other custom protocols might be added in the future.
-          example:
-            singleProtocolLegacy:
-              name: webdav
-              options:
-                sharedSecret: hfiuhworzwnur98d3wjiwhr
-                permissions: some permissions scheme
-            singleProtocolNew:
-              name: webdav
-              options:
-                sharedSecret: hfiuhworzwnur98d3wjiwhr
-              webdav:
-                sharedSecret: hfiuhworzwnur98d3wjiwhr
-                permissions:
-                - read
-                - write
-                uri: https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt
-            multipleProtocols:
-              name: multi
-              webdav:
-                permissions:
-                - read
-                - mfa-enforced
-                uri: https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt
-              webapp:
-                uriTemplate: "https://open-cloud-mesh.org/app/ocm/hfiuhworzwnur98d3wjiwhr/{relative-path-to-shared-resource}"
-                viewMode: read
-              datatx:
-                srcUri: https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt
-                size: 100000
     NewNotification:
       required:
       - notificationType
