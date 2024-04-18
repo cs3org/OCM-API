@@ -491,6 +491,7 @@ components:
                   only support `webdav`.
               options:
                 type: object
+                deprecated: true
                 properties: {}
                 description: |
                   This property is now deprecated. Implementations are encouraged to
