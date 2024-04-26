@@ -467,6 +467,7 @@ definitions:
                   description: |
                     An optional secret to be used to access the resource,
                     such as a bearer token.
+                    To prevent leaking it in logs it MUST NOT appear in any URI.
                 permissions:
                   type: array
                   items:
@@ -523,6 +524,7 @@ definitions:
                   description: |
                     An optional secret to be used to access the resource,
                     for example in the form of a bearer token.
+                    To prevent leaking it in logs it MUST NOT appear in any URI.
                 srcUri:
                   type: string
                   description: |
@@ -545,18 +547,18 @@ definitions:
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read", "write"]
-              uri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
+              uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
             webdav:
               permissions: ["read", "mfa-enforced"]
-              uri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
+              uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
             webapp:
-              uriTemplate: "https://open-cloud-mesh.org/app/ocm/hfiuhworzwnur98d3wjiwhr/{relative-path-to-shared-resource}"
+              uriTemplate: "https://open-cloud-mesh.org/app/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/{relative-path-to-shared-resource}"
               viewMode: "read"
             datatx:
-              srcUri: "https://open-cloud-mesh.org/remote/dav/ocm/hfiuhworzwnur98d3wjiwhr/path/to/resource.txt"
+              srcUri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
               size: 100000
   NewNotification:
     type: object
