@@ -33,7 +33,9 @@ Authentication between services is already established. This means that this spe
 
 If a finite whitelist of receiver servers exists on the sender side, then this list may already contain all necessary endpoint details.
 
-When a sending server allows sending to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/ocm-provider` well-known URL that receiving servers MAY provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1ocm-provider/get).
+When a sending server allows sending to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers MAY provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1ocm-provider/get).
+
+In particular, implementations MAY provide their users a service such that `https://provider.org/.well-known/ocm` points to `https://my-cloud-storage.provider.org/`, and a remote service willing to create a share to `user@provider.org` would actually be redirected to `https://my-cloud-storage.provider.org/ocm/shares`. DNS `SRV` records MAY be used to achieve a similar integration: a `SRV` record for `provider.org` MAY be created to point to `my-cloud-storage.provider.org:443`, and a remote service would just have to execute a DNS query against `provider.org` in order to discover `https://my-cloud-storage.provider.org/.well-known/ocm`.
 
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
