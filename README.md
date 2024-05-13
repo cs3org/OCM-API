@@ -33,9 +33,12 @@ Authentication between services is already established. This means that this spe
 
 If a finite whitelist of receiver servers exists on the sender side, then this list may already contain all necessary endpoint details.
 
-When a sending server allows sending to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers MAY provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1ocm-provider/get).
+When a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers SHOULD provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get).
 
-In particular, implementations MAY provide their users a service such that `https://provider.org/.well-known/ocm` points to `https://my-cloud-storage.provider.org/`, and a remote service willing to create a share to `user@provider.org` would actually be redirected to `https://my-cloud-storage.provider.org/ocm/shares`. DNS `SRV` records MAY be used to achieve a similar integration: a `SRV` record for `provider.org` MAY be created to point to `my-cloud-storage.provider.org:443`, and a remote service would just have to execute a DNS query against `provider.org` in order to discover `https://my-cloud-storage.provider.org/.well-known/ocm`.
+To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism SHOULD be provided by implementations that wish to allow sending shares to any receiver, based on DNS `SRV` Service Records.
+
+* A provider SHOULD ensure that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
+* When requested to discover the EFSS endpoint for `user@provider.org`, implementations SHOULD query the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
 
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
