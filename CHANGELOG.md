@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.0] - 2024-07-18 - Giuseppe Lo Presti <lopresti@cern.ch>
+
+* Added a `/.well-known` endpoint for discovery, to replace
+  the legacy `/ocm-provider` endpoint in a future release.
+* Added support for Multi-Factor Authentication.
+* Clarified access methods to remote shares: bearer token
+  authorization is the preferred mechanism, basic auth or
+  no auth are deprecated.
+* Extended and improved the `/notifications` endpoint.
+
 ## [1.1.0] - 2023-05-15 - Giuseppe Lo Presti <lopresti@cern.ch>
 
 * Added a new `/invite-accepted` endpoint to support an invitation
