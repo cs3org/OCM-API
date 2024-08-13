@@ -225,15 +225,11 @@ paths:
           schema:
             $ref: "#/definitions/AcceptedInviteResponse"
         400:
-          description: The invitation token is invalid.
+          description: The invitation token is invalid or does not exist.
           schema:
             $ref: "#/definitions/Error"
         403:
           description: Remote service is not trusted to accept invitations.
-          schema:
-            $ref: "#/definitions/Error"
-        404:
-          description: The invitation token does not exist.
           schema:
             $ref: "#/definitions/Error"
         409:
