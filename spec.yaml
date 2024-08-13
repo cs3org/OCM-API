@@ -233,7 +233,7 @@ paths:
           schema:
             $ref: "#/definitions/Error"
         409:
-          description: User is already known by the OCM provider.
+          description: Invitation already accepted.
           schema:
             $ref: "#/definitions/Error"
 
