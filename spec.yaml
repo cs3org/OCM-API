@@ -280,23 +280,23 @@ definitions:
     properties:
       enabled:
         type: boolean
-        description: Whether the OCM service is enabled at this endpoint
+        description: Whether the OCM service is enabled at this endpoint.
       apiVersion:
         type: string
-        description: The OCM API version this endpoint supports
+        description: The OCM API version this endpoint supports.
         example: 1.1.0
       endPoint:
         type: string
-        description: The URI of the OCM API available at this endpoint
+        description: The URI of the OCM API available at this endpoint.
         example: https://my-cloud-storage.org/ocm
       provider:
         type: string
-        description: A friendly branding name of this endpoint
+        description: A friendly branding name of this endpoint.
         example: MyCloudStorage
       federation:
         type: object
         description: |
-          The information about the OCM service federation type and trusted domains at this endpoint
+          The information about the OCM service federation type and trusted domains at this endpoint.
         required:
           - type
         properties:
