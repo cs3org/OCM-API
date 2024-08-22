@@ -325,6 +325,7 @@ definitions:
                   Directories of domains trusted by this endpoint.
                 items:
                   type: string
+                  format: url
                 example: ["https://iop.sciencemesh.uni-muenster.de/iop/mentix/cs3"]
       resourceTypes:
         type: array
