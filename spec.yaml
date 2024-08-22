@@ -293,6 +293,39 @@ definitions:
         type: string
         description: A friendly branding name of this endpoint
         example: MyCloudStorage
+      federation:
+        type: object
+        description: |
+          The information about the OCM service federation type and trusted domains at this endpoint
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            description: |
+              A supported federation type (open, closed).
+              The `open` federation means that this enpoint trusts every other server.
+              The `closed` federation means this endpoint only trusts server from it's trusted list.
+            example: open
+          trusted:
+            type: object
+            description: |
+              Optional information about the servers trusted at this endpoint.
+            properties:
+              domains:
+                type: array
+                description: |
+                  Domains trusted by this endpoint.
+                items:
+                  type: string
+                example: ["trusted-cloud-storage.org"]
+              directories:
+                type: array
+                description: |
+                  Directories of domains trusted by this endpoint.
+                items:
+                  type: string
+                example: ["https://iop.sciencemesh.uni-muenster.de/iop/mentix/cs3"]
       resourceTypes:
         type: array
         description: |
