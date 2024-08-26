@@ -35,10 +35,10 @@ If a finite whitelist of receiver servers exists on the sender side, then this l
 
 When a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers SHOULD provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get).
 
-To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism SHOULD be provided by implementations that wish to allow sending shares to any receiver, based on DNS `SRV` Service Records.
+To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism MAY be provided in case hosting https://provider.org/.well-known/ocm is impractical, based on DNS `SRV` Service Records.
 
-* A provider SHOULD ensure that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
-* When requested to discover the EFSS endpoint for `user@provider.org`, implementations SHOULD query the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
+* If e.g. https://provider.org/.well-known/ocm does not exist, a provider MAY instead point to e.g. https://my-cloud-storage.provider.org/.well-known/ocm by ensuring that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
+* When requested to discover the EFSS endpoint for `user@provider.org`, if https://provider.org/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
 
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
