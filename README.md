@@ -50,9 +50,9 @@ In response to a share creation, the receiving server MAY send back a [notificat
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
 * If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
-Otherwise, if `protocol.webdav.code` and `protocol.webdav.token_endpoint` are not empty, the receiver SHOULD call the token endpoint to exchange
-the code for a short-lived access token, using an [Access Token Request](https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.3)
-like in the OAuth 2.0 Authorization Code Flow, and then use that OAuth access token to access the remote share.
+Otherwise, if `protocol.webdav.nonce` and `protocol.webdav.gnap_as_uri` are not empty, the receiver SHOULD call the token endpoint to exchange
+the nonce for a short-lived access token, using [GNAP](https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/),
+and then use that GNAP access token to access the remote share.
 
 * If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<host><path>`, where `<host>` is the remote server, and `<path>` is obtained by querying the [Discovery](#discovery) endpoint at the remote server and getting `resourceTypes[0].protocols.webdav`. Note that this access method is _deprecated_ and may be removed in a future release of the Protocol.
 
