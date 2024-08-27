@@ -50,7 +50,7 @@ In response to a share creation, the receiving server MAY send back a [notificat
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
 * If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
-Otherwise, if `protocol.webdav.nonce` and `protocol.webdav.gnap_as_uri` are not empty, the receiver SHOULD call the token endpoint to exchange
+Otherwise, if `protocol.webdav.nonce` and `protocol.webdav.gnapAuthorizationServer` are not empty, the receiver SHOULD call the token endpoint to exchange
 the nonce for a short-lived access token, using [GNAP](https://datatracker.ietf.org/doc/draft-ietf-gnap-core-protocol/),
 and then use that GNAP access token to access the remote share.
 
