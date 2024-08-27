@@ -15,6 +15,7 @@ the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specif
   * [Share Updating](#update)
   * [Resharing](#reshare)
   * [Invite](#invite)
+  * [Signing Request](#signing-request)
 
 * [Contributing](#contributing)
 
@@ -35,16 +36,20 @@ If a finite whitelist of receiver servers exists on the sender side, then this l
 
 When a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers SHOULD provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get).
 
+If the identity of an incoming request needs to be confirmed, the discovery data SHOULD contain a public key. Each incoming request that requires to origin from an authenticated source must be signed in its headers using the related private key.
+
 To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism SHOULD be provided by implementations that wish to allow sending shares to any receiver, based on DNS `SRV` Service Records.
 
 * A provider SHOULD ensure that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
 * When requested to discover the EFSS endpoint for `user@provider.org`, implementations SHOULD query the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
 
+
+
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
 
 ### Share Acceptance
-In response to a share creation, the receiving server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the sending server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The sending server MAY expose this information to the end user. 
+In response to a share creation, the receiving server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the sending server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The sending server MAY expose this information to the end user.
 
 ### Share Access
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
@@ -85,6 +90,103 @@ For further details on this concept, see also [#54](https://github.com/cs3org/OC
 If an OCM provider exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which SHOULD be honored. A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the consumer has not provided a second factor to establish their identity with greater confidence.
 
 Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
+
+
+## Signing request
+
+A request is signed by adding the signature in the headers. The sender also need to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
+To helps debugging, it is made mandatory to also add all properties used in the signature as headers, even if they can be easily re-generated from the payload.  
+
+Note: Signed requests prove the identity of the sender but does not encrypt nor affect its payload.
+
+Here is an example of headers needed to sign a request.  
+
+```
+  {
+    "(request-target)": "post /path",
+    "content-length": 380,
+    "date": "Mon, 08 Jul 2024 14:16:20 GMT",
+    "digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
+    "host": "hostname.of.the.recipient",
+    "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"ras-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+  }
+```
+
+- '(request-target)' contains the reached endpoint and the used method,
+- 'content-length' is the total length of the payload of the request,
+- 'date' is the date and time on which the request have been emitted,
+- 'digest' is a checksum of the payload of the request,
+- 'host' is the hostname of the recipient of the request (remote when signing outgoing request, local on incoming request),
+- 'Signature' contains the signature generated using the private key and details on its generation:
+  * 'keyId' is a unique id, formatted as an url. hostname is used to retrieve the public key via custom discovery
+  * 'algorithm' specify the algorithm used to generate signature
+  * 'headers' specify the properties used when generating the signature
+  * 'signature' the signature of an array containing the properties listed in 'headers'. Some properties like content-length, date, digest, and host are mandatory to protect against authenticity override.
+
+
+### How to generate the Signature for outgoing request
+
+After properties are set in the headers, the Signature is generated and added to the list.  
+
+This is a quick PHP example of headers for outgoing request:
+
+```php
+    $headers = [
+        '(request-target)' => 'post /path',
+        'content-length' => strlen($payload),
+        'date' => gmdate('D, d M Y H:i:s T'),
+        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
+        'host': 'hostname.of.the.recipient',
+    ];
+
+    openssl_sign(implode("\n", $headers), $signed, $privateKey, OPENSSL_ALGO_SHA256);
+		
+    $signature = [
+        'keyId' => 'https://author.hostname/key',
+        'algorithm' => 'ras-sha256',
+        'headers' => 'content-length date digest host',
+        'signature' => $signed 
+    ];
+
+    $headers['Signature'] = implode(',', $signature);
+```
+
+
+### How to confirm Signature on incoming request
+
+The first step would be to confirm the validity of each properties:
+
+- '(request-target)' and 'host' are immutable to the type of the request and the local/current host,
+- 'content-length' and 'digest' can be re-generated and compared from the payload of the request,
+- A maximum TTL must be applied to 'date' and current timestamp, 
+- regarding data contained in the 'Signature' header:
+  * using 'keyId' to get the public key from remote signatory,
+  * 'headers' is used to generate the clear version of the signature and must contain at least 'content-length', 'date', 'digest' and 'host',
+  * 'signature' is the encrypted version of the signature.
+
+Here is an example of how to verify the signature using the headers, the signature and the public key:  
+
+```php
+    $clear = [
+        '(request-target)' => 'post /path',
+        'content-length' => strlen($payload),
+        'date' => 'Mon, 08 Jul 2024 14:16:20 GMT',
+        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
+        'host': $localhost
+    ];
+    
+    $signed = "DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==";
+    if (openssl_verify(implode("\n", $clear), $signed, $publicKey, 'sha256') !== 1) {
+        throw new InvalidSignatureException('signature issue');
+    }
+```
+
+### Validating the payload
+
+while signed, it is still needed to confirm the validity of the payload.  
+The last step is to ensure that the payload implies action initiated on the behalf the source of the request.  
+
+As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.  
 
 
 ## Changelog
