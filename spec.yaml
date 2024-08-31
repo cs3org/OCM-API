@@ -628,14 +628,18 @@ definitions:
             type: string
             description: Token received in the invite
             example: xyz
-          userID:
+          userId:
             type: string
             description: Unique ID to identify the user at the remote provider accepting the invite.
             example: 51dc30ddc473d43a6011e9ebba6ca770
+          federatedCloudId:
+            type: string
+            description: Federated cloud ID of the user accepting the invite. it should be in the form of username@provider-domain.
+            example: richard@receiver.org
           email:
             type: string
-            description: Email ID of the user accepting the invite.
-            example: richard@receiver.org
+            description: Email of the user accepting the invite.
+            example: richard@gmail.com
           name:
             type: string
             description: Name of the user accepting the invite.
@@ -644,15 +648,19 @@ definitions:
     type: object
     allOf:
       - properties:
-          userID:
+          userId:
             type: string
             description: Unique ID to identify the sender at the local provider.
             example: 9302
+          federatedCloudId:
+            type: string
+            description: Federated cloud ID of the user accepting the invite. it should be in the form of username@provider-domain.
+            example: john@sender.org
           email:
             type: string
-            description: Email ID of the user that sent the invite.
-            example: john@sender.org
+            description: The email of the user who sent the invite.
+            example: john@cern.ch
           name:
             type: string
-            description: Name of the user that sent the invite.
+            description: Name of the user who sent the invite.
             example: John Doe
