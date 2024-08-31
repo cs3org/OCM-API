@@ -654,7 +654,7 @@ definitions:
             example: 9302
           federatedCloudId:
             type: string
-            description: Federated cloud ID of the user accepting the invite. it should be in the form of username@provider-domain.
+            description: Federated cloud ID of the user who sent the invite. it should be in the form of username@provider-domain.
             example: john@sender.org
           email:
             type: string
