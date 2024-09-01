@@ -619,11 +619,6 @@ definitions:
     type: object
     allOf:
       - properties:
-          recipientProvider:
-            type: string
-            format: url
-            description: URL of the receiver OCM service.
-            example: https://receiver.org
           token:
             type: string
             description: Token received in the invite
