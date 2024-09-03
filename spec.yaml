@@ -566,9 +566,11 @@ definitions:
               permissions: ["read", "mfa-enforced"]
               uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
             webapp:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               uriTemplate: "https://open-cloud-mesh.org/app/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/{relative-path-to-shared-resource}"
               viewMode: "read"
             datatx:
+              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               srcUri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
               size: 100000
   NewNotification:
