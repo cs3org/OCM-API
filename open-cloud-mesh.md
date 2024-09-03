@@ -25,9 +25,27 @@ It uses a specific implementation of GNAP notifications, and a specific implemen
 client instance to which the notification is addressed is not (yet) registered at the AS.
 
 ## Details of GNAP notifications
+To indicate that a new resource is available for a client instance to access,
+an AS can send a notification to that client instance.
+This notification may include:
+* a displayable description of the resource
+* instructions for accessing the resource
+* a description of the intended end user, through an identifier or an attribute such as a group name.
+
+There may be a response notification, accept/reject.
+
+If the notification is addressed to an unregistered client instance, then the AS MAY dynamically register this client instance
+using [GNAP client instance discovery](./gnap-client-instance-discovery.md).
+
 See https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1shares/post
 
 ## Details of GNAP client instance discovery
+For an RO to dynamically register a client instance, they can:
+* provide its FQDN
+* the AS will retrieve the .well-known
+* if this fails, it can do an SRV lookup
+* the AS takes a decision whether to dynamically add the client instance or not
+
 See https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1ocm-provider/get
 
 # invite
