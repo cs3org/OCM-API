@@ -50,7 +50,7 @@ In response to a share creation, the receiving server MAY send back a [notificat
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
 * If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
-Otherwise, if `protocol.webdav.code` is not empty, the receiver SHOULD make a signed POST request to the `tokenEndpoint` from discovery to exchange
+Otherwise, if `protocol.webdav.code` is not empty, the receiver SHOULD discover the sender's `tokenEndpoint` and make a signed POST request to it, to exchange
 the code for a short-lived bearer token,
 and then use that bearer token to access the remote share.
 
