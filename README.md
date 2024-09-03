@@ -28,7 +28,8 @@ the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specif
 
 
 ## Specification
-### Discovery
+### Introduction
+### Establishing recipient details
 Authentication between services is already established. This means that this specification doesn't cover the way a service authenticates incoming API calls (e.g. through an API Key, VPN connection or IP whitelisting). In this scope we assume that the services are already authenticated.
 
 If a finite whitelist of receiver servers exists on the sender side, then this list may already contain all necessary endpoint details.
@@ -40,13 +41,27 @@ To fill the gap between users knowning other peers' email addresses of the form 
 * If e.g. https://provider.org/.well-known/ocm does not exist, a provider MAY instead point to e.g. https://my-cloud-storage.provider.org/.well-known/ocm by ensuring that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
 * When requested to discover the EFSS endpoint for `user@provider.org`, if https://provider.org/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
 
-### Share Creation
+#### Invite
+If Alice (`alice at sender.com`) and Bob (`bob at receiver.com`) know each other, yet they may not have a mechanism to trust any received share request, as that may be similar to receiving spam.
+
+In this case, Alice may invite Bob to initiate a mutual trust relationship: on the provider side, the `sender.com` service MAY implement an interface for Alice to generate a single-use token and send it to Bob off-band (e.g. via e-mail). In addition, the `sender.com` service MAY integrate this interface with [ScienceMesh](https://sciencemesh.io), and only allow a curated white list of sites as receivers.
+
+On the receiving end, assuming that Bob wishes to accept the invitation, the receiving server MAY provide an interface for Bob to input the received token, or to interact with the ScienceMesh directory. In any case, the receiving server SHOULD make a HTTP POST request to the [/invite-accepted](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) endpoint of the sending server, sending the token and disclosing Bob's identity details such as `bob at receiver.com`. If the token matches the one created earlier by Alice, the response MUST include Alice's identity details such as `alice at sender.com`.
+
+Following this step, both services at `sender.com` and `receiver.com` MAY display, respectively, `bob` and `alice` as trusted or white-listed contacts, and enable sharing between them. Sites MAY enforce a policy to only accept shares between such trusted contacts, or MAY display a warning to users when a share from an unknown party is received.
+
+For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
+
+### Decision to send
+### Notification of share creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
 
-### Share Acceptance
+### Decision to receive
+### Notification of Share Acceptance/Rejection
 In response to a share creation, the receiving server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the sending server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The sending server MAY expose this information to the end user. 
 
-### Share Access
+### Obtaining the Access Token
+### Accessing the Resource
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
 * If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
@@ -56,6 +71,11 @@ To access a share, the receiving server MAY use multiple ways, depending on the 
 In both cases, when the share is a folder and the receiver accesses a resource within the share, it SHOULD append its relative path to that URL.
 
 Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, the receiving host MUST ensure that the user accessing the resource has been authenticated with MFA.
+
+#### Multi Factor Authentication
+If an OCM provider exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which SHOULD be honored. A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the consumer has not provided a second factor to establish their identity with greater confidence.
+
+Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
 
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
@@ -69,23 +89,6 @@ The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be used by t
 receiving server to persuarde the sending server to share the same resource with another share recipient.
 TODO: document how receiver.com can know if sender.com understood and processed the
 reshare request.
-
-### Invite
-If Alice (`alice at sender.com`) and Bob (`bob at receiver.com`) know each other, yet they may not have a mechanism to trust any received share request, as that may be similar to receiving spam.
-
-In this case, Alice may invite Bob to initiate a mutual trust relationship: on the provider side, the `sender.com` service MAY implement an interface for Alice to generate a single-use token and send it to Bob off-band (e.g. via e-mail). In addition, the `sender.com` service MAY integrate this interface with [ScienceMesh](https://sciencemesh.io), and only allow a curated white list of sites as receivers.
-
-On the receiving end, assuming that Bob wishes to accept the invitation, the receiving server MAY provide an interface for Bob to input the received token, or to interact with the ScienceMesh directory. In any case, the receiving server SHOULD make a HTTP POST request to the [/invite-accepted](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) endpoint of the sending server, sending the token and disclosing Bob's identity details such as `bob at receiver.com`. If the token matches the one created earlier by Alice, the response MUST include Alice's identity details such as `alice at sender.com`.
-
-Following this step, both services at `sender.com` and `receiver.com` MAY display, respectively, `bob` and `alice` as trusted or white-listed contacts, and enable sharing between them. Sites MAY enforce a policy to only accept shares between such trusted contacts, or MAY display a warning to users when a share from an unknown party is received.
-
-For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
-
-### Multi Factor Authentication
-If an OCM provider exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which SHOULD be honored. A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the consumer has not provided a second factor to establish their identity with greater confidence.
-
-Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
-
 
 ## Changelog
 
