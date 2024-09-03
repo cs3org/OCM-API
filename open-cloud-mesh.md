@@ -1,9 +1,62 @@
-Open Cloud Mesh (OCM) is a server federation protocol that is used in practice in various ways.
-This document describes how existing servers implement it. There are three authorization flows: public link, invite, and share with.
+Open Cloud Mesh (OCM) is a server federation protocol that is used to notify a remote user that they have
+been granted access to some resource. It has similarities with authorization flows such as OAuth, as well as with social fediverse protocols such as ActivityPub.
 
+# creating a share
+Suppose Alice has an account on a sending server (sender.com) and Bob has an account on a receiving server (receiver.com).
+The receiving server is registered as an API client of the sending server.
+Alice gestures that she wants to grant Bob access to a given resource, and wants him to be notified of this.
+In this scenario, support that the sending server knows the OCM endpoint of the receiving server (say `https://receiver.com/ocm`), and also knows some identifier of Bob's account at that server (say `bob-153`).
+The sending and receiving server also know each other's public key for http signatures.
+To send the notification, the sending server:
+* determines the public uri (say `https://sender.com/webdav/some/folder/`) and protocol (say `webdav`) through which the receiving server will be able to access the resource
+* generates a unique code, say '123456',
+* makes a POST request to the `/shares` path within the receiving server's OCM API, with a JSON body
+* includes at least the following fields in that JSON body:
+```json
+{
+  "shareWith": "bob-153@receiver.com",
+  "protocol": {
+    "webdav": {
+        "code": "123456",
+        "uri": "https://sender.com/webdav/some/folder/"
+    }
+  }
+}
+```
+* generates and adds http signature headers as described in [draft-cavage-http-signatures-12](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
 
-# creating a share, using httpsig+bearer tokens
+# obtaining a bearer token
+When the receiving server receives ths  request, it can obtain a bearer token:
+```http
+POST /token
+Host: sender.com
+Content-Type: application/json
+[...]
+
+{
+    "client_id": "receiver.com",
+    "code": "123456"
+}
+```
+To which the sending server's token endpoint could reply:
+```json
+{
+   "access_token": "asdfghj",
+   "expires_in": 3600,
+   "refresh_token": "qwertyuiop" 
+}
+```
+And with that, the receiving server could access the resource at its URI:
+```http
+GET /webdav/some/folder/
+Host: sender.com
+Authorization: Bearer asdfghj
+```
+
+This completes the description of the basic Open Cloud Mesh mechanism. The rest of this specification details optional extensions and legacy versions of it.
+
 # other / multiple protocols, extra (legacy) fields
+
 # dynamic client registration, discovery (/.well-known/ocm, /ocm-provider, DNS SRV)
 # recipient user/group discovery, invites
 # flows
