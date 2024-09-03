@@ -1,7 +1,13 @@
 Open Cloud Mesh (OCM) is a server federation protocol that is used in practice in various ways.
 This document describes how existing servers implement it. There are three authorization flows: public link, invite, and share with.
 
-# public link
+
+# creating a share, using httpsig+bearer tokens
+# other / multiple protocols, extra (legacy) fields
+# dynamic client registration, discovery (/.well-known/ocm, /ocm-provider, DNS SRV)
+# recipient user/group discovery, invites
+# flows
+## public link
 
 Alice creates a public link for a resource on her account on server 1.
 Bob visits the GUI of server 1 to view it, and clicks 'save to my cloud <bob@server2>'.
@@ -18,13 +24,13 @@ the RS-first Method of AS Discovery described in section 9.1 of [GNAP](https://d
 
 It can be interpreted as a client instance switching protocol: bob@server1 acts as an RO, registers server2 as a client instance, and grants bob@server2 access.
 
-# share with
+## share with
 
 Share with flow is similar but Alice is the RO who vets and registers server2 as a client instance, and triggers a notification.
 It uses a specific implementation of GNAP notifications, and a specific implementation of GNAP client instance discovery in case the
 client instance to which the notification is addressed is not (yet) registered at the AS.
 
-## Details of GNAP notifications
+### Details of GNAP notifications
 To indicate that a new resource is available for a client instance to access,
 an AS can send a notification to that client instance.
 This notification may include:
@@ -39,7 +45,7 @@ using [GNAP client instance discovery](./gnap-client-instance-discovery.md).
 
 See https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1shares/post
 
-## Details of GNAP client instance discovery
+### Details of GNAP client instance discovery
 For an RO to dynamically register a client instance, they can:
 * provide its FQDN
 * the AS will retrieve the .well-known
@@ -48,7 +54,7 @@ For an RO to dynamically register a client instance, they can:
 
 See https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org#/paths/~1ocm-provider/get
 
-# invite
+## invite
 
 Alice sends Bob a nonce out of band. Bob enters this in client instance 2.
 It sends a POST to AS 1 with Bob's user identifier.
@@ -72,3 +78,5 @@ Like DOI
 Request an invite to something
 
 
+# accept/reject/revoke notifications
+# reshare notifications
