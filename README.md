@@ -38,10 +38,10 @@ When a sending server allows sharing to any internet-hosted receiving server, th
 
 To ease the process of confirming the identity of a remote party, the discovery data MAY contain a public key: each incoming request that requires to origin from an authenticated source MUST be signed in its headers using the private key of that source, whose public key MUST be exposed in its discovery data.
 
-To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism SHOULD be provided by implementations that wish to allow sending shares to any receiver, based on DNS `SRV` Service Records.
+To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism MAY be provided in case hosting https://provider.org/.well-known/ocm is impractical, based on DNS `SRV` Service Records.
 
-* A provider SHOULD ensure that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
-* When requested to discover the EFSS endpoint for `user@provider.org`, implementations SHOULD query the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
+* If e.g. https://provider.org/.well-known/ocm does not exist, a provider MAY instead point to e.g. https://my-cloud-storage.provider.org/.well-known/ocm by ensuring that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
+* When requested to discover the EFSS endpoint for `user@provider.org`, if https://provider.org/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
 
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
@@ -53,6 +53,9 @@ In response to a share creation, the receiving server MAY send back a [notificat
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
 * If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
+Otherwise, if `protocol.webdav.code` is not empty, the receiver SHOULD discover the sender's OCM endpoint and make a signed POST request to `<OCM endpoint>/token`, to exchange
+the code for a short-lived bearer token,
+and then use that bearer token to access the remote share.
 
 * If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<host><path>`, where `<host>` is the remote server, and `<path>` is obtained by querying the [Discovery](#discovery) endpoint at the remote server and getting `resourceTypes[0].protocols.webdav`. Note that this access method is _deprecated_ and may be removed in a future release of the Protocol.
 
