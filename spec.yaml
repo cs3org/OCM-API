@@ -649,9 +649,9 @@ definitions:
       - properties:
           recipientProvider:
             type: string
-            format: url
-            description: URL of the receiver OCM service.
-            example: https://receiver.org
+            format: fqdn
+            description: FQDN of the receiver OCM service.
+            example: receiver.org
           token:
             type: string
             description: Token received in the invite
@@ -663,7 +663,7 @@ definitions:
           email:
             type: string
             description: Email ID of the user accepting the invite.
-            example: richard@receiver.org
+            example: richard@gmail.com
           name:
             type: string
             description: Name of the user accepting the invite.
