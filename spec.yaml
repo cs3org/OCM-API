@@ -320,8 +320,9 @@ definitions:
             protocols:
               type: object
               description: |
-                The supported protocols to access shares at this endpoint.
-                Implementations MUST support `webdav` at a minimum.
+                The supported protocols to access shared resources at this endpoint.
+                Implementations MUST support at least `webdav` for `file` resources,
+                any other combination of resources and protocols is optional.
               properties:
                 webdav:
                   type: string
@@ -329,14 +330,12 @@ definitions:
                     The top-level WebDAV path at this endpoint. In order to access
                     a remote shared resource, implementations MAY use this path
                     as a prefix, or as the full path (see sharing examples).
-                  example: /remote/dav/ocm/
                 webapp:
                   type: string
                   description: |
                     The top-level path for web apps at this endpoint. This value
                     is provided for documentation purposes, and it SHALL NOT
                     be intended as a prefix for share requests.
-                  example: /app/ocm/
                 datatx:
                   type: string
                   description: |
@@ -345,7 +344,17 @@ definitions:
                     NOT be intended as a prefix. In addition, implementations
                     are expected to execute the transfer using WebDAV as
                     the wire protocol.
-                  example: /remote/dav/ocm/
+              patternProperties:
+                "^.*$":
+                  type: string
+                  description: |
+                    Any additional protocol supported for this resource type MAY
+                    be advertised here, where the value MAY correspond to a top-level
+                    URI to be used for that protocol.
+              example:
+                webdav: "/remote/dav/ocm/"
+                webapp: "/app/ocm/"
+                talk: "/apps/spreed/api/"
       capabilities:
         type: array
         description: |
