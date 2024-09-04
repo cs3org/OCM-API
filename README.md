@@ -29,6 +29,7 @@ the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specif
 
 ## Specification
 ### Introduction
+[...]
 ### Establishing recipient details
 Authentication between services is already established. This means that this specification doesn't cover the way a service authenticates incoming API calls (e.g. through an API Key, VPN connection or IP whitelisting). In this scope we assume that the services are already authenticated.
 
@@ -53,14 +54,17 @@ Following this step, both services at `sender.com` and `receiver.com` MAY displa
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
 ### Decision to send
+[...]
 ### Notification of share creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
 
 ### Decision to receive
+[...]
 ### Notification of Share Acceptance/Rejection
 In response to a share creation, the receiving server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the sending server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The sending server MAY expose this information to the end user. 
 
 ### Obtaining the Access Token
+[...]
 ### Accessing the Resource
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
 
