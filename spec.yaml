@@ -361,7 +361,7 @@ definitions:
         type: object
         description: |
           The signatory used to sign outgoing request to confirm its origin. The 
-          signatory is optional but it MUST contains `id` and `publicKeyPem`.
+          signatory is optional but it MUST contain `id` and `publicKeyPem`.
         properties:
           id:
             type: string
