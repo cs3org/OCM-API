@@ -112,7 +112,7 @@ Here is an example of headers needed to sign a request.
 
 - '(request-target)' contains the reached endpoint and the used method,
 - 'content-length' is the total length of the payload of the request,
-- 'date' is the date and time on which the request have been emitted,
+- 'date' is the date and time when the request has been sent,
 - 'digest' is a checksum of the payload of the request,
 - 'host' is the hostname of the recipient of the request (remote when signing outgoing request, local on incoming request),
 - 'Signature' contains the signature generated using the private key and details on its generation:
