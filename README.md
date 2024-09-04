@@ -36,7 +36,7 @@ If a finite whitelist of receiver servers exists on the sender side, then this l
 
 When a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers SHOULD provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get).
 
-If the identity of an incoming request needs to be confirmed, the discovery data SHOULD contain a public key. Each incoming request that requires to origin from an authenticated source must be signed in its headers using the related private key.
+To ease the process of confirming the identity of a remote party, the discovery data MAY contain a public key: each incoming request that requires to origin from an authenticated source MUST be signed in its headers using the private key of that source, whose public key MUST be exposed in its discovery data.
 
 To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism SHOULD be provided by implementations that wish to allow sending shares to any receiver, based on DNS `SRV` Service Records.
 
