@@ -43,8 +43,6 @@ To fill the gap between users knowning other peers' email addresses of the form 
 * A provider SHOULD ensure that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
 * When requested to discover the EFSS endpoint for `user@provider.org`, implementations SHOULD query the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
 
-
-
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
 
