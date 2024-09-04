@@ -375,9 +375,6 @@ definitions:
       - owner
       - sender
       - protocol
-      - permission
-      - shareType
-      - resourceType
     properties:
       shareWith:
         type: string
