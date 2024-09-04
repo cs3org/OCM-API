@@ -92,7 +92,7 @@ Since there is no way to guarantee that the sharee OCM provider will actually en
 
 ## Signing request
 
-A request is signed by adding the signature in the headers. The sender also need to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
+A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
 To helps debugging, it is made mandatory to also add all properties used in the signature as headers, even if they can be easily re-generated from the payload.  
 
 Note: Signed requests prove the identity of the sender but does not encrypt nor affect its payload.
