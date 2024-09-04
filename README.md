@@ -181,8 +181,7 @@ Here is an example of how to verify the signature using the headers, the signatu
 
 ### Validating the payload
 
-while signed, it is still needed to confirm the validity of the payload.  
-The last step is to ensure that the payload implies action initiated on the behalf the source of the request.  
+Following the validation of the signature, the host should also confirm the validity of the payload, that is ensuring that the actions implied in the payload actually initiated on behalf of the source of the request.
 
 As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.  
 
