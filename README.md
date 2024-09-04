@@ -106,7 +106,7 @@ Here is an example of headers needed to sign a request.
     "date": "Mon, 08 Jul 2024 14:16:20 GMT",
     "digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
     "host": "hostname.of.the.recipient",
-    "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"ras-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+    "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"rsa-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
   }
 ```
 
@@ -141,7 +141,7 @@ This is a quick PHP example of headers for outgoing request:
 		
     $signature = [
         'keyId' => 'https://author.hostname/key',
-        'algorithm' => 'ras-sha256',
+        'algorithm' => 'rsa-sha256',
         'headers' => 'content-length date digest host',
         'signature' => $signed 
     ];
