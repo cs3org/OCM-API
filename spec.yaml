@@ -1,194 +1,214 @@
-swagger: "2.0"
+openapi: 3.0.3
+x-origin:
+  - url: https://raw.githubusercontent.com/cs3org/OCM-API/develop/spec.yaml
+    format: swagger
+    version: "2.0"
+    converter:
+      url: https://github.com/mermade/oas-kit
+      version: 7.0.8
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
   version: 1.1.0
   x-logo:
     url: logo.png
-schemes:
-  - https
-consumes:
-  - application/json
-produces:
-  - application/hal+json
-parameters:
-  id:
-    name: id
-    in: path
-    description: Unique ID to identify the share at the consumer side.
-    required: true
-    type: string
-  page:
-    name: page
-    in: query
-    type: integer
-    required: false
-    default: 1
-    description: >
-      Default parameter to handle paging through collections. However, this
-      parameter is NOT mandatory, as clients should use
-      the HAL navigation links (e.g. `_links.next.href`) to paginate. These
-      links enable the possibility to use vendor specific pagination.
 paths:
   /.well-known/ocm:
     get:
       summary: Discovery endpoint
       description: >
-        Following RFC 8615, this endpoint returns the properties and capabilities
-        offered by a remote cloud storage. This endpoint is to be served as a
-        top-level URL, e.g. as in `https://my-cloud-storage.org/.well-known/ocm`.
+        Following RFC 8615, this endpoint returns the properties and
+        capabilities offered by a remote cloud storage. This endpoint is to be
+        served as a top-level URL, e.g. as in
+        `https://my-cloud-storage.org/.well-known/ocm`.
       responses:
         "200":
           description: The capabilities of this OCM service
-          schema:
-            $ref: "#/definitions/Discovery"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Discovery"
   /ocm-provider:
     get:
       summary: Legacy discovery endpoint
       description: >
-        This endpoint returns the properties and capabilities offered by a remote
-        cloud storage. It is a replica of `/.well-known/ocm` and it is required
-        to be supported, owing to previously established practices by the main
-        cloud storages that have implemented OCM (for more details, see
-        https://github.com/cs3org/OCM-API/pull/37#issuecomment-435875108).
-        This endpoint is to be served as a top-level URL.
+        This endpoint returns the properties and capabilities offered by a
+        remote cloud storage. It is a replica of `/.well-known/ocm` and it is
+        required to be supported, owing to previously established practices by
+        the main cloud storages that have implemented OCM (for more details, see
+        https://github.com/cs3org/OCM-API/pull/37#issuecomment-435875108). This
+        endpoint is to be served as a top-level URL.
       responses:
         "200":
           description: The capabilities of this OCM service
-          schema:
-            $ref: "#/definitions/Discovery"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Discovery"
   /shares:
     post:
       summary: Create a new share
       description: >
         After the provider created a local share, it sends a `share` object to
-        the consumer containing the 
-        information which is needed to start synchronization between the two
-        services.
-      parameters:
-        - name: share
-          in: body
-          description: The JSON object to create a new share at the consumer side.
-          required: true
-          schema:
-            $ref: "#/definitions/NewShare"
+        the consumer containing the  information which is needed to start
+        synchronization between the two services.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewShare"
+        description: The JSON object to create a new share at the consumer side.
+        required: true
       responses:
         "201":
           description: >
             Consumer successfully received the share. The response might contain
-            the display name of the recipient of the share for general
-            user experience improvement.
-          schema:
-            type: object
-            properties:
-              recipientDisplayName:
-                type: string
-                description: display name of the recipient
-                example: John Doe
+            the display name of the recipient of the share for general user
+            experience improvement.
+          content:
+            application/hal+json:
+              schema:
+                type: object
+                properties:
+                  recipientDisplayName:
+                    type: string
+                    description: display name of the recipient
+                    example: John Doe
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
             found or required properties are missing.
-          schema:
-            $ref: "#/definitions/400"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/400"
         "401":
           description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "403":
           description: Trusted service is not authorized to create shares.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "501":
-          description: >-
-            The consumer doesn't support incoming external shares, the share
+          description: The consumer doesn't support incoming external shares, the share
             type or the resource type is not supported.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "503":
-          description: >-
-            The consumer is temporary unavailable (e.g. due to planned
+          description: The consumer is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
               description: >
                 Indication for the client when the service could be requested
-                again in HTTP Date format as used by the 
-                Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015
-                07:28:00 GMT`) or the number of seconds 
-                (e.g. 3000 if you the service is expected to be available again
-                within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"
+                again in HTTP Date format as used by the  Internet Message
+                Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the
+                number of seconds  (e.g. 3000 if you the service is expected to
+                be available again within 50 minutes).
+              schema:
+                type: string
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /mfa-capable:
     get:
       summary: Inform the sender that the provider will enforce MFA requirements.
       description: >
-        Signal that this OCM provider has the capability to enforce MFA when accessing
-        remote shares.
-        A sender MAY set the permission `mfa-enforced` on a share to this provider:
-        when a consumer attempts to access such a share, the consumer server SHOULD
-        enforce, prior to access, that a session exists for the consumer and that
-        it has been authenticated with MFA, or prompt the consumer in order to
-        elevate their session to MFA if that is applicable.
-        Note: there is no guarantee that the consumer service actually enforces any MFA
-        requirements, so a trust must be established before relying on this capability.
+        Signal that this OCM provider has the capability to enforce MFA when
+        accessing remote shares. A sender MAY set the permission `mfa-enforced`
+        on a share to this provider: when a consumer attempts to access such a
+        share, the consumer server SHOULD enforce, prior to access, that a
+        session exists for the consumer and that it has been authenticated with
+        MFA, or prompt the consumer in order to elevate their session to MFA if
+        that is applicable. Note: there is no guarantee that the consumer
+        service actually enforces any MFA requirements, so a trust must be
+        established before relying on this capability.
       responses:
         "200":
-          description: |
+          description: >
             The provider claims that it is capable of enforcing MFA requirements.
         "404":
-          description: |
-            The provider does not have the capability to enforce MFA requirements.
+          description: >
+            The provider does not have the capability to enforce MFA
+            requirements.
   /notifications:
     post:
       summary: Send a notification to a remote party about a previously known entity
-      description: |
-        Notifications are optional messages. They are expected to be used to inform the
+      description: >
+        Notifications are optional messages. They are expected to be used to
+        inform the
+
         other party about a change about a previously known entity, such as a share or
+
         a trusted user.
+
         For example, a notification MAY be sent by a recipient to let the provider know
+
         that the recipient declined a share. In this case, the provider site MAY mark the
+
         share as declined for its user(s).
+
         Similarly, it MAY be sent by a provider to let the recipient know that the provider
+
         removed a given share, such that the recipient MAY clean it up from its database.
+
         A notification MAY also be sent to let a recipient know that the provider
+
         removed that recipient from the list of trusted users, along with any related share.
+
         The recipient MAY reciprocally remove that provider from the list of trusted users,
+
         along with any related share.
-      parameters:
-        - name: notification
-          in: body
-          description: The JSON object with a new notification
-          required: true
-          schema:
-            $ref: "#/definitions/NewNotification"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewNotification"
+        description: The JSON object with a new notification
+        required: true
       responses:
         "201":
-          description: |
-            Receiver succesfully received the notification. The response body MAY contain
+          description: >
+            Receiver succesfully received the notification. The response body
+            MAY contain
+
             a JSON object with some resonse data, depending on the actual notification.
         "400":
           description: |
             Bad request due to invalid parameters, e.g. when `type` is invalid
             or missing.
-          schema:
-            $ref: "#/definitions/400"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/400"
         "401":
           description: Client cannot be authenticated as a trusted service.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "403":
           description: Trusted service is not authorized to create notifications.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "501":
           description: |
             The receiver doesn't support notifications, the resource type is not
             supported.
-          schema:
-            $ref: "#/definitions/Error"
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "503":
           description: |
             The receiver is temporary unavailable (e.g. due to planned
@@ -201,461 +221,577 @@ paths:
                 [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number
                 of seconds (e.g. 3000 if you the service is expected to be
                 available again within 50 minutes).
-              type: string
-          schema:
-            $ref: "#/definitions/Error"
+              schema:
+                type: string
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /invite-accepted:
     post:
       summary: Inform the sender that an invitation was accepted to start sharing
       description: >
-        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
-        To protect the identity of the parties, for shares created following an OCM invitation,
-        the user id MAY be hashed, and recipients implementing the OCM invitation workflow
-        MAY refuse to process shares coming from unknown parties.
-      parameters:
-        - name: invite
-          in: body
-          description: The JSON object to notify the OCM provider that an invite has been accepted.
-          required: true
-          schema:
-            $ref: "#/definitions/AcceptedInvite"
+        Inform about an accepted invitation so the user on the sender provider's
+        side can initiate the OCM share creation. To protect the identity of the
+        parties, for shares created following an OCM invitation, the user id MAY
+        be hashed, and recipients implementing the OCM invitation workflow MAY
+        refuse to process shares coming from unknown parties.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AcceptedInvite"
+        description: The JSON object to notify the OCM provider that an invite has been
+          accepted.
+        required: true
       responses:
-        200:
+        "200":
           description: Invitation accepted.
-          schema:
-            $ref: "#/definitions/AcceptedInviteResponse"
-        400:
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/AcceptedInviteResponse"
+        "400":
           description: The invitation token is invalid or does not exist.
-          schema:
-            $ref: "#/definitions/Error"
-        403:
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
           description: Remote service is not trusted to accept invitations.
-          schema:
-            $ref: "#/definitions/Error"
-        409:
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
           description: Invitation already accepted.
-          schema:
-            $ref: "#/definitions/Error"
-
-definitions:
-  "400":
-    type: object
-    allOf:
-      - $ref: "#/definitions/Error"
-      - properties:
-          validationErrors:
-            type: array
-            items:
-              type: object
-              properties:
-                name:
-                  type: string
-                  example: shareWith
-                message:
-                  type: string
-                  description: >
-                    A validation error message which is understandable for both
-                    humans and machines (e.g. no use of special characters)
-                    providing more information on the cause of the validation error.
-                  example: NOT_FOUND
-  Error:
-    type: object
-    required:
-      - message
-    properties:
-      message:
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  parameters:
+    id:
+      name: id
+      in: path
+      description: Unique ID to identify the share at the consumer side.
+      required: true
+      schema:
         type: string
-        description: >
-          An error message which is understandable for both humans and machines
-          (e.g. no use of special characters) providing more information
-          on the cause of the error.
-        example: RESOURCE_NOT_FOUND
-  Discovery:
-    type: object
-    required:
-      - enabled
-      - apiVersion
-      - endPoint
-      - resourceTypes
-    properties:
-      enabled:
-        type: boolean
-        description: Whether the OCM service is enabled at this endpoint
-      apiVersion:
-        type: string
-        description: The OCM API version this endpoint supports
-        example: 1.1.0
-      endPoint:
-        type: string
-        description: The URI of the OCM API available at this endpoint
-        example: https://my-cloud-storage.org/ocm
-      provider:
-        type: string
-        description: A friendly branding name of this endpoint
-        example: MyCloudStorage
-      resourceTypes:
-        type: array
-        description: |
-          A list of all supported resource types with their access protocols.
-          Each resource type is identified by its `name`: the list MUST NOT
-          contain more than one resource type object per given `name`.
-        items:
-          type: object
-          properties:
-            name:
-              type: string
-              description: |
-                A supported resource type (file, folder, calendar, contact, ...).
-                Implementations MUST support `file` at a minimum.
-              example: file
-            shareTypes:
-              type: array
-              description: |
-                The supported recipient share types.
-                Implementations MUST support `user` at a minimum.
-              items:
-                type: string
-                enum: ["user", "group", "federation"]
-              example: ["user"]
-            protocols:
-              type: object
-              description: |
-                The supported protocols to access shares at this endpoint.
-                Implementations MUST support `webdav` at a minimum.
-              properties:
-                webdav:
-                  type: string
-                  description: |
-                    The top-level WebDAV path at this endpoint. In order to access
-                    a remote shared resource, implementations MAY use this path
-                    as a prefix, or as the full path (see sharing examples).
-                  example: /remote/dav/ocm/
-                webapp:
-                  type: string
-                  description: |
-                    The top-level path for web apps at this endpoint. This value
-                    is provided for documentation purposes, and it SHALL NOT
-                    be intended as a prefix for share requests.
-                  example: /app/ocm/
-                datatx:
-                  type: string
-                  description: |
-                    The top-level path to be used for data transfers. This
-                    value is provided for documentation purposes, and it SHALL
-                    NOT be intended as a prefix. In addition, implementations
-                    are expected to execute the transfer using WebDAV as
-                    the wire protocol.
-                  example: /remote/dav/ocm/
-      capabilities:
-        type: array
-        description: |
-          The optional capabilities exposed at this endpoint according to the present
-          specifications. As implementations MUST provide `/shares` to be compliant,
-          it is not necessary to expose it as a capability.
-        items:
-          type: string
-          enum: ["/notifications", "/invite-accepted", "/mfa-capable"]
-        example:
-          ["/invite-accepted"]
-  NewShare:
-    type: object
-    required:
-      - shareWith
-      - name
-      - providerId
-      - owner
-      - sender
-      - protocol
-      - permission
-      - shareType
-      - resourceType
-    properties:
-      shareWith:
-        type: string
-        description: |
-          Consumer specific identifier of the user, group or federation the provider
-          wants to share the resource with. This is known in advance.
-          Please note that the consumer service endpoint is known in advance
-          as well, so this is no part of the request body.
-        example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-      name:
-        type: string
-        description: Name of the resource (file or folder).
-        example: resource.txt
-      description:
-        type: string
-        description: Optional description of the resource (file or folder).
-        example: |
-          This is the Open API Specification file (in YAML format) of the Open
-          Cloud Mesh API.
-      providerId:
-        type: string
-        description: |
-          Identifier to identify the shared resource at the provider side. This is
-          unique per provider such that if the same resource is shared twice,
-          this providerId will not be repeated.
-        example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-      owner:
-        description: |
-          Provider specific identifier of the user who owns the resource.
-        type: string
-        example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
-      sender:
-        description: |
-          Provider specific identifier of the user that wants to share the
-          resource. Please note that the requesting provider is being
-          identified on a higher level, so the former `remote` property
-          is not part of the request body.
-        type: string
-        example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
-      ownerDisplayName:
-        type: string
-        description: |
-          Display name of the owner of the resource
-        example: Dimitri
-      senderDisplayName:
-        type: string
-        description: |
-          Display name of the user that wants to share the resource
-        example: John Doe
-      shareType:
-        type: string
-        enum: ["user", "group", "federation"]
-        description: |
-          Recipient share type
-        example: user
-      resourceType:
-        type: string
-        description: |
-          Resource type (file, folder, calendar, contact, ...)
-        example: file
-      expiration:
+    page:
+      name: page
+      in: query
+      required: false
+      description: >
+        Default parameter to handle paging through collections. However, this
+        parameter is NOT mandatory, as clients should use the HAL navigation
+        links (e.g. `_links.next.href`) to paginate. These links enable the
+        possibility to use vendor specific pagination.
+      schema:
         type: integer
-        description: |
-          The expiration time for the OCM share, in seconds
-          of UTC time since Unix epoch. If omitted, it is assumed
-          that the share does not expire.
-      protocol:
-        type: object
-        description: |
-          JSON object with specific options for each protocol.
-          The supported protocols are:
-          - `webdav`, to access the data
-          - `webapp`, to access remote web applications
-          - `datatx`, to transfer the data to the remote endpoint
+        default: 1
+  schemas:
+    "400":
+      type: object
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - properties:
+            validationErrors:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: shareWith
+                  message:
+                    type: string
+                    description: >
+                      A validation error message which is understandable for
+                      both humans and machines (e.g. no use of special
+                      characters) providing more information on the cause of the
+                      validation error.
+                    example: NOT_FOUND
+    Error:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: >
+            An error message which is understandable for both humans and
+            machines (e.g. no use of special characters) providing more
+            information on the cause of the error.
+          example: RESOURCE_NOT_FOUND
+    Discovery:
+      type: object
+      required:
+        - enabled
+        - apiVersion
+        - endPoint
+        - resourceTypes
+      properties:
+        enabled:
+          type: boolean
+          description: Whether the OCM service is enabled at this endpoint
+        apiVersion:
+          type: string
+          description: The OCM API version this endpoint supports
+          example: 1.1.0
+        endPoint:
+          type: string
+          description: The URI of the OCM API available at this endpoint
+          example: https://my-cloud-storage.org/ocm
+        provider:
+          type: string
+          description: A friendly branding name of this endpoint
+          example: MyCloudStorage
+        resourceTypes:
+          type: array
+          description: |
+            A list of all supported resource types with their access protocols.
+            Each resource type is identified by its `name`: the list MUST NOT
+            contain more than one resource type object per given `name`.
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: >
+                  A supported resource type (file, folder, calendar, contact,
+                  ...).
 
-          Other custom protocols might be added in the future.
-        additionalProperties:
-          type: object
-          required:
-            - name
-          properties:
-            name:
-              type: string
-              description: |
-                The name of the protocol. If `multi` is given, one or more protocol
-                endpoints are expected to be defined according to the optional
-                properties specified below.
-                Otherwise, at least `webdav` is expected to be supported, and
-                its options MAY be given in the opaque `options` payload for
-                compatibility with v1.0 implementations (see examples). Note
-                though that this format is deprecated.
-                Warning: client implementers should be aware that v1.1 servers
-                MAY support both `webdav` and `multi`, but v1.0 servers MAY
-                only support `webdav`.
-            options:
-              type: object
-              description: |
-                This property is now deprecated. Implementations are encouraged to
-                transition to the new optional properties defined below, such that
-                this field may be removed in a future major version of the spec.
-            webdav:
-              type: object
-              properties:
-                sharedSecret:
+                  Implementations MUST support `file` at a minimum.
+                example: file
+              shareTypes:
+                type: array
+                description: |
+                  The supported recipient share types.
+                  Implementations MUST support `user` at a minimum.
+                items:
                   type: string
-                  description: |
-                    An optional secret to be used to access the resource,
-                    such as a bearer token.
-                    To prevent leaking it in logs it MUST NOT appear in any URI.
-                permissions:
-                  type: array
-                  items:
+                  enum:
+                    - user
+                    - group
+                    - federation
+                example:
+                  - user
+              protocols:
+                type: object
+                description: |
+                  The supported protocols to access shares at this endpoint.
+                  Implementations MUST support `webdav` at a minimum.
+                properties:
+                  webdav:
+                    type: string
+                    description: >
+                      The top-level WebDAV path at this endpoint. In order to
+                      access
+
+                      a remote shared resource, implementations MAY use this path
+
+                      as a prefix, or as the full path (see sharing examples).
+                    example: /remote/dav/ocm/
+                  webapp:
+                    type: string
+                    description: >
+                      The top-level path for web apps at this endpoint. This
+                      value
+
+                      is provided for documentation purposes, and it SHALL NOT
+
+                      be intended as a prefix for share requests.
+                    example: /app/ocm/
+                  datatx:
                     type: string
                     description: |
+                      The top-level path to be used for data transfers. This
+                      value is provided for documentation purposes, and it SHALL
+                      NOT be intended as a prefix. In addition, implementations
+                      are expected to execute the transfer using WebDAV as
+                      the wire protocol.
+                    example: /remote/dav/ocm/
+        capabilities:
+          type: array
+          description: >
+            The optional capabilities exposed at this endpoint according to the
+            present
+
+            specifications. As implementations MUST provide `/shares` to be compliant,
+
+            it is not necessary to expose it as a capability.
+          items:
+            type: string
+            enum:
+              - /notifications
+              - /invite-accepted
+              - /mfa-capable
+          example:
+            - /invite-accepted
+    NewShare:
+      type: object
+      required:
+        - shareWith
+        - name
+        - providerId
+        - owner
+        - sender
+        - protocol
+        - permission
+        - shareType
+        - resourceType
+      properties:
+        shareWith:
+          type: string
+          description: >
+            Consumer specific identifier of the user, group or federation the
+            provider
+
+            wants to share the resource with. This is known in advance.
+
+            Please note that the consumer service endpoint is known in advance
+
+            as well, so this is no part of the request body.
+          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
+        name:
+          type: string
+          description: Name of the resource (file or folder).
+          example: resource.txt
+        description:
+          type: string
+          description: Optional description of the resource (file or folder).
+          example: |
+            This is the Open API Specification file (in YAML format) of the Open
+            Cloud Mesh API.
+        providerId:
+          type: string
+          description: >
+            Identifier to identify the shared resource at the provider side.
+            This is
+
+            unique per provider such that if the same resource is shared twice,
+
+            this providerId will not be repeated.
+          example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        owner:
+          description: |
+            Provider specific identifier of the user who owns the resource.
+          type: string
+          example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
+        sender:
+          description: |
+            Provider specific identifier of the user that wants to share the
+            resource. Please note that the requesting provider is being
+            identified on a higher level, so the former `remote` property
+            is not part of the request body.
+          type: string
+          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
+        ownerDisplayName:
+          type: string
+          description: |
+            Display name of the owner of the resource
+          example: Dimitri
+        senderDisplayName:
+          type: string
+          description: |
+            Display name of the user that wants to share the resource
+          example: John Doe
+        shareType:
+          type: string
+          enum:
+            - user
+            - group
+            - federation
+          description: |
+            Recipient share type
+          example: user
+        resourceType:
+          type: string
+          description: |
+            Resource type (file, folder, calendar, contact, ...)
+          example: file
+        expiration:
+          type: integer
+          description: |
+            The expiration time for the OCM share, in seconds
+            of UTC time since Unix epoch. If omitted, it is assumed
+            that the share does not expire.
+        protocol:
+          type: object
+          description: |
+            JSON object with specific options for each protocol.
+            The supported protocols are:
+            - `webdav`, to access the data
+            - `webapp`, to access remote web applications
+            - `datatx`, to transfer the data to the remote endpoint
+
+            Other custom protocols might be added in the future.
+          additionalProperties:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                description: >
+                  The name of the protocol. If `multi` is given, one or more
+                  protocol
+
+                  endpoints are expected to be defined according to the optional
+
+                  properties specified below.
+
+                  Otherwise, at least `webdav` is expected to be supported, and
+
+                  its options MAY be given in the opaque `options` payload for
+
+                  compatibility with v1.0 implementations (see examples). Note
+
+                  though that this format is deprecated.
+
+                  Warning: client implementers should be aware that v1.1 servers
+
+                  MAY support both `webdav` and `multi`, but v1.0 servers MAY
+
+                  only support `webdav`.
+              options:
+                type: object
+                description: >
+                  This property is now deprecated. Implementations are
+                  encouraged to
+
+                  transition to the new optional properties defined below, such that
+
+                  this field may be removed in a future major version of the spec.
+              webdav:
+                type: object
+                properties:
+                  sharedSecret:
+                    type: string
+                    description: >
+                      An optional secret to be used to access the resource,
+
+                      such as a bearer token.
+
+                      To prevent leaking it in logs it MUST NOT appear in any URI.
+                  permissions:
+                    type: array
+                    items:
+                      type: string
+                      description: >
+                        The permissions granted to the sharee.
+
+                        - `read` allows read-only access including download of a copy.
+
+                        - `write` allows create, update, and delete rights on the resource.
+
+                        - `share` allows re-share rights on the resource.
+
+                        - `mfa-enforced` requires the user accessing the resource to be
+                          MFA-authenticated. This permission MAY be used if the
+                          provider exposes the `mfa-capable` capability.
+                      enum:
+                        - read
+                        - write
+                        - share
+                        - mfa-enforced
+                  uri:
+                    type: string
+                    description: >
+                      An URI to access the remote resource. The URI MAY be
+                      relative,
+
+                      in which case the prefix exposed by the `/ocm-provider` endpoint MUST
+
+                      be used, or it may be absolute (recommended). Additionally, the URI
+
+                      MAY include a secret hash in the path, in which case there MAY be
+
+                      no associated `sharedSecret`.
+              webapp:
+                type: object
+                properties:
+                  uriTemplate:
+                    type: string
+                    description: >
+                      A templated URI to a client-browsable view of the shared
+                      resource,
+
+                      such that users may use the web applications available at the site.
+
+                      The URI MAY include a secret hash in the path. If the path includes
+
+                      a `{relative-path-to-shared-resource}` placeholder, implementations
+
+                      MAY replace it with the actual path to ease user interaction.
+                  viewMode:
+                    type: string
+                    description: >
                       The permissions granted to the sharee.
-                      - `read` allows read-only access including download of a copy.
-                      - `write` allows create, update, and delete rights on the resource.
-                      - `share` allows re-share rights on the resource.
+
+                      - `view` allows access to the web app in view-only mode.
+
+                      - `read` allows read and download access via the web app.
+
+                      - `write` allows full editing rights via the web app.
+
                       - `mfa-enforced` requires the user accessing the resource to be
                         MFA-authenticated. This permission MAY be used if the
                         provider exposes the `mfa-capable` capability.
-                    enum: ["read", "write", "share", "mfa-enforced"]
-                uri:
-                  type: string
-                  description: |
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the URI
-                    MAY include a secret hash in the path, in which case there MAY be
-                    no associated `sharedSecret`.
-            webapp:
-              type: object
-              properties:
-                uriTemplate:
-                  type: string
-                  description: |
-                    A templated URI to a client-browsable view of the shared resource,
-                    such that users may use the web applications available at the site.
-                    The URI MAY include a secret hash in the path. If the path includes
-                    a `{relative-path-to-shared-resource}` placeholder, implementations
-                    MAY replace it with the actual path to ease user interaction.
-                viewMode:
-                  type: string
-                  description: |
-                    The permissions granted to the sharee.
-                    - `view` allows access to the web app in view-only mode.
-                    - `read` allows read and download access via the web app.
-                    - `write` allows full editing rights via the web app.
-                    - `mfa-enforced` requires the user accessing the resource to be
-                      MFA-authenticated. This permission MAY be used if the
-                      provider exposes the `mfa-capable` capability.
-                  enum: ["view", "read", "write", "mfa-enforced"]
-                sharedSecret:
-                  type: string
-                  description: |
-                    An optional secret to be used to access the remote web app,
-                    for example in the form of a bearer token.
-            datatx:
-              type: object
-              properties:
-                sharedSecret:
-                  type: string
-                  description: |
-                    An optional secret to be used to access the resource,
-                    for example in the form of a bearer token.
-                    To prevent leaking it in logs it MUST NOT appear in any URI.
-                srcUri:
-                  type: string
-                  description: |
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the
-                    URI MAY include a secret hash in the path.
-                size:
-                  type: integer
-        example:
-          singleProtocolLegacy:
-            name: "webdav"
-            options:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: "some permissions scheme"
-          singleProtocolNew:
-            name: "webdav"
-            options:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-            webdav:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: ["read", "write"]
-              uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
-          multipleProtocols:
-            name: "multi"
-            options:
-            webdav:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: ["read", "mfa-enforced"]
-              uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
-            webapp:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              uriTemplate: "https://open-cloud-mesh.org/app/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/{relative-path-to-shared-resource}"
-              viewMode: "read"
-            datatx:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              srcUri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
-              size: 100000
-  NewNotification:
-    type: object
-    required:
-      - notificationType
-      - resourceType
-      - providerId
-    properties:
-      notificationType:
-        type: string
-        description: |
-          A notification type that is understandable for both humans and
-          machines (e.g. no use of special characters) providing more
-          information on the cause of the error.
-          Values that MAY be used by implementations are:
-          `SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,
-          `SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`,
-          `USER_REMOVED`.
-      resourceType:
-        type: string
-        description: |
-          Resource type (file, folder, user, calendar, contact, ...)
-      providerId:
-        type: string
-        description: |
-          Identifier of the shared resource. If the resourceType is `file`,
-          then see `NewShare/providerId` for the required information.
-          If the resourceType is `user`, then this is the user identifier
-          previously sent via `/invite-accepted`.
-      notification:
-        type: object
-        description: |
-          Optional additional parameters, depending on the notification
-          and the resource type.
-    example:
-      shareWasAccepted:
-        notificationType: "SHARE_ACCEPTED"
-        resourceType: "file"
-        providerId: "7c084226-d9a1-11e6-bf26-cec0c932ce01"
+                    enum:
+                      - view
+                      - read
+                      - write
+                      - mfa-enforced
+                  sharedSecret:
+                    type: string
+                    description: >
+                      An optional secret to be used to access the remote web
+                      app,
+
+                      for example in the form of a bearer token.
+              datatx:
+                type: object
+                properties:
+                  sharedSecret:
+                    type: string
+                    description: >
+                      An optional secret to be used to access the resource,
+
+                      for example in the form of a bearer token.
+
+                      To prevent leaking it in logs it MUST NOT appear in any URI.
+                  srcUri:
+                    type: string
+                    description: >
+                      An URI to access the remote resource. The URI MAY be
+                      relative,
+
+                      in which case the prefix exposed by the `/ocm-provider` endpoint MUST
+
+                      be used, or it may be absolute (recommended). Additionally, the
+
+                      URI MAY include a secret hash in the path.
+                  size:
+                    type: integer
+          example:
+            singleProtocolLegacy:
+              name: webdav
+              options:
+                sharedSecret: hfiuhworzwnur98d3wjiwhr
+                permissions: some permissions scheme
+            singleProtocolNew:
+              name: webdav
+              options:
+                sharedSecret: hfiuhworzwnur98d3wjiwhr
+              webdav:
+                sharedSecret: hfiuhworzwnur98d3wjiwhr
+                permissions:
+                  - read
+                  - write
+                uri: https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt
+            multipleProtocols:
+              name: multi
+              options: null
+              webdav:
+                sharedSecret: hfiuhworzwnur98d3wjiwhr
+                permissions:
+                  - read
+                  - mfa-enforced
+                uri: https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt
+              webapp:
+                sharedSecret: hfiuhworzwnur98d3wjiwhr
+                uriTemplate: https://open-cloud-mesh.org/app/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/{relative-path-to-shared-resource}
+                viewMode: read
+              datatx:
+                sharedSecret: hfiuhworzwnur98d3wjiwhr
+                srcUri: https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt
+                size: 100000
+    NewNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - providerId
+      properties:
+        notificationType:
+          type: string
+          description: |
+            A notification type that is understandable for both humans and
+            machines (e.g. no use of special characters) providing more
+            information on the cause of the error.
+            Values that MAY be used by implementations are:
+            `SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,
+            `SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`,
+            `USER_REMOVED`.
+        resourceType:
+          type: string
+          description: |
+            Resource type (file, folder, user, calendar, contact, ...)
+        providerId:
+          type: string
+          description: |
+            Identifier of the shared resource. If the resourceType is `file`,
+            then see `NewShare/providerId` for the required information.
+            If the resourceType is `user`, then this is the user identifier
+            previously sent via `/invite-accepted`.
         notification:
-          message: "Recipient accepted the share"
-          sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-      userWasRemoved:
-        notificationType: "USER_REMOVED"
-        resourceType: "user"
-        providerId: "51dc30ddc473d43a6011e9ebba6ca770"
-  AcceptedInvite:
-    type: object
-    allOf:
-      - properties:
-          recipientProvider:
-            type: string
-            format: url
-            description: URL of the receiver OCM service.
-            example: https://receiver.org
-          token:
-            type: string
-            description: Token received in the invite
-            example: xyz
-          userID:
-            type: string
-            description: Unique ID to identify the user at the remote provider accepting the invite.
-            example: 51dc30ddc473d43a6011e9ebba6ca770
-          email:
-            type: string
-            description: Email ID of the user accepting the invite.
-            example: richard@receiver.org
-          name:
-            type: string
-            description: Name of the user accepting the invite.
-            example: Richard Feynman
-  AcceptedInviteResponse:
-    type: object
-    allOf:
-      - properties:
-          userID:
-            type: string
-            description: Unique ID to identify the sender at the local provider.
-            example: 9302
-          email:
-            type: string
-            description: Email ID of the user that sent the invite.
-            example: john@sender.org
-          name:
-            type: string
-            description: Name of the user that sent the invite.
-            example: John Doe
+          type: object
+          description: |
+            Optional additional parameters, depending on the notification
+            and the resource type.
+      example:
+        shareWasAccepted:
+          notificationType: SHARE_ACCEPTED
+          resourceType: file
+          providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+          notification:
+            message: Recipient accepted the share
+            sharedSecret: hfiuhworzwnur98d3wjiwhr
+        userWasRemoved:
+          notificationType: USER_REMOVED
+          resourceType: user
+          providerId: 51dc30ddc473d43a6011e9ebba6ca770
+    AcceptedInvite:
+      type: object
+      allOf:
+        - properties:
+            recipientProvider:
+              type: string
+              format: url
+              description: URL of the receiver OCM service.
+              example: https://receiver.org
+            token:
+              type: string
+              description: Token received in the invite
+              example: xyz
+            userID:
+              type: string
+              description: Unique ID to identify the user at the remote provider accepting the
+                invite.
+              example: 51dc30ddc473d43a6011e9ebba6ca770
+            email:
+              type: string
+              description: Email ID of the user accepting the invite.
+              example: richard@receiver.org
+            name:
+              type: string
+              description: Name of the user accepting the invite.
+              example: Richard Feynman
+    AcceptedInviteResponse:
+      type: object
+      allOf:
+        - properties:
+            userID:
+              type: string
+              description: Unique ID to identify the sender at the local provider.
+              example: 9302
+            email:
+              type: string
+              description: Email ID of the user that sent the invite.
+              example: john@sender.org
+            name:
+              type: string
+              description: Name of the user that sent the invite.
+              example: John Doe
