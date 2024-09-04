@@ -374,6 +374,8 @@ definitions:
       - providerId
       - owner
       - sender
+      - shareType
+      - resourceType
       - protocol
     properties:
       shareWith:
