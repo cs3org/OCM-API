@@ -366,6 +366,23 @@ definitions:
           enum: ["/notifications", "/invite-accepted", "/mfa-capable"]
         example:
           ["/invite-accepted"]
+      publicKey:
+        type: object
+        description: |
+          The signatory used to sign outgoing request to confirm its origin. The 
+          signatory is optional but it MUST contain `id` and `publicKeyPem`.
+        properties:
+          id:
+            type: string
+            description: |
+              unique id of the key in URI format. The hostname set the origin of the 
+              request and MUST be identical to the current discovery endpoint.
+            example: https://my-cloud-storage.org/ocm#signature
+          publicKeyPem:
+            type: string
+            description: |
+              PEM-encoded version of the public key.
+            example: "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
   NewShare:
     type: object
     required:
