@@ -373,7 +373,7 @@ definitions:
             type: string
             description: |
               PEM-encoded version of the public key.
-            example: "-----BEGIN PRIVATE KEY-----\nMII...QDD\n-----END PRIVATE KEY-----\n"
+            example: "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
   NewShare:
     type: object
     required:
