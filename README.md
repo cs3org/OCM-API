@@ -29,6 +29,28 @@ the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specif
 
 
 ## Specification
+### Introduction
+Open Cloud Mesh is a  server federation protocol that is used to notify a remote user that they have
+been granted access to some resource. It has similarities with authorization flows such as OAuth, as well as with social internet protocols such as ActivityPub and email.
+
+### Terms
+We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
+* __resource__ - the piece of data or interaction to which access is being granted
+* __share__ - a policy rule stating that certain actors are allowed access to a resource. Also: a record in a database representing this rule.
+* __sending user__ - a person or party who is authorized to create shares ("Resource Owner").
+* __receiving user or group__ - a person, group or party who is granted access to the resource through the share ("Requesting Party / RqP" in OAuth-UMA).
+* __sending server__ - the server that:
+  * holds the resource ("file server", "Entreprise File Sync and Share (EFSS) server"),
+  * provides access to it ("API"),
+  * takes the decision to create the share based on user interface gestures from the sending user ("Authorization Server")
+  * takes the decision about authorizing attempts to access the resource ("Resource Server")
+  * send out share creation notifications when appropriate (see below)
+* __receiving server__ - the server that:
+  * receives share creation notifications (see below)
+  * actively or passively notifies the receiving user or group of any incoming share creation notification
+  * acts as an API client, allowing the receiving user to access the resource through an API (e.g. WebDAV) of the sending server
+* __share creation notification__ - a server-to-server request from the sending server to the receiving server, notifying the receiving server that a share has been created.
+
 ### Discovery
 Authentication between services is already established. This means that this specification doesn't cover the way a service authenticates incoming API calls (e.g. through an API Key, VPN connection or IP whitelisting). In this scope we assume that the services are already authenticated.
 
