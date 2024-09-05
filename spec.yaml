@@ -10,7 +10,7 @@ schemes:
 consumes:
   - application/json
 produces:
-  - application/hal+json
+  - application/json
 parameters:
   id:
     name: id
