@@ -206,12 +206,10 @@ paths:
             $ref: "#/definitions/Error"
   /invite-accepted:
     post:
-      summary: Inform the sender that an invitation was accepted to start sharing
+      summary: [Invite Acceptance Request](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-request-details) and [Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details)
       description: >
-        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
-        To protect the identity of the parties, for shares created following an OCM invitation,
-        the user id MAY be hashed, and recipients implementing the OCM invitation workflow
-        MAY refuse to process shares coming from unknown parties.
+        See the Open Cloud Mesh [Invite flow spec](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-flow) for more details.
+
       parameters:
         - name: invite
           in: body

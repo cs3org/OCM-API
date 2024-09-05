@@ -140,6 +140,10 @@ Whereas the precise syntax of the Invite Message and the Invite Acceptance Gestu
 
 The Invite Receiver OCM Server SHOULD apply its own policies for trusting the Invite Sender OCM Server before making the Invite Acceptance Request.
 
+Since the Invite Flow does not require either Party to type or remember the `userId`, this string does not need to be human-memorable. Even if the Invite Receiver has a memorable username at the Invite Receiver OCM Server, this `userId` that forms part of their OCM Address does not need to match it.
+
+Also, a different `userId` could be given out to each contact, to avoid correlation of identities.
+
 ##### Invite Acceptance Response Details
 The Invite Acceptance Response SHOULD be a HTTP response:
 * in response to the Invite Acceptance Request
@@ -151,10 +155,16 @@ The Invite Acceptance Response SHOULD be a HTTP response:
 
 The Invite Sender OCM Server SHOULD verify the HTTP Signature on the Invite Acceptance Request and apply its own policies for trusting the Invite Receiver OCM Server before processing the Invite Acceptance Request and sending the Invite Acceptance Response.
 
+As with the `userId` in the Invite Acceptance Request, the one in the Response also doesn't need to be human-memorable, doesn't need to match the Invite Sender's username at their OCM Server
+
 ##### Addition into address books
 Following these step, both servers MAY display the `name` of the other party as a trusted or allowlisted contact, and enable selecting them as a Receiving Party. OCM Servers MAY enforce a policy to only accept Share Creation Notifications from such trusted contacts, or MAY display a warning to users when a Share Creation Notification from an unknown party is received.
 
 Both servers MAY also allowlist each other as a server with which at least one of their users wishes to interact.
+
+Note that Invites act symmetrically, so once contact has been established, both the Invite Sender and the Invite Receiver may take on either the Sending Party or the Receiving Party role in subsequent Share Creation events.
+
+Both parties may delete the other party from their address book at any time without notifying them.
 
 ##### Security Advantages
 It is important to underscore the value of the Invite in this scenario, as it provides four important security advantages. First of all, if the Receiving Server blocks Share Creation Notifications from Sending Parties who are not in the addressbook of the Receiving Party, then this protects the Receiving Party from receiving unsolicited Shares. An attacker could still send the Receiving Party an unsolicited Share, but they would first need to convince the Receiving Party through an out-of-band communication channel to accept their invite. In many use cases, the Receiving Party has had other forms of contact with the Sending Party (e.g. in-person or email back-and-forth). The out-of-band Invite Message thus leverages the filters and context which the Receiving Party may already benefit from in that out-of-band communication. For instance, a careful Receiving Party may choose to only accept Invites that reach them via a private or moderated messaging platform.
