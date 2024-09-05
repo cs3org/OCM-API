@@ -30,31 +30,28 @@ parameters:
       the HAL navigation links (e.g. `_links.next.href`) to paginate. These
       links enable the possibility to use vendor specific pagination.
 paths:
-  /.well-known/ocm:
+  https://<discovery-fqdn>/.well-known/ocm:
     get:
       summary: Discovery endpoint
       description: >
         Following RFC 8615, this endpoint returns the properties and capabilities
-        offered by a remote cloud storage. This endpoint is to be served as a
-        top-level URL, e.g. as in `https://my-cloud-storage.org/.well-known/ocm`.
+        offered by an OCM Server. This endpoint is to be served at the OCM server's FQDN,
+        or at the discovery FQDN that its SRV DNS record redirects to,
+        e.g. as in `https://my-cloud-storage.org/.well-known/ocm`.
+        See [OCM API Discovery](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#ocm-api-discovery) for more details.
       responses:
         "200":
-          description: The capabilities of this OCM service
+          description: The API endpoint, version, public key, and capabilities of this OCM Server
           schema:
             $ref: "#/definitions/Discovery"
-  /ocm-provider:
+  https://<discovery-fqdn>/ocm-provider:
     get:
       summary: Legacy discovery endpoint
       description: >
-        This endpoint returns the properties and capabilities offered by a remote
-        cloud storage. It is a replica of `/.well-known/ocm` and it is required
-        to be supported, owing to previously established practices by the main
-        cloud storages that have implemented OCM (for more details, see
-        https://github.com/cs3org/OCM-API/pull/37#issuecomment-435875108).
-        This endpoint is to be served as a top-level URL.
+        This endpoint is a replica of `/.well-known/ocm`. OCM Servers MUST support both.
       responses:
         "200":
-          description: The capabilities of this OCM service
+          description: See `/.well-known/ocm`.
           schema:
             $ref: "#/definitions/Discovery"
   /shares:

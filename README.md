@@ -21,6 +21,9 @@ the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swag
       * [Invite Acceptance Response Details](#invite-acceptance-response-details)
       * [Further Reading](#further-reading)
   * [OCM API Discovery](#ocm-api-discovery)
+      * [Introduction](#introduction-1)
+      * [Process](#process)
+      * [Fields](#fields)
   * [Share Creation Notification](#share-creation-notification)
   * [Receiving Party Notification](#receiving-party-notification)
   * [Share Acceptance Notification](#share-acceptance-notification)
@@ -68,8 +71,13 @@ We define the following concepts (with some non-normative references to related 
 * __Share Creation__ - the addition of a Share to the database state of the Sending Server, in response to a successful Sending Gesture or for another reason
 * __Share Creation Notification__ - a server-to-server request from the sending server to the receiving server, notifying the receiving server that a Share has been created
 * __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`
-* __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM-capable server. `<Receiving Party's identifier>` is an opaque string,
+* __OCM Server__ - a server that supports OCM.
+* __Discovering Server__ - a server that tries to obtain information in OCM API discovery
+* __Discoverable Server__ - a server that tries to supply information in OCM API discovery
+* __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM Server. `<Receiving Party's identifier>` is an opaque string,
 unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This can, but doesn't need to be, the domain at which the OCM API of that server is hosted.
+* __Vanity OCM Address__ - a string that looks like an OCM Address but with an alternative (generally shorter or nicer) FQDN. This FQDN does not support HTTP-based discovery, but it does provide an SRV record in its DNS zone, pointing to the (generally longer or uglier) FQDN of the OCM Server.
+* __Regular OCM Address__ - an OCM Address that is not a Vanity OCM Address
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact between parties and servers in the Invite Flow, containing an Invite Token (see below) and the Invite Sender's OCM Address
 * __Invite Sender__ - the party sending an Invite
@@ -181,6 +189,7 @@ Third, equivalently, the Sending Server knows it is essentially registering the 
 Fourth, related to the second one, it removes the partial 'open relay' problem that exists when the Sending Server is allowed to include any Receiving Server FQDN in the Sending Gesture. Without the use of Invites, a Distributed Denial of Service attack could be organised if many internet users collude to flood a given OCM Server with Share Creation Notifications which will be hard to distinguish from legitimate requests without human interaction. An unsolicited (invalid) Invite Acceptance Request is much easier to filter out than an unsolicited (possibly valid, possibly invalid) OCM request, since the Invite Acceptance Request needs to contain an Invite Token that was previously uniquely generated at the Invite Sender OCM server.
 
 ### OCM API Discovery
+#### Introduction
 After establishing contact as discussed in the previous section, the Sharing User can send the Share Creation Gesture to the Sending Server, providing the Sending Server with the following information:
 * Resource to be shared
 * Protocol to be offered for access
@@ -205,14 +214,79 @@ If the FQDN passes the denylist and/or allowlist checks, but no details about it
 
 This process MAY be influenced by a VPN connection and/or IP allowlisting.
 
-OCM API discovery can happen from the Receiving Server FQDN, using a HTTP GET request to `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility).
-The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
+When OCM API discovery can occur in preparation of a Share Creation Notification, the Sending Server takes on the 'Discovering Server' role and the Receiving Server plays the role of 'Discoverable Server'.
 
-To help with situations where hosting `https://<fqdn>/.well-known/ocm` or `https://<fqdn>/ocm-provider` is impractical, a further discovery mechanism MAY be provided, based on DNS `SRV` Service Records.
+#### Process
+At the start of the process, the Discovering Server has either an OCM Address, or just an FQDN from for instance the `recipientProvider` field of an Invite Acceptance Request.
 
-If `https://<fqdn>/.well-known/ocm` does not exist, the Receiving Server MAY instead point to `https://<other-fqdn>/.well-known/ocm` by ensuring that a `type=SRV` DNS query to `_ocm._tcp.<fqdn>` resolves to e.g. `service = 10 10 443 <other-fqdn>`
+Step 1: In case it has an OCM Address, it should first extract `<fqdn>` from it (the part after the `@` sign).
+Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP GET request to `https://<fqdn>/.well-known/ocm`.
+Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
+Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as the URL instead.
+Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
+Step 6: If not, and the `<fqdn>` came from an OCM Address, then it SHOULD check if the OCM Address in question was a Vanity OCM Address.
+This can be checked with a `type=SRV` DNS query to `_ocm._tcp.<fqdn>`. If that returns `service = 10 10 443 <regular-fqdn>` then repeat from step 2, using `<regular-fqdn>` instead of the `<fqdn>` that appeared in the Vanity OCM Address.
+Step 7: If not, fail.
+Step 8: The JSON response body is the data that was discovered.
 
-When attempting to discover the OCM API details for `<fqdn>`, if https://<fqdn>/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.<fqdn>` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path, using TLS.
+#### Fields
+The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
+
+* REQUIRED: enabled (boolean) - Whether the OCM service is enabled at this endpoint
+* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.1.0"`
+* REQUIRED: endPoint (string) - The URI of the OCM API available at this endpoint. Example: `"https://my-cloud-storage.org/ocm"`
+* OPTIONAL: provider (string) - A friendly branding name of this endpoint. Example: `"MyCloudStorage"`
+* REQUIRED: resourceTypes (array) - A list of all supported resource types with their access protocols. Each item in this list should
+itself be an object containing the following fields:
+  * name (string) -  A supported resource type (file, folder, calendar, contact, ...).
+                Implementations MUST support `file` at a minimum. Each resource type is identified by its `name`: the list MUST NOT
+          contain more than one resource type object per given `name`.
+  * shareTypes (array of string) -
+                The supported recipient share types.
+                MUST contain `"user"` at a minimum, plus optionally `"group"` and `"federation"`.
+                Example: `["user"]`
+  * protocols (object) - The supported protocols for accessing shared resources.
+                Implementations MUST support at least `webdav` for `file` resources,
+                any other combination of resources and protocols is optional. Example:
+                ```json
+                {
+                  "webdav": "/remote/dav/ocm/",
+                  "webapp": "/app/ocm/",
+                  "talk": "/apps/spreed/api/"
+                }
+                ```
+                Fields:
+    * webdav (string) - The top-level WebDAV path at this endpoint. In order to access
+                    a remote shared resource, implementations MAY use this path
+                    as a prefix, or as the full path (see sharing examples).
+    * webapp (string) - The top-level path for web apps at this endpoint. This value
+                    is provided for documentation purposes, and it SHALL NOT
+                    be intended as a prefix for share requests.
+    * datatx (string) - The top-level path to be used for data transfers. This
+                    value is provided for documentation purposes, and it SHALL
+                    NOT be intended as a prefix. In addition, implementations
+                    are expected to execute the transfer using WebDAV as
+                    the wire protocol.
+    * Any additional protocol supported for this resource type MAY
+                    be advertised here, where the value MAY correspond to a top-level
+                    URI to be used for that protocol.
+              
+* OPTIONAL: capabilities (array of string) - The optional capabilities supported by this OCM Server.
+          As implementations MUST accept Share Creation Notifications to be compliant,
+          it is not necessary to expose that as a capability.
+          Example: `["/notifications"]`. The array MAY include for instance:
+    * `"/notifications"` - to indicate this OCM server is capable of processing OCM Notifications
+    * `"/invite-accepted"` - to indicate that this OCM server is capable of processing Invite Acceptance Requests.
+    * `"/mfa-capable"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
+        
+* OPTIONAL: publicKey (object) - The signatory used to sign outgoing request to confirm its origin. The 
+          signatory is optional, but if present, it MUST contain two string fields, `id` and `publicKeyPem`.
+        properties:
+  * REQUIRED id (string) unique id of the key in URI format. The hostname set the origin of the 
+              request and MUST be identical to the current discovery endpoint.
+            Example: https://my-cloud-storage.org/ocm#signature
+  * REQUIRED publicKeyPem (string) - PEM-encoded version of the public key.
+            Example: "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
 
 ### Share Creation Notification
 To create a share, the sending server SHOULD make a HTTP POST request
