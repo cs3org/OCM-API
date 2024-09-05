@@ -67,6 +67,7 @@ We define the following concepts (with some non-normative references to related 
 * __Sending Gesture__ - a user interface interaction from the Sending Party to the Sending Server, conveying the intention to create a Share
 * __Share Creation__ - the addition of a Share to the database state of the Sending Server, in response to a successful Sending Gesture or for another reason
 * __Share Creation Notification__ - a server-to-server request from the sending server to the receiving server, notifying the receiving server that a Share has been created
+* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`
 * __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM-capable server. `<Receiving Party's identifier>` is an opaque string,
 unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This can, but doesn't need to be, the domain at which the OCM API of that server is hosted.
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
@@ -80,6 +81,8 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Invite Acceptance Gesture__ - gesture from the Invite Receiver to the Invite Receiver OCM Server, supplying the Invite Token as well as the OCM Address of the Invite Sender, effectively allowlisting the Invite Sender OCM Server for sending Share Creation Notifications to the Invite Receiver OCM Server.
 * __Invite Acceptance Request__ - API call from the Invite Receiver OCM Server to the Invite Sender OCM Server, supplying the Invite Token as well as the OCM Address of the Invite Receiver, effectively allowlisting the Invite Sender OCM Server for sending Share Creation Notifications to the Invite Receiver OCM Server.
 * __Invite Acceptance Response__ - HTTP response to the Invite Acceptance Request
+* __Share Name__ - a human-readable string, provided by the Sending Party or the Sending Server, to help the Receiving Party understand which Resource the Share grants access to
+* __Share Permissions__ - protocol-specific restrictions on the modes of accessing the Resource
 
 ### General Flow
 The lifecycle of an Open Cloud Mesh Share starts with prerequisites such as
@@ -169,8 +172,8 @@ After establishing contact as discussed in the previous section, the Sharing Use
 * Sending Party's identifier
 * Receiving Party's identifier
 * Receiving Server FQDN
-* OPTIONAL: Name
-* OPTIONAL: Permissions
+* OPTIONAL: Share Name
+* OPTIONAL: Share Permissions
 
 The next step is for the Sending Server to additionally discover:
 * if the Receiving Server is trusted
@@ -179,16 +182,16 @@ The next step is for the Sending Server to additionally discover:
 * at which URL
 * the public key the Receiving Server will use for HTTP Signatures (if any)
 
-The Sending Server MAY first preform denylist and allowlist checks on the FQDN.
+The Sending Server MAY first perform denylist and allowlist checks on the FQDN.
 
-If a finite allowlist of receiver servers exists on the sender side, then this list may already contain all necessary information.
+If a finite allowlist of Receiving Servers exists on the Sending Server side, then this list may already contain all necessary information.
 
 If the FQDN passes the denylist and/or allowlist checks, but no details about its OCM API are known, the Sending Server can use the following process to try to fetch this information from the Receiving Server.
 
 This process MAY be influenced by a VPN connection and/or IP allowlisting.
 
-Otherwise, for instance
-when a sending server allows sharing to any internet-hosted receiving server, then trust can be established dynamically, and OCM API discovery can happen from the Receiving Server FQDN, using `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility) as the URL. The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
+OCM API discovery can happen from the Receiving Server FQDN, using a HTTP GET request to `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility).
+The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
 
 To help with situations where hosting `https://<fqdn>/.well-known/ocm` or `https://<fqdn>/ocm-provider` is impractical, a further discovery mechanism MAY be provided, based on DNS `SRV` Service Records.
 
