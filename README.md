@@ -37,30 +37,30 @@ the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swag
 
 ## Specification
 ### Introduction
-Open Cloud Mesh is a  server federation protocol that is used to notify a remote user that they have
-been granted access to some resource. It has similarities with authorization flows such as OAuth, as well as with social internet protocols such as ActivityPub and email.
+Open Cloud Mesh is a server federation protocol that is used to notify a Receiving Party that they have
+been granted access to some Resource. It has similarities with authorization flows such as OAuth, as well as with social internet protocols such as ActivityPub and email.
 
-The actual file sync is not part of this specification. To keep this specification 'future proof', the file sync protocol will be embedded as a separate object in Open Cloud Mesh API calls. This protocol object contains all protocol specific options, e.g. WebDAV specific options.
+Open Cloud Mesh only handles the necessary interactions up to the point where the Receiving Party is informed that they were granted access to the Resource. The actual resource access is then left to protocols such as WebDAV and others.
 
 ### Terms
 We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
-* __Resource__ - the piece of data or interaction to which access is being granted
-* __Share__ - a policy rule stating that certain actors are allowed access to a resource. Also: a record in a database representing this rule
-* __Sending Party__ - a person or party who is authorized to create shares ("Resource Owner")
-* __Receiving Party__ - a person, group or party who is granted access to the resource through the share ("Requesting Party / RqP" in OAuth-UMA)
+* __Resource__ - the piece of data or interaction to which access is being granted, e.g. a file, folder, video call, or printer queue
+* __Share__ - a policy rule stating that certain actors are allowed access to a Resource. Also: a record in a database representing this rule
+* __Sending Party__ - a person or party who is authorized to create Shares (similar to "Resource Owner" in OAuth)
+* __Receiving Party__ - a person, group or party who is granted access to the Resource through the Share (similar to "Requesting Party / RqP" in OAuth-UMA)
 * __Sending Server__ - the server that:
-  * holds the resource ("file server", "Entreprise File Sync and Share (EFSS) server"),
-  * provides access to it ("API"),
-  * takes the decision to create the share based on user interface gestures from the sending user ("Authorization Server")
-  * takes the decision about authorizing attempts to access the resource ("Resource Server")
-  * send out share creation notifications when appropriate (see below)
+  * holds the Resource ("file server" or "Entreprise File Sync and Share (EFSS) server" role),
+  * provides access to it (by exposing at least one "API"),
+  * takes the decision to create the Share based on user interface gestures from the Sending Party (the "Authorization Server" role in OAuth)
+  * takes the decision about authorizing attempts to access the Resource (the "Resource Server" role in OAuth)
+  * send out Share Creation Notifications when appropriate (see below)
 * __Receiving Server__ - the server that:
-  * receives share creation notifications (see below)
-  * actively or passively notifies the receiving user or group of any incoming share creation notification
-  * acts as an API client, allowing the receiving user to access the resource through an API (e.g. WebDAV) of the sending server
-* __Sending Gesture__ - a user interface interaction from the Sending Party to the Sending Server, conveying the intention to create a share
+  * receives Share Creation Notifications (see below)
+  * actively or passively notifies the receiving user or group of any incoming Share Creation Notification
+  * acts as an API client, allowing the receiving user to access the Resource through an API (e.g. WebDAV) of the sending server
+* __Sending Gesture__ - a user interface interaction from the Sending Party to the Sending Server, conveying the intention to create a Share
 * __Share Creation__ - the addition of a Share to the database state of the Sending Server, in response to a successful Sending Gesture or for another reason
-* __Share Creation Notification__ - a server-to-server request from the sending server to the receiving server, notifying the receiving server that a share has been created
+* __Share Creation Notification__ - a server-to-server request from the sending server to the receiving server, notifying the receiving server that a Share has been created
 * __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM-capable server. `<Receiving Party's identifier>` is an opaque string,
 unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This can, but doesn't need to be, the domain at which the OCM API of that server is hosted.
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
@@ -89,7 +89,7 @@ The Sending Server MAY offer the Sending Party an address book tool, where OCM A
 An interface for anonymously viewing a Resource on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture. This means that the Sending Party and the Receiving Party could be the same person, so contact between them does not need to be explicitly established.
 
 #### Public Invite Flow
-Similarly, an interface on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture for a given Resource, without itself providing a way to access that particular Resource. A link to this interface could then for instance be shared on a mailing list, allowing all subscribers to effectively request access to the resource by making a Sending Gesture to the Sending Server with their own OCM Address.
+Similarly, an interface on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture for a given Resource, without itself providing a way to access that particular Resource. A link to this interface could then for instance be shared on a mailing list, allowing all subscribers to effectively request access to the Resource by making a Sending Gesture to the Sending Server with their own OCM Address.
 
 #### Invite Flow
 ##### Rationale
@@ -187,13 +187,13 @@ The Receiving Server MAY discard the notification if any of the following hold t
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
 * the Sending Party is not trusted by the Receiving Party (i.e. the Sending Party's OCM Address does not appear in the Receiving Party's addressbook)
-* the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the resource
-* an initial check shows that the resource cannot successfully accessed through (any of) the protocol(s) listed
+* the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the Resource
+* an initial check shows that the Resource cannot successfully accessed through (any of) the protocol(s) listed
 
 ### Receiving Party Notification
 If the Share Creation Notification is not discarded by the Receiving Server, they MAY notify the Receiving Party passively by adding the Share to some inbox list, and MAY also notify them actively through for instance a push notification or an email message.
 
-They could give the Receiving Party the option to accept or reject the share, or add the share automatically and only send an informational notification that this happened.
+They could give the Receiving Party the option to accept or reject the Share, or add the Share automatically and only send an informational notification that this happened.
 
 ### Share Acceptance Notification
 In response to a Share Creation Notification, the Receiving Server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the Sending Server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The Sending Server MAY expose this information to the Sending Party.
@@ -211,21 +211,21 @@ Otherwise, if `protocol.webdav.sharedSecret` is not empty, the receiver MUST pas
 
 In both cases, when the Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL.
 
-Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, the receiving host MUST ensure that the user accessing the resource has been authenticated with MFA.
+Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
 
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
 equivalent to a `"SHARE_DECLINED"` notification.
 
-Reverting access to outgoing shares is a vendor specific implementation. One vendor might delete an entire share while another might invalidate an access token. This is considered part of vendor-specific internals and thus not part of the interaction between different vendors. However, the provider could notify the consumer by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
+Reverting access to outgoing shares is a vendor specific implementation. One vendor might delete an entire Share while another might invalidate an access token. This is considered part of vendor-specific internals and thus not part of the interaction between different vendors. However, the provider could notify the consumer by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
 
 ### Share Updating
 TODO: document `"RESHARE_CHANGE_PERMISSION"`
 
 ### Resharing
 The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be used by the
-receiving server to persuarde the sending server to share the same resource with another share recipient.
-TODO: document how receiver.com can know if sender.com understood and processed the
+Receiving Server to persuade the Sending Server to share the same Resource with another Receiving Party.
+TODO: document how the Receiving Party can know if the Sending Party understood and processed the
 reshare request.
 
 ## Appendix A: Multi Factor Authentication
