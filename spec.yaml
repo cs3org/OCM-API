@@ -391,10 +391,9 @@ definitions:
       - providerId
       - owner
       - sender
-      - protocol
-      - permission
       - shareType
       - resourceType
+      - protocol
     properties:
       shareWith:
         type: string
