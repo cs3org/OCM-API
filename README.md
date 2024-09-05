@@ -127,19 +127,39 @@ Following these step, both servers MAY display the `name` of the other party as 
 
 For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
-### Discovery
-Authentication between services is already established. This means that this specification doesn't cover the way a service authenticates incoming API calls (e.g. through an API Key, VPN connection or IP whitelisting). In this scope we assume that the services are already authenticated.
+### OCM API Discovery
+After establishing contact as discussed in the previous section, the Sharing User can send the Share Creation Gesture to the Sending Server, providing the Sending Server with the following information:
+* Resource to be shared
+* Protocol to be offered for access
+* Sending Party's identifier
+* Receiving Party's identifier
+* Receiving Server FQDN
+* OPTIONAL: Name
+* OPTIONAL: Permissions
 
-If a finite whitelist of receiver servers exists on the sender side, then this list may already contain all necessary endpoint details.
+The next step is for the Sending Server to additionally discover:
+* if the Receiving Server is trusted
+* if the Receiving Server supports OCM
+* if so, which version and with which optional functionality
+* at which URL
+* the public key the Receiving Server will use for HTTP Signatures (if any)
 
-When a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the sharee address, using the `/.well-known/ocm` (or `/ocm-provider`, for backwards compatibility) URL that receiving servers SHOULD provide according to this [specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get).
+The Sending Server MAY first preform denylist and allowlist checks on the FQDN.
 
-To ease the process of confirming the identity of a remote party, the discovery data MAY contain a public key: each incoming request that requires to origin from an authenticated source MUST be signed in its headers using the private key of that source, whose public key MUST be exposed in its discovery data.
+If a finite allowlist of receiver servers exists on the sender side, then this list may already contain all necessary information.
 
-To fill the gap between users knowning other peers' email addresses of the form `user@provider.org`, and the actual cloud storage endpoints being in the form `https://my-cloud-storage.provider.org`, a further discovery mechanism MAY be provided in case hosting https://provider.org/.well-known/ocm is impractical, based on DNS `SRV` Service Records.
+If the FQDN passes the denylist and/or allowlist checks, but no details about its OCM API are known, the Sending Server can use the following process to try to fetch this information from the Receiving Server.
 
-* If e.g. https://provider.org/.well-known/ocm does not exist, a provider MAY instead point to e.g. https://my-cloud-storage.provider.org/.well-known/ocm by ensuring that a `type=SRV` DNS query to `_ocm._tcp.provider.org` resolves to e.g. `service = 10 10 443 my-cloud-storage.provider.org`
-* When requested to discover the EFSS endpoint for `user@provider.org`, if https://provider.org/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.domain` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path.
+This process MAY be influenced by a VPN connection and/or IP allowlisting.
+
+Otherwise, for instance
+when a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the Receiving Server FQDN, using `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility) as the URL. The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
+
+To help with situations where hosting `https://<fqdn>/.well-known/ocm` or `https://<fqdn>/ocm-provider` is impractical, a further discovery mechanism MAY be provided, based on DNS `SRV` Service Records.
+
+If `https://<fqdn>/.well-known/ocm` does not exist, the Receiving Server MAY instead point to `https://<other-fqdn>/.well-known/ocm` by ensuring that a `type=SRV` DNS query to `_ocm._tcp.<fqdn>` resolves to e.g. `service = 10 10 443 <other-fqdn>`
+
+When attempting to discover the OCM API details for `<fqdn>`, if https://<fqdn>/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.<fqdn>` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path, using TLS.
 
 ### Share Creation
 To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
