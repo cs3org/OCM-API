@@ -96,11 +96,11 @@ Since there is no way to guarantee that the sharee OCM provider will actually en
 ## Signing request
 
 A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
-To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.  
+To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.
 
 Note: Signed requests prove the identity of the sender but does not encrypt nor affect its payload.
 
-Here is an example of headers needed to sign a request.  
+Here is an example of headers needed to sign a request.
 
 ```
   {
@@ -127,7 +127,7 @@ Here is an example of headers needed to sign a request.
 
 ### How to generate the Signature for outgoing request
 
-After properties are set in the headers, the Signature is generated and added to the list.  
+After properties are set in the headers, the Signature is generated and added to the list.
 
 This is a quick PHP example of headers for outgoing request:
 
@@ -146,7 +146,7 @@ This is a quick PHP example of headers for outgoing request:
         'keyId' => 'https://author.hostname/key',
         'algorithm' => 'rsa-sha256',
         'headers' => 'content-length date digest host',
-        'signature' => $signed 
+        'signature' => $signed
     ];
 
     $headers['Signature'] = implode(',', $signature);
@@ -159,13 +159,13 @@ The first step would be to confirm the validity of each properties:
 
 - '(request-target)' and 'host' are immutable to the type of the request and the local/current host,
 - 'content-length' and 'digest' can be re-generated and compared from the payload of the request,
-- A maximum TTL must be applied to 'date' and current timestamp, 
+- A maximum TTL must be applied to 'date' and current timestamp,
 - regarding data contained in the 'Signature' header:
   * using 'keyId' to get the public key from remote signatory,
   * 'headers' is used to generate the clear version of the signature and must contain at least 'content-length', 'date', 'digest' and 'host',
   * 'signature' is the encrypted version of the signature.
 
-Here is an example of how to verify the signature using the headers, the signature and the public key:  
+Here is an example of how to verify the signature using the headers, the signature and the public key:
 
 ```php
     $clear = [
@@ -175,7 +175,7 @@ Here is an example of how to verify the signature using the headers, the signatu
         'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
         'host': $localhost
     ];
-    
+
     $signed = "DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==";
     if (openssl_verify(implode("\n", $clear), $signed, $publicKey, 'sha256') !== 1) {
         throw new InvalidSignatureException('signature issue');
@@ -186,7 +186,7 @@ Here is an example of how to verify the signature using the headers, the signatu
 
 Following the validation of the signature, the host should also confirm the validity of the payload, that is ensuring that the actions implied in the payload actually initiated on behalf of the source of the request.
 
-As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.  
+As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.
 
 
 ## Changelog
