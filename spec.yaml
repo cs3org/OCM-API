@@ -219,19 +219,19 @@ paths:
             $ref: "#/definitions/AcceptedInvite"
       responses:
         200:
-          description: Invitation accepted.
+          description: Invitation Acceptance Request successful (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/AcceptedInviteResponse"
         400:
-          description: The invitation token is invalid or does not exist.
+          description: The Invitation Token is invalid or does not exist (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/Error"
         403:
-          description: Remote service is not trusted to accept invitations.
+          description: Invite Receiver OCM Server is not trusted to accept this Invite (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/Error"
         409:
-          description: Invitation already accepted.
+          description: Invitation already accepted (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/Error"
   /token:

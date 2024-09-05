@@ -153,9 +153,14 @@ The Invite Acceptance Response SHOULD be a HTTP response:
   * `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
   * `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
 
+A 200 response status means the Invitation Acceptance Request was successful.
+A 400 response status means the Invitation Token is invalid or does not exist.
+A 403 response status means the Invite Receiver OCM Server is not trusted to accept this Invite.
+A 409 response status means the Invite was already accepted.
+
 The Invite Sender OCM Server SHOULD verify the HTTP Signature on the Invite Acceptance Request and apply its own policies for trusting the Invite Receiver OCM Server before processing the Invite Acceptance Request and sending the Invite Acceptance Response.
 
-As with the `userID` in the Invite Acceptance Request, the one in the Response also doesn't need to be human-memorable, doesn't need to match the Invite Sender's username at their OCM Server
+As with the `userID` in the Invite Acceptance Request, the one in the Response also doesn't need to be human-memorable, doesn't need to match the Invite Sender's username at their OCM Server.
 
 ##### Addition into address books
 Following these step, both servers MAY display the `name` of the other party as a trusted or allowlisted contact, and enable selecting them as a Receiving Party. OCM Servers MAY enforce a policy to only accept Share Creation Notifications from such trusted contacts, or MAY display a warning to users when a Share Creation Notification from an unknown party is received.
