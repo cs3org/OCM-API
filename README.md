@@ -2,35 +2,45 @@
 
 ![Open Cloud Mesh Protocol Specification](logo.png)
 
-This repository contains the specification of the Open Cloud Mesh protocol, including
-the [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API. This specification describes disovery and use of the RESTful API endpoints, request and response headers, possible response codes, request and response formats, hypermedia controls, error handling, and other API design best practices which vendors should support to make sharing of resources between different vendors possible.
+This repository contains the text of the Open Cloud Mesh Internet-Draft, as well as
+the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API.
 
-* [Scope and assumptions](#scope-and-assumptions)
 * [Specification](#specification)
-  * [Discovery](#discovery)
-  * [Share Creation](#create)
-  * [Share Acceptance](#accept)
-  * [Share Access](#access)
-  * [Share Deletion](#unshare)
-  * [Share Updating](#update)
-  * [Resharing](#reshare)
-  * [Invite](#invite)
-  * [Signing Request](#signing-request)
-
+  * [Introduction](#introduction)
+  * [Terms](#terms)
+  * [Establishing Contact](#establishing-contact)
+    * [Direct Entry](#direct-entry)
+    * [Address books](#address-books)
+    * [Public Link Flow](#public-link-flow)
+    * [Public Invite Flow](#public-invite-flow)
+    * [Invite Flow](#invite-flow)
+      * [Rationale](#rationale)
+      * [Steps](#steps)
+      * [Invite Acceptance Request Details](#invite-acceptance-request-details)
+      * [Invite Acceptance Response Details](#invite-acceptance-response-details)
+      * [Further Reading](#further-reading)
+  * [OCM API Discovery](#ocm-api-discovery)
+  * [Share Creation Notification](#share-creation-notification)
+  * [Receiving Party Notification](#receiving-party-notification)
+  * [Share Acceptance Notification](#share-acceptance-notification)
+  * [Resource Access](#resource-access)
+  * [Share Deletion](#share-deletion)
+  * [Share Updating](#share-updating)
+  * [Resharing](#resharing)
+* [Appendix A: Multi Factor Authentication](#appendix-a-multi-factor-authentication)
+* [Appendix B: Request Signing](#appendix-b-request-signing)
+  * [How to generate the Signature for outgoing request](#how-to-generate-the-signature-for-outgoing-request)
+  * [How to confirm Signature on incoming request](#how-to-confirm-signature-on-incoming-request)
+  * [Validating the payload](#validating-the-payload)
+* [Changelog](#changelog)
 * [Contributing](#contributing)
-
-## Scope and assumptions
-
-* For the core sharing functionality, the provider knows the consumer (both endpoint and user) when it creates a share with the consumer (also see [#26](https://github.com/cs3org/OCM-API/issues/26)). In addition, an optional invitation workflow is available in this specification (see below), which gives the consumer a way to automatically trust a provider (and vice versa). The [ScienceMesh](https://sciencemesh.io) infrastructure provides a managed white list of trusted federated sites.
-* Consumer doesn't have to accept a share, the resource will be available to the consumer immediately ([#25](https://github.com/cs3org/OCM-API/issues/25)).
-* Dealing with incoming shares is a vendor specific implementation. One vendor might use an 'accept before' process while another vendor might use a 'decline after' approach. This is considered part of the UX and thus not part of the interaction between different vendors. However, the consumer could notify the provider by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
-* Reverting access to outgoing shares is a vendor specific implementation. One vendor might delete an entire share while another might invalidate an access token. This is considered part of vendor-specific internals and thus not part of the interaction between different vendors. However, the provider could notify the consumer by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
-* The actual file sync is not part of this specification. To keep this specification 'future proof', the file sync protocol will be embedded as a separate object in Open Cloud Mesh API calls. This protocol object contains all protocol specific options, e.g. WebDAV specific options.
 
 ## Specification
 ### Introduction
 Open Cloud Mesh is a  server federation protocol that is used to notify a remote user that they have
 been granted access to some resource. It has similarities with authorization flows such as OAuth, as well as with social internet protocols such as ActivityPub and email.
+
+The actual file sync is not part of this specification. To keep this specification 'future proof', the file sync protocol will be embedded as a separate object in Open Cloud Mesh API calls. This protocol object contains all protocol specific options, e.g. WebDAV specific options.
 
 ### Terms
 We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
@@ -153,7 +163,7 @@ If the FQDN passes the denylist and/or allowlist checks, but no details about it
 This process MAY be influenced by a VPN connection and/or IP allowlisting.
 
 Otherwise, for instance
-when a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the Receiving Server FQDN, using `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility) as the URL. The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
+when a sending server allows sharing to any internet-hosted receiving server, then trust can be established dynamically, and OCM API discovery can happen from the Receiving Server FQDN, using `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility) as the URL. The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
 
 To help with situations where hosting `https://<fqdn>/.well-known/ocm` or `https://<fqdn>/ocm-provider` is impractical, a further discovery mechanism MAY be provided, based on DNS `SRV` Service Records.
 
@@ -206,6 +216,8 @@ Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, t
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
 equivalent to a `"SHARE_DECLINED"` notification.
+
+Reverting access to outgoing shares is a vendor specific implementation. One vendor might delete an entire share while another might invalidate an access token. This is considered part of vendor-specific internals and thus not part of the interaction between different vendors. However, the provider could notify the consumer by using the introduced `/notifications` endpoint (also see [#27](https://github.com/cs3org/OCM-API/issues/27)).
 
 ### Share Updating
 TODO: document `"RESHARE_CHANGE_PERMISSION"`
