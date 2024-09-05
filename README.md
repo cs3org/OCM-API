@@ -62,7 +62,7 @@ We define the following concepts (with some non-normative references to related 
   * provides access to it (by exposing at least one "API"),
   * takes the decision to create the Share based on user interface gestures from the Sending Party (the "Authorization Server" role in OAuth)
   * takes the decision about authorizing attempts to access the Resource (the "Resource Server" role in OAuth)
-  * send out Share Creation Notifications when appropriate (see below)
+  * sends out Share Creation Notifications when appropriate (see below)
 * __Receiving Server__ - the server that:
   * receives Share Creation Notifications (see below)
   * actively or passively notifies the receiving user or group of any incoming Share Creation Notification
