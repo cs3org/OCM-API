@@ -65,6 +65,68 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Invite Acceptance Request__ - API call from the Invite Receiver OCM Server to the Invite Sender OCM Server, supplying the Invite Token as well as the OCM Address of the Invite Receiver, effectively allowlisting the Invite Sender OCM Server for sending Share Creation Notifications to the Invite Receiver OCM Server.
 * __Invite Acceptance Response__ - HTTP response to the Invite Acceptance Request
 
+### Establishing Contact
+Before the Sending Server can send a Share Creation Notification to the Receiving Server, it needs to establish the Receiving Server's FQDN, and the Receiving Party's identifier, among other things.
+Some steps may proceed the Sending Gesture, allowing the Sending Party to establish (with some level of trust) the OCM Address of the Receiving Party.
+
+#### Direct Entry
+The simplest way for this is if the Receiving Party shares their OCM Address with the Sending Party through some out-of-band means, and the Sending Party enters this string into the user interface of the Sending Server, by means of typing or pasting into an HTML form, or clicking a link to a URL that includes the string in some form.
+
+#### Address books
+The Sending Server MAY offer the Sending Party an address book tool, where OCM Addresses can be stored over time in a labeled and/or searchable way. This decouples the act by which the OCM Address string is passed into the Sending Server's database from the selection of the Receiving Party in preparation for Share Creation.
+
+#### Public Link Flow
+An interface for anonymously viewing a Resource on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture. This means that the Sending Party and the Receiving Party could be the same person, so contact between them does not need to be explicitly established.
+
+#### Public Invite Flow
+Similarly, an interface on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture for a given Resource, without itself providing a way to access that particular Resource. A link to this interface could then for instance be shared on a mailing list, allowing all subscribers to effectively request access to the resource by making a Sending Gesture to the Sending Server with their own OCM Address.
+
+#### Invite Flow
+##### Rationale
+Many methods for establishing contact allow unsolicited contact with the prospective Receiving Party whenever that party's OCM Address is known. The Invite Flow requires the Receiving Party to explicitly accept it before it can be used, which establishes bidirectional trust between the two parties involved.
+
+###### Steps
+* the Invite Sender OCM Server generates a unique Invite Token and helps the Invite Sender to create the Invite Message
+* the Invite Sender uses some out-of-band communication to send the Invite Message, containing the Invite Token and the Invite Sender OCM Server FQDN, to the Invite Receiver
+* the Invite Receiver navigates to the Invite Receiver OCM Server (possibly using a Where-Are-You-From page provided as part of the Invite Message) and makes the Invite Acceptance Gesture
+* the Invite Receiver OCM Server discovers the OCM API of the Invite Sender OCM Server using generic OCM API Discovery (see section below)
+* the Invite Receiver OCM Server sends the Invite Acceptance Request to the Invite Sender OCM Server
+
+##### Invite Acceptance Request Details
+Whereas the precise syntax of the Invite Message and the Invite Acceptance Gesture will differ between implementations, the Invite Acceptance Request SHOULD be a HTTP POST request:
+* to the `/invited-accepted` path in the Invite Sender OCM Server's OCM API
+* using `application/json` as the `Content-Type` HTTP request header
+* its request body containing a JSON document representing an object with the following string fields:
+  * `recipientProvider` - FQDN of the Invite Receiver OCM Server
+  * `token` - the Invite Token. The Invite Sender OCM Server SHOULD recall which Invite Sender OCM Address this token was linked to
+  * `userId` - the Invite Receiver's identifier at their OCM Server
+  * `email` - non-normative / informational; an email address for the Invite Receiver. Not necessarily at the same FQDN as their OCM Server
+  * `name` - human-readable name of the Invite Receiver, as a suggestion for display in the Invite Sender's address book
+* using TLS
+* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
+
+See [Invite Acceptance Request API definition](https://cs3org.github.io/OCM-API/docs.html?branch=master&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) for further non-normative documentation.
+
+The Invite Receiver OCM Server SHOULD apply its own policies for trusting the Invite Sender OCM Server before making the Invite Acceptance Request.
+
+##### Invite Acceptance Response Details
+The Invite Acceptance Response SHOULD be a HTTP response:
+* in response to the Invite Acceptance Request
+* using `application/json` as the `Content-Type` HTTP response header
+* its response body containing a JSON document representing an object with the following string fields:
+  * `userId` - the Invite Sender's identifier at their OCM Server
+  * `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
+  * `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
+
+See [Invite Acceptance Request API definition](https://cs3org.github.io/OCM-API/docs.html?branch=master&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) for further non-normative documentation.
+
+The Invite Sender OCM Server SHOULD verify the HTTP Signature on the Invite Acceptance Request and apply its own policies for trusting the Invite Receiver OCM Server before processing the Invite Acceptance Request and sending the Invite Acceptance Response.
+
+##### Further Reading
+Following these step, both servers MAY display the `name` of the other party as a trusted or white-listed contact, and enable selecting them as a Receiving Party. OCM Servers MAY enforce a policy to only accept Share Creation Notifications from such trusted contacts, or MAY display a warning to users when a Share Creation Notification from an unknown party is received.
+
+For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
+
 ### Discovery
 Authentication between services is already established. This means that this specification doesn't cover the way a service authenticates incoming API calls (e.g. through an API Key, VPN connection or IP whitelisting). In this scope we assume that the services are already authenticated.
 
@@ -111,17 +173,6 @@ The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be used by t
 receiving server to persuarde the sending server to share the same resource with another share recipient.
 TODO: document how receiver.com can know if sender.com understood and processed the
 reshare request.
-
-### Invite
-If Alice (`alice at sender.com`) and Bob (`bob at receiver.com`) know each other, yet they may not have a mechanism to trust any received share request, as that may be similar to receiving spam.
-
-In this case, Alice may invite Bob to initiate a mutual trust relationship: on the provider side, the `sender.com` service MAY implement an interface for Alice to generate a single-use token and send it to Bob off-band (e.g. via e-mail). In addition, the `sender.com` service MAY integrate this interface with [ScienceMesh](https://sciencemesh.io), and only allow a curated white list of sites as receivers.
-
-On the receiving end, assuming that Bob wishes to accept the invitation, the receiving server MAY provide an interface for Bob to input the received token, or to interact with the ScienceMesh directory. In any case, the receiving server SHOULD make a HTTP POST request to the [/invite-accepted](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) endpoint of the sending server, sending the token and disclosing Bob's identity details such as `bob at receiver.com`. If the token matches the one created earlier by Alice, the response MUST include Alice's identity details such as `alice at sender.com`.
-
-Following this step, both services at `sender.com` and `receiver.com` MAY display, respectively, `bob` and `alice` as trusted or white-listed contacts, and enable sharing between them. Sites MAY enforce a policy to only accept shares between such trusted contacts, or MAY display a warning to users when a share from an unknown party is received.
-
-For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
 
 ### Multi Factor Authentication
 If an OCM provider exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which SHOULD be honored. A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the consumer has not provided a second factor to establish their identity with greater confidence.
