@@ -8,6 +8,7 @@ the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swag
 * [Specification](#specification)
   * [Introduction](#introduction)
   * [Terms](#terms)
+  * [General Flow](#general-flow)
   * [Establishing Contact](#establishing-contact)
     * [Direct Entry](#direct-entry)
     * [Address books](#address-books)
@@ -42,6 +43,11 @@ been granted access to some Resource. It has similarities with authorization flo
 
 Open Cloud Mesh only handles the necessary interactions up to the point where the Receiving Party is informed that they were granted access to the Resource. The actual resource access is then left to protocols such as WebDAV and others.
 
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
+"OPTIONAL" in this document are to be interpreted as described in
+RFC 2119.
+
 ### Terms
 We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
 * __Resource__ - the piece of data or interaction to which access is being granted, e.g. a file, folder, video call, or printer queue
@@ -75,9 +81,21 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Invite Acceptance Request__ - API call from the Invite Receiver OCM Server to the Invite Sender OCM Server, supplying the Invite Token as well as the OCM Address of the Invite Receiver, effectively allowlisting the Invite Sender OCM Server for sending Share Creation Notifications to the Invite Receiver OCM Server.
 * __Invite Acceptance Response__ - HTTP response to the Invite Acceptance Request
 
+### General Flow
+The lifecycle of an Open Cloud Mesh Share starts with prerequisites such as
+establishing trust, establishing contact, and OCM API discovery.
+
+Then the share creation involves the Sending Party making a Sending Gesture to the Sending Server,
+the Sending Server carrying out the actual Share Creation,
+and the Sending Server sending a Share Creation Notification to the Receiving Server.
+
+After this, the Receiving Server MAY notify the Receiving Party and/or the Sending Server, and will act as an API client
+through which the Receiving Party can access the Resource. After that, the Share may be updated, deleted, and/or reshared.
+
 ### Establishing Contact
-Before the Sending Server can send a Share Creation Notification to the Receiving Server, it needs to establish the Receiving Server's FQDN, and the Receiving Party's identifier, among other things.
-Some steps may proceed the Sending Gesture, allowing the Sending Party to establish (with some level of trust) the OCM Address of the Receiving Party.
+Before the Sending Server can send a Share Creation Notification to the Receiving Server, it needs to establish the Receiving Party's OCM Address (containing the Receiving Server's FQDN, and the Receiving Party's identifier), among other things.
+Some steps may preceed the Sending Gesture, allowing the Sending Party to establish (with some level of trust) the OCM Address of the Receiving Party. In other cases, establishing the OCM Address
+of the Receiving Party happens as part of the Sending Gesture.
 
 #### Direct Entry
 The simplest way for this is if the Receiving Party shares their OCM Address with the Sending Party through some out-of-band means, and the Sending Party enters this string into the user interface of the Sending Server, by means of typing or pasting into an HTML form, or clicking a link to a URL that includes the string in some form.
@@ -86,10 +104,10 @@ The simplest way for this is if the Receiving Party shares their OCM Address wit
 The Sending Server MAY offer the Sending Party an address book tool, where OCM Addresses can be stored over time in a labeled and/or searchable way. This decouples the act by which the OCM Address string is passed into the Sending Server's database from the selection of the Receiving Party in preparation for Share Creation.
 
 #### Public Link Flow
-An interface for anonymously viewing a Resource on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture. This means that the Sending Party and the Receiving Party could be the same person, so contact between them does not need to be explicitly established.
+An interface for anonymously viewing a Resource on the Sending Server MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture. This means that the Sending Party and the Receiving Party could be the same person, so contact between them does not need to be explicitly established.
 
 #### Public Invite Flow
-Similarly, an interface on the Sending Server, MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture for a given Resource, without itself providing a way to access that particular Resource. A link to this interface could then for instance be shared on a mailing list, allowing all subscribers to effectively request access to the Resource by making a Sending Gesture to the Sending Server with their own OCM Address.
+Similarly, an interface on the Sending Server MAY allow any internet user to type or paste an OCM address into an HTML form, as a Sending Gesture for a given Resource, without itself providing a way to access that particular Resource. A link to this interface could then for instance be shared on a mailing list, allowing all subscribers to effectively request access to the Resource by making a Sending Gesture to the Sending Server with their own OCM Address.
 
 #### Invite Flow
 ##### Rationale
@@ -115,8 +133,6 @@ Whereas the precise syntax of the Invite Message and the Invite Acceptance Gestu
 * using TLS
 * using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
 
-See [Invite Acceptance Request API definition](https://cs3org.github.io/OCM-API/docs.html?branch=master&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) for further non-normative documentation.
-
 The Invite Receiver OCM Server SHOULD apply its own policies for trusting the Invite Sender OCM Server before making the Invite Acceptance Request.
 
 ##### Invite Acceptance Response Details
@@ -128,14 +144,21 @@ The Invite Acceptance Response SHOULD be a HTTP response:
   * `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
   * `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
 
-See [Invite Acceptance Request API definition](https://cs3org.github.io/OCM-API/docs.html?branch=master&repo=OCM-API&user=cs3org#/paths/~1invite-accepted/post) for further non-normative documentation.
-
 The Invite Sender OCM Server SHOULD verify the HTTP Signature on the Invite Acceptance Request and apply its own policies for trusting the Invite Receiver OCM Server before processing the Invite Acceptance Request and sending the Invite Acceptance Response.
 
-##### Further Reading
-Following these step, both servers MAY display the `name` of the other party as a trusted or white-listed contact, and enable selecting them as a Receiving Party. OCM Servers MAY enforce a policy to only accept Share Creation Notifications from such trusted contacts, or MAY display a warning to users when a Share Creation Notification from an unknown party is received.
+##### Addition into address books
+Following these step, both servers MAY display the `name` of the other party as a trusted or allowlisted contact, and enable selecting them as a Receiving Party. OCM Servers MAY enforce a policy to only accept Share Creation Notifications from such trusted contacts, or MAY display a warning to users when a Share Creation Notification from an unknown party is received.
 
-For further details on this concept, see also [#54](https://github.com/cs3org/OCM-API/pull/54) and related issues. For a discussion about trust policies, see [sciencemesh#196](https://github.com/sciencemesh/sciencemesh/issues/196).
+Both servers MAY also allowlist each other as a server with which at least one of their users wishes to interact.
+
+##### Security Advantages
+It is important to underscore the value of the Invite in this scenario, as it provides four important security advantages. First of all, if the Receiving Server blocks Share Creation Notifications from Sending Parties who are not in the addressbook of the Receiving Party, then this protects the Receiving Party from receiving unsolicited Shares. An attacker could still send the Receiving Party an unsolicited Share, but they would first need to convince the Receiving Party through an out-of-band communication channel to accept their invite. In many use cases, the Receiving Party has had other forms of contact with the Sending Party (e.g. in-person or email back-and-forth). The out-of-band Invite Message thus leverages the filters and context which the Receiving Party may already benefit from in that out-of-band communication. For instance, a careful Receiving Party may choose to only accept Invites that reach them via a private or moderated messaging platform.
+
+Second, when the Receiving Party accepts the Invite, the Receiving Server knows that the Sending Server they are about to interact with is trusted by the Sending Party, which in turn is trusted by the Receiving Party, which in turn is trusted by them. In other words, one of their users is requesting the allowlisting of a server they wish to interact with, in order to interact with a party they know out-of-band. This gives the Receiving Server reason to put more trust in the Sending Server than it would put into an arbitrary internet-hosted server.
+
+Third, equivalently, the Sending Server knows it is essentially registering the Receiving Server as an API client at the request of the Receiving Party, to whom the right to request this has been traceably delegated by the Sending Party, which is one of its registered users.
+
+Fourth, related to the second one, it removes the partial 'open relay' problem that exists when the Sending Server is allowed to include any Receiving Server FQDN in the Sending Gesture. Without the use of Invites, a Distributed Denial of Service attack could be organised if many internet users collude to flood a given OCM Server with Share Creation Notifications which will be hard to distinguish from legitimate requests without human interaction. An unsolicited (invalid) Invite Acceptance Request is much easier to filter out than an unsolicited (possibly valid, possibly invalid) OCM request, since the Invite Acceptance Request needs to contain an Invite Token that was previously uniquely generated at the Invite Sender OCM server.
 
 ### OCM API Discovery
 After establishing contact as discussed in the previous section, the Sharing User can send the Share Creation Gesture to the Sending Server, providing the Sending Server with the following information:
