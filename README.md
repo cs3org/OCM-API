@@ -132,7 +132,7 @@ Whereas the precise syntax of the Invite Message and the Invite Acceptance Gestu
 * its request body containing a JSON document representing an object with the following string fields:
   * `recipientProvider` - FQDN of the Invite Receiver OCM Server
   * `token` - the Invite Token. The Invite Sender OCM Server SHOULD recall which Invite Sender OCM Address this token was linked to
-  * `userId` - the Invite Receiver's identifier at their OCM Server
+  * `userID` - the Invite Receiver's identifier at their OCM Server
   * `email` - non-normative / informational; an email address for the Invite Receiver. Not necessarily at the same FQDN as their OCM Server
   * `name` - human-readable name of the Invite Receiver, as a suggestion for display in the Invite Sender's address book
 * using TLS
@@ -140,22 +140,22 @@ Whereas the precise syntax of the Invite Message and the Invite Acceptance Gestu
 
 The Invite Receiver OCM Server SHOULD apply its own policies for trusting the Invite Sender OCM Server before making the Invite Acceptance Request.
 
-Since the Invite Flow does not require either Party to type or remember the `userId`, this string does not need to be human-memorable. Even if the Invite Receiver has a memorable username at the Invite Receiver OCM Server, this `userId` that forms part of their OCM Address does not need to match it.
+Since the Invite Flow does not require either Party to type or remember the `userID`, this string does not need to be human-memorable. Even if the Invite Receiver has a memorable username at the Invite Receiver OCM Server, this `userID` that forms part of their OCM Address does not need to match it.
 
-Also, a different `userId` could be given out to each contact, to avoid correlation of identities.
+Also, a different `userID` could be given out to each contact, to avoid correlation of identities.
 
 ##### Invite Acceptance Response Details
 The Invite Acceptance Response SHOULD be a HTTP response:
 * in response to the Invite Acceptance Request
 * using `application/json` as the `Content-Type` HTTP response header
 * its response body containing a JSON document representing an object with the following string fields:
-  * `userId` - the Invite Sender's identifier at their OCM Server
+  * `userID` - the Invite Sender's identifier at their OCM Server
   * `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
   * `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
 
 The Invite Sender OCM Server SHOULD verify the HTTP Signature on the Invite Acceptance Request and apply its own policies for trusting the Invite Receiver OCM Server before processing the Invite Acceptance Request and sending the Invite Acceptance Response.
 
-As with the `userId` in the Invite Acceptance Request, the one in the Response also doesn't need to be human-memorable, doesn't need to match the Invite Sender's username at their OCM Server
+As with the `userID` in the Invite Acceptance Request, the one in the Response also doesn't need to be human-memorable, doesn't need to match the Invite Sender's username at their OCM Server
 
 ##### Addition into address books
 Following these step, both servers MAY display the `name` of the other party as a trusted or allowlisted contact, and enable selecting them as a Receiving Party. OCM Servers MAY enforce a policy to only accept Share Creation Notifications from such trusted contacts, or MAY display a warning to users when a Share Creation Notification from an unknown party is received.
