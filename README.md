@@ -178,7 +178,7 @@ The Receiving Server MAY discard the notification if any of the following hold t
 * the keypair used to generate the HTTP Signature doesn't match the one trusted or discoverable from the FQDN part of the `sender` field in the request body
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
-* the Sending Party is not trusted by the Receiving Party (i.e. the Sending Party's OCM Address does not appear in the Receiving Party's addressbook)
+* the Sending Party is not trusted by the Receiving Party (e.g. no Invite was exchanged and/or the Sending Party's OCM Address does not appear in the Receiving Party's addressbook)
 * the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the resource
 * an initial check shows that the resource cannot successfully accessed through (any of) the protocol(s) listed
 
