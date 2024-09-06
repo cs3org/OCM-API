@@ -85,7 +85,9 @@ Similarly, an interface on the Sending Server, MAY allow any internet user to ty
 ##### Rationale
 Many methods for establishing contact allow unsolicited contact with the prospective Receiving Party whenever that party's OCM Address is known. The Invite Flow requires the Receiving Party to explicitly accept it before it can be used, which establishes bidirectional trust between the two parties involved.
 
-###### Steps
+OCM Servers MAY enforce a policy to only accept Shares between such trusted contacts, or MAY display a warning to the Receiving Party when a Share Creation Notification from an unknown Sending Party is received
+
+##### Steps
 * the Invite Sender OCM Server generates a unique Invite Token and helps the Invite Sender to create the Invite Message
 * the Invite Sender uses some out-of-band communication to send the Invite Message, containing the Invite Token and the Invite Sender OCM Server FQDN, to the Invite Receiver
 * the Invite Receiver navigates to the Invite Receiver OCM Server (possibly using a Where-Are-You-From page provided as part of the Invite Message) and makes the Invite Acceptance Gesture
@@ -156,6 +158,37 @@ Otherwise, for instance
 when a sending server allows sharing to any internet-hosted receiving server, then discovery can happen from the Receiving Server FQDN, using `https://<fqdn>/.well-known/ocm` (or `https://<fqdn>/ocm-provider`, for backwards compatibility) as the URL. The Receiving Server SHOULD provide both of these. See the [API specification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1.well-known~1ocm/get) for a normative definition of both endpoints.
 
 To help with situations where hosting `https://<fqdn>/.well-known/ocm` or `https://<fqdn>/ocm-provider` is impractical, a further discovery mechanism MAY be provided, based on DNS `SRV` Service Records.
+
+If `https://<fqdn>/.well-known/ocm` does not exist, the Receiving Server MAY instead point to `https://<other-fqdn>/.well-known/ocm` by ensuring that a `type=SRV` DNS query to `_ocm._tcp.<fqdn>` resolves to e.g. `service = 10 10 443 <other-fqdn>`
+
+When attempting to discover the OCM API details for `<fqdn>`, if https://<fqdn>/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.<fqdn>` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path, using TLS.
+
+### Share Creation Notification
+To create a share, the sending server SHOULD make a HTTP POST request
+* to the `/shares` path in the Invite Sender OCM Server's OCM API
+* using `application/json` as the `Content-Type` HTTP request header
+* its request body containing a JSON document representing an object with the fields as described in the ([API docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post))
+* using TLS
+* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
+
+The Receiving Server MAY discard the notification if any of the following hold true:
+* the HTTP Signature is missing
+* the HTTP Signature is not valid
+* no keypair is trusted or discoverable from the FQDN part of the `sender` field in the request body
+* the keypair used to generate the HTTP Signature doesn't match the one trusted or discoverable from the FQDN part of the `sender` field in the request body
+* the Sending Server is denylisted
+* the Sending Server is not allowlisted
+* the Sending Party is not trusted by the Receiving Party (e.g. no Invite was exchanged and/or the Sending Party's OCM Address does not appear in the Receiving Party's addressbook)
+* the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the resource
+* an initial check shows that the resource cannot successfully accessed through (any of) the protocol(s) listed
+
+### Receiving Party Notification
+If the Share Creation Notification is not discarded by the Receiving Server, they MAY notify the Receiving Party passively by adding the Share to some inbox list, and MAY also notify them actively through for instance a push notification or an email message.
+
+They could give the Receiving Party the option to accept or reject the share, or add the share automatically and only send an informational notification that this happened.
+
+### Share Acceptance Notification
+In response to a Share Creation Notification, the Receiving Server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the Sending Server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The Sending Server MAY expose this information to the Sending Party.
 
 If `https://<fqdn>/.well-known/ocm` does not exist, the Receiving Server MAY instead point to `https://<other-fqdn>/.well-known/ocm` by ensuring that a `type=SRV` DNS query to `_ocm._tcp.<fqdn>` resolves to e.g. `service = 10 10 443 <other-fqdn>`
 
