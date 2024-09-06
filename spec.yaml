@@ -236,6 +236,27 @@ paths:
           description: Invitation already accepted.
           schema:
             $ref: "#/definitions/Error"
+  /token:
+    post:
+      summary: Obtain a (potentially short-lived) bearer token in exchange for a code
+      description: >
+        See https://github.com/cs3org/OCM-API?tab=readme-ov-file#share-access
+      parameters:
+        - name: token-request
+          in: body
+          description: The JSON request body.
+          required: true
+          schema:
+            $ref: "#/definitions/TokenRequest"
+      responses:
+        200:
+          description: Token issued.
+          schema:
+            $ref: "#/definitions/TokenResponse"
+        403:
+          description: Token denied.
+          schema:
+            $ref: "#/definitions/Error"
 
 definitions:
   "400":
@@ -460,6 +481,10 @@ definitions:
           The expiration time for the OCM share, in seconds
           of UTC time since Unix epoch. If omitted, it is assumed
           that the share does not expire.
+      code:
+        type: string
+        description: |
+          A nonce to be exchanged for a (potentially short-lived) bearer token at the Sending Server's /token endpoint.
       protocol:
         type: object
         description: |
@@ -684,3 +709,40 @@ definitions:
             type: string
             description: Name of the user that sent the invite.
             example: John Doe
+  TokenRequest:
+    type: object
+    allOf:
+      - properties:
+          client_id:
+            type: string
+            format: fqdn
+            description: FQDN of the Receiving Server.
+            example: receiver.org
+          code:
+            type: string
+            description: Code received in the Share Creation Notification
+            example: xyz
+          grant_type:
+            type: string
+            description: Must be set to 'ocm_authorization_code'
+            example: ocm_authorization_code
+  TokenResponse:
+    type: object
+    allOf:
+      - properties:
+          access_token:
+            type: string
+            description: The bearer token to be used to access the protocol-specific API(s)
+            example: asdfgh
+          token_type:
+            type: string
+            description: Must be set to 'bearer'
+            example: bearer
+          expires_in:
+            type: number
+            description: Number of seconds before this access_token will need to be refreshed.
+            example: 3600
+          refresh_token:
+            type: string
+            description: A refresh token
+            example: qwertyuiop
