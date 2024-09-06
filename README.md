@@ -85,6 +85,8 @@ Similarly, an interface on the Sending Server, MAY allow any internet user to ty
 ##### Rationale
 Many methods for establishing contact allow unsolicited contact with the prospective Receiving Party whenever that party's OCM Address is known. The Invite Flow requires the Receiving Party to explicitly accept it before it can be used, which establishes bidirectional trust between the two parties involved.
 
+OCM Servers MAY enforce a policy to only accept Shares between such trusted contacts, or MAY display a warning to the Receiving Party when a Share Creation Notification from an unknown Sending Party is received
+
 ##### Steps
 * the Invite Sender OCM Server generates a unique Invite Token and helps the Invite Sender to create the Invite Message
 * the Invite Sender uses some out-of-band communication to send the Invite Message, containing the Invite Token and the Invite Sender OCM Server FQDN, to the Invite Receiver
