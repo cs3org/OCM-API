@@ -507,8 +507,7 @@ If a Receiving Server exposes the capability `/mfa-capable`, it indicates that i
 
 Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite-flow) capability may be envisaged.
 
-
-# Appendix B: Request Signing
+## Appendix B: Request Signing
 
 A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
 To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.
@@ -517,39 +516,86 @@ Note: Signed requests prove the identity of the sender but does not encrypt nor 
 
 Here is an example of headers needed to sign a request.
 
-- '(request-target)' contains the reached endpoint and the used method,
-- 'content-length' is the total length of the payload of the request,
-- 'date' is the date and time when the request has been sent,
-- 'digest' is a checksum of the payload of the request,
-- 'host' is the hostname of the recipient of the request (remote when signing outgoing request, local on incoming request),
-- 'Signature' contains the signature generated using the private key and details on its generation:
+~~~~~
+  {
+    "(request-target)": "post /path",
+    "content-length": 380,
+    "date": "Mon, 08 Jul 2024 14:16:20 GMT",
+    "digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
+    "host": "hostname.of.the.recipient",
+    "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"rsa-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+  }
+~~~~~
+
+* '(request-target)' contains the reached endpoint and the used method,
+* 'content-length' is the total length of the payload of the request,
+* 'date' is the date and time when the request has been sent,
+* 'digest' is a checksum of the payload of the request,
+* 'host' is the hostname of the recipient of the request (remote when signing outgoing request, local on incoming request),
+* 'Signature' contains the signature generated using the private key and details on its generation:
   * 'keyId' is a unique id, formatted as an url. hostname is used to retrieve the public key via custom discovery
   * 'algorithm' specify the algorithm used to generate signature
   * 'headers' specify the properties used when generating the signature
   * 'signature' the signature of an array containing the properties listed in 'headers'. Some properties like content-length, date, digest, and host are mandatory to protect against authenticity override.
 
 
-## How to generate the Signature for outgoing request
+### How to generate the Signature for outgoing request
 
 After properties are set in the headers, the Signature is generated and added to the list.
 
 This is a quick PHP example of headers for outgoing request:
 
-## How to confirm Signature on incoming request
+~~~~~
+    $headers = [
+        '(request-target)' => 'post /path',
+        'content-length' => strlen($payload),
+        'date' => gmdate('D, d M Y H:i:s T'),
+        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
+        'host': 'hostname.of.the.recipient',
+    ];
+
+    openssl_sign(implode("\n", $headers), $signed, $privateKey, OPENSSL_ALGO_SHA256);
+
+    $signature = [
+        'keyId' => 'https://author.hostname/key',
+        'algorithm' => 'rsa-sha256',
+        'headers' => 'content-length date digest host',
+        'signature' => $signed
+    ];
+
+    $headers['Signature'] = implode(',', $signature);
+~~~~~
+
+### How to confirm Signature on incoming request
 
 The first step would be to confirm the validity of each properties:
 
-- '(request-target)' and 'host' are immutable to the type of the request and the local/current host,
-- 'content-length' and 'digest' can be re-generated and compared from the payload of the request,
-- A maximum TTL must be applied to 'date' and current timestamp,
-- regarding data contained in the 'Signature' header:
+* '(request-target)' and 'host' are immutable to the type of the request and the local/current host,
+* 'content-length' and 'digest' can be re-generated and compared from the payload of the request,
+* A maximum TTL must be applied to 'date' and current timestamp,
+* regarding data contained in the 'Signature' header:
   * using 'keyId' to get the public key from remote signatory,
   * 'headers' is used to generate the clear version of the signature and must contain at least 'content-length', 'date', 'digest' and 'host',
   * 'signature' is the encrypted version of the signature.
 
 Here is an example of how to verify the signature using the headers, the signature and the public key:
 
-## Validating the payload
+~~~~~
+    $clear = [
+        '(request-target)' => 'post /path',
+        'content-length' => strlen($payload),
+        'date' => 'Mon, 08 Jul 2024 14:16:20 GMT',
+        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
+        'host': $localhost
+    ];
+
+    $signed = "DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==";
+    if (openssl_verify(implode("\n", $clear), $signed, $publicKey, 'sha256') !== 1) {
+        throw new InvalidSignatureException('signature issue');
+    }
+~~~~~
+
+### Validating the payload
 
 Following the validation of the signature, the host should also confirm the validity of the payload, that is ensuring that the actions implied in the payload actually initiated on behalf of the source of the request.
 
