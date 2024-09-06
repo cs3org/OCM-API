@@ -163,11 +163,32 @@ If `https://<fqdn>/.well-known/ocm` does not exist, the Receiving Server MAY ins
 
 When attempting to discover the OCM API details for `<fqdn>`, if https://<fqdn>/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.<fqdn>` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path, using TLS.
 
-### Share Creation
-To create a share, the sending server SHOULD make a HTTP POST request to the `/shares` endpoint of the receiving server ([docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post)).
+### Share Creation Notification
+To create a share, the sending server SHOULD make a HTTP POST request
+* to the `/shares` path in the Invite Sender OCM Server's OCM API
+* using `application/json` as the `Content-Type` HTTP request header
+* its request body containing a JSON document representing an object with the fields as described in the ([API docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post))
+* using TLS
+* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
 
-### Share Acceptance
-In response to a share creation, the receiving server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the sending server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The sending server MAY expose this information to the end user.
+The Receiving Server MAY discard the notification if any of the following hold true:
+* the HTTP Signature is missing
+* the HTTP Signature is not valid
+* no keypair is trusted or discoverable from the FQDN part of the `sender` field in the request body
+* the keypair used to generate the HTTP Signature doesn't match the one trusted or discoverable from the FQDN part of the `sender` field in the request body
+* the Sending Server is denylisted
+* the Sending Server is not allowlisted
+* the Sending Party is not trusted by the Receiving Party (e.g. no Invite was exchanged and/or the Sending Party's OCM Address does not appear in the Receiving Party's addressbook)
+* the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the resource
+* an initial check shows that the resource cannot successfully accessed through (any of) the protocol(s) listed
+
+### Receiving Party Notification
+If the Share Creation Notification is not discarded by the Receiving Server, they MAY notify the Receiving Party passively by adding the Share to some inbox list, and MAY also notify them actively through for instance a push notification or an email message.
+
+They could give the Receiving Party the option to accept or reject the share, or add the share automatically and only send an informational notification that this happened.
+
+### Share Acceptance Notification
+In response to a Share Creation Notification, the Receiving Server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the Sending Server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The Sending Server MAY expose this information to the Sending Party.
 
 ### Share Access
 To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
