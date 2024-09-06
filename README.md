@@ -39,7 +39,7 @@ We define the following concepts (with some non-normative references to related 
 * __Sending Party__ - a person or party who is authorized to create shares ("Resource Owner")
 * __Receiving Party__ - a person, group or party who is granted access to the resource through the share ("Requesting Party / RqP" in OAuth-UMA)
 * __Sending Server__ - the server that:
-  * holds the resource ("file server", "Entreprise File Sync and Share (EFSS) server"),
+  * holds the resource ("file server", "Enterprise File Sync and Share (EFSS) server"),
   * provides access to it ("API"),
   * takes the decision to create the share based on user interface gestures from the sending user ("Authorization Server")
   * takes the decision about authorizing attempts to access the resource ("Resource Server")
