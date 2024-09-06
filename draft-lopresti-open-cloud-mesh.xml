@@ -615,6 +615,7 @@ reshare request.</t>
 
 <t>Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the <eref target="https://sciencemesh.io">ScienceMesh</eref> integration for the <xref target="invite-flow">Invite</xref> capability may be envisaged.</t>
 
+</section>
 <section anchor="appendix-b-request-signing"><name>Appendix B: Request Signing</name>
 
 <t>A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
@@ -718,7 +719,6 @@ To help debugging, it is recommended to also add all properties used in the sign
 
 <t>As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.</t>
 
-</section>
 </section>
 </section>
 
@@ -989,41 +989,41 @@ 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
-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
-XnrW+29PJ9TZFqgAAA==
+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
+ev8NlKO8MxKoAAA=
 
 -->
 

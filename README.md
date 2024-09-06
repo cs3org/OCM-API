@@ -507,7 +507,7 @@ If a Receiving Server exposes the capability `/mfa-capable`, it indicates that i
 
 Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite-flow) capability may be envisaged.
 
-## Appendix B: Request Signing
+# Appendix B: Request Signing
 
 A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
 To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.
@@ -539,7 +539,7 @@ Here is an example of headers needed to sign a request.
   * 'signature' the signature of an array containing the properties listed in 'headers'. Some properties like content-length, date, digest, and host are mandatory to protect against authenticity override.
 
 
-### How to generate the Signature for outgoing request
+## How to generate the Signature for outgoing request
 
 After properties are set in the headers, the Signature is generated and added to the list.
 
@@ -566,7 +566,7 @@ This is a quick PHP example of headers for outgoing request:
     $headers['Signature'] = implode(',', $signature);
 ~~~~~
 
-### How to confirm Signature on incoming request
+## How to confirm Signature on incoming request
 
 The first step would be to confirm the validity of each properties:
 
@@ -595,7 +595,7 @@ Here is an example of how to verify the signature using the headers, the signatu
     }
 ~~~~~
 
-### Validating the payload
+## Validating the payload
 
 Following the validation of the signature, the host should also confirm the validity of the payload, that is ensuring that the actions implied in the payload actually initiated on behalf of the source of the request.
 
