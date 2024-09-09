@@ -206,12 +206,10 @@ paths:
             $ref: "#/definitions/Error"
   /invite-accepted:
     post:
-      summary: Inform the sender that an invitation was accepted to start sharing
+      summary: [Invite Acceptance Request](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-request-details) and [Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details)
       description: >
-        Inform about an accepted invitation so the user on the sender provider's side can initiate the OCM share creation.
-        To protect the identity of the parties, for shares created following an OCM invitation,
-        the user id MAY be hashed, and recipients implementing the OCM invitation workflow
-        MAY refuse to process shares coming from unknown parties.
+        See the Open Cloud Mesh [Invite flow spec](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-flow) for more details.
+
       parameters:
         - name: invite
           in: body
@@ -221,19 +219,40 @@ paths:
             $ref: "#/definitions/AcceptedInvite"
       responses:
         200:
-          description: Invitation accepted.
+          description: Invitation Acceptance Request successful (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/AcceptedInviteResponse"
         400:
-          description: The invitation token is invalid or does not exist.
+          description: The Invitation Token is invalid or does not exist (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/Error"
         403:
-          description: Remote service is not trusted to accept invitations.
+          description: Invite Receiver OCM Server is not trusted to accept this Invite (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
           schema:
             $ref: "#/definitions/Error"
         409:
-          description: Invitation already accepted.
+          description: Invitation already accepted (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
+          schema:
+            $ref: "#/definitions/Error"
+  /token:
+    post:
+      summary: Obtain a (potentially short-lived) bearer token in exchange for a code
+      description: >
+        See https://github.com/cs3org/OCM-API?tab=readme-ov-file#share-access
+      parameters:
+        - name: token-request
+          in: body
+          description: The JSON request body.
+          required: true
+          schema:
+            $ref: "#/definitions/TokenRequest"
+      responses:
+        200:
+          description: Token issued.
+          schema:
+            $ref: "#/definitions/TokenResponse"
+        403:
+          description: Token denied.
           schema:
             $ref: "#/definitions/Error"
   /token:
@@ -683,15 +702,15 @@ definitions:
             example: xyz
           userID:
             type: string
-            description: Unique ID to identify the user at the remote provider accepting the invite.
+            description: Unique ID to identify the Invite Receiver at their OCM Server.
             example: 51dc30ddc473d43a6011e9ebba6ca770
           email:
             type: string
-            description: Email ID of the user accepting the invite.
+            description: Email address of the Invite Receiver.
             example: richard@gmail.com
           name:
             type: string
-            description: Name of the user accepting the invite.
+            description: Name of the Invite Receiver.
             example: Richard Feynman
   AcceptedInviteResponse:
     type: object
@@ -699,15 +718,15 @@ definitions:
       - properties:
           userID:
             type: string
-            description: Unique ID to identify the sender at the local provider.
+            description: Unique ID to identify the Invite Sender at their OCM Server.
             example: 9302
           email:
             type: string
-            description: Email ID of the user that sent the invite.
+            description: Email ID of the Invite Sender.
             example: john@sender.org
           name:
             type: string
-            description: Name of the user that sent the invite.
+            description: Name of the Invite Sender.
             example: John Doe
   TokenRequest:
     type: object
