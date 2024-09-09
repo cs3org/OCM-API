@@ -190,17 +190,49 @@ They could give the Receiving Party the option to accept or reject the share, or
 ### Share Acceptance Notification
 In response to a Share Creation Notification, the Receiving Server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the Sending Server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The Sending Server MAY expose this information to the Sending Party.
 
-### Share Access
-To access a share, the receiving server MAY use multiple ways, depending on the received payload and on the `protocol.name` property:
+If `https://<fqdn>/.well-known/ocm` does not exist, the Receiving Server MAY instead point to `https://<other-fqdn>/.well-known/ocm` by ensuring that a `type=SRV` DNS query to `_ocm._tcp.<fqdn>` resolves to e.g. `service = 10 10 443 <other-fqdn>`
 
-* If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share. If `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
-Otherwise, if `protocol.webdav.code` is not empty, the receiver SHOULD discover the sender's OCM endpoint and make a signed POST request to `<OCM endpoint>/token`, to exchange
+When attempting to discover the OCM API details for `<fqdn>`, if https://<fqdn>/.well-known/ocm can not be fetched, implementations SHOULD fall back to querying the corresponding `_ocm._tcp.<fqdn>` DNS record, e.g. `_ocm._tcp.provider.org`, and subsequently make a HTTP GET request to the host returned by that DNS query, followed by the `/.well-known/ocm` URL path, using TLS.
+
+### Share Creation Notification
+To create a share, the sending server SHOULD make a HTTP POST request
+* to the `/shares` path in the Invite Sender OCM Server's OCM API
+* using `application/json` as the `Content-Type` HTTP request header
+* its request body containing a JSON document representing an object with the fields as described in the ([API docs](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post))
+* using TLS
+* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
+
+The Receiving Server MAY discard the notification if any of the following hold true:
+* the HTTP Signature is missing
+* the HTTP Signature is not valid
+* no keypair is trusted or discoverable from the FQDN part of the `sender` field in the request body
+* the keypair used to generate the HTTP Signature doesn't match the one trusted or discoverable from the FQDN part of the `sender` field in the request body
+* the Sending Server is denylisted
+* the Sending Server is not allowlisted
+* the Sending Party is not trusted by the Receiving Party (i.e. the Sending Party's OCM Address does not appear in the Receiving Party's addressbook)
+* the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the resource
+* an initial check shows that the resource cannot successfully accessed through (any of) the protocol(s) listed
+
+### Receiving Party Notification
+If the Share Creation Notification is not discarded by the Receiving Server, they MAY notify the Receiving Party passively by adding the Share to some inbox list, and MAY also notify them actively through for instance a push notification or an email message.
+
+They could give the Receiving Party the option to accept or reject the share, or add the share automatically and only send an informational notification that this happened.
+
+### Share Acceptance Notification
+In response to a Share Creation Notification, the Receiving Server MAY send back a [notification](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1notifications/post) to the Sending Server, with  `notificationType` set to `"SHARE_ACCEPTED"` or `"SHARE_DECLINED"`. The Sending Server MAY expose this information to the Sending Party.
+
+### Resource Access
+To access the Resource, the Receiving Server MAY use multiple ways, depending on the body of the Share Creation Notification and on the `protocol.name` property in there:
+
+* If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share.
+If `code` is not empty, the receiver SHOULD discover the sender's OCM endpoint and make a signed POST request to the `/token` path inside the Sending Server's OCM API, to exchange
 the code for a short-lived bearer token,
-and then use that bearer token to access the remote share.
+and then use that bearer token to access the Resource.
+Otherwise, if `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
 
-* If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<host><path>`, where `<host>` is the remote server, and `<path>` is obtained by querying the [Discovery](#discovery) endpoint at the remote server and getting `resourceTypes[0].protocols.webdav`. Note that this access method is _deprecated_ and may be removed in a future release of the Protocol.
+* If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<host><path>`, where `<host>` is the remote server, and `<path>` is obtained by querying the [Discovery](#discovery) endpoint at the Sending Server and getting `resourceTypes[0].protocols.webdav`. Note that this access method is _deprecated_ and may be removed in a future release of the Protocol.
 
-In both cases, when the share is a folder and the receiver accesses a resource within the share, it SHOULD append its relative path to that URL.
+In both cases, when the Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL.
 
 Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, the receiving host MUST ensure that the user accessing the resource has been authenticated with MFA.
 
@@ -217,13 +249,13 @@ receiving server to persuarde the sending server to share the same resource with
 TODO: document how receiver.com can know if sender.com understood and processed the
 reshare request.
 
-### Multi Factor Authentication
-If an OCM provider exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a share. If the sharer OCM provider trusts the receiver OCM provider, the sharer MAY set the permission `mfa-enforced` on a share, which SHOULD be honored. A compliant OCM provider that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the consumer has not provided a second factor to establish their identity with greater confidence.
+## Appendix A: Multi Factor Authentication
+If a Receiving Server exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the permission `mfa-enforced` on a Share, which the Receiving Server SHOULD honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
 
-Since there is no way to guarantee that the sharee OCM provider will actually enforce the MFA requirement, it is up to the sharer OCM provider to establish a trust with the OCM sharee provider such that it is reasonable to assume that the sharee OCM provider will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted OCM providers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
+Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
 
 
-## Signing request
+## Appendix B: Request Signing
 
 A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
 To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.
@@ -271,7 +303,7 @@ This is a quick PHP example of headers for outgoing request:
     ];
 
     openssl_sign(implode("\n", $headers), $signed, $privateKey, OPENSSL_ALGO_SHA256);
-		
+
     $signature = [
         'keyId' => 'https://author.hostname/key',
         'algorithm' => 'rsa-sha256',
