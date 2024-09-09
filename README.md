@@ -415,34 +415,34 @@ Here is an example of headers needed to sign a request.
   * 'headers' specify the properties used when generating the signature
   * 'signature' the signature of an array containing the properties listed in 'headers'. Some properties like content-length, date, digest, and host are mandatory to protect against authenticity override.
 
-
 ### How to generate the Signature for outgoing request
 
 After properties are set in the headers, the Signature is generated and added to the list.
 
-This is a quick PHP example of headers for outgoing request:
+This is a pseudo-code example to generate the `Signature` header for outgoing requests:
 
-```php
-    $headers = [
-        '(request-target)' => 'post /path',
-        'content-length' => strlen($payload),
-        'date' => gmdate('D, d M Y H:i:s T'),
-        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
-        'host': 'hostname.of.the.recipient',
-    ];
+```code
+headers = {
+    '(request-target)': 'post /path',
+    'content-length': length_of(payload),
+    'date': current_gmt_datetime(),  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
+    'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
+    'host': 'recipient-hostname',
+}
 
-    openssl_sign(implode("\n", $headers), $signed, $privateKey, OPENSSL_ALGO_SHA256);
+# Sign the concatenated headers using a private key and the SHA-256 algorithm
+signed = sign_with_private_key(concatenate_with_newlines(headers), private_key, 'sha256')
 
-    $signature = [
-        'keyId' => 'https://author.hostname/key',
-        'algorithm' => 'rsa-sha256',
-        'headers' => 'content-length date digest host',
-        'signature' => $signed
-    ];
+# Define the signature information and append to the headers
+signature = {
+    'keyId': 'https://author.hostname/key',
+    'algorithm': 'rsa-sha256',
+    'headers': 'content-length date digest host',
+    'signature': signed,
+}
 
-    $headers['Signature'] = implode(',', $signature);
+headers['Signature'] = format_signature(signature)
 ```
-
 
 ### How to confirm Signature on incoming request
 
@@ -458,19 +458,23 @@ The first step would be to confirm the validity of each properties:
 
 Here is an example of how to verify the signature using the headers, the signature and the public key:
 
-```php
-    $clear = [
-        '(request-target)' => 'post /path',
-        'content-length' => strlen($payload),
-        'date' => 'Mon, 08 Jul 2024 14:16:20 GMT',
-        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
-        'host': $localhost
-    ];
+```code
+clear = {
+    '(request-target)': 'post /path',
+    'content-length': length_of(payload),
+    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',  # The date used in the verification process
+    'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
+    'host': localhost(),
+}
 
-    $signed = "DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==";
-    if (openssl_verify(implode("\n", $clear), $signed, $publicKey, 'sha256') !== 1) {
-        throw new InvalidSignatureException('signature issue');
-    }
+# signature value provided for verification
+signed = headers['Signature']
+
+# Verify the signature using the public key and the SHA-256 algorithm
+verification_result = verify_signature(concatenate_with_newlines(clear), signed, public_key, 'sha256')
+
+if not verification_result then
+    raise InvalidSignatureException
 ```
 
 ### Validating the payload
