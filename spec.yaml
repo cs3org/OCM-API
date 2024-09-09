@@ -252,6 +252,27 @@ paths:
           description: Token denied.
           schema:
             $ref: "#/definitions/Error"
+  /token:
+    post:
+      summary: Obtain a (potentially short-lived) bearer token in exchange for a code
+      description: >
+        See https://github.com/cs3org/OCM-API?tab=readme-ov-file#share-access
+      parameters:
+        - name: token-request
+          in: body
+          description: The JSON request body.
+          required: true
+          schema:
+            $ref: "#/definitions/TokenRequest"
+      responses:
+        200:
+          description: Token issued.
+          schema:
+            $ref: "#/definitions/TokenResponse"
+        403:
+          description: Token denied.
+          schema:
+            $ref: "#/definitions/Error"
 
 definitions:
   "400":
