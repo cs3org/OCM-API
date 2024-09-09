@@ -31,6 +31,7 @@ author:
   - ins: M. Nordin
     name: Micke Nordin
     organization: SUNET
+    email: kano@sunet.se
     uri: https://code.smolnet.org/micke
 
 --- abstract
