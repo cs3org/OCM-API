@@ -51,6 +51,8 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
 "OPTIONAL" in this document are to be interpreted as described in
 RFC 2119.
 
+The actual file sync is not part of this specification. To keep this specification 'future proof', the file sync protocol will be embedded as a separate object in Open Cloud Mesh API calls. This protocol object contains all protocol specific options, e.g. WebDAV specific options.
+
 ### Terms
 We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
 * __Resource__ - the piece of data or interaction to which access is being granted, e.g. a file, folder, video call, or printer queue
