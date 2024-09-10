@@ -389,7 +389,7 @@ Since there is no way to guarantee that the Receiving Server will actually enfor
 A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
 To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.
 
-Note: Signed requests prove the identity of the sender but does not encrypt nor affect its payload.
+Note: Signed requests prove the identity of the sender but do not encrypt nor affect its payload.
 
 Here is an example of headers needed to sign a request.
 
@@ -404,22 +404,22 @@ Here is an example of headers needed to sign a request.
   }
 ```
 
-- '(request-target)' contains the reached endpoint and the used method,
-- 'content-length' is the total length of the payload of the request,
-- 'date' is the date and time when the request has been sent,
-- 'digest' is a checksum of the payload of the request,
-- 'host' is the hostname of the recipient of the request (remote when signing outgoing request, local on incoming request),
-- 'Signature' contains the signature generated using the private key and details on its generation:
-  * 'keyId' is a unique id, formatted as an url. hostname is used to retrieve the public key via custom discovery
-  * 'algorithm' specify the algorithm used to generate signature
-  * 'headers' specify the properties used when generating the signature
-  * 'signature' the signature of an array containing the properties listed in 'headers'. Some properties like content-length, date, digest, and host are mandatory to protect against authenticity override.
+- `(request-target)` contains the reached endpoint and the used method,
+- `content-length` is the total length of the payload of the request,
+- `date` is the date and time when the request has been sent,
+- `digest` is a checksum of the payload of the request,
+- `host` is the hostname of the recipient of the request (remote when signing outgoing request, local on incoming request),
+- `Signature` contains the signature generated using the private key and details on its generation:
+  * `keyId` is a unique id, formatted as an URL; hostname is used to retrieve the public key via custom discovery
+  * `algorithm` specify the algorithm used to generate signature
+  * `headers` specify the properties used when generating the signature
+  * `signature` the signature of an array containing the properties listed in `headers`. Some properties like content-length, date, digest, and host are mandatory to protect against authenticity override.
 
 ### How to generate the Signature for outgoing request
 
 After properties are set in the headers, the Signature is generated and added to the list.
 
-This is a pseudo-code example to generate the `Signature` header for outgoing requests:
+This is a pseudo-code example for generating the `Signature` header for outgoing requests:
 
 ```code
 headers = {
@@ -430,12 +430,9 @@ headers = {
     'host': 'recipient-hostname',
 }
 
-# Sign the concatenated headers using a private key and the SHA-256 algorithm
-signed = sign_with_private_key(concatenate_with_newlines(headers), private_key, 'sha256')
-
-# Define the signature information and append to the headers
+signed = ssl_sign(concatenate_with_newlines(headers), private_key, 'sha256')
 signature = {
-    'keyId': 'https://author.hostname/key',
+    'keyId': 'https://sender.org/ocm',  # The sending server's keyId as advertised at the discovery endpoint
     'algorithm': 'rsa-sha256',
     'headers': 'content-length date digest host',
     'signature': signed,
@@ -448,13 +445,13 @@ headers['Signature'] = format_signature(signature)
 
 The first step would be to confirm the validity of each properties:
 
-- '(request-target)' and 'host' are immutable to the type of the request and the local/current host,
-- 'content-length' and 'digest' can be re-generated and compared from the payload of the request,
-- A maximum TTL must be applied to 'date' and current timestamp,
-- regarding data contained in the 'Signature' header:
-  * using 'keyId' to get the public key from remote signatory,
-  * 'headers' is used to generate the clear version of the signature and must contain at least 'content-length', 'date', 'digest' and 'host',
-  * 'signature' is the encrypted version of the signature.
+- `(request-target)` and `host` are immutable to the type of the request and the local/current host,
+- `content-length` and `digest` can be re-generated and compared from the payload of the request,
+- a maximum TTL must be applied to `date` and current timestamp,
+- regarding data contained in the `Signature` header:
+  * using `keyId` to get the public key from remote signatory,
+  * `headers` is used to generate the clear version of the signature and must contain at least `content-length`, `date`, `digest` and `host`,
+  * `signature` is the encrypted version of the signature.
 
 Here is an example of how to verify the signature using the headers, the signature and the public key:
 
@@ -467,11 +464,8 @@ clear = {
     'host': localhost(),
 }
 
-# signature value provided for verification
 signed = headers['Signature']
-
-# Verify the signature using the public key and the SHA-256 algorithm
-verification_result = verify_signature(concatenate_with_newlines(clear), signed, public_key, 'sha256')
+verification_result = ssl_verify(concatenate_with_newlines(clear), signed, public_key, 'sha256')
 
 if not verification_result then
     raise InvalidSignatureException
