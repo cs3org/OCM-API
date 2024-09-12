@@ -475,13 +475,13 @@ definitions:
       expiration:
         type: integer
         description: |
-          The expiration time for the OCM share, in seconds
-          of UTC time since Unix epoch. If omitted, it is assumed
-          that the share does not expire.
+          The expiration time for the share, in seconds of UTC time since
+          Unix epoch. If omitted, it is assumed that the share does not expire.
       code:
         type: string
         description: |
-          A nonce to be exchanged for a (potentially short-lived) bearer token at the Sending Server's /token endpoint.
+          A nonce to be exchanged for a (potentially short-lived) bearer token
+          at the Sending Server's `/token` endpoint.
       protocol:
         type: object
         description: |
@@ -510,6 +510,7 @@ definitions:
                 Warning: client implementers should be aware that v1.1 servers
                 MAY support both `webdav` and `multi`, but v1.0 servers MAY
                 only support `webdav`.
+                This field may be removed in a future major version of the spec.
             options:
               type: object
               description: |
@@ -553,10 +554,8 @@ definitions:
                   type: string
                   description: |
                     An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the URI
-                    MAY include a secret hash in the path, in which case there MAY be
-                    no associated `sharedSecret`.
+                    in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
+                    be used, or it may be absolute (recommended).
             webapp:
               type: object
               properties:
@@ -564,10 +563,10 @@ definitions:
                   type: string
                   description: |
                     A templated URI to a client-browsable view of the shared resource,
-                    such that users may use the web applications available at the site.
-                    The URI MAY include a secret hash in the path. If the path includes
-                    a `{relative-path-to-shared-resource}` placeholder, implementations
-                    MAY replace it with the actual path to ease user interaction.
+                    such that users may use a web application available at the sender site.
+                    If the path includes a `{relative-path-to-shared-resource}` placeholder,
+                    implementations SHOULD replace it with the actual path to ease user
+                    interaction.
                 viewMode:
                   type: string
                   description: |
@@ -582,8 +581,13 @@ definitions:
                 sharedSecret:
                   type: string
                   description: |
-                    An optional secret to be used to access the remote web app,
-                    for example in the form of a bearer token.
+                    An optional secret to be used to access the remote web app, such as
+                    a bearer token. To prevent leaking it in logs it MUST NOT appear
+                    in any URI. If a `code` is provided, then the sending host MUST
+                    accept the short-lived bearer token when serving the web app,
+                    which was already exchanged on the first WebDAV-based interaction
+                    with the recipient of the share. In this case, the `sharedSecret`
+                    SHOULD be omitted.
             datatx:
               type: object
               properties:
@@ -596,12 +600,18 @@ definitions:
                 srcUri:
                   type: string
                   description: |
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the
-                    URI MAY include a secret hash in the path.
+                    An absolute URI to access the resource at the sending server.
                 size:
                   type: integer
+                  description: |
+                    The size of the file to be transferred from the sending server.
+          patternProperties:
+            "^.*$":
+              type: object
+              description: |
+                An optional additional protocol supported for this resource, with any custom
+                payload. Appropriate capabilities MUST be advertised in order for
+                a sender to ensure the recipient can parse such customized payloads.
         example:
           singleProtocolLegacy:
             name: "webdav"
@@ -609,9 +619,7 @@ definitions:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: "some permissions scheme"
           singleProtocolNew:
-            name: "webdav"
-            options:
-              sharedSecret: "hfiuhworzwnur98d3wjiwhr"
+            name: "multi"
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read", "write"]
@@ -619,7 +627,6 @@ definitions:
               uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
-            options:
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read"]
