@@ -427,12 +427,12 @@ headers = {
     'content-length': length_of(payload),
     'date': current_gmt_datetime(),  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
     'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
-    'host': 'recipient-hostname',
+    'host': 'recipient-fqdn',
 }
 
 signed = ssl_sign(concatenate_with_newlines(headers), private_key, 'sha256')
 signature = {
-    'keyId': 'https://sender.org/ocm',  # The sending server's keyId as advertised at the discovery endpoint
+    'keyId': 'sender-fqdn',  # The sending server's FQDN; find its public key through OCM API discovery
     'algorithm': 'rsa-sha256',
     'headers': 'content-length date digest host',
     'signature': signed,
@@ -461,7 +461,7 @@ clear = {
     'content-length': length_of(payload),
     'date': 'Mon, 08 Jul 2024 14:16:20 GMT',  # The date used in the verification process
     'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
-    'host': localhost(),
+    'host': 'sender-fqdn',
 }
 
 signed = headers['Signature']
