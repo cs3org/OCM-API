@@ -534,10 +534,21 @@ definitions:
                       - `read` allows read-only access including download of a copy.
                       - `write` allows create, update, and delete rights on the resource.
                       - `share` allows re-share rights on the resource.
+                    enum: ["read", "write", "share"]
+                requirements:
+                  type: array
+                  items:
+                    type: string
+                    description: |
+                      A list of requirements that the recipient provider MUST fulfill
+                      to access the resource. The share MUST contain at least the `none`
+                      requirement, but MUST NOT include the `none` requirement if another
+                      requirement is listed.
                       - `mfa-enforced` requires the user accessing the resource to be
-                        MFA-authenticated. This permission MAY be used if the
+                        MFA-authenticated. This requirement MAY be used if the
                         provider exposes the `mfa-capable` capability.
-                    enum: ["read", "write", "share", "mfa-enforced"]
+                      - `none` indicates that no requirements are imposed.
+                    enum: ["mfa-enforced", "none"]
                 uri:
                   type: string
                   description: |
@@ -604,13 +615,15 @@ definitions:
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
               permissions: ["read", "write"]
+              requirements: ["none"]
               uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
           multipleProtocols:
             name: "multi"
             options:
             webdav:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
-              permissions: ["read", "mfa-enforced"]
+              permissions: ["read"]
+              requirements: ["mfa-enforced"]
               uri: "https://open-cloud-mesh.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01/path/to/resource.txt"
             webapp:
               sharedSecret: "hfiuhworzwnur98d3wjiwhr"
