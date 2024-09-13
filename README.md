@@ -92,7 +92,8 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Invite Acceptance Request__ - API call from the Invite Receiver OCM Server to the Invite Sender OCM Server, supplying the Invite Token as well as the OCM Address of the Invite Receiver, effectively allowlisting the Invite Sender OCM Server for sending Share Creation Notifications to the Invite Receiver OCM Server.
 * __Invite Acceptance Response__ - HTTP response to the Invite Acceptance Request
 * __Share Name__ - a human-readable string, provided by the Sending Party or the Sending Server, to help the Receiving Party understand which Resource the Share grants access to
-* __Share Permissions__ - protocol-specific restrictions on the modes of accessing the Resource
+* __Share Permissions__ - protocol-specific freedoms granted to the Receiving Party on the modes of accessing the Resource
+* __Share Requirements__ - protocol-specific restrictions on the modes of accessing the Resource
 
 ### General Flow
 The lifecycle of an Open Cloud Mesh Share starts with prerequisites such as
@@ -198,6 +199,7 @@ After establishing contact as discussed in the previous section, the Sharing Use
 * Sending Party's identifier
 * Receiving Party's identifier
 * Receiving Server FQDN
+* OPTIONAL: Share Requirements
 * OPTIONAL: Share Name
 * OPTIONAL: Share Permissions
 
@@ -361,7 +363,7 @@ Otherwise, if `protocol.webdav.sharedSecret` is not empty, the receiver MUST pas
 
 In both cases, when the Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL.
 
-Additionally, if `protocol.<protocolname>.permissions` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
+Additionally, if `protocol.<protocolname>.webdav.requirements` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
 
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
@@ -379,7 +381,7 @@ TODO: document how the Receiving Party can know if the Sending Party understood 
 reshare request.
 
 ## Appendix A: Multi Factor Authentication
-If a Receiving Server exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set as a permission on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the permission `mfa-enforced` on a Share, which the Receiving Server SHOULD honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` permission, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
+If a Receiving Server exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the permission `mfa-enforced` on a Share, which the Receiving Server SHOULD honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` requirement, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
 
 Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite) capability may be envisaged.
 
