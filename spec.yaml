@@ -203,7 +203,9 @@ paths:
             $ref: "#/definitions/Error"
   /invite-accepted:
     post:
-      summary: [Invite Acceptance Request](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-request-details) and [Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details)
+      summary: >
+        [Invite Acceptance Request](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-request-details) and [Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details)
+
       description: >
         See the Open Cloud Mesh [Invite flow spec](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-flow) for more details.
 
@@ -229,27 +231,6 @@ paths:
             $ref: "#/definitions/Error"
         409:
           description: Invitation already accepted (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details))
-          schema:
-            $ref: "#/definitions/Error"
-  /token:
-    post:
-      summary: Obtain a (potentially short-lived) bearer token in exchange for a code
-      description: >
-        See https://github.com/cs3org/OCM-API?tab=readme-ov-file#share-access
-      parameters:
-        - name: token-request
-          in: body
-          description: The JSON request body.
-          required: true
-          schema:
-            $ref: "#/definitions/TokenRequest"
-      responses:
-        200:
-          description: Token issued.
-          schema:
-            $ref: "#/definitions/TokenResponse"
-        403:
-          description: Token denied.
           schema:
             $ref: "#/definitions/Error"
   /token:
