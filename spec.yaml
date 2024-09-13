@@ -519,9 +519,9 @@ definitions:
             name:
               type: string
               description: |
-                The name of the protocol. If `multi` is given, one or more protocol
-                endpoints are expected to be defined according to the optional
-                properties specified below.
+                The name of the protocol. Default: `multi`.
+                If `multi` is given, one or more protocol endpoints are expected
+                to be defined according to the optional properties specified below.
                 Otherwise, at least `webdav` is expected to be supported, and
                 its options MAY be given in the opaque `options` payload for
                 compatibility with v1.0 implementations (see examples). Note
@@ -542,9 +542,11 @@ definitions:
                 sharedSecret:
                   type: string
                   description: |
-                    An optional secret to be used to access the resource,
-                    such as a bearer token.
-                    To prevent leaking it in logs it MUST NOT appear in any URI.
+                    An optional secret to be used to access the resource, such as
+                    a bearer token. If a `code` is provided, it SHOULD be used
+                    instead via the code flow interaction, and the `sharedSecret`
+                    SHOULD be omitted. To prevent leaking it in logs it MUST NOT
+                    appear in any URI.
                 permissions:
                   type: array
                   items:
@@ -593,18 +595,21 @@ definitions:
                     a bearer token. To prevent leaking it in logs it MUST NOT appear
                     in any URI. If a `code` is provided, then the sending host MUST
                     accept the short-lived bearer token when serving the web app,
-                    which was already exchanged on the first WebDAV-based interaction
-                    with the recipient of the share. In this case, the `sharedSecret`
-                    SHOULD be omitted.
+                    which can be exchanged in the code flow interaction. The exchange
+                    MAY already have happened if the recipient accessed the underlying
+                    resource via WebDAV, in a multi-protocol scenario. In this case,
+                    the `sharedSecret` SHOULD be omitted.
             datatx:
               type: object
               properties:
                 sharedSecret:
                   type: string
                   description: |
-                    An optional secret to be used to access the resource,
-                    for example in the form of a bearer token.
-                    To prevent leaking it in logs it MUST NOT appear in any URI.
+                    An optional secret to be used to access the resource, such as
+                    a bearer token. If a `code` is provided, it SHOULD be used
+                    instead via the code flow interaction, and the `sharedSecret`
+                    SHOULD be omitted. To prevent leaking it in logs it MUST NOT
+                    appear in any URI.
                 srcUri:
                   type: string
                   description: |
