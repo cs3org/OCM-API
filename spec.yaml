@@ -614,9 +614,10 @@ definitions:
             "^.*$":
               type: object
               description: |
-                An optional additional protocol supported for this resource, with any custom
-                payload. Appropriate capabilities MUST be advertised in order for
-                a sender to ensure the recipient can parse such customized payloads.
+                Any optional additional protocols supported for this resource MAY
+                be provided here, along with their custom payload. Appropriate
+                capabilities MUST be advertised in order for a sender to ensure
+                the recipient can parse such customized payloads.
         example:
           singleProtocolLegacy:
             name: "webdav"
