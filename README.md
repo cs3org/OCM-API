@@ -473,6 +473,12 @@ make a HTTP POST request
 * OPTIONAL resourceType (string) - copied from the Share Creation Notification for the Share this notification is about
 * OPTIONAL notification (object) - optional additional parameters, depending on the notification and the resource type
 
+
+### Receiving Party Notification
+If the Share Creation Notification is not discarded by the Receiving Server, they MAY notify the Receiving Party passively by adding the Share to some inbox list, and MAY also notify them actively through for instance a push notification or an email message.
+
+They could give the Receiving Party the option to accept or reject the Share, or add the Share automatically and only send an informational notification that this happened.
+
 # Resource Access
 To access the Resource, the Receiving Server MAY use multiple ways, depending on the body of the Share Creation Notification and on the `protocol.name` property in there:
 
@@ -513,7 +519,7 @@ Since there is no way to guarantee that the Receiving Server will actually enfor
 A request is signed by adding the signature in the headers. The sender also needs to expose the public key used to generate the signature. The receiver can then validate the signature and therefore the origin of the request.
 To help debugging, it is recommended to also add all properties used in the signature as headers, even if they can easily be re-generated from the payload.
 
-Note: Signed requests prove the identity of the sender but does not encrypt nor affect its payload.
+Note: Signed requests prove the identity of the sender but do not encrypt nor affect its payload.
 
 Here is an example of headers needed to sign a request.
 
@@ -544,57 +550,57 @@ Here is an example of headers needed to sign a request.
 
 After properties are set in the headers, the Signature is generated and added to the list.
 
-This is a quick PHP example of headers for outgoing request:
+This is a pseudo-code example for generating the `Signature` header for outgoing requests:
 
-~~~~~
-    $headers = [
-        '(request-target)' => 'post /path',
-        'content-length' => strlen($payload),
-        'date' => gmdate('D, d M Y H:i:s T'),
-        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
-        'host': 'hostname.of.the.recipient',
-    ];
+```code
+headers = {
+    '(request-target)': 'post /path',
+    'content-length': length_of(payload),
+    'date': current_gmt_datetime(),  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
+    'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
+    'host': 'recipient-fqdn',
+}
 
-    openssl_sign(implode("\n", $headers), $signed, $privateKey, OPENSSL_ALGO_SHA256);
+signed = ssl_sign(concatenate_with_newlines(headers), private_key, 'sha256')
+signature = {
+    'keyId': 'sender-fqdn',  # The sending server's FQDN; find its public key through OCM API discovery
+    'algorithm': 'rsa-sha256',
+    'headers': 'content-length date digest host',
+    'signature': signed,
+}
 
-    $signature = [
-        'keyId' => 'https://author.hostname/key',
-        'algorithm' => 'rsa-sha256',
-        'headers' => 'content-length date digest host',
-        'signature' => $signed
-    ];
+headers['Signature'] = format_signature(signature)
+```
 
-    $headers['Signature'] = implode(',', $signature);
-~~~~~
-
-## How to confirm Signature on incoming request
+### How to confirm Signature on incoming request
 
 The first step would be to confirm the validity of each properties:
 
-* '(request-target)' and 'host' are immutable to the type of the request and the local/current host,
-* 'content-length' and 'digest' can be re-generated and compared from the payload of the request,
-* A maximum TTL must be applied to 'date' and current timestamp,
-* regarding data contained in the 'Signature' header:
-  * using 'keyId' to get the public key from remote signatory,
-  * 'headers' is used to generate the clear version of the signature and must contain at least 'content-length', 'date', 'digest' and 'host',
-  * 'signature' is the encrypted version of the signature.
+* `(request-target)` and `host` are immutable to the type of the request and the local/current host,
+* `content-length` and `digest` can be re-generated and compared from the payload of the request,
+* a maximum TTL must be applied to `date` and current timestamp,
+* regarding data contained in the `Signature` header:
+  * using `keyId` to get the public key from remote signatory,
+  * `headers` is used to generate the clear version of the signature and must contain at least `content-length`, `date`, `digest` and `host`,
+  * `signature` is the encrypted version of the signature.
 
 Here is an example of how to verify the signature using the headers, the signature and the public key:
 
-~~~~~
-    $clear = [
-        '(request-target)' => 'post /path',
-        'content-length' => strlen($payload),
-        'date' => 'Mon, 08 Jul 2024 14:16:20 GMT',
-        'digest': 'SHA-256=' . base64_encode(hash('sha256', utf8_encode($payload), true)),
-        'host': $localhost
-    ];
+```code
+clear = {
+    '(request-target)': 'post /path',
+    'content-length': length_of(payload),
+    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',  # The date used in the verification process
+    'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
+    'host': 'sender-fqdn',
+}
 
-    $signed = "DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==";
-    if (openssl_verify(implode("\n", $clear), $signed, $publicKey, 'sha256') !== 1) {
-        throw new InvalidSignatureException('signature issue');
-    }
-~~~~~
+signed = headers['Signature']
+verification_result = ssl_verify(concatenate_with_newlines(clear), signed, public_key, 'sha256')
+
+if not verification_result then
+    raise InvalidSignatureException
+```
 
 ## Validating the payload
 
