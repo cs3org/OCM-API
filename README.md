@@ -229,10 +229,8 @@ Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP GET reque
 Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
 Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as the URL instead.
 Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
-Step 6: If not, and the `<fqdn>` came from an OCM Address, then it SHOULD check if the OCM Address in question was a Vanity OCM Address.
-This can be checked with a `type=SRV` DNS query to `_ocm._tcp.<fqdn>`. If that returns `service = 10 10 443 <regular-fqdn>` then repeat from step 2, using `<regular-fqdn>` instead of the `<fqdn>` that appeared in the Vanity OCM Address.
-Step 7: If not, fail.
-Step 8: The JSON response body is the data that was discovered.
+Step 6: If not, fail.
+Step 7: The JSON response body is the data that was discovered.
 
 ## Fields
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
