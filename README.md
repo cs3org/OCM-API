@@ -552,7 +552,7 @@ After properties are set in the headers, the Signature is generated and added to
 
 This is a pseudo-code example for generating the `Signature` header for outgoing requests:
 
-```code
+~~~~~
 headers = {
     '(request-target)': 'post /path',
     'content-length': length_of(payload),
@@ -570,7 +570,7 @@ signature = {
 }
 
 headers['Signature'] = format_signature(signature)
-```
+~~~~~
 
 ### How to confirm Signature on incoming request
 
@@ -586,7 +586,7 @@ The first step would be to confirm the validity of each properties:
 
 Here is an example of how to verify the signature using the headers, the signature and the public key:
 
-```code
+~~~~~
 clear = {
     '(request-target)': 'post /path',
     'content-length': length_of(payload),
@@ -600,7 +600,7 @@ verification_result = ssl_verify(concatenate_with_newlines(clear), signed, publi
 
 if not verification_result then
     raise InvalidSignatureException
-```
+~~~~~
 
 ## Validating the payload
 
