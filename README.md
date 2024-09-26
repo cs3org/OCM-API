@@ -363,7 +363,7 @@ Otherwise, if `protocol.webdav.sharedSecret` is not empty, the receiver MUST pas
 
 In both cases, when the Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL.
 
-Additionally, if `protocol.<protocolname>.webdav.requirements` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
+Additionally, if `protocol.<protocolname>.requirements` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
 
 ### Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
