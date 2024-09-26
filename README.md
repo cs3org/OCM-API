@@ -92,7 +92,7 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Invite Acceptance Request__ - API call from the Invite Receiver OCM Server to the Invite Sender OCM Server, supplying the Invite Token as well as the OCM Address of the Invite Receiver, effectively allowlisting the Invite Sender OCM Server for sending Share Creation Notifications to the Invite Receiver OCM Server.
 * __Invite Acceptance Response__ - HTTP response to the Invite Acceptance Request
 * __Share Name__ - a human-readable string, provided by the Sending Party or the Sending Server, to help the Receiving Party understand which Resource the Share grants access to
-* __Share Permissions__ - protocol-specific freedoms granted to the Receiving Party on the modes of accessing the Resource
+* __Share Permissions__ - protocol-specific allowances granted to the Receiving Party on the modes of accessing the Resource
 * __Share Requirements__ - protocol-specific restrictions on the modes of accessing the Resource
 
 ### General Flow
