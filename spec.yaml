@@ -541,14 +541,14 @@ definitions:
                     type: string
                     description: |
                       A list of requirements that the recipient provider MUST fulfill
-                      to access the resource. The share MUST contain at least the `none`
-                      requirement, but MUST NOT include the `none` requirement if another
-                      requirement is listed.
+                      to access the resource. Requirements are optional, but if it is
+                      present it MUST NOT be empty. A recipient provider MUST reject
+                      a share whose requirements it does not understand. Currently,
+                      the only requirement supported is:
                       - `mfa-enforced` requires the user accessing the resource to be
                         MFA-authenticated. This requirement MAY be used if the
                         provider exposes the `mfa-capable` capability.
-                      - `none` indicates that no requirements are imposed.
-                    enum: ["mfa-enforced", "none"]
+                    enum: ["mfa-enforced"]
                 uri:
                   type: string
                   description: |
