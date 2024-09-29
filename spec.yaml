@@ -693,45 +693,49 @@ definitions:
         providerId: "51dc30ddc473d43a6011e9ebba6ca770"
   AcceptedInvite:
     type: object
-    allOf:
-      - properties:
-          recipientProvider:
-            type: string
-            format: fqdn
-            description: FQDN of the receiver OCM service.
-            example: receiver.org
-          token:
-            type: string
-            description: Token received in the invite
-            example: xyz
-          userID:
-            type: string
-            description: Unique ID to identify the Invite Receiver at their OCM Server.
-            example: 51dc30ddc473d43a6011e9ebba6ca770
-          email:
-            type: string
-            description: Email address of the Invite Receiver.
-            example: richard@gmail.com
-          name:
-            type: string
-            description: Name of the Invite Receiver.
-            example: Richard Feynman
+    required:
+      - recipientProvider
+      - token
+      - userID
+    properties:
+      recipientProvider:
+        type: string
+        format: fqdn
+        description: FQDN of the receiver OCM service.
+        example: receiver.org
+      token:
+        type: string
+        description: Token received in the invite
+        example: xyz
+      userID:
+        type: string
+        description: Unique ID to identify the Invite Receiver at their OCM Server.
+        example: 51dc30ddc473d43a6011e9ebba6ca770
+      email:
+        type: string
+        description: Email address of the Invite Receiver.
+        example: richard@gmail.com
+      name:
+        type: string
+        description: Name of the Invite Receiver.
+        example: Richard Feynman
   AcceptedInviteResponse:
     type: object
-    allOf:
-      - properties:
-          userID:
-            type: string
-            description: Unique ID to identify the Invite Sender at their OCM Server.
-            example: 9302
-          email:
-            type: string
-            description: Email ID of the Invite Sender.
-            example: john@sender.org
-          name:
-            type: string
-            description: Name of the Invite Sender.
-            example: John Doe
+    required:
+      - userID
+    properties:
+      userID:
+        type: string
+        description: Unique ID to identify the Invite Sender at their OCM Server.
+        example: 9302
+      email:
+        type: string
+        description: Email ID of the Invite Sender.
+        example: john@sender.org
+      name:
+        type: string
+        description: Name of the Invite Sender.
+        example: John Doe
   TokenRequest:
     type: object
     allOf:
