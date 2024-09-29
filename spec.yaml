@@ -733,38 +733,36 @@ definitions:
             example: John Doe
   TokenRequest:
     type: object
-    allOf:
-      - properties:
-          client_id:
-            type: string
-            format: fqdn
-            description: FQDN of the Receiving Server.
-            example: receiver.org
-          code:
-            type: string
-            description: Code received in the Share Creation Notification
-            example: xyz
-          grant_type:
-            type: string
-            description: Must be set to 'ocm_authorization_code'
-            example: ocm_authorization_code
+    properties:
+      client_id:
+        type: string
+        format: fqdn
+        description: FQDN of the Receiving Server.
+        example: receiver.org
+      code:
+        type: string
+        description: Code received in the Share Creation Notification
+        example: xyz
+      grant_type:
+        type: string
+        description: Must be set to 'ocm_authorization_code'
+        example: ocm_authorization_code
   TokenResponse:
     type: object
-    allOf:
-      - properties:
-          access_token:
-            type: string
-            description: The bearer token to be used to access the protocol-specific API(s)
-            example: asdfgh
-          token_type:
-            type: string
-            description: Must be set to 'bearer'
-            example: bearer
-          expires_in:
-            type: number
-            description: Number of seconds before this access_token will need to be refreshed.
-            example: 3600
-          refresh_token:
-            type: string
-            description: A refresh token
-            example: qwertyuiop
+    properties:
+      access_token:
+        type: string
+        description: The bearer token to be used to access the protocol-specific API(s)
+        example: asdfgh
+      token_type:
+        type: string
+        description: Must be set to 'bearer'
+        example: bearer
+      expires_in:
+        type: number
+        description: Number of seconds before this access_token will need to be refreshed.
+        example: 3600
+      refresh_token:
+        type: string
+        description: A refresh token
+        example: qwertyuiop
