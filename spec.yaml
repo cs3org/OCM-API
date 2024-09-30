@@ -564,12 +564,17 @@ definitions:
                       A list of requirements that the recipient provider MUST fulfill
                       to access the resource. Requirements are optional, but if it is
                       present it MUST NOT be empty. A recipient provider MUST reject
-                      a share whose requirements it does not understand. Currently,
-                      the only requirement supported is:
+                      a share whose requirements it does not understand.
+                      The following requirements are currently supported:
                       - `mfa-enforced` requires the user accessing the resource to be
                         MFA-authenticated. This requirement MAY be used if the
-                        provider exposes the `mfa-capable` capability.
-                    enum: ["mfa-enforced"]
+                        recipient provider exposes the `enforce-mfa` capability.
+                      - `request-signed` requires the recipient to exchange the given
+                        `code` via a signed HTTPS request to `/token` at the Sending
+                        Server, in order to get a short-lived token to be used for
+                        subsequent access. This requirement MAY be used if the
+                        recipient provider exposes the `receive-code` capability.
+                    enum: ["mfa-enforced", "request-signed"]
             webapp:
               type: object
               properties:
