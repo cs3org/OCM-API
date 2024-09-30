@@ -36,7 +36,6 @@ paths:
       description: >
         Following RFC 8615, this endpoint returns the properties and capabilities
         offered by an OCM Server. This endpoint is to be served at the OCM server's FQDN,
-        or at the discovery FQDN that its SRV DNS record redirects to,
         e.g. as in `https://my-cloud-storage.org/.well-known/ocm`.
         See [OCM API Discovery](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#ocm-api-discovery) for more details.
       responses:
