@@ -74,8 +74,6 @@ We define the following concepts (with some non-normative references to related 
 * __Discoverable Server__ - a server that tries to supply information in OCM API discovery
 * __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM Server. `<Receiving Party's identifier>` is an opaque string,
 unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This can, but doesn't need to be, the domain at which the OCM API of that server is hosted.
-* __Vanity OCM Address__ - a string that looks like an OCM Address but with an alternative (generally shorter or nicer) FQDN. This FQDN does not support HTTP-based discovery, but it does provide an SRV record in its DNS zone, pointing to the (generally longer or uglier) FQDN of the OCM Server.
-* __Regular OCM Address__ - an OCM Address that is not a Vanity OCM Address
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact between parties and servers in the Invite Flow, containing an Invite Token (see below) and the Invite Sender's OCM Address
 * __Invite Sender__ - the party sending an Invite
@@ -229,10 +227,8 @@ Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP GET reque
 Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
 Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as the URL instead.
 Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
-Step 6: If not, and the `<fqdn>` came from an OCM Address, then it SHOULD check if the OCM Address in question was a Vanity OCM Address.
-This can be checked with a `type=SRV` DNS query to `_ocm._tcp.<fqdn>`. If that returns `service = 10 10 443 <regular-fqdn>` then repeat from step 2, using `<regular-fqdn>` instead of the `<fqdn>` that appeared in the Vanity OCM Address.
-Step 7: If not, fail.
-Step 8: The JSON response body is the data that was discovered.
+Step 6: If not, fail.
+Step 7: The JSON response body is the data that was discovered.
 
 ## Fields
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
@@ -455,7 +451,6 @@ They could give the Receiving Party the option to accept or reject the share, or
 # Share Acceptance Notification
 In response to a Share Creation Notification, the Receiving Server MAY discover the OCM API of the Sending Server,
 starting from the `<fqdn>` part of the `sender` field in the Share Creation Notification.
-Note that the `sender` field is not allowed to contain a Vanity OCM Address, so the fallback to SRV DNS records is not necessary in this OCM API discovery process.
 
 If the OCM API of the Sending Server is successfully discovered, the Receiving Server MAY
 make a HTTP POST request
