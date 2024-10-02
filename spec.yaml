@@ -697,6 +697,8 @@ definitions:
       - recipientProvider
       - token
       - userID
+      - email
+      - name
     properties:
       recipientProvider:
         type: string
@@ -723,6 +725,8 @@ definitions:
     type: object
     required:
       - userID
+      - email
+      - name
     properties:
       userID:
         type: string
