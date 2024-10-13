@@ -203,11 +203,9 @@ paths:
   /invite-accepted:
     post:
       summary: >
-        [Invite Acceptance Request](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-request-details) and [Response](https://github.com/cs3org/OCM-API/tree/internet-draft-format?tab=readme-ov-file#invite-acceptance-response-details)
-
+        Inform the sender that an invitation was accepted to start sharing.
       description: >
         See the Open Cloud Mesh [Invite flow spec](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-flow) for more details.
-
       parameters:
         - name: invite
           in: body
@@ -236,7 +234,7 @@ paths:
     post:
       summary: Obtain a (potentially short-lived) bearer token in exchange for a code
       description: >
-        See https://github.com/cs3org/OCM-API?tab=readme-ov-file#share-access
+        See https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access
       parameters:
         - name: token-request
           in: body
