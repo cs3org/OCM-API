@@ -543,12 +543,17 @@ definitions:
                       A list of requirements that the recipient provider MUST fulfill
                       to access the resource. Requirements are optional, but if it is
                       present it MUST NOT be empty. A recipient provider MUST reject
-                      a share whose requirements it does not understand. Currently,
-                      the only requirement supported is:
+                      a share whose requirements it does not understand.
+                      The following requirements are currently supported:
                       - `mfa-enforced` requires the user accessing the resource to be
                         MFA-authenticated. This requirement MAY be used if the
-                        provider exposes the `mfa-capable` capability.
-                    enum: ["mfa-enforced"]
+                        provider exposes the `mfa-enabled` capability.
+                      - `request-signed` requires the user to sign the necessary
+                        HTTPS `PROPFIND` and subsequent requests using the httpsig
+                        process in order to gain access to the resource. This requirement
+                        MAY be used if the provider exposes the `httpsig-enabled`
+                        capability.
+                    enum: ["mfa-enforced", "request-signed"]
                 uri:
                   type: string
                   description: |
