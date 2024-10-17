@@ -137,11 +137,11 @@ Whereas the precise syntax of the Invite Message and the Invite Acceptance Gestu
 * to the `/invited-accepted` path in the Invite Sender OCM Server's OCM API
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object with the following string fields:
-  * `recipientProvider` - FQDN of the Invite Receiver OCM Server
-  * `token` - the Invite Token. The Invite Sender OCM Server SHOULD recall which Invite Sender OCM Address this token was linked to
-  * `userID` - the Invite Receiver's identifier at their OCM Server
-  * `email` - non-normative / informational; an email address for the Invite Receiver. Not necessarily at the same FQDN as their OCM Server
-  * `name` - human-readable name of the Invite Receiver, as a suggestion for display in the Invite Sender's address book
+  * REQUIRED: `recipientProvider` - FQDN of the Invite Receiver OCM Server
+  * REQUIRED: `token` - the Invite Token. The Invite Sender OCM Server SHOULD recall which Invite Sender OCM Address this token was linked to
+  * REQUIRED: `userID` - the Invite Receiver's identifier at their OCM Server
+  * REQUIRED: `email` - non-normative / informational; an email address for the Invite Receiver. Not necessarily at the same FQDN as their OCM Server
+  * REQUIRED: `name` - human-readable name of the Invite Receiver, as a suggestion for display in the Invite Sender's address book
 * using TLS
 * using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
 
@@ -157,9 +157,9 @@ The Invite Acceptance Response SHOULD be a HTTP response:
 * in response to the Invite Acceptance Request
 * using `application/json` as the `Content-Type` HTTP response header
 * its response body containing a JSON document representing an object with the following string fields:
-  * `userID` - the Invite Sender's identifier at their OCM Server
-  * `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
-  * `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
+  * REQUIRED: `userID` - the Invite Sender's identifier at their OCM Server
+  * REQUIRED: `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
+  * REQUIRED: `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
 
 A 200 response status means the Invitation Acceptance Request was successful.
 A 400 response status means the Invitation Token is invalid or does not exist.
