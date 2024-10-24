@@ -526,7 +526,7 @@ definitions:
                     or it MAY be absolute, including a hostname. The latter is NOT
                     recommended because of security concerns.
                     In all cases, for a `folder` resource, the composed URI acts
-                    as the root path, such that other files located within MUST
+                    as the root path, such that other files located within SHOULD
                     be accessible by appending their relative path to that URI.
                 sharedSecret:
                   type: string
@@ -573,7 +573,7 @@ definitions:
                     to access the resource, or it MAY be absolute, including a hostname.
                     The latter is NOT recommended because of security concerns.
                     In all cases, for a `folder` resource, the composed URI acts
-                    as the root path, such that other files located within MUST
+                    as the root path, such that other files located within SHOULD
                     be accessible by appending their relative path to that URI.
                 viewMode:
                   type: string
@@ -613,7 +613,7 @@ definitions:
                   description: |
                     An URI to access the resource at the sending server. The URI
                     SHOULD be relative, such as a key or a UUID, in which case the
-                    prefix exposed by the `/.well-known/ocm` endpoint MUST be used
+                    prefix exposed by the `/.well-known/ocm` endpoint SHOULD be used
                     to access the resource, or it MAY be absolute, including
                     a hostname. The latter is NOT recommended because of security
                     concerns.
