@@ -161,8 +161,8 @@ The Invite Acceptance Response SHOULD be a HTTP response:
   * REQUIRED: `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
   * REQUIRED: `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
 
-A 200 response status means the Invitation Acceptance Request was successful.
-A 400 response status means the Invitation Token is invalid or does not exist.
+A 200 response status means the Invite Acceptance Request was successful.
+A 400 response status means the Invite Token is invalid or does not exist.
 A 403 response status means the Invite Receiver OCM Server is not trusted to accept this Invite.
 A 409 response status means the Invite was already accepted.
 
@@ -234,10 +234,10 @@ Step 7: The JSON response body is the data that was discovered.
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
 
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at this endpoint
-* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.1.0"`
+* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. MUST start with `"1."` for this version of the specification and clients MUST ignore the rest of the string.
 * REQUIRED: endPoint (string) - The URI of the OCM API available at this endpoint. Example: `"https://my-cloud-storage.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this endpoint. Example: `"MyCloudStorage"`
-* REQUIRED: resourceTypes (array) - A list of all supported resource types with their access protocols. Each item in this list should
+* REQUIRED: resourceTypes (array) - A list of all resource types this server supports in both the Sending Server role and the Receiving Server role, with their access protocols. Each item in this list should
 itself be an object containing the following fields:
   * name (string) -  A supported resource type (file, folder, calendar, contact, ...).
                 Implementations MUST support `file` at a minimum. Each resource type is identified by its `name`: the list MUST NOT
@@ -246,7 +246,7 @@ itself be an object containing the following fields:
                 The supported recipient share types.
                 MUST contain `"user"` at a minimum, plus optionally `"group"` and `"federation"`.
                 Example: `["user"]`
-  * protocols (object) - The supported protocols for accessing shared resources.
+  * protocols (object) - The supported protocols for accessing shared resources of this type.
                 Implementations MUST support at least `webdav` for `file` resources,
                 any other combination of resources and protocols is optional. Example:
                 ```json
@@ -275,11 +275,21 @@ itself be an object containing the following fields:
 * OPTIONAL: capabilities (array of string) - The optional capabilities supported by this OCM Server.
           As implementations MUST accept Share Creation Notifications to be compliant,
           it is not necessary to expose that as a capability.
-          Example: `["/notifications"]`. The array MAY include for instance:
-    * `"/notifications"` - to indicate this OCM server is capable of processing OCM Notifications
-    * `"/invite-accepted"` - to indicate that this OCM server is capable of processing Invite Acceptance Requests.
-    * `"/mfa-capable"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
-        
+          Example: `["receive-code", "webdav-uri"]`. The array MAY include for instance:
+    * `"enforce-mfa"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
+    * `"webdav-uri"` - to indicate that this OCM server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
+    * `"protocol-object"` - to indicate that this OCM server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
+    * `"receive-code"` - to indicate that this OCM server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
+* OPTIONAL: criteria (array of string) - The criteria for accepting a Share Creation Notification.
+          As all Receiving Servers should require the use of TLS in API calls,
+          it is not necessary to expose that as a criterium.
+          Example: `["http-request-signatures", "code"]`. The array MAY include for instance:
+    * `"http-request-signatures"` - to indicate that API requests without http signatures will be rejected.
+    * `"code"` - to indicate that API requests without code will be rejected (i.e. the `sharedSecret` in the protocol details will be ignored).
+    * `"denylist"` - some servers may be blocked based on their IP address
+    * `"allowlist"` - unknown servers may be blocked based on their IP address
+    * `"invite"` - an invite must have been exchanged between the sender and the receiver before a Share Creation Notification can be sent
+
 * OPTIONAL: publicKey (object) - The signatory used to sign outgoing request to confirm its origin. The 
           signatory is optional, but if present, it MUST contain two string fields, `id` and `publicKeyPem`.
         properties:
@@ -489,7 +499,7 @@ Otherwise, if `protocol.webdav.sharedSecret` is not empty, the receiver MUST pas
 
 In both cases, when the Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL.
 
-Additionally, if `protocol.<protocolname>.requirements` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
+Additionally, if `protocol.<protocolname>.requirements` includes `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
 
 # Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
@@ -506,7 +516,7 @@ Receiving Server to persuade the Sending Server to share the same Resource with 
 TODO: document how the Receiving Party can know if the Sending Party understood and processed the
 reshare request.
 
-## Appendix A: Multi Factor Authentication
+# Appendix A: Multi Factor Authentication
 If a Receiving Server exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the requirement `mfa-enforced` on a Share, which the Receiving Server MUST honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` requirement, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
 
 Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite-flow) capability may be envisaged.
