@@ -161,8 +161,8 @@ The Invite Acceptance Response SHOULD be a HTTP response:
   * REQUIRED: `email` - non-normative / informational; an email address for the Invite Sender. Not necessarily at the same FQDN as their OCM Server
   * REQUIRED: `name` - human-readable name of the Invite Sender, as a suggestion for display in the Invite Receiver's address book
 
-A 200 response status means the Invitation Acceptance Request was successful.
-A 400 response status means the Invitation Token is invalid or does not exist.
+A 200 response status means the Invite Acceptance Request was successful.
+A 400 response status means the Invite Token is invalid or does not exist.
 A 403 response status means the Invite Receiver OCM Server is not trusted to accept this Invite.
 A 409 response status means the Invite was already accepted.
 
@@ -234,7 +234,7 @@ Step 7: The JSON response body is the data that was discovered.
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
 
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at this endpoint
-* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. MUST start with `"1."` and clients MUST ignore the rest of the string.
+* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. MUST start with `"1."` for this version of the specification and clients MUST ignore the rest of the string.
 * REQUIRED: endPoint (string) - The URI of the OCM API available at this endpoint. Example: `"https://my-cloud-storage.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this endpoint. Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this server supports in both the Sending Server role and the Receiving Server role, with their access protocols. Each item in this list should
