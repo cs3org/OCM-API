@@ -278,6 +278,7 @@ itself be an object containing the following fields:
           Example: `["receive-code", "webdav-uri"]`. The array MAY include for instance:
     * `"enforce-mfa"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
     * `"webdav-uri"` - to indicate that this OCM server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
+    * `"protocol-object"` - to indicate that this OCM server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
     * `"receive-code"` - to indicate that this OCM server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a Share Creation Notification.
           As all Receiving Servers should require the use of TLS in API calls,
