@@ -186,7 +186,7 @@ Second, when the Receiving Party accepts the Invite, the Receiving Server knows 
 
 Third, equivalently, the Sending Server knows it is essentially registering the Receiving Server as an API client at the request of the Receiving Party, to whom the right to request this has been traceably delegated by the Sending Party, which is one of its registered users.
 
-Fourth, related to the second one, it removes the partial 'open relay' problem that exists when the Sending Server is allowed to include any Receiving Server FQDN in the Sending Gesture. Without the use of Invites, a Distributed Denial of Service attack could be organised if many internet users collude to flood a given OCM Server with Share Creation Notifications which will be hard to distinguish from legitimate requests without human interaction. An unsolicited (invalid) Invite Acceptance Request is much easier to filter out than an unsolicited (possibly valid, possibly invalid) OCM request, since the Invite Acceptance Request needs to contain an Invite Token that was previously uniquely generated at the Invite Sender OCM server.
+Fourth, related to the second one, it removes the partial 'open relay' problem that exists when the Sending Server is allowed to include any Receiving Server FQDN in the Sending Gesture. Without the use of Invites, a Distributed Denial of Service attack could be organised if many internet users collude to flood a given OCM Server with Share Creation Notifications which will be hard to distinguish from legitimate requests without human interaction. An unsolicited (invalid) Invite Acceptance Request is much easier to filter out than an unsolicited (possibly valid, possibly invalid) Share Creation Notification Request, since the Invite Acceptance Request needs to contain an Invite Token that was previously uniquely generated at the Invite Sender OCM server.
 
 # OCM API Discovery
 ## Introduction
@@ -477,17 +477,13 @@ If the Share Creation Notification is not discarded by the Receiving Server, the
 They could give the Receiving Party the option to accept or reject the Share, or add the Share automatically and only send an informational notification that this happened.
 
 # Resource Access
-To access the Resource, the Receiving Server MAY use multiple ways, depending on the body of the Share Creation Notification and on the `protocol.name` property in there:
+To access the Resource, the Receiving Server MAY use multiple ways, depending on the body of the Share Creation Notification. The procedure is as follows:
+1. A root path `<sender-ocm-path>` MUST be obtained by querying the [Discovery](#ocm-api-discovery) endpoint at the Sending Server and getting `resourceTypes[0].protocols.webdav`.
+2. If `code` is not empty, the receiver SHOULD make a signed POST request to the `/token` path inside the Sending Server's OCM API, to exchange the code for a short-lived bearer token, and then use that bearer token to access the Resource.
+3. If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<sender-host><sender-ocm-path>`. Note that this access method, based on Basic Auth, is _deprecated_ and may be removed in a future release of the Protocol.
+4. Otherwise, if `protocol.name` = `multi`, the receiver MUST inspect the `protocol.webdav.uri` property: if it's a complete URI, the receiver MUST make a HTTP PROPFIND request against it to access the remote resource. If it only contains an identifier `<key>`, the receiver MUST make a HTTP PROPFIND request to `https://<sender-host><sender-ocm-path>/<key>` in order to access the remote resource. Additionally, the receiver MUST pass an `Authorization: bearer` header with either the short-lived bearer token obtained in step 2, if applicable, or the `protocol.webdav.sharedSecret` value.
 
-* If `protocol.name` = `multi`, the receiver MUST make a HTTP PROPFIND request to `protocol.webdav.uri` to access the remote share.
-If `code` is not empty, the receiver SHOULD discover the sender's OCM endpoint and make a signed POST request to the `/token` path inside the Sending Server's OCM API, to exchange
-the code for a short-lived bearer token,
-and then use that bearer token to access the Resource.
-Otherwise, if `protocol.webdav.sharedSecret` is not empty, the receiver MUST pass it as a `Authorization: bearer` header.
-
-* If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<host><path>`, where `<host>` is the remote server, and `<path>` is obtained by querying the [Discovery](#ocm-api-discovery) endpoint at the Sending Server and getting `resourceTypes[0].protocols.webdav`. Note that this access method is _deprecated_ and may be removed in a future release of the Protocol.
-
-In both cases, when the Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL.
+In all cases, in case the Shared Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL. In other words, the Sending Server SHOULD support requests to URLs such as `https://<sender-host><sender-ocm-path>/path/to/resource.txt`.
 
 Additionally, if `protocol.<protocolname>.requirements` include `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
 
