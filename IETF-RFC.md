@@ -234,7 +234,7 @@ Step 7: The JSON response body is the data that was discovered.
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
 
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at this endpoint
-* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. MUST start with `"1."` for this version of the specification and clients MUST ignore the rest of the string.
+* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.1.0"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at this endpoint. Example: `"https://my-cloud-storage.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this endpoint. Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this server supports in both the Sending Server role and the Receiving Server role, with their access protocols. Each item in this list should
@@ -279,6 +279,7 @@ itself be an object containing the following fields:
     * `"enforce-mfa"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
     * `"webdav-uri"` - to indicate that this OCM server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
     * `"protocol-object"` - to indicate that this OCM server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
+    * `"invites"` - to indicate the server would support acting as an Invite Sender or Invite Receiver OCM Server. This might be useful for suggesting to a user that existing contacts might be upgraded to the more secure (and possibly required) invite flow.
     * `"receive-code"` - to indicate that this OCM server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a Share Creation Notification.
           As all Receiving Servers should require the use of TLS in API calls,
