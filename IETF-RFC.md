@@ -402,9 +402,13 @@ If `multi` is given, one or more protocol
                       - `read` allows read-only access including download of a copy.
                       - `write` allows create, update, and delete rights on the resource.
                       - `share` allows re-share rights on the resource.
-                      - `mfa-enforced` requires the user accessing the resource to be
-                        MFA-authenticated. This permission MAY be used if the
-                        provider exposes the `mfa-capable` capability.
+     * OPTIONAL requirements (array of strings) -
+                      The requirements that the sharee MUST fulfill to access the resource. A subset of:
+                      - `mfa-enforced` requires the consumer to be MFA-authenticated. This
+                        MAY be used if the recipient provider exposes the `enforce-mfa` capability.
+                      - `use-code` requires the consumer to exchange the given `code` via a
+                        signed HTTPS request. This MAY be used if the recipient provider exposes
+                        the `receive-code` capability.
      * OPTIONAL uri (string)
                     An URI to access the remote resource. The URI MAY be relative,
                     in which case the prefix exposed by the `/ocm-provider` endpoint MUST
@@ -423,9 +427,6 @@ If `multi` is given, one or more protocol
                     - `view` allows access to the web app in view-only mode.
                     - `read` allows read and download access via the web app.
                     - `write` allows full editing rights via the web app.
-                    - `mfa-enforced` requires the user accessing the resource to be
-                      MFA-authenticated. This permission MAY be used if the
-                      provider exposes the `mfa-capable` capability.
      * OPTIONAL sharedSecret (string)
                     An optional secret to be used to access the remote web app,
                     for example in the form of a bearer token.
@@ -496,7 +497,7 @@ To access the Resource, the Receiving Server MAY use multiple ways, depending on
 
 In all cases, in case the Shared Resource is a folder and the Receiving Server accesses a resource within that shared folder, it SHOULD append its relative path to that URL. In other words, the Sending Server SHOULD support requests to URLs such as `https://<sender-host><sender-ocm-path>/path/to/resource.txt`.
 
-Additionally, if `protocol.<protocolname>.requirements` includes `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA.
+Additionally, if `protocol.<protocolname>.requirements` includes `mfa-enforced`, the Receiving Server MUST ensure that the Receiving Party has been authenticated with MFA, or prompt the consmer in order to elevate their session, if applicable.
 
 # Share Deletion
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"` notification is
@@ -515,7 +516,7 @@ The details of the payload and side effects such a notification may have are out
 Note that the Receiving Party sending such a notification has no way of knowing if the Sending Party understood and processed the reshare request or not.
 
 # Appendix A: Multi Factor Authentication
-If a Receiving Server exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the requirement `mfa-enforced` on a Share, which the Receiving Server MUST honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` requirement, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
+If a Receiving Server exposes the capability `enforce-mfa`, it indicates that it will try and comply with a MFA requirement set on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the requirement `mfa-enforced` on a Share, which the Receiving Server MUST honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` requirement, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
 
 Since there is no way to guarantee that the Receiving Server will actually enforce the MFA requirement, it is up to the Sending Server to establish a trust with the Receiving Server such that it is reasonable to assume that the Receiving Server will honor the MFA requirement. This establishment of trust will inevitably be implementation dependent, and can be done for example using a pre approved allow list of trusted Receiving Servers. The procedure of establishing trust is out of scope for this specification: a mechanism similar to the [ScienceMesh](https://sciencemesh.io) integration for the [Invite](#invite-flow) capability may be envisaged.
 
