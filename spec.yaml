@@ -374,13 +374,23 @@ definitions:
         type: array
         description: |
           The optional capabilities exposed at this endpoint according to the present
-          specifications. As implementations MUST provide `/shares` to be compliant,
-          it is not necessary to expose it as a capability.
+          specifications.
         items:
           type: string
-          enum: ["/notifications", "/invite-accepted", "/mfa-capable"]
+          enum: ["enforce-mfa", "webdav-uri", "protocol-object", "invites", "receive-code"]
         example:
-          ["/invite-accepted"]
+          ["webdav-uri", "protocol-object"]
+      criteria:
+        type: array
+        description: |
+          The criteria for accepting a Share Creation Notification.
+          As all Receiving Servers should require the use of TLS in API calls,
+          it is not necessary to expose that as a criterium.
+        items:
+          type: string
+          enum: ["http-request-signatures", "code", "denylist", "allowlist", "invite"]
+        example:
+          ["allowlist", "invite"]
       publicKey:
         type: object
         description: |
