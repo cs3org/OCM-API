@@ -569,12 +569,12 @@ definitions:
                       - `mfa-enforced` requires the user accessing the resource to be
                         MFA-authenticated. This requirement MAY be used if the
                         recipient provider exposes the `enforce-mfa` capability.
-                      - `request-signed` requires the recipient to exchange the given
+                      - `use-code` requires the recipient to exchange the given
                         `code` via a signed HTTPS request to `/token` at the Sending
                         Server, in order to get a short-lived token to be used for
                         subsequent access. This requirement MAY be used if the
                         recipient provider exposes the `receive-code` capability.
-                    enum: ["mfa-enforced", "request-signed"]
+                    enum: ["mfa-enforced", "use-code"]
             webapp:
               type: object
               properties:
