@@ -505,13 +505,14 @@ equivalent to a `"SHARE_DECLINED"` notification.
 Note that the Sending Server MAY at any time revoke access to a Resource (effectively undoing or deleting the Share) without notifying the Receiving Server.
 
 # Share Updating
-TODO: document `"RESHARE_CHANGE_PERMISSION"`
+Some implementations have experimented with a `"RESHARE_CHANGE_PERMISSION"`notification, but the payload and side effects such a notification may have are out of scope of this version of this specification.
+The Receiving Party sending such a notification has no way of knowing if the Sending Party understood and processed the reshare request or not.
 
 # Resharing
 The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be used by the
 Receiving Server to persuade the Sending Server to share the same Resource with another Receiving Party.
-TODO: document how the Receiving Party can know if the Sending Party understood and processed the
-reshare request.
+The details of the payload and side effects such a notification may have are out of scope of this version of this specification.
+Note that the Receiving Party sending such a notification has no way of knowing if the Sending Party understood and processed the reshare request or not.
 
 # Appendix A: Multi Factor Authentication
 If a Receiving Server exposes the capability `/mfa-capable`, it indicates that it will try and comply with a MFA requirement set on a Share. If the Sending Server trusts the Receiving Server, the Sending Server MAY set the requirement `mfa-enforced` on a Share, which the Receiving Server MUST honor. A compliant Receiving Server that signals that it is MFA-capable MUST not allow access to a resource protected with the `mfa-enforced` requirement, if the Receiving Party has not provided a second factor to establish their identity with greater confidence.
