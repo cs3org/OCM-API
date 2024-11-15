@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.2.0] - 2024-11-20 - Michiel B. de Jong <michiel@pondersource.com>
+
+* Rephrased and improved the whole protocol description text
+  in order to conform to the IETF Internet Draft style.
+* Updated the API specification to OpenAPI 3.0.
+* Added a `/.well-known` endpoint for discovery, to replace
+  the legacy `/ocm-provider` endpoint in a future release, and
+  extended the properties and capabilities each implementation
+  can expose.
+* Introduced a concept of `requirements` in new shares, which indicate
+  that a recipient of a share MUST fulfill some capabilities in order
+  to access the share.
+* Introduced several mechanisms to improve security:
+  * Support for Multi-Factor Authentication.
+  * Support for signing requests.
+  * Support for OAuth-style exchanges, via a new `/token` endpoint.
+  * Clarified access methods to remote shares, and deprecated
+    less secure ones.
+* Extended the `/notifications` endpoint.
+
 ## [1.1.0] - 2023-05-15 - Giuseppe Lo Presti <lopresti@cern.ch>
 
 * Added a new `/invite-accepted` endpoint to support an invitation
