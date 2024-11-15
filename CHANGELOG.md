@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.2.0] - 2024-11-20 - Michiel B. De Jong <michiel@pondersource.com>
+## [1.2.0] - 2024-11-20 - Michiel B. de Jong <michiel@pondersource.com>
 
 * Rephrased and improved the whole protocol description text
   in order to conform to the IETF Internet Draft style.
