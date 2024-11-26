@@ -22,3 +22,10 @@ If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIB
 ## Changelog
 
 [Available here](CHANGELOG.md)
+
+## Test Suite
+
+We run [automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) between implementers
+
+## Technical Workshop 2024 Recording
+In Novembert 2024 we held a [technical workshop](https://indico.cern.ch/event/1451374/) about Open Cloud Mesh ([recording](https://cernbox.cern.ch/s/goxckNVnfdXLKcv )).
