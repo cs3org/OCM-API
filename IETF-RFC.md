@@ -445,6 +445,7 @@ If `multi` is given, one or more protocol
 ## Decision to Discard
 The Receiving Server MAY discard the notification if any of the following hold true:
 
+* the HTTP Signature is missing but the Sending Server does expose a keypair discoverable from the FQDN part of the `sender` field in the request body
 * the HTTP Signature is missing
 * the HTTP Signature is not valid
 * no keypair is trusted or discoverable from the FQDN part of the `sender` field in the request body
@@ -453,7 +454,7 @@ The Receiving Server MAY discard the notification if any of the following hold t
 * the Sending Server is not allowlisted
 * the Sending Party is not trusted by the Receiving Party (e.g. no Invite was exchanged and/or the Sending Party's OCM Address does not appear in the Receiving Party's address book)
 * the Receiving Server is unable to act as an API client for (any of) the protocol(s) listed for accessing the resource
-* an initial check shows that the resource cannot successfully accessed through (any of) the protocol(s) listed
+* an initial check shows that the resource cannot successfully be accessed through (any of) the protocol(s) listed
 
 # Receiving Party Notification
 If the Share Creation Notification is not discarded by the Receiving Server, they MAY notify the Receiving Party passively by adding the Share to some inbox list, and MAY also notify them actively through for instance a push notification or an email message.
