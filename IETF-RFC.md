@@ -299,7 +299,7 @@ itself be an object containing the following fields:
             Example: https://my-cloud-storage.org/ocm#signature
   * REQUIRED publicKeyPem (string) - PEM-encoded version of the public key.
             Example: "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
-* OPTIONAL: `"inviteAcceptDialog"` (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. If for example "/index.php/apps/sciencemesh/accept" is specified here then a Where-Are-You-From page could redirect the end-user to /index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com.
+* OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. If for example "/index.php/apps/sciencemesh/accept" is specified here then a Where-Are-You-From page could redirect the end-user to /index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com.
 
 # Share Creation Notification
 To create a share, the sending server SHOULD make a HTTP POST request
