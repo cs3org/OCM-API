@@ -14,6 +14,9 @@ Previous versions:
 
 [SemVer](https://semver.org) versioning applies to OCM, and all versions are supported unless stated otherwise by an implementation.
 
+## Invitation flow at a glance
+
+![Invitation flow](invitation flow.jpg) 
 ## Contributing
 
 The Open Cloud Mesh API specification is an open source, community-driven project. The project is hosted as a [W3C Community Group](https://www.w3.org/community/ocm/).

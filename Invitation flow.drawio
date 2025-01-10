@@ -1,0 +1,132 @@
+<mxfile host="Electron" modified="2025-01-10T08:07:42.050Z" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.1.0 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="JRnc8RXhewh4mf_fvx7M" version="24.1.0" type="device">
+  <diagram name="Page-1" id="2YBvvXClWsGukQMizWep">
+    <mxGraphModel dx="1364" dy="843" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="NDPqdjoCEg37fMv0_q80-3" value="" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};participant=umlActor;" parent="1" vertex="1">
+          <mxGeometry x="111" y="71" width="20" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-5" value="Inviter Server" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="1" vertex="1">
+          <mxGeometry x="362" y="71" width="78" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-13" value="" style="html=1;points=[[0,0,0,0,5],[0,1,0,0,-5],[1,0,0,0,5],[1,1,0,0,-5]];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="NDPqdjoCEg37fMv0_q80-5" vertex="1">
+          <mxGeometry x="34" y="80" width="10" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-22" value="" style="html=1;points=[[0,0,0,0,5],[0,1,0,0,-5],[1,0,0,0,5],[1,1,0,0,-5]];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="NDPqdjoCEg37fMv0_q80-5" vertex="1">
+          <mxGeometry x="34" y="350" width="10" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-27" value="" style="html=1;points=[[0,0,0,0,5],[0,1,0,0,-5],[1,0,0,0,5],[1,1,0,0,-5]];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="NDPqdjoCEg37fMv0_q80-5" vertex="1">
+          <mxGeometry x="34" y="590" width="10" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-6" value="" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};participant=umlActor;size=47;" parent="1" vertex="1">
+          <mxGeometry x="990" y="71" width="21" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-7" value="Inviter" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="91" y="21" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-8" value="Invitee" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=14;" parent="1" vertex="1">
+          <mxGeometry x="970.5" y="21" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-9" value="Invitee&lt;div&gt;Server&lt;/div&gt;" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="1" vertex="1">
+          <mxGeometry x="670" y="71" width="78" height="730" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-20" value="" style="html=1;points=[[0,0,0,0,5],[0,1,0,0,-5],[1,0,0,0,5],[1,1,0,0,-5]];perimeter=orthogonalPerimeter;outlineConnect=0;targetShapes=umlLifeline;portConstraint=eastwest;newEdgeStyle={&quot;curved&quot;:0,&quot;rounded&quot;:0};" parent="NDPqdjoCEg37fMv0_q80-9" vertex="1">
+          <mxGeometry x="34" y="270" width="10" height="370" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-14" value="1. Calls Invitation API" style="html=1;verticalAlign=bottom;endArrow=block;curved=0;rounded=0;entryX=0;entryY=0;entryDx=0;entryDy=5;entryPerimeter=0;" parent="1" source="NDPqdjoCEg37fMv0_q80-3" target="NDPqdjoCEg37fMv0_q80-13" edge="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="470" y="391" as="sourcePoint" />
+            <mxPoint x="550" y="391" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-16" value="&amp;nbsp;Creates an &lt;b&gt;invitation*&lt;/b&gt; recorrd in databse" style="shape=note;size=20;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="530" y="160" width="100" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-17" value="" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;entryX=0.024;entryY=0.317;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="NDPqdjoCEg37fMv0_q80-13" target="NDPqdjoCEg37fMv0_q80-16" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="410" y="191" as="sourcePoint" />
+            <mxPoint x="570" y="191" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-18" value="&lt;p style=&quot;margin:0px;margin-top:4px;text-align:center;text-decoration:underline;&quot;&gt;&lt;b&gt;Invitation:Type&lt;/b&gt;&lt;/p&gt;&lt;hr size=&quot;1&quot; style=&quot;border-style:solid;&quot;&gt;&lt;p style=&quot;margin:0px;margin-left:8px;&quot;&gt;Tokrn :&amp;nbsp;&lt;b&gt;string&lt;/b&gt;&amp;nbsp;&lt;br&gt;email :&amp;nbsp;&lt;b style=&quot;background-color: initial;&quot;&gt;string&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin:0px;margin-left:8px;&quot;&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;accepted :&amp;nbsp;&lt;/span&gt;&lt;b style=&quot;background-color: initial;&quot;&gt;bool&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;br&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 8px;&quot;&gt;createdAt :&amp;nbsp;&lt;b style=&quot;background-color: initial;&quot;&gt;datetime&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 8px;&quot;&gt;expiresAt :&amp;nbsp;&lt;b style=&quot;background-color: initial;&quot;&gt;?datetime&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;p style=&quot;margin: 0px 0px 0px 8px;&quot;&gt;acceptedAt :&amp;nbsp;&lt;b style=&quot;background-color: initial;&quot;&gt;?datetime&lt;/b&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/p&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="verticalAlign=top;align=left;overflow=fill;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="470" y="10" width="160" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-19" value="Dispach annotification (Email) to invitee&lt;div&gt;email contains:&lt;br&gt;- Token&lt;/div&gt;&lt;div&gt;- inviter server FQDN&lt;/div&gt;" style="html=1;verticalAlign=bottom;startArrow=oval;startFill=1;endArrow=block;startSize=8;curved=0;rounded=0;exitX=0.526;exitY=0.321;exitDx=0;exitDy=0;exitPerimeter=0;align=left;" parent="1" edge="1">
+          <mxGeometry x="-0.7086" y="-1" width="60" relative="1" as="geometry">
+            <mxPoint x="403.028" y="310.23" as="sourcePoint" />
+            <mxPoint x="1000" y="310.23" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-21" value="submiting invitation acceptance form with&amp;nbsp;&lt;div&gt;providing received &lt;b&gt;Token &lt;/b&gt;and inviter server FQDN&lt;/div&gt;" style="html=1;verticalAlign=bottom;startArrow=none;startFill=0;endArrow=open;startSize=6;endSize=8;curved=0;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="80" relative="1" as="geometry">
+            <mxPoint x="1000" y="375" as="sourcePoint" />
+            <mxPoint x="714" y="375" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-23" value="discovering OCM API of inviter server" style="html=1;verticalAlign=bottom;startArrow=oval;startFill=1;endArrow=block;startSize=8;curved=0;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="60" relative="1" as="geometry">
+            <mxPoint x="704" y="440" as="sourcePoint" />
+            <mxPoint x="406" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-24" value="" style="endArrow=open;endFill=1;endSize=12;html=1;rounded=0;exitX=0.564;exitY=0.614;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="NDPqdjoCEg37fMv0_q80-5" target="NDPqdjoCEg37fMv0_q80-20" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="399" y="511" as="sourcePoint" />
+            <mxPoint x="701.5" y="511" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-28" value="Adds &lt;b&gt;FQDN&lt;/b&gt; of &lt;b&gt;inviter server&lt;/b&gt;&amp;nbsp;as a trusted servers" style="shape=note;size=20;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="850" y="491" width="100" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-29" value="" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;entryX=-0.03;entryY=0.17;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="NDPqdjoCEg37fMv0_q80-20" target="NDPqdjoCEg37fMv0_q80-28" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="716" y="537" as="sourcePoint" />
+            <mxPoint x="802" y="537" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-30" value="Accept invitation* ApiCall" style="html=1;verticalAlign=bottom;startArrow=oval;startFill=1;endArrow=block;startSize=8;curved=0;rounded=0;entryX=1;entryY=0;entryDx=0;entryDy=5;entryPerimeter=0;" parent="1" source="NDPqdjoCEg37fMv0_q80-20" target="NDPqdjoCEg37fMv0_q80-27" edge="1">
+          <mxGeometry width="60" relative="1" as="geometry">
+            <mxPoint x="560" y="671" as="sourcePoint" />
+            <mxPoint x="620" y="671" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-31" value="AcceptInvitationDto" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=26;fillColor=#d5e8d4;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="770" y="618" width="170" height="182" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-32" value="+ inviteeServerFQDN: string" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NDPqdjoCEg37fMv0_q80-31" vertex="1">
+          <mxGeometry y="26" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-33" value="+ token: string" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NDPqdjoCEg37fMv0_q80-31" vertex="1">
+          <mxGeometry y="52" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-36" value="+ userId: string" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NDPqdjoCEg37fMv0_q80-31" vertex="1">
+          <mxGeometry y="78" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-37" value="+ Email: string" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NDPqdjoCEg37fMv0_q80-31" vertex="1">
+          <mxGeometry y="104" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-35" value="+ userId: string" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NDPqdjoCEg37fMv0_q80-31" vertex="1">
+          <mxGeometry y="130" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-34" value="+ Name: string" style="text;strokeColor=#82b366;fillColor=#d5e8d4;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="NDPqdjoCEg37fMv0_q80-31" vertex="1">
+          <mxGeometry y="156" width="170" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-38" value="- mark invitation record as accepted&lt;br&gt;- add invitee in contacts table" style="shape=note;size=20;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="140" y="661" width="184" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="NDPqdjoCEg37fMv0_q80-39" value="" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;" parent="1" source="NDPqdjoCEg37fMv0_q80-5" edge="1">
+          <mxGeometry width="160" relative="1" as="geometry">
+            <mxPoint x="140" y="683" as="sourcePoint" />
+            <mxPoint x="320" y="681" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KToGfry4naJeort9V1CE-1" value="&lt;font color=&quot;#3333ff&quot;&gt;https://datatracker.ietf.org/doc/draft-lopresti-open-cloud-mesh/&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="50" y="810" width="1280" height="30" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
