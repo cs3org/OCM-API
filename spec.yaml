@@ -472,6 +472,13 @@ components:
                 -----BEGIN PUBLIC KEY-----
                 MII...QDD
                 -----END PUBLIC KEY-----
+        inviteAcceptDialog:
+          type: string
+          description: >
+            Optional URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided.
+            Implementations that offer the `invites` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow.
+            If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a Where-Are-You-From page could redirect the end-user
+            to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
     NewShare:
       type: object
       required:
