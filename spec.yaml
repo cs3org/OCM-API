@@ -476,8 +476,8 @@ components:
           type: string
           description: >
             URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided.
-            If for example "/index.php/apps/sciencemesh/accept" is specified here then a Where-Are-You-From page could redirect the end-user
-            to /index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com.
+            If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a Where-Are-You-From page could redirect the end-user
+            to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
     NewShare:
       type: object
       required:
