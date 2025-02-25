@@ -375,7 +375,7 @@ To create a share, the sending server SHOULD make a HTTP POST request
           Option 3: Set the `name` field to `multi`, and put the protocol
           details in a field carrying the name of the protocol.
 
-                Option 1 using the `options` field now deprecated. Implementations are encouraged to
+                Option 1 using the `options` field is now deprecated. Implementations are encouraged to
                 transition to the new optional properties defined below, such that
                 this field may be removed in a future major version of the spec.
 
@@ -394,6 +394,12 @@ If `multi` is given, one or more protocol
                 only support `webdav`.
 
    * Protocol details for `webdav` MAY contain:
+     * REQUIRED uri (string)
+                    An URI to access the remote resource. The URI MAY be relative,
+                    in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
+                    be used, or it MAY be absolute. The latter is recommended in case the
+                    receiver cannot unambiguously identify the sending server's endpoint (e.g.
+                    because of reverse proxies).
      * OPTIONAL sharedSecret (string) - required if no `code` field is given for the Share as a whole (see above).
                     An optional secret to be used to access the resource,
                     such as a bearer token.
@@ -410,19 +416,13 @@ If `multi` is given, one or more protocol
                       - `use-code` requires the consumer to exchange the given `code` via a
                         signed HTTPS request. This MAY be used if the recipient provider exposes
                         the `receive-code` capability.
-     * OPTIONAL uri (string)
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the URI
-                    MAY include a secret hash in the path, in which case there MAY be
-                    no associated `sharedSecret`.
    * Protocol details for `webapp` MAY contain:
-     * REQUIRED uriTemplate (string)
-                    A templated URI to a client-browsable view of the shared resource,
-                    such that users may use the web applications available at the site.
-                    The URI MAY include a secret hash in the path. If the path includes
-                    a `{relative-path-to-shared-resource}` placeholder, implementations
-                    MAY replace it with the actual path to ease user interaction.
+     * REQUIRED uri (string)
+                    An URI to a client-browsable view of the shared resource, such that
+                    users may use the web applications available at the site. The URI MAY
+                    be relative, in which case the prefix exposed by the `/.well-known/ocm`
+                    endpoint MUST be used, or it MAY be absolute. Similar considerations
+                    as for the `webdav.uri` field apply.
      * REQUIRED viewMode (string)
                     The permissions granted to the sharee. A subset of:
                     - `view` allows access to the web app in view-only mode.
@@ -432,16 +432,17 @@ If `multi` is given, one or more protocol
                     An optional secret to be used to access the remote web app,
                     for example in the form of a bearer token.
    * Protocol details for `datatx` MAY contain:
+     * REQUIRED srcUri (string)
+                    An URI to access the remote resource. The URI MAY be relative,
+                    in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
+                    be used, or it MAY be absolute. Similar considerations as for the
+                    `webdav.uri` field apply.
      * OPTIONAL sharedSecret (string)
                     An optional secret to be used to access the resource,
                     for example in the form of a bearer token.
                     To prevent leaking it in logs it MUST NOT appear in any URI.
-     * REQUIRED srcUri (string)
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the
-                    URI MAY include a secret hash in the path.
      * OPTIONAL size (integer)
+                    The size of the file to be transferred from the sending server. 
 
 ## Decision to Discard
 The Receiving Server MAY discard the notification if any of the following hold true:
