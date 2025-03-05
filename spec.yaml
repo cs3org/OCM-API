@@ -606,12 +606,10 @@ components:
                   uri:
                     type: string
                     description: >
-                      An URI to access the remote resource. The URI MAY be relative,
+                      An URI to access the remote resource. The URI SHOULD be relative,
                       such as a key or a UUID, in which case the prefix exposed by the
-                      `/.well-known/ocm` endpoint MUST be used to access the resource,
-                      or it MAY be absolute, including a hostname. The latter is
-                      recommended in case the receiver cannot unambiguously identify
-                      the sending server's endpoint (e.g. because of reverse proxies).
+                      `/.well-known/ocm` endpoint MUST be used to access the resource, or
+                      it MAY be absolute, including a hostname. The latter is deprecated.
                       In all cases, for a `folder` resource, the composed URI acts
                       as the root path, such that other files located within it SHOULD
                       be accessible by appending their relative path to that URI.
@@ -666,7 +664,7 @@ components:
                     description: >
                       An URI to a client-browsable view of the remote resource, such that
                       users may use a web application available at the sender site.
-                      The URI MAY be relative, such as a key or a UUID, in which case
+                      The URI SHOULD be relative, such as a key or a UUID, in which case
                       the prefix exposed by the `/.well-known/ocm` endpoint MUST be used
                       to access the resource, or it MAY be absolute, including a hostname.
                       Similar considerations as for the `webdav` case apply here.
@@ -710,7 +708,7 @@ components:
                     type: string
                     description: >
                       An URI to access the resource at the sending server. The URI
-                      MAY be relative, such as a key or a UUID, in which case the
+                      SHOULD be relative, such as a key or a UUID, in which case the
                       prefix exposed by the `/.well-known/ocm` endpoint SHOULD be used
                       to access the resource, or it MAY be absolute, including a
                       hostname. Similar considerations as for the `webdav` case apply.

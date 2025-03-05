@@ -73,7 +73,7 @@ We define the following concepts (with some non-normative references to related 
 * __Discovering Server__ - a server that tries to obtain information in OCM API discovery
 * __Discoverable Server__ - a server that tries to supply information in OCM API discovery
 * __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM Server. `<Receiving Party's identifier>` is an opaque string,
-unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This can, but doesn't need to be, the domain at which the OCM API of that server is hosted.
+unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This MUST be the domain at which the OCM API of that server is hosted.
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact between parties and servers in the Invite Flow, containing an Invite Token (see below) and the Invite Sender's OCM Address
 * __Invite Sender__ - the party sending an Invite
@@ -395,11 +395,9 @@ If `multi` is given, one or more protocol
 
    * Protocol details for `webdav` MAY contain:
      * REQUIRED uri (string)
-                    An URI to access the remote resource. The URI MAY be relative,
+                    An URI to access the remote resource. The URI SHOULD be relative,
                     in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
-                    be used, or it MAY be absolute. The latter is recommended in case the
-                    receiver cannot unambiguously identify the sending server's endpoint (e.g.
-                    because of reverse proxies).
+                    be used. Absolute URIs are deprecated.
      * OPTIONAL sharedSecret (string) - required if no `code` field is given for the Share as a whole (see above).
                     An optional secret to be used to access the resource,
                     such as a bearer token.
@@ -419,10 +417,9 @@ If `multi` is given, one or more protocol
    * Protocol details for `webapp` MAY contain:
      * REQUIRED uri (string)
                     An URI to a client-browsable view of the shared resource, such that
-                    users may use the web applications available at the site. The URI MAY
+                    users may use the web applications available at the site. The URI SHOULD
                     be relative, in which case the prefix exposed by the `/.well-known/ocm`
-                    endpoint MUST be used, or it MAY be absolute. Similar considerations
-                    as for the `webdav.uri` field apply.
+                    endpoint MUST be used. Absolute URIs are deprecated.
      * REQUIRED viewMode (string)
                     The permissions granted to the sharee. A subset of:
                     - `view` allows access to the web app in view-only mode.
@@ -433,16 +430,15 @@ If `multi` is given, one or more protocol
                     for example in the form of a bearer token.
    * Protocol details for `datatx` MAY contain:
      * REQUIRED srcUri (string)
-                    An URI to access the remote resource. The URI MAY be relative,
+                    An URI to access the remote resource. The URI SHOULD be relative,
                     in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
-                    be used, or it MAY be absolute. Similar considerations as for the
-                    `webdav.uri` field apply.
+                    be used. Absolute URIs are deprecated.
      * OPTIONAL sharedSecret (string)
                     An optional secret to be used to access the resource,
                     for example in the form of a bearer token.
                     To prevent leaking it in logs it MUST NOT appear in any URI.
      * OPTIONAL size (integer)
-                    The size of the file to be transferred from the sending server. 
+                    The size of the file to be transferred from the sending server.
 
 ## Decision to Discard
 The Receiving Server MAY discard the notification if any of the following hold true:
@@ -493,7 +489,7 @@ They could give the Receiving Party the option to accept or reject the Share, or
 
 # Resource Access
 To access the Resource, the Receiving Server MAY use multiple ways, depending on the body of the Share Creation Notification. The procedure is as follows:
-1. A root path `<sender-ocm-path>` MUST be obtained by querying the [Discovery](#ocm-api-discovery) endpoint at the Sending Server and getting `resourceTypes[0].protocols.webdav`.
+1. The receiver MUST extract the OCM Server FQDN from the `owner` field of the received share, and MUST query the [Discovery](#ocm-api-discovery) endpoint at that address: the `resourceTypes[0].protocols.webdav` value is the `<sender-ocm-path>` to be used in step 3.
 2. If `code` is not empty, the receiver SHOULD make a signed POST request to the `/token` path inside the Sending Server's OCM API, to exchange the code for a short-lived bearer token, and then use that bearer token to access the Resource.
 3. If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<sender-host><sender-ocm-path>`. Note that this access method, based on Basic Auth, is _deprecated_ and may be removed in a future release of the Protocol.
 4. Otherwise, if `protocol.name` = `multi`, the receiver MUST inspect the `protocol.webdav.uri` property: if it's a complete URI, the receiver MUST make a HTTP PROPFIND request against it to access the remote resource. If it only contains an identifier `<key>`, the receiver MUST make a HTTP PROPFIND request to `https://<sender-host><sender-ocm-path>/<key>` in order to access the remote resource. Additionally, the receiver MUST pass an `Authorization: bearer` header with either the short-lived bearer token obtained in step 2, if applicable, or the `protocol.webdav.sharedSecret` value.
