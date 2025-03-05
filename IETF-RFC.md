@@ -224,9 +224,9 @@ At the start of the process, the Discovering Server has either an OCM Address, o
 
 Step 1: In case it has an OCM Address, it should first extract `<fqdn>` from it (the part after the `@` sign).
 Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP GET request to `https://<fqdn>/.well-known/ocm`.
-Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
+Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 7.
 Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as the URL instead.
-Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
+Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 7.
 Step 6: If not, fail.
 Step 7: The JSON response body is the data that was discovered.
 
