@@ -73,7 +73,7 @@ We define the following concepts (with some non-normative references to related 
 * __Discovering Server__ - a server that tries to obtain information in OCM API discovery
 * __Discoverable Server__ - a server that tries to supply information in OCM API discovery
 * __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM Server. `<Receiving Party's identifier>` is an opaque string,
-unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This MUST be the domain at which the OCM API of that server is hosted.
+unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This MUST be the domain at which the `/.well-known/ocm` endpoint of that server is hosted.
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact between parties and servers in the Invite Flow, containing an Invite Token (see below) and the Invite Sender's OCM Address
 * __Invite Sender__ - the party sending an Invite
