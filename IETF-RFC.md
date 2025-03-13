@@ -222,7 +222,7 @@ When OCM API discovery can occur in preparation of a Share Creation Notification
 ## Process
 At the start of the process, the Discovering Server has either an OCM Address, or just an FQDN from for instance the `recipientProvider` field of an Invite Acceptance Request.
 
-Step 1: In case it has an OCM Address, it should first extract `<fqdn>` from it (the part after the `@` sign).
+Step 1: In case it has an OCM Address, it should first extract `<fqdn>` from it (the part after the last `@` sign).
 Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP GET request to `https://<fqdn>/.well-known/ocm`.
 Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 7.
 Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as the URL instead.
