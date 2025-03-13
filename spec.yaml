@@ -606,21 +606,18 @@ components:
                   uri:
                     type: string
                     description: >
-                      An URI to access the remote resource. The URI SHOULD be
-                      relative,
+                      An URI to access the remote resource. The URI SHOULD be relative,
                       such as a key or a UUID, in which case the prefix exposed by the
-                      `/.well-known/ocm` endpoint MUST be used to access the resource,
-                      or it MAY be absolute, including a hostname. The latter is NOT
-                      recommended because of security concerns.
+                      `/.well-known/ocm` endpoint MUST be used to access the resource, or
+                      it MAY be absolute, including a hostname. The latter is deprecated.
                       In all cases, for a `folder` resource, the composed URI acts
-                      as the root path, such that other files located within SHOULD
+                      as the root path, such that other files located within it SHOULD
                       be accessible by appending their relative path to that URI.
                   sharedSecret:
                     type: string
                     description: >
                       An optional secret to be used to access the resource, such
-                      as
-                      a bearer token. If a `code` is provided, it SHOULD be used
+                      as a bearer token. If a `code` is provided, it SHOULD be used
                       instead via the code flow interaction, and the `sharedSecret`
                       SHOULD be omitted. To prevent leaking it in logs it MUST NOT
                       appear in any URI.
@@ -665,13 +662,12 @@ components:
                   uri:
                     type: string
                     description: >
-                      An URI to a client-browsable view of the remote resource,
-                      such that
+                      An URI to a client-browsable view of the remote resource, such that
                       users may use a web application available at the sender site.
                       The URI SHOULD be relative, such as a key or a UUID, in which case
                       the prefix exposed by the `/.well-known/ocm` endpoint MUST be used
                       to access the resource, or it MAY be absolute, including a hostname.
-                      The latter is NOT recommended because of security concerns.
+                      Similar considerations as for the `webdav` case apply here.
                       In all cases, for a `folder` resource, the composed URI acts
                       as the root path, such that other files located within SHOULD
                       be accessible by appending their relative path to that URI.
@@ -689,8 +685,7 @@ components:
                   sharedSecret:
                     type: string
                     description: >
-                      An optional secret to be used to access the remote web
-                      app, such as
+                      An optional secret to be used to access the remote web app, such as
                       a bearer token. To prevent leaking it in logs it MUST NOT appear
                       in any URI. If a `code` is provided, then the sending host MUST
                       accept the short-lived bearer token when serving the web app,
@@ -704,8 +699,7 @@ components:
                   sharedSecret:
                     type: string
                     description: >
-                      An optional secret to be used to access the resource, such
-                      as
+                      An optional secret to be used to access the resource, such as
                       a bearer token. If a `code` is provided, it SHOULD be used
                       instead via the code flow interaction, and the `sharedSecret`
                       SHOULD be omitted. To prevent leaking it in logs it MUST NOT
@@ -713,13 +707,11 @@ components:
                   srcUri:
                     type: string
                     description: >
-                      An URI to access the resource at the sending server. The
-                      URI
+                      An URI to access the resource at the sending server. The URI
                       SHOULD be relative, such as a key or a UUID, in which case the
                       prefix exposed by the `/.well-known/ocm` endpoint SHOULD be used
-                      to access the resource, or it MAY be absolute, including
-                      a hostname. The latter is NOT recommended because of security
-                      concerns.
+                      to access the resource, or it MAY be absolute, including a
+                      hostname. Similar considerations as for the `webdav` case apply.
                   size:
                     type: integer
                     description: >

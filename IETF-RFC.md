@@ -73,7 +73,7 @@ We define the following concepts (with some non-normative references to related 
 * __Discovering Server__ - a server that tries to obtain information in OCM API discovery
 * __Discoverable Server__ - a server that tries to supply information in OCM API discovery
 * __OCM Address__ - a string of the form `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely identify a user or group "at" an OCM Server. `<Receiving Party's identifier>` is an opaque string,
-unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This can, but doesn't need to be, the domain at which the OCM API of that server is hosted.
+unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the server is identified. This MUST be the domain at which the `/.well-known/ocm` endpoint of that server is hosted.
 * __OCM Notification__ - a message from the Receiving Server to the Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact between parties and servers in the Invite Flow, containing an Invite Token (see below) and the Invite Sender's OCM Address
 * __Invite Sender__ - the party sending an Invite
@@ -222,11 +222,11 @@ When OCM API discovery can occur in preparation of a Share Creation Notification
 ## Process
 At the start of the process, the Discovering Server has either an OCM Address, or just an FQDN from for instance the `recipientProvider` field of an Invite Acceptance Request.
 
-Step 1: In case it has an OCM Address, it should first extract `<fqdn>` from it (the part after the `@` sign).
+Step 1: In case it has an OCM Address, it should first extract `<fqdn>` from it (the part after the last `@` sign).
 Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP GET request to `https://<fqdn>/.well-known/ocm`.
-Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
+Step 3: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 7.
 Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as the URL instead.
-Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 8.
+Step 5: If that results in a valid HTTP response with a valid JSON response body within reasonable time, go to step 7.
 Step 6: If not, fail.
 Step 7: The JSON response body is the data that was discovered.
 
@@ -234,7 +234,7 @@ Step 7: The JSON response body is the data that was discovered.
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
 
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at this endpoint
-* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.1.0"`
+* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.2.0"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at this endpoint. Example: `"https://my-cloud-storage.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this endpoint. Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this server supports in both the Sending Server role and the Receiving Server role, with their access protocols. Each item in this list should
@@ -375,7 +375,7 @@ To create a share, the sending server SHOULD make a HTTP POST request
           Option 3: Set the `name` field to `multi`, and put the protocol
           details in a field carrying the name of the protocol.
 
-                Option 1 using the `options` field now deprecated. Implementations are encouraged to
+                Option 1 using the `options` field is now deprecated. Implementations are encouraged to
                 transition to the new optional properties defined below, such that
                 this field may be removed in a future major version of the spec.
 
@@ -394,6 +394,10 @@ If `multi` is given, one or more protocol
                 only support `webdav`.
 
    * Protocol details for `webdav` MAY contain:
+     * REQUIRED uri (string)
+                    An URI to access the remote resource. The URI SHOULD be relative,
+                    in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
+                    be used. Absolute URIs are deprecated.
      * OPTIONAL sharedSecret (string) - required if no `code` field is given for the Share as a whole (see above).
                     An optional secret to be used to access the resource,
                     such as a bearer token.
@@ -410,19 +414,12 @@ If `multi` is given, one or more protocol
                       - `use-code` requires the consumer to exchange the given `code` via a
                         signed HTTPS request. This MAY be used if the recipient provider exposes
                         the `receive-code` capability.
-     * OPTIONAL uri (string)
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the URI
-                    MAY include a secret hash in the path, in which case there MAY be
-                    no associated `sharedSecret`.
    * Protocol details for `webapp` MAY contain:
-     * REQUIRED uriTemplate (string)
-                    A templated URI to a client-browsable view of the shared resource,
-                    such that users may use the web applications available at the site.
-                    The URI MAY include a secret hash in the path. If the path includes
-                    a `{relative-path-to-shared-resource}` placeholder, implementations
-                    MAY replace it with the actual path to ease user interaction.
+     * REQUIRED uri (string)
+                    An URI to a client-browsable view of the shared resource, such that
+                    users may use the web applications available at the site. The URI SHOULD
+                    be relative, in which case the prefix exposed by the `/.well-known/ocm`
+                    endpoint MUST be used. Absolute URIs are deprecated.
      * REQUIRED viewMode (string)
                     The permissions granted to the sharee. A subset of:
                     - `view` allows access to the web app in view-only mode.
@@ -432,16 +429,16 @@ If `multi` is given, one or more protocol
                     An optional secret to be used to access the remote web app,
                     for example in the form of a bearer token.
    * Protocol details for `datatx` MAY contain:
+     * REQUIRED srcUri (string)
+                    An URI to access the remote resource. The URI SHOULD be relative,
+                    in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST
+                    be used. Absolute URIs are deprecated.
      * OPTIONAL sharedSecret (string)
                     An optional secret to be used to access the resource,
                     for example in the form of a bearer token.
                     To prevent leaking it in logs it MUST NOT appear in any URI.
-     * REQUIRED srcUri (string)
-                    An URI to access the remote resource. The URI MAY be relative,
-                    in which case the prefix exposed by the `/ocm-provider` endpoint MUST
-                    be used, or it may be absolute (recommended). Additionally, the
-                    URI MAY include a secret hash in the path.
      * OPTIONAL size (integer)
+                    The size of the file to be transferred from the sending server.
 
 ## Decision to Discard
 The Receiving Server MAY discard the notification if any of the following hold true:
@@ -492,7 +489,7 @@ They could give the Receiving Party the option to accept or reject the Share, or
 
 # Resource Access
 To access the Resource, the Receiving Server MAY use multiple ways, depending on the body of the Share Creation Notification. The procedure is as follows:
-1. A root path `<sender-ocm-path>` MUST be obtained by querying the [Discovery](#ocm-api-discovery) endpoint at the Sending Server and getting `resourceTypes[0].protocols.webdav`.
+1. The receiver MUST extract the OCM Server FQDN from the `sender` field of the received share, and MUST query the [Discovery](#ocm-api-discovery) endpoint at that address: the `resourceTypes[0].protocols.webdav` value is the `<sender-ocm-path>` to be used in step 3.
 2. If `code` is not empty, the receiver SHOULD make a signed POST request to the `/token` path inside the Sending Server's OCM API, to exchange the code for a short-lived bearer token, and then use that bearer token to access the Resource.
 3. If `protocol.name` = `webdav`, the receiver SHOULD inspect the `protocol.options` property. If it contains a `sharedSecret`, as in the [legacy example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post), then the receiver SHOULD make a HTTP PROPFIND request to `https://<sharedSecret>:@<sender-host><sender-ocm-path>`. Note that this access method, based on Basic Auth, is _deprecated_ and may be removed in a future release of the Protocol.
 4. Otherwise, if `protocol.name` = `multi`, the receiver MUST inspect the `protocol.webdav.uri` property: if it's a complete URI, the receiver MUST make a HTTP PROPFIND request against it to access the remote resource. If it only contains an identifier `<key>`, the receiver MUST make a HTTP PROPFIND request to `https://<sender-host><sender-ocm-path>/<key>` in order to access the remote resource. Additionally, the receiver MUST pass an `Authorization: bearer` header with either the short-lived bearer token obtained in step 2, if applicable, or the `protocol.webdav.sharedSecret` value.
