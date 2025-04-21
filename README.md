@@ -14,19 +14,16 @@ Previous versions:
 
 [SemVer](https://semver.org) versioning applies to OCM, and all versions are supported unless stated otherwise by an implementation.
 
+## Test Suite
+
+We run [automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) between implementers.
+
 ## Contributing
 
 The Open Cloud Mesh API specification is an open source, community-driven project. The project is hosted as a [W3C Community Group](https://www.w3.org/community/ocm/).
 
 If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md).
 
-## Changelog
+## History and Changelog
 
-[Available here](CHANGELOG.md)
-
-## Test Suite
-
-We run [automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) between implementers
-
-## Technical Workshop 2024 Recording
-In Novembert 2024 we held a [technical workshop](https://indico.cern.ch/event/1451374/) about Open Cloud Mesh ([recording](https://cernbox.cern.ch/s/goxckNVnfdXLKcv )).
+The history of Open Cloud Mesh is [available here](HISTORY.md) and a changelog of the released versions is [available here](CHANGELOG.md).
