@@ -181,7 +181,7 @@ Many methods for establishing contact allow unsolicited contact with the prospec
 <t>Whereas the precise syntax of the Invite Message and the Invite Acceptance Gesture will differ between implementations, the Invite Acceptance Request SHOULD be a HTTP POST request:</t>
 
 <t><list style="symbols">
-  <t>to the <spanx style="verb">/invited-accepted</spanx> path in the Invite Sender OCM Server's OCM API</t>
+  <t>to the <spanx style="verb">/invite-accepted</spanx> path in the Invite Sender OCM Server's OCM API</t>
   <t>using <spanx style="verb">application/json</spanx> as the <spanx style="verb">Content-Type</spanx> HTTP request header</t>
   <t>its request body containing a JSON document representing an object with the following string fields:
   <list style="symbols">

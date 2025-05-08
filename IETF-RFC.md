@@ -134,7 +134,7 @@ OCM Servers MAY enforce a policy to only accept Shares between such trusted cont
 ### Invite Acceptance Request Details
 Whereas the precise syntax of the Invite Message and the Invite Acceptance Gesture will differ between implementations, the Invite Acceptance Request SHOULD be a HTTP POST request:
 
-* to the `/invited-accepted` path in the Invite Sender OCM Server's OCM API
+* to the `/invite-accepted` path in the Invite Sender OCM Server's OCM API
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object with the following string fields:
   * REQUIRED: `recipientProvider` - FQDN of the Invite Receiver OCM Server
