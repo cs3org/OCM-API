@@ -1,0 +1,38 @@
+name: Build RFC XML
+
+on:
+  push:
+    paths: [IETF-RFC.md]
+  workflow_dispatch:         
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Ruby setup
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: false
+
+      - name: Install kramdown-rfc
+        run: gem install --no-document kramdown-rfc
+
+      - name: Convert Markdown → XML
+        run: kramdown-rfc IETF-RFC.md > IETF-RFC.xml
+
+      # Commit the result back to the repo
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: IETF-RFC.xml
+          message: 'CI: regenerate IETF-RFC.xml'
+          author_name: github-actions
+          author_email: actions@github.com
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rfc-xml
+          path: IETF-RFC.xml
