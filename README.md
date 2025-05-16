@@ -27,3 +27,8 @@ If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIB
 ## History and Changelog
 
 The history of Open Cloud Mesh is [available here](HISTORY.md) and a changelog of the released versions is [available here](CHANGELOG.md).
+
+## IETF-RFC.md -> IETF-RFC.xml
+
+Please do all edits in IETF-RFC.md, don't edit IETF-RFC.xml by hand.
+Then see [this commit comment](https://github.com/cs3org/OCM-API/commit/cbd2f2c82ba7067b80395f77066c7fb25ed86f65) for instructions on how to build IETF-RFC.xml from IETF-RFC.md
