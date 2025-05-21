@@ -31,6 +31,16 @@ jobs:
           message: 'CI: regenerate IETF-RFC.xml'
           author_name: github-actions
           author_email: actions@github.com
+          # github.sha is unique per run
+          new_branch: rfc/gen-${{ github.sha }}   
+          push: origin HEAD
+
+      - uses: peter-evans/create-pull-request@v6
+        with:
+          branch: rfc/gen-${{ github.sha }}
+          title: 'Regenerate IETF-RFC.xml'
+          body: 'Automatic XML regeneration by CI'
+          base: develop
 
       - uses: actions/upload-artifact@v4
         with:
