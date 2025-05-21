@@ -613,4 +613,12 @@ Following the validation of the signature, the host should also confirm the vali
 
 As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.
 
+# Acknowledgements
+
+Our deepest thanks and appreciation go to the people who started the work on what would become this specification in 2015. In particular we want to thank (in alphabetical order) Guido Aben, Russell Albert, Holger Angenent, David Antoš, Hrachya Astsatryan, Kurt Bauer, Charles du Jeu, Andreas Eckey, David Gillard, Andranik Hayrapetyan Wahi, Christoph Herzog, David Jericho, Frank Karlitschek, Christian Kracher, Ralph Krimmel, Massimo Lamanna, Simon Leinen, Jari Miettinen, Jakub Moscicki, Frederik Orellana, Vlad Roman, Christian Schmitz, Woojin Seok, Rogier Spoor, Christian Sprajc, Peter Szegedi, Ron Trompert, Benedikt Wegmann and Johnatan Xu.
+
+We would also like to thank Ishank Arora, Gianmaria Del Monte, Jörn Friedrich Dreyer, Hugo González Labrador, Maxence Lange, Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and Björn Schissle for their direct contributions to the specification.
+
+Over the years many more people have been involved in the development of OCM. We would like to thank all of them for their contributions, including Jean-Thomas Acquaviva, Samuel Alfageme Sainz, Karsten Asshauer, Miroslav Bauer, Felix Böhm, Maciej Brzeźniak, Diogo Castro, Gavin Charles Kennedy, Jarosław Czub, Milan Danecek, Michael D'Silva, Lukasz Dutka, Pedro Ferreira, Renato Furter, Klaas Freitag, Raman Ganguly, Eva Gergely, Hilary Goodson, Daniel Halbe, Dave Heyns, Jan Holesovsky, Jan Hornicek, Carina Kemp, Fergus Kerins, Andreas Klotz, Matthias Knoll, Christian Kracher, Mario Lassnig, Claudius Laumanns, Anthony Leroy, Patrick Maier, Vladislav Makarenko, Anna Manou, Rita Meneses, Zheng Meyer-Zhao, Crystal Michelle Chua, Yoann Moulin, Daniel Müller, Frederik Müller, Rasmus Munk, Michał Orzechowski, Jacek Pawel Kitowski, Iosif Peterfi, Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse, Carla Sauvanaud, Klaus Scheibenberger, Christian Schmitz, Marcin Sieprawski, Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
+
 --- back
