@@ -30,19 +30,16 @@ jobs:
           path: IETF-RFC.xml
 
       # Commit the result back to the repo
-      - uses: EndBug/add-and-commit@v9
-        with:
-          add: IETF-RFC.xml
-          message: 'CI: regenerate IETF-RFC.xml'
-          author_name: github-actions
-          author_email: actions@github.com
-          # github.sha is unique per run
-          new_branch: rfc/gen-${{ github.sha }}
-          push: origin HEAD
-
       - uses: peter-evans/create-pull-request@v6
         with:
           branch: rfc/gen-${{ github.sha }}
+          base: develop
+          add-paths: |
+            IETF-RFC.xml
+          commit-message: 'CI: regenerate IETF-RFC.xml'
+          signoff: true
           title: 'Regenerate IETF-RFC.xml'
           body: 'Automatic XML regeneration by CI'
-          base: develop
+          reviewers: |
+            glpatcern
+            michielbdejong
