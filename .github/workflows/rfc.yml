@@ -21,8 +21,13 @@ jobs:
       - name: Install kramdown-rfc
         run: gem install --no-document kramdown-rfc
 
-      - name: Convert Markdown → XML
+      - name: Convert Markdown to XML
         run: kramdown-rfc IETF-RFC.md > IETF-RFC.xml
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rfc-xml
+          path: IETF-RFC.xml
 
       # Commit the result back to the repo
       - uses: EndBug/add-and-commit@v9
@@ -31,8 +36,13 @@ jobs:
           message: 'CI: regenerate IETF-RFC.xml'
           author_name: github-actions
           author_email: actions@github.com
+          # github.sha is unique per run
+          new_branch: rfc/gen-${{ github.sha }}
+          push: origin HEAD
 
-      - uses: actions/upload-artifact@v4
+      - uses: peter-evans/create-pull-request@v6
         with:
-          name: rfc-xml
-          path: IETF-RFC.xml
+          branch: rfc/gen-${{ github.sha }}
+          title: 'Regenerate IETF-RFC.xml'
+          body: 'Automatic XML regeneration by CI'
+          base: develop
