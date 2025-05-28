@@ -14,9 +14,9 @@ Previous versions:
 
 [SemVer](https://semver.org) versioning applies to OCM, and all versions are supported unless stated otherwise by an implementation.
 
-## Test Suite
+## Testing
 
-We run [automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) between implementers.
+We provide an [https://github.com/cs3org/OCM-stub](OCM-stub) reference implementation, and run [automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) between implementers and against the stub.
 
 ## Contributing
 
@@ -24,11 +24,8 @@ The Open Cloud Mesh API specification is an open source, community-driven projec
 
 If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md).
 
+To contribute to the Draft, please do all edits in `IETF-RFC.md` only. A GitHub action will regenerate the `IETF-RFC.xml` file.
+
 ## History and Changelog
 
 The history of Open Cloud Mesh is [available here](HISTORY.md) and a changelog of the released versions is [available here](CHANGELOG.md).
-
-## IETF-RFC.md -> IETF-RFC.xml
-
-Please do all edits in IETF-RFC.md, don't edit IETF-RFC.xml by hand.
-Then see [this commit comment](https://github.com/cs3org/OCM-API/commit/cbd2f2c82ba7067b80395f77066c7fb25ed86f65) for instructions on how to build IETF-RFC.xml from IETF-RFC.md
