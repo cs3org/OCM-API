@@ -5,6 +5,11 @@ info:
   version: 1.2.0
   x-logo:
     url: logo.png
+servers:
+  - url: https://{discovery_fqdn}
+    variables:
+      discovery_fqdn:
+        default: my-cloud-storage.tld
 paths:
   /.well-known/ocm:
     get:
