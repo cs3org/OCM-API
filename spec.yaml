@@ -1,11 +1,4 @@
 openapi: 3.0.3
-x-origin:
-  - url: https://raw.githubusercontent.com/cs3org/OCM-API/develop/spec.yaml
-    format: swagger
-    version: "2.0"
-    converter:
-      url: https://github.com/mermade/oas-kit
-      version: 7.0.8
 info:
   title: Open Cloud Mesh API
   description: Open Cloud Mesh Open API Specification.
