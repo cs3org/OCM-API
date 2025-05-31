@@ -9,7 +9,7 @@ servers:
   - url: https://{discovery_fqdn}
     variables:
       discovery_fqdn:
-        default: my-cloud-storage.tld
+        default: my-cloud-storage.org
 paths:
   /.well-known/ocm:
     get:
@@ -402,8 +402,7 @@ components:
                       this path as a prefix (see sharing examples). In addition,
                       implementations are expected to execute the transfer using
                       WebDAV as the wire protocol.
-                patternProperties:
-                  ^.*$:
+                additionalProperties:
                     type: string
                     description: >
                       Any additional protocol supported for this resource type
@@ -573,158 +572,156 @@ components:
             - `webapp`, to access remote web applications
             - `datatx`, to transfer the data to the remote endpoint
             Other custom protocols might be added in the future.
-          additionalProperties:
-            type: object
-            required:
-              - name
-            properties:
-              name:
-                type: string
-                description: >
-                  The name of the protocol. Default: `multi`.
-                  If `multi` is given, one or more protocol endpoints are expected
-                  to be defined according to the optional properties specified below.
-                  Otherwise, at least `webdav` is expected to be supported, and
-                  its options MAY be given in the opaque `options` payload for
-                  compatibility with v1.0 implementations (see examples). Note
-                  though that this format is deprecated.
-                  Warning: client implementers should be aware that v1.1 servers
-                  MAY support both `webdav` and `multi`, but v1.0 servers MAY
-                  only support `webdav`.
-                  This field may be removed in a future major version of the spec.
-              options:
-                type: object
-                description: >
-                  This property is now deprecated. Implementations are
-                  encouraged to
-                  transition to the new optional properties defined below, such that
-                  this field may be removed in a future major version of the spec.
-              webdav:
-                type: object
-                properties:
-                  uri:
+          required:
+            - name
+          properties:
+            name:
+              type: string
+              description: >
+                The name of the protocol. Default: `multi`.
+                If `multi` is given, one or more protocol endpoints are expected
+                to be defined according to the optional properties specified below.
+                Otherwise, at least `webdav` is expected to be supported, and
+                its options MAY be given in the opaque `options` payload for
+                compatibility with v1.0 implementations (see examples). Note
+                though that this format is deprecated.
+                Warning: client implementers should be aware that v1.1 servers
+                MAY support both `webdav` and `multi`, but v1.0 servers MAY
+                only support `webdav`.
+                This field may be removed in a future major version of the spec.
+            options:
+              type: object
+              description: >
+                This property is now deprecated. Implementations are
+                encouraged to
+                transition to the new optional properties defined below, such that
+                this field may be removed in a future major version of the spec.
+            webdav:
+              type: object
+              properties:
+                uri:
+                  type: string
+                  description: >
+                    An URI to access the remote resource. The URI SHOULD be relative,
+                    such as a key or a UUID, in which case the prefix exposed by the
+                    `/.well-known/ocm` endpoint MUST be used to access the resource, or
+                    it MAY be absolute, including a hostname. The latter is deprecated.
+                    In all cases, for a `folder` resource, the composed URI acts
+                    as the root path, such that other files located within it SHOULD
+                    be accessible by appending their relative path to that URI.
+                sharedSecret:
+                  type: string
+                  description: >
+                    An optional secret to be used to access the resource, such
+                    as a bearer token. If a `code` is provided, it SHOULD be used
+                    instead via the code flow interaction, and the `sharedSecret`
+                    SHOULD be omitted. To prevent leaking it in logs it MUST NOT
+                    appear in any URI.
+                permissions:
+                  type: array
+                  items:
                     type: string
                     description: >
-                      An URI to access the remote resource. The URI SHOULD be relative,
-                      such as a key or a UUID, in which case the prefix exposed by the
-                      `/.well-known/ocm` endpoint MUST be used to access the resource, or
-                      it MAY be absolute, including a hostname. The latter is deprecated.
-                      In all cases, for a `folder` resource, the composed URI acts
-                      as the root path, such that other files located within it SHOULD
-                      be accessible by appending their relative path to that URI.
-                  sharedSecret:
-                    type: string
-                    description: >
-                      An optional secret to be used to access the resource, such
-                      as a bearer token. If a `code` is provided, it SHOULD be used
-                      instead via the code flow interaction, and the `sharedSecret`
-                      SHOULD be omitted. To prevent leaking it in logs it MUST NOT
-                      appear in any URI.
-                  permissions:
-                    type: array
-                    items:
-                      type: string
-                      description: >
-                        The permissions granted to the sharee.
-                        - `read` allows read-only access including download of a copy.
-                        - `write` allows create, update, and delete rights on the resource.
-                        - `share` allows re-share rights on the resource.
-                      enum:
-                        - read
-                        - write
-                        - share
-                  requirements:
-                    type: array
-                    items:
-                      type: string
-                      description: >
-                        A list of requirements that the recipient provider MUST
-                        fulfill
-                        to access the resource. Requirements are optional, but if it is
-                        present it MUST NOT be empty. A recipient provider MUST reject
-                        a share whose requirements it does not understand.
-                        The following requirements are currently supported:
-                        - `mfa-enforced` requires the user accessing the resource to be
-                          MFA-authenticated. This requirement MAY be used if the
-                          recipient provider exposes the `enforce-mfa` capability.
-                        - `use-code` requires the recipient to exchange the given
-                          `code` via a signed HTTPS request to `/token` at the Sending
-                          Server, in order to get a short-lived token to be used for
-                          subsequent access. This requirement MAY be used if the
-                          recipient provider exposes the `receive-code` capability.
-                      enum:
-                        - mfa-enforced
-                        - use-code
-              webapp:
-                type: object
-                properties:
-                  uri:
-                    type: string
-                    description: >
-                      An URI to a client-browsable view of the remote resource, such that
-                      users may use a web application available at the sender site.
-                      The URI SHOULD be relative, such as a key or a UUID, in which case
-                      the prefix exposed by the `/.well-known/ocm` endpoint MUST be used
-                      to access the resource, or it MAY be absolute, including a hostname.
-                      Similar considerations as for the `webdav` case apply here.
-                      In all cases, for a `folder` resource, the composed URI acts
-                      as the root path, such that other files located within SHOULD
-                      be accessible by appending their relative path to that URI.
-                  viewMode:
-                    type: string
-                    description: |
                       The permissions granted to the sharee.
-                      - `view` allows access to the web app in view-only mode.
-                      - `read` allows read and download access via the web app.
-                      - `write` allows full editing rights via the web app.
+                      - `read` allows read-only access including download of a copy.
+                      - `write` allows create, update, and delete rights on the resource.
+                      - `share` allows re-share rights on the resource.
                     enum:
-                      - view
                       - read
                       - write
-                  sharedSecret:
+                      - share
+                requirements:
+                  type: array
+                  items:
                     type: string
                     description: >
-                      An optional secret to be used to access the remote web app, such as
-                      a bearer token. To prevent leaking it in logs it MUST NOT appear
-                      in any URI. If a `code` is provided, then the sending host MUST
-                      accept the short-lived bearer token when serving the web app,
-                      which can be exchanged in the code flow interaction. The exchange
-                      MAY already have happened if the recipient accessed the underlying
-                      resource via WebDAV, in a multi-protocol scenario. In this case,
-                      the `sharedSecret` SHOULD be omitted.
-              datatx:
-                type: object
-                properties:
-                  sharedSecret:
-                    type: string
-                    description: >
-                      An optional secret to be used to access the resource, such as
-                      a bearer token. If a `code` is provided, it SHOULD be used
-                      instead via the code flow interaction, and the `sharedSecret`
-                      SHOULD be omitted. To prevent leaking it in logs it MUST NOT
-                      appear in any URI.
-                  srcUri:
-                    type: string
-                    description: >
-                      An URI to access the resource at the sending server. The URI
-                      SHOULD be relative, such as a key or a UUID, in which case the
-                      prefix exposed by the `/.well-known/ocm` endpoint SHOULD be used
-                      to access the resource, or it MAY be absolute, including a
-                      hostname. Similar considerations as for the `webdav` case apply.
-                  size:
-                    type: integer
-                    description: >
-                      The size of the file to be transferred from the sending
-                      server.
-            patternProperties:
-              ^.*$:
-                type: object
-                description: >
-                  Any optional additional protocols supported for this resource
-                  MAY
-                  be provided here, along with their custom payload. Appropriate
-                  capabilities MUST be advertised in order for a sender to ensure
-                  the recipient can parse such customized payloads.
+                      A list of requirements that the recipient provider MUST
+                      fulfill
+                      to access the resource. Requirements are optional, but if it is
+                      present it MUST NOT be empty. A recipient provider MUST reject
+                      a share whose requirements it does not understand.
+                      The following requirements are currently supported:
+                      - `mfa-enforced` requires the user accessing the resource to be
+                        MFA-authenticated. This requirement MAY be used if the
+                        recipient provider exposes the `enforce-mfa` capability.
+                      - `use-code` requires the recipient to exchange the given
+                        `code` via a signed HTTPS request to `/token` at the Sending
+                        Server, in order to get a short-lived token to be used for
+                        subsequent access. This requirement MAY be used if the
+                        recipient provider exposes the `receive-code` capability.
+                    enum:
+                      - mfa-enforced
+                      - use-code
+            webapp:
+              type: object
+              properties:
+                uri:
+                  type: string
+                  description: >
+                    An URI to a client-browsable view of the remote resource, such that
+                    users may use a web application available at the sender site.
+                    The URI SHOULD be relative, such as a key or a UUID, in which case
+                    the prefix exposed by the `/.well-known/ocm` endpoint MUST be used
+                    to access the resource, or it MAY be absolute, including a hostname.
+                    Similar considerations as for the `webdav` case apply here.
+                    In all cases, for a `folder` resource, the composed URI acts
+                    as the root path, such that other files located within SHOULD
+                    be accessible by appending their relative path to that URI.
+                viewMode:
+                  type: string
+                  description: |
+                    The permissions granted to the sharee.
+                    - `view` allows access to the web app in view-only mode.
+                    - `read` allows read and download access via the web app.
+                    - `write` allows full editing rights via the web app.
+                  enum:
+                    - view
+                    - read
+                    - write
+                sharedSecret:
+                  type: string
+                  description: >
+                    An optional secret to be used to access the remote web app, such as
+                    a bearer token. To prevent leaking it in logs it MUST NOT appear
+                    in any URI. If a `code` is provided, then the sending host MUST
+                    accept the short-lived bearer token when serving the web app,
+                    which can be exchanged in the code flow interaction. The exchange
+                    MAY already have happened if the recipient accessed the underlying
+                    resource via WebDAV, in a multi-protocol scenario. In this case,
+                    the `sharedSecret` SHOULD be omitted.
+            datatx:
+              type: object
+              properties:
+                sharedSecret:
+                  type: string
+                  description: >
+                    An optional secret to be used to access the resource, such as
+                    a bearer token. If a `code` is provided, it SHOULD be used
+                    instead via the code flow interaction, and the `sharedSecret`
+                    SHOULD be omitted. To prevent leaking it in logs it MUST NOT
+                    appear in any URI.
+                srcUri:
+                  type: string
+                  description: >
+                    An URI to access the resource at the sending server. The URI
+                    SHOULD be relative, such as a key or a UUID, in which case the
+                    prefix exposed by the `/.well-known/ocm` endpoint SHOULD be used
+                    to access the resource, or it MAY be absolute, including a
+                    hostname. Similar considerations as for the `webdav` case apply.
+                size:
+                  type: integer
+                  description: >
+                    The size of the file to be transferred from the sending
+                    server.
+
+          additionalProperties:
+            type: object
+            description: >
+              Any optional additional protocols supported for this resource
+              MAY
+              be provided here, along with their custom payload. Appropriate
+              capabilities MUST be advertised in order for a sender to ensure
+              the recipient can parse such customized payloads.
           example:
             singleProtocolLegacy:
               name: webdav
@@ -758,6 +755,10 @@ components:
                 srcUri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 size: 100000
+              talk-v1:
+                "uri": "8f6t8y"
+                "sharedSecret": "Q8eVZr7h43B2CtUmjPpx"
+                "permissions": ["read", "write"]
     NewNotification:
       type: object
       required:
