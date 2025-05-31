@@ -404,12 +404,10 @@ components:
                       this path as a prefix (see sharing examples). In addition,
                       implementations are expected to execute the transfer using
                       WebDAV as the wire protocol.
-                patternProperties:
-                  ^.*$:
+                additionalProperties:
                     type: string
                     description: >
-                      Any additional protocol supported for this resource type
-                      MAY
+                      Any additional protocol supported for this resource type MAY
                       be advertised here, where the value MAY correspond to a top-level
                       URI to be used for that protocol.
                 example:
@@ -718,14 +716,12 @@ components:
                     description: >
                       The size of the file to be transferred from the sending
                       server.
-            patternProperties:
-              ^.*$:
+            additionalProperties:
                 type: object
                 description: >
                   Any optional additional protocols supported for this resource
-                  MAY
-                  be provided here, along with their custom payload. Appropriate
-                  capabilities MUST be advertised in order for a sender to ensure
+                  MAY be provided here, along with their custom payload. Appropriate
+                  capabilities SHOULD be advertised in order for a sender to ensure
                   the recipient can parse such customized payloads.
           example:
             singleProtocolLegacy:
