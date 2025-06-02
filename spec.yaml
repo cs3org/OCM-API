@@ -13,15 +13,14 @@ info:
   x-logo:
     url: logo.png
 paths:
-  https://<discovery-fqdn>/.well-known/ocm:
+  /.well-known/ocm:
     get:
       summary: Discovery endpoint
       description: >
         Following RFC 8615, this endpoint returns the properties and
-        capabilities offered by an OCM Server. This endpoint is to be served at
-        the OCM server's FQDN, e.g. as in
-        `https://my-cloud-storage.org/.well-known/ocm`. See [OCM API
-        Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
+        capabilities offered by an OCM Server. This endpoint MUST be
+        served at the OCM Server's root FQDN, e.g. as in
+        `https://my-cloud-storage.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
         for more details.
       responses:
         "200":
@@ -31,12 +30,13 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Discovery"
-  https://<discovery-fqdn>/ocm-provider:
+  /ocm-provider:
     get:
       summary: Legacy discovery endpoint
       description: >
-        This endpoint is a replica of `/.well-known/ocm`. OCM Servers MUST
-        support both.
+        This endpoint is a replica of `/.well-known/ocm`, and MUST be
+        served at the OCM Server's root FQDN as well.
+        OCM Servers MUST support both.
       responses:
         "200":
           description: See `/.well-known/ocm`.
