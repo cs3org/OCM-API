@@ -718,9 +718,8 @@ components:
             type: object
             description: >
               Any optional additional protocols supported for this resource
-              MAY
-              be provided here, along with their custom payload. Appropriate
-              capabilities MUST be advertised in order for a sender to ensure
+              MAY be provided here, along with their custom payload. Appropriate
+              capabilities SHOULD be advertised in order for a sender to ensure
               the recipient can parse such customized payloads.
           example:
             singleProtocolLegacy:
@@ -755,10 +754,6 @@ components:
                 srcUri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 size: 100000
-              talk-v1:
-                "uri": "8f6t8y"
-                "sharedSecret": "Q8eVZr7h43B2CtUmjPpx"
-                "permissions": ["read", "write"]
     NewNotification:
       type: object
       required:
