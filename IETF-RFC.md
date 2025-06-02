@@ -88,6 +88,7 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Share Name__ - a human-readable string, provided by the Sending Party or the Sending Server, to help the Receiving Party understand which Resource the Share grants access to
 * __Share Permissions__ - protocol-specific allowances granted to the Receiving Party on the modes of accessing the Resource
 * __Share Requirements__ - protocol-specific restrictions on the modes of accessing the Resource
+* __WAYF Page__ - a Where-Are-You-From page is a discovery service used to identify the OCM Server of an Invite Receiver.
 
 # General Flow
 The lifecycle of an Open Cloud Mesh Share starts with prerequisites such as
@@ -150,6 +151,13 @@ The Invite Receiver OCM Server SHOULD apply its own policies for trusting the In
 Since the Invite Flow does not require either Party to type or remember the `userID`, this string does not need to be human-memorable. Even if the Invite Receiver has a memorable username at the Invite Receiver OCM Server, this `userID` that forms part of their OCM Address does not need to match it.
 
 Also, a different `userID` could be given out to each contact, to avoid correlation of identities.
+
+If the inviteAcceptDialog uses a WAYF page, it MAY consist of a fixed list of servers, in addition to, or instead of, a free-text input where any OCM server can be entered. This is especially useful if the Invite Sender is part of a network of associated OCM Servers. The Invite Sender's server MAY use a central database to store the fixed list of OCM servers. In that case the central database MUST be exposed as a JSON document. 
+* The format of the JSON document must be an array of objects, with the following fields:
+  * REQUIRED: `url` - the OCM Server's FQDN.
+  * REQUIRED: `displayName` - a human-readable name for the OCM Server.
+
+Implementors that provide a WAYF Page SHOULD make the URL for the API endpoint of such a central database configurable, allowing the OCM Server to be part of a network of associated OCM Servers. The configuration mechanism MAY allow an OCM Server to be part of multiple networks, thus displaying a union of multiple lists in it's WAYF Page.
 
 ### Invite Acceptance Response Details
 The Invite Acceptance Response SHOULD be a HTTP response:
