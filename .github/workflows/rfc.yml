@@ -2,6 +2,7 @@ name: Build RFC XML
 
 on:
   push:
+    branches: [develop]
     paths: [IETF-RFC.md]
   workflow_dispatch:         
 
