@@ -157,7 +157,7 @@ If the inviteAcceptDialog uses a WAYF page, it MAY consist of a fixed list of se
   * REQUIRED: `url` - the OCM Server's FQDN.
   * REQUIRED: `displayName` - a human-readable name for the OCM Server.
 
-Implementors that provide a WAYF Page SHOULD make the URL for the API endpoint of such a central database configurable, allowing the OCM Server to be part of a network of associated OCM Servers. The configuration mechanism MAY allow an OCM Server to be part of multiple networks, thus displaying a union of multiple lists in it's WAYF Page.
+Implementors that provide a WAYF Page SHOULD make the URL for the API endpoint of such a central database configurable, allowing the OCM Server to be part of a network of associated OCM Servers. The configuration mechanism MAY allow an OCM Server to be part of multiple networks, thus displaying a union of multiple lists in its WAYF Page.
 
 ### Invite Acceptance Response Details
 The Invite Acceptance Response SHOULD be a HTTP response:
