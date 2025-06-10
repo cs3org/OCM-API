@@ -129,7 +129,7 @@ OCM Servers MAY enforce a policy to only accept Shares between such trusted cont
 
 * the Invite Sender OCM Server generates a unique Invite Token and helps the Invite Sender to create the Invite Message
 * the Invite Sender uses some out-of-band communication to send the Invite Message, containing the Invite Token and the Invite Sender OCM Server FQDN, to the Invite Receiver
-* the Invite Receiver navigates to the Invite Receiver OCM Server (possibly using a WAYF Page provided as part of the Invite Message) and makes the Invite Acceptance Gesture
+* the Invite Receiver navigates to the Invite Receiver OCM Server and makes the Invite Acceptance Gesture. This step MAY be facilitated if the Invite Sender OCM Server implements a WAYF Page, such that the Invite Message would include a link to it for the Invite Receiver to navigate to: the Invite Receiver would then be able to indicate their OCM Server and proceed with the Invite Acceptance Gesture without manually copying the Invite Token.
 * the Invite Receiver OCM Server discovers the OCM API of the Invite Sender OCM Server using generic OCM API Discovery (see section below)
 * the Invite Receiver OCM Server sends the Invite Acceptance Request to the Invite Sender OCM Server
 
@@ -302,11 +302,12 @@ itself be an object containing the following fields:
           As implementations MUST accept Share Creation Notifications to be compliant,
           it is not necessary to expose that as a capability.
           Example: `["receive-code", "webdav-uri"]`. The array MAY include for instance:
-    * `"enforce-mfa"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
-    * `"webdav-uri"` - to indicate that this OCM server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
-    * `"protocol-object"` - to indicate that this OCM server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
+    * `"enforce-mfa"` - to indicate that this OCM Server can apply a Sending Server's MFA requirements for a Share on their behalf.
+    * `"webdav-uri"` - to indicate that this OCM Server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
+    * `"protocol-object"` - to indicate that this OCM Server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
     * `"invites"` - to indicate the server would support acting as an Invite Sender or Invite Receiver OCM Server. This might be useful for suggesting to a user that existing contacts might be upgraded to the more secure (and possibly required) invite flow.
-    * `"receive-code"` - to indicate that this OCM server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
+    * `"receive-code"` - to indicate that this OCM Server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
+    * `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF Page to facilitate the Invite flow.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a Share Creation Notification.
           As all Receiving Servers should require the use of TLS in API calls,
           it is not necessary to expose that as a criterium.
