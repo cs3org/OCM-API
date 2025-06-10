@@ -129,7 +129,7 @@ OCM Servers MAY enforce a policy to only accept Shares between such trusted cont
 
 * the Invite Sender OCM Server generates a unique Invite Token and helps the Invite Sender to create the Invite Message
 * the Invite Sender uses some out-of-band communication to send the Invite Message, containing the Invite Token and the Invite Sender OCM Server FQDN, to the Invite Receiver
-* the Invite Receiver navigates to the Invite Receiver OCM Server (possibly using a Where-Are-You-From page provided as part of the Invite Message) and makes the Invite Acceptance Gesture
+* the Invite Receiver navigates to the Invite Receiver OCM Server (possibly using a WAYF Page provided as part of the Invite Message) and makes the Invite Acceptance Gesture
 * the Invite Receiver OCM Server discovers the OCM API of the Invite Sender OCM Server using generic OCM API Discovery (see section below)
 * the Invite Receiver OCM Server sends the Invite Acceptance Request to the Invite Sender OCM Server
 
@@ -325,7 +325,7 @@ itself be an object containing the following fields:
             Example: https://my-cloud-storage.org/ocm#signature
   * REQUIRED publicKeyPem (string) - PEM-encoded version of the public key.
             Example: "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
-* OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. Implementations that offer the `"invites"` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow. If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a Where-Are-You-From page could redirect the end-user to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
+* OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. Implementations that offer the `"invites"` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow. If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
 
 # Share Creation Notification
 To create a share, the sending server SHOULD make a HTTP POST request
