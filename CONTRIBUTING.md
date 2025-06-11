@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-Our [issue tracker](https://github.com/cs3org/OCM-API/issues) can be used to discuss problems or additions to the current or next version of the Open Cloud Mesh API specification.
+Our [Issues tracker](https://github.com/cs3org/OCM-API/issues) can be used to discuss problems or additions to the current or next version of the Open Cloud Mesh API specification. Additionally, in our [Discussions forum](https://github.com/cs3org/OCM-API/discussions) you are welcome to bring up ideas, questions, and any other item that may be of interest for Open Cloud Mesh.
 
 Please follow these guidelines before opening an issue:
 
