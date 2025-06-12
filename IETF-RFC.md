@@ -153,27 +153,7 @@ Since the Invite Flow does not require either Party to type or remember the `use
 
 Also, a different `userID` could be given out to each contact, to avoid correlation of identities.
 
-If the Invite Sender OCM Server implements a WAYF Page, such a page MAY include a fixed list of servers, in addition to, or instead of, a free-text input where any OCM Server can be entered. This is especially useful if the Invite Sender is part of a federation of associated OCM Servers. In order to populate the list of associated OCM Servers, the Invite Sender's server MAY make use of a Directory Service: in that case, the Directory Service MUST expose, via anonymous HTTP GET, a JSON document with the following format:
-  * REQUIRED: `federation` - a human-readable name for the list of OCM Servers exposed by the Directory Service
-  * REQUIRED: `servers` - a JSON array of objects to describe the list of OCM Servers with the following string fields:
-    * REQUIRED: `url` - the OCM Server's FQDN
-    * REQUIRED: `displayName` - a human-readable name for the OCM Server
-  Example:
-  ```json
-  {
-    "federation" : "The ScienceMesh Directory",
-    "servers" : [
-      {
-       "url" : "https://ocm-server-1.fqdn",
-       "displayName" : "OCM Server 1"
-      },
-      {
-       "url" : "https://ocm-server-2.fqdn",
-       "displayName" : "OCM Server 2"
-      }
-    ]
-  }
-  ```
+If the Invite Sender OCM Server implements a WAYF Page, such a page MAY include a fixed list of servers, in addition to, or instead of, a free-text input where any OCM Server can be entered. This is especially useful if the Invite Sender is part of a federation of associated OCM Servers. In order to populate the list of associated OCM Servers, the Invite Sender's server MAY make use of a Directory Service, which is expected to follow the specification detailed in Appendix C.
 
 Implementors that provide a WAYF Page SHOULD make the URL for the API endpoint of such a Directory Service configurable, allowing the OCM Server to be part of a network of associated OCM Servers. The configuration mechanism MAY allow an OCM Server to be part of multiple networks, thus displaying a union of multiple lists in its WAYF Page.
 
@@ -604,7 +584,7 @@ signature = {
 headers['Signature'] = format_signature(signature)
 ~~~~~
 
-### How to confirm Signature on incoming request
+## How to confirm Signature on incoming request
 
 The first step would be to confirm the validity of each properties:
 
@@ -639,6 +619,31 @@ if not verification_result then
 Following the validation of the signature, the host should also confirm the validity of the payload, that is ensuring that the actions implied in the payload actually initiated on behalf of the source of the request.
 
 As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.
+
+# Appendix C: Directory Service
+
+A third-party Directory Service is a back-end service used to federate multiple OCM Servers and facilitate the Invite flow. It is expected to expose, via anonymous HTTP GET, a JSON document with the following format:
+  * REQUIRED: `federation` - a human-readable name for the list of OCM Servers exposed by the Directory Service
+  * REQUIRED: `servers` - a JSON array of objects to describe the list of OCM Servers with the following string fields:
+    * REQUIRED: `url` - the OCM Server's FQDN
+    * REQUIRED: `displayName` - a human-readable name for the OCM Server
+  Example:
+  ```json
+  {
+    "federation" : "The ScienceMesh Directory",
+    "servers" : [
+      {
+       "url" : "https://ocm-server-1.fqdn",
+       "displayName" : "OCM Server 1"
+      },
+      {
+       "url" : "https://ocm-server-2.fqdn",
+       "displayName" : "OCM Server 2"
+      }
+    ]
+  }
+  ```
+
 
 # Acknowledgements
 
