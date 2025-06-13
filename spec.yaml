@@ -36,6 +36,54 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Discovery"
+  /request-share:
+    post:
+      summary: Request access to a share
+      description: >
+        This endpoint is used to request access to a share.
+        The request MUST contain the share ID and the OCM address of the party
+        who wants to receive the share.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RequestShare"
+        description: The JSON object to request access to a share.
+        required: true
+      responses:
+        "201":
+          description: >
+            Consumer successfully received request.
+        "400":
+          description: >
+            Bad request due to invalid parameters, e.g. when `shareId` is missing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/400"
+        "501":
+          description: The server doesn't support requesting shares.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "503":
+          description: The server is temporary unavailable (e.g. due to planned
+            maintenance).
+          headers:
+            Retry-After:
+              description: >
+                Indication for the client when the service could be requested
+                again in HTTP Date format as used by the Internet Message
+                Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the
+                number of seconds (e.g. 3000 if you the service is expected to
+                be available again within 50 minutes).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /shares:
     post:
       summary: Share Creation Notification endpoint
@@ -852,6 +900,22 @@ components:
           type: string
           description: Name of the Invite Sender.
           example: John Doe
+    RequestShare:
+      type: object
+      required:
+        - shareWith
+        - shareId
+      properties:
+        shareWith:
+          type: string
+          description: >
+            Consumer specific identifier of the user, group or federation that
+            wants to recive a share of the resource.
+          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
+        shareId:
+          type: string
+          description: A unique identifier for the resource.
+          example: 1234567890abcdef
     TokenRequest:
       type: object
       required:

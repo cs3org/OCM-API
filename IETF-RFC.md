@@ -1039,6 +1039,33 @@ They could give the Receiving Party the option to accept or reject the
 share, or add the share automatically and only send an informational
 notification that this happened.
 
+# Request for a Share
+
+If the Receiving Party knows of a resource that has not yet
+been shared, the Receiving Party MAY make an HTTP POST request
+
+* to the `/request-share` path in the Sending Server's OCM API
+* using `application/json` as the `Content-Type` HTTP request
+  header
+* its request body containing a JSON document representing an
+  object with the fields as described below
+* using TLS
+* using httpsig [RFC9421]
+
+## Fields
+
+* REQUIRED shareWith (string)
+  OCM Address of the user, group or federation that wants to
+  receive a share of the resource.
+  Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
+* REQUIRED shareId (string)
+  A unique identifier for the resource.
+  Example: 1234567890abcdef
+
+After receiving a request for a Share, the Sending Party MAY
+send a Share Creation Notification to the Receiving Party
+using the OCM address in the shareWith field.
+
 
 # Share Acceptance Notification
 
