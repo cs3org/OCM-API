@@ -308,6 +308,10 @@ components:
           type: string
           description: A friendly branding name of this endpoint
           example: MyCloudStorage
+        resourceadvertismenturi:
+          type: string
+          description: the uri of the ocm resources advertised at this endpoint
+          example: https://my-cloud-storage.org/ocm/resources
         resourceTypes:
           type: array
           description: |
