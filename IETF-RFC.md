@@ -88,6 +88,8 @@ unique at the server. `<fqdn>` is the Fully Qualified Domain Name by which the s
 * __Share Name__ - a human-readable string, provided by the Sending Party or the Sending Server, to help the Receiving Party understand which Resource the Share grants access to
 * __Share Permissions__ - protocol-specific allowances granted to the Receiving Party on the modes of accessing the Resource
 * __Share Requirements__ - protocol-specific restrictions on the modes of accessing the Resource
+* __WAYF Page__ - a Where-Are-You-From page is a discovery service used to identify the OCM Server of an Invite Receiver
+* __Directory Service__ - a third-party service that exposes a list of trusted OCM Servers
 
 # General Flow
 The lifecycle of an Open Cloud Mesh Share starts with prerequisites such as
@@ -127,7 +129,7 @@ OCM Servers MAY enforce a policy to only accept Shares between such trusted cont
 
 * the Invite Sender OCM Server generates a unique Invite Token and helps the Invite Sender to create the Invite Message
 * the Invite Sender uses some out-of-band communication to send the Invite Message, containing the Invite Token and the Invite Sender OCM Server FQDN, to the Invite Receiver
-* the Invite Receiver navigates to the Invite Receiver OCM Server (possibly using a Where-Are-You-From page provided as part of the Invite Message) and makes the Invite Acceptance Gesture
+* the Invite Receiver navigates to the Invite Receiver OCM Server and makes the Invite Acceptance Gesture. This step MAY be facilitated if the Invite Sender OCM Server implements a WAYF Page, such that the Invite Message would include a link to it for the Invite Receiver to navigate to: the Invite Receiver would then be able to indicate their OCM Server and proceed with the Invite Acceptance Gesture without manually copying the Invite Token.
 * the Invite Receiver OCM Server discovers the OCM API of the Invite Sender OCM Server using generic OCM API Discovery (see section below)
 * the Invite Receiver OCM Server sends the Invite Acceptance Request to the Invite Sender OCM Server
 
@@ -150,6 +152,10 @@ The Invite Receiver OCM Server SHOULD apply its own policies for trusting the In
 Since the Invite Flow does not require either Party to type or remember the `userID`, this string does not need to be human-memorable. Even if the Invite Receiver has a memorable username at the Invite Receiver OCM Server, this `userID` that forms part of their OCM Address does not need to match it.
 
 Also, a different `userID` could be given out to each contact, to avoid correlation of identities.
+
+If the Invite Sender OCM Server implements a WAYF Page, such a page MAY include a fixed list of servers, in addition to, or instead of, a free-text input where any OCM Server can be entered. This is especially useful if the Invite Sender is part of a federation of associated OCM Servers. In order to populate the list of associated OCM Servers, the Invite Sender's server MAY make use of a Directory Service, which is expected to follow the specification detailed in Appendix C.
+
+Implementors that provide a WAYF Page SHOULD make the URL for the API endpoint of such a Directory Service configurable, allowing the OCM Server to be part of a network of associated OCM Servers. The configuration mechanism MAY allow an OCM Server to be part of multiple networks, thus displaying a union of multiple lists in its WAYF Page.
 
 ### Invite Acceptance Response Details
 The Invite Acceptance Response SHOULD be a HTTP response:
@@ -276,11 +282,12 @@ itself be an object containing the following fields:
           As implementations MUST accept Share Creation Notifications to be compliant,
           it is not necessary to expose that as a capability.
           Example: `["receive-code", "webdav-uri"]`. The array MAY include for instance:
-    * `"enforce-mfa"` - to indicate that this OCM server can apply a Sending Server's MFA requirements for a Share on their behalf.
-    * `"webdav-uri"` - to indicate that this OCM server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
-    * `"protocol-object"` - to indicate that this OCM server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
+    * `"enforce-mfa"` - to indicate that this OCM Server can apply a Sending Server's MFA requirements for a Share on their behalf.
+    * `"webdav-uri"` - to indicate that this OCM Server can append a relative URI to the path listed for WebDAV in the appropriate `resourceTypes` entry
+    * `"protocol-object"` - to indicate that this OCM Server can receive a Share Creation Notification whose `protocol` object contains one property per supported protocol instead of containing the standard `name` and `options` properties.
     * `"invites"` - to indicate the server would support acting as an Invite Sender or Invite Receiver OCM Server. This might be useful for suggesting to a user that existing contacts might be upgraded to the more secure (and possibly required) invite flow.
-    * `"receive-code"` - to indicate that this OCM server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
+    * `"receive-code"` - to indicate that this OCM Server can receive a `code` as part of a Share Creation Notification, and exchange it for a bearer token at the Sending Server's `/token` API endpoint.
+    * `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF Page to facilitate the Invite flow.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a Share Creation Notification.
           As all Receiving Servers should require the use of TLS in API calls,
           it is not necessary to expose that as a criterium.
@@ -299,7 +306,7 @@ itself be an object containing the following fields:
             Example: https://my-cloud-storage.org/ocm#signature
   * REQUIRED publicKeyPem (string) - PEM-encoded version of the public key.
             Example: "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
-* OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. Implementations that offer the `"invites"` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow. If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a Where-Are-You-From page could redirect the end-user to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
+* OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. Implementations that offer the `"invites"` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow. If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
 
 # Share Creation Notification
 To create a share, the sending server SHOULD make a HTTP POST request
@@ -577,7 +584,7 @@ signature = {
 headers['Signature'] = format_signature(signature)
 ~~~~~
 
-### How to confirm Signature on incoming request
+## How to confirm Signature on incoming request
 
 The first step would be to confirm the validity of each properties:
 
@@ -612,6 +619,31 @@ if not verification_result then
 Following the validation of the signature, the host should also confirm the validity of the payload, that is ensuring that the actions implied in the payload actually initiated on behalf of the source of the request.
 
 As an example, if the payload is about initiating a new share the file owner has to be an account from the instance at the origin of the request.
+
+# Appendix C: Directory Service
+
+A third-party Directory Service is a back-end service used to federate multiple OCM Servers and facilitate the Invite flow. It is expected to expose, via anonymous HTTP GET, a JSON document with the following format:
+  * REQUIRED: `federation` - a human-readable name for the list of OCM Servers exposed by the Directory Service
+  * REQUIRED: `servers` - a JSON array of objects to describe the list of OCM Servers with the following string fields:
+    * REQUIRED: `url` - the OCM Server's FQDN
+    * REQUIRED: `displayName` - a human-readable name for the OCM Server
+  Example:
+  ```json
+  {
+    "federation" : "The ScienceMesh Directory",
+    "servers" : [
+      {
+       "url" : "https://ocm-server-1.fqdn",
+       "displayName" : "OCM Server 1"
+      },
+      {
+       "url" : "https://ocm-server-2.fqdn",
+       "displayName" : "OCM Server 2"
+      }
+    ]
+  }
+  ```
+
 
 # Acknowledgements
 
