@@ -240,14 +240,14 @@ The JSON response body offered by the Discoverable Server SHOULD contain the fol
 * REQUIRED: resourceTypes (array) - A list of all resource types this server supports in both the Sending Server role and the Receiving Server role, with their access protocols. Each item in this list should
 itself be an object containing the following fields:
   * name (string) -  A supported resource type (file, folder, calendar, contact, ...).
-                Implementations MUST support `file` at a minimum. Each resource type is identified by its `name`: the list MUST NOT
-          contain more than one resource type object per given `name`.
+                Implementations MUST offer support for at least one resource type, where `file` is the commonly supported one. Each resource type is identified by its `name`:
+                the list MUST NOT contain more than one resource type object per given `name`.
   * shareTypes (array of string) -
                 The supported recipient share types.
                 MUST contain `"user"` at a minimum, plus optionally `"group"` and `"federation"`.
                 Example: `["user"]`
   * protocols (object) - The supported protocols for accessing shared resources of this type.
-                Implementations MUST support at least `webdav` for `file` resources,
+                Implementations that offer `file` resources MUST support at least `webdav`,
                 any other combination of resources and protocols is optional. Example:
                 ```json
                 {
