@@ -301,7 +301,7 @@ itself be an object containing the following fields:
 * OPTIONAL: publicKey (object) - The signatory used to sign outgoing request to confirm its origin. The 
           signatory is optional, but if present, it MUST contain two string fields, `id` and `publicKeyPem`.
         properties:
-  * REQUIRED id (string) unique id of the key in URI format. The hostname set the origin of the 
+  * REQUIRED keyId (string) unique id of the key in URI format. The hostname set the origin of the 
               request and MUST be identical to the current discovery endpoint.
             Example: https://my-cloud-storage.org/ocm#signature
   * REQUIRED publicKeyPem (string) - PEM-encoded version of the public key.
