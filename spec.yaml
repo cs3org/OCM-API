@@ -454,7 +454,7 @@ components:
             The 
             signatory is optional but it MUST contain `id` and `publicKeyPem`.
           properties:
-            id:
+            keyId:
               type: string
               description: >
                 unique id of the key in URI format. The hostname set the origin
