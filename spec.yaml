@@ -1,7 +1,10 @@
 openapi: 3.0.3
 info:
   title: Open Cloud Mesh API
-  description: Open Cloud Mesh Open API Specification.
+  description: >
+    Open Cloud Mesh OpenAPI Specification.
+    The semantic of the Protocol Specification is detailed in the
+    [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md) document.
   version: 1.2.0
   x-logo:
     url: logo.png
@@ -32,8 +35,8 @@ paths:
     get:
       summary: Legacy discovery endpoint
       description: >
-        This endpoint is a replica of `/.well-known/ocm`, and MUST be
-        served at the OCM Server's root FQDN as well.
+        This endpoint is a replica of `/.well-known/ocm`, and MUST be served
+        at the OCM Server's root FQDN as well to ensure backwards compatibility.
         OCM Servers MUST support both.
       responses:
         "200":
@@ -44,11 +47,11 @@ paths:
                 $ref: "#/components/schemas/Discovery"
   /shares:
     post:
-      summary: Create a new share
+      summary: Share Creation Notification endpoint
       description: >
-        After the provider created a local share, it sends a `share` object to
-        the consumer containing the  information which is needed to start
-        synchronization between the two services.
+        This endpoint is used by a Sending Server to notify a Receiving Server that
+        a new Share has been created. See [Share Creation Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-creation-notification)
+        for more details.
       requestBody:
         content:
           application/json:
@@ -117,21 +120,12 @@ paths:
                 $ref: "#/components/schemas/Error"
   /notifications:
     post:
-      summary: Send a notification to a remote party about a previously known entity
+      summary: Share Acceptance Notification endpoint
       description: >
-        Notifications are optional messages. They are expected to be used to
-        inform the
-        other party about a change about a previously known entity, such as a share or
-        a trusted user.
-        For example, a notification MAY be sent by a recipient to let the provider know
-        that the recipient declined a share. In this case, the provider site MAY mark the
-        share as declined for its user(s).
-        Similarly, it MAY be sent by a provider to let the recipient know that the provider
-        removed a given share, such that the recipient MAY clean it up from its database.
-        A notification MAY also be sent to let a recipient know that the provider
-        removed that recipient from the list of trusted users, along with any related share.
-        The recipient MAY reciprocally remove that provider from the list of trusted users,
-        along with any related share.
+        This optional endpoint is used to inform the other party about a change
+        that concerns a previously known entity, such as a Share or a trusted User.
+        See [Share Acceptance Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-acceptance-notification)
+        for more details.
       requestBody:
         content:
           application/json:
@@ -193,11 +187,10 @@ paths:
                 $ref: "#/components/schemas/Error"
   /invite-accepted:
     post:
-      summary: |
-        Inform the sender that an invitation was accepted to start sharing.
+      summary: Invitation Acceptance endpoint
       description: >
-        See the Open Cloud Mesh [Invite flow
-        spec](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-flow)
+        This optional endpoint is used to inform the Sender that an Invitation was accepted.
+        See [Invite flow](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-flow)
         for more details.
       requestBody:
         content:
@@ -240,10 +233,11 @@ paths:
                 $ref: "#/components/schemas/Error"
   /token:
     post:
-      summary: Obtain a (potentially short-lived) bearer token in exchange for a code
+      summary: Token Exchange endpoint
       description: >
-        See
-        https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access
+        This optional endpoint allows to obtain a (potentially short-lived) bearer token in exchange for a code.
+        See [Resource Access](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access)
+        for more details.
       requestBody:
         content:
           application/json:

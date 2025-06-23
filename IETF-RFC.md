@@ -309,7 +309,7 @@ itself be an object containing the following fields:
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where a user can accept an invite, when query parameters `"token"` and `"providerDomain"` are provided. Implementations that offer the `"invites"` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow. If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
 
 # Share Creation Notification
-To create a share, the sending server SHOULD make a HTTP POST request
+To create a Share, the Sending Server SHOULD make a HTTP POST request
 
 * to the `/shares` path in the Receiving Server's OCM API
 * using `application/json` as the `Content-Type` HTTP request header
@@ -487,6 +487,10 @@ make a HTTP POST request
 * REQUIRED providerId (string) - copied from the Share Creation Notification for the Share this notification is about
 * OPTIONAL resourceType (string) - copied from the Share Creation Notification for the Share this notification is about
 * OPTIONAL notification (object) - optional additional parameters, depending on the notification and the resource type
+
+For example, a notification MAY be sent by a recipient to let the provider know that the recipient declined a share. In this case, the provider site MAY mark the share as declined for its user(s).
+Similarly, it MAY be sent by a provider to let the recipient know that the provider removed a given share, such that the recipient MAY clean it up from its database.
+A notification MAY also be sent to let a recipient know that the provider removed that recipient from the list of trusted users, along with any related share. The recipient MAY reciprocally remove that provider from the list of trusted users, along with any related share.
 
 
 ### Receiving Party Notification
