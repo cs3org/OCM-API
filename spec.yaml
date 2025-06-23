@@ -1,7 +1,10 @@
 openapi: 3.0.3
 info:
   title: Open Cloud Mesh API
-  description: Open Cloud Mesh Open API Specification.
+  description: >
+    Open Cloud Mesh OpenAPI Specification.
+    The semantic of the Protocol Specification is detailed in the
+    [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md) document.
   version: 1.2.0
   x-logo:
     url: logo.png
