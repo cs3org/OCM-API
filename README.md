@@ -16,7 +16,7 @@ Previous versions:
 
 ## Testing
 
-We provide an [OCM-stub](https://github.com/cs3org/OCM-stub) reference implementation, and run [automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) between implementers and the stub.
+In this Org we maintain an [OCM-stub](https://github.com/cs3org/OCM-stub) reference implementation, and a [test suite](https://github.com/cs3org/ocm-test-suite?tab=readme-ov-file#open-cloud-mesh-test-suite-) to run UI-based tests between implementers and the stub.
 
 ## Contributing
 
