@@ -44,10 +44,9 @@ Open Cloud Mesh only handles the necessary interactions up to the point where th
 --- middle
 
 # Terms
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
-NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED",  "MAY", and
-"OPTIONAL" in this document are to be interpreted as described in
-RFC 2119.
+The key words "MUST", "MUST NOT", "SHOULD", "SHOULD NOT", and "MAY" in this document are to be interpreted as described in RFC 2119.
+
+The key words "REQUIRED", "RECOMMENDED", "OPTIONAL" has the same meaning as "MUST", "SHOULD" and "MAY" respectively but are used instead of their counterparts where it makes more grammatical sense (such as marking fields in a JSON object).
 
 We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
 
@@ -267,10 +266,10 @@ itself be an object containing the following fields:
                     a remote shared resource, implementations MAY use this path
                     as a prefix, or as the full path (see sharing examples).
     * webapp (string) - The top-level path for web apps at this endpoint. This value
-                    is provided for documentation purposes, and it SHALL NOT
+                    is provided for documentation purposes, and it SHOULD NOT
                     be intended as a prefix for share requests.
     * datatx (string) - The top-level path to be used for data transfers. This
-                    value is provided for documentation purposes, and it SHALL
+                    value is provided for documentation purposes, and it SHOULD
                     NOT be intended as a prefix. In addition, implementations
                     are expected to execute the transfer using WebDAV as
                     the wire protocol.
@@ -481,7 +480,7 @@ make a HTTP POST request
 
 ## Fields
 
-* REQUIRED notificationType (string) - in a Share Acceptance Notification it SHOULD be one of:
+* REQUIRED notificationType (string) - in a Share Acceptance Notification it MUST be one of:
   * 'SHARE_ACCEPTED'
   * 'SHARE_DECLINED'
 * REQUIRED providerId (string) - copied from the Share Creation Notification for the Share this notification is about
