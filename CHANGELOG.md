@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.2.1] - 2025-07-17 - Giuseppe Lo Presti <lopresti@cern.ch>
+
+* Overall review of the spec in the ongoing quest to improve clarity
+  and consistency, without altering the semantic of the API.
+* Introduced concept of a Directory Service with a Where-Are-You-From
+  page capability and an Invite Accept Dialog property to complement
+  the Invite flow. Correspondingly, the Discovery endpoint has been
+  extended and its description improved.
+
 ## [1.2.0] - 2024-11-20 - Michiel B. de Jong <michiel@pondersource.com>
 
 * Rephrased and improved the whole protocol description text
