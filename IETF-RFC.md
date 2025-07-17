@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-lopresti-open-cloud-mesh-03
+docname: draft-lopresti-open-cloud-mesh-04
 category: std
 
 ipr: trust200902
@@ -239,7 +239,7 @@ Step 7: The JSON response body is the data that was discovered.
 The JSON response body offered by the Discoverable Server SHOULD contain the following information about its OCM API:
 
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at this endpoint
-* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.2.0"`
+* REQUIRED: apiVersion (string) - The OCM API version this endpoint supports. Example: `"1.2.1"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at this endpoint. Example: `"https://my-cloud-storage.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this endpoint. Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this server supports in both the Sending Server role and the Receiving Server role, with their access protocols. Each item in this list should
