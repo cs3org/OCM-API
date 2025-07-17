@@ -5,7 +5,7 @@ info:
     Open Cloud Mesh OpenAPI Specification.
     The semantic of the Protocol Specification is detailed in the
     [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md) document.
-  version: 1.2.0
+  version: 1.2.1
   x-logo:
     url: logo.png
 servers:
@@ -327,7 +327,7 @@ components:
         apiVersion:
           type: string
           description: The OCM API version this endpoint supports
-          example: 1.2.0
+          example: 1.2.1
         endPoint:
           type: string
           description: The URI of the OCM API available at this endpoint
