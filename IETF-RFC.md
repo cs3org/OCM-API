@@ -144,7 +144,7 @@ Whereas the precise syntax of the Invite Message and the Invite Acceptance Gestu
   * REQUIRED: `email` - non-normative / informational; an email address for the Invite Receiver. Not necessarily at the same FQDN as their OCM Server
   * REQUIRED: `name` - human-readable name of the Invite Receiver, as a suggestion for display in the Invite Sender's address book
 * using TLS
-* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
+* using [httpsig](https://datatracker.ietf.org/doc/rfc9421)
 
 The Invite Receiver OCM Server SHOULD apply its own policies for trusting the Invite Sender OCM Server before making the Invite Acceptance Request.
 
@@ -314,7 +314,7 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object with the fields as described below
 * using TLS
-* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
+* using [httpsig](https://datatracker.ietf.org/doc/rfc9421)
 
 ## Fields
 
@@ -476,7 +476,7 @@ make a HTTP POST request
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object with the fields as described below
 * using TLS
-* using [httpsig](https://datatracker.ietf.org/doc/html/draft-cavage-http-signatures-12)
+* using [httpsig](https://datatracker.ietf.org/doc/rfc9421)
 
 ## Fields
 
