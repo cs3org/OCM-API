@@ -44,9 +44,11 @@ Open Cloud Mesh only handles the necessary interactions up to the point where th
 --- middle
 
 # Terms
-The key words "MUST", "MUST NOT", "SHOULD", "SHOULD NOT", and "MAY" in this document are to be interpreted as described in RFC 2119.
-
-The key words "REQUIRED", "RECOMMENDED", "OPTIONAL" has the same meaning as "MUST", "SHOULD" and "MAY" respectively but are used instead of their counterparts where it makes more grammatical sense (such as marking fields in a JSON object).
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
+"MAY", and "OPTIONAL" in this document are to be interpreted as
+described in BCP 14 [RFC2119] [RFC8174] when, and only when, they
+appear in all capitals, as shown here.
 
 We define the following concepts (with some non-normative references to related concepts from OAuth and elsewhere):
 
