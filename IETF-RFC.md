@@ -886,6 +886,33 @@ knowing if the Sending Party understood and processed the reshare request or not
 # IANA Considerations
 This document has no IANA actions.
 
+# Security Considerations
+## Trust
+There are several areas that is not covered by this specification. Most
+importantly we do not provide a way of establishing trust between
+servers, even though some features of the protocol rely on trust, such
+as the mfa-enforced criteria.
+
+Trust needs to be established out of band, but there are some features
+of the protocol that _can_ be used to assist operators in establishing
+trust. For instance, invite flow can be used to establish that users
+know and have out of band connections with other users on an OCM server.
+
+Further more the Directory Service feature can be used to establish a
+trusted federation, where a central authority can be trusted to
+implement measures for auditing and adding only trusted servers into the
+discovery service.
+
+### httpsig
+Using signed messages to verify that an OCM server is the server you
+think it is, is realy best practice, and should be done unless you have
+a niche use case. 
+
+## Legacy shared secrets
+Using the legacy format of shared secrets instead of short lived tokens
+is not a good idea.
+
+
 # Appendix A: Multi Factor Authentication
 If a Receiving Server exposes the capability `enforce-mfa`, it
 indicates that it will try and comply with a MFA requirement set on a
