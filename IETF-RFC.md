@@ -1079,7 +1079,7 @@ Ron Trompert, Benedikt Wegmann and Johnatan Xu.
 
 We would also like to thank Ishank Arora, Gianmaria Del Monte,
 Jörn Friedrich Dreyer, Hugo González Labrador, Maxence Lange,
-Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and Björn Schissle
+Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and Björn Schießle
 for their direct contributions to the specification.
 
 Over the years many more people have been involved in the development
