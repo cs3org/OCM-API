@@ -20,13 +20,13 @@ author:
   - ins: M.B. de Jong
     name: Michiel de Jong
     organization: Ponder Source
-    email: michiel@pondersource.com
+    email: michiel@pondersource.org
     uri: https://pondersource.com
 
   - ins: M. Baghbani
     name: Mahdi Baghbani
     organization: Ponder Source
-    email: mahdi@pondersource.com
+    email: mahdi@pondersource.org
     uri: https://pondersource.com
 
   - ins: M. Nordin
