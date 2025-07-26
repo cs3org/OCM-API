@@ -32,4 +32,8 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * Presentation at [FOSDEM 25](https://ftp.fau.de/fosdem/2025/h1308/fosdem-2025-5094-open-cloud-mesh.av1.webm).
 * In March 2025, the team was invited to present the Internet-Draft document at the IETF Meeting 122. The presentation was postponed to the next meeting, as it clashed with the CS3 2025 event.
 * At [CS3 2025](https://indico.cern.ch/event/1467643/timetable/#20250319.detailed) the OCM CS3 SIG held a session to report on its activity.
-* The Internet-Draft document was presented at [IETF 123](https://datatracker.ietf.org/meeting/123/agenda), Madrid, as part of the [Dispatch session](https://datatracker.ietf.org/meeting/123/session/dispatch) ([recording](https://youtu.be/LJMnsFVR3rU?t=452)). **Version 1.2.1 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#121---2025-07-17---giuseppe-lo-presti-lopresticernch)** in preparation for that event. Following a successful dispatch, a non-WG mailing list [ocm@ietf.org](https://mailman3.ietf.org/mailman3/lists/ocm.ietf.org) was provided to initiate the standardization process.
+* The Internet-Draft document was presented at [IETF 123](https://datatracker.ietf.org/meeting/123/agenda), as part of the [Dispatch session](https://datatracker.ietf.org/meeting/123/session/dispatch) ([recording](https://youtu.be/LJMnsFVR3rU?t=452)). **Version 1.2.1 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#121---2025-07-17---giuseppe-lo-presti-lopresticernch)** in preparation for that event. Following a successful dispatch, a non-WG [IETF mailing list](https://mailman3.ietf.org/mailman3/lists/ocm.ietf.org) was provided to initiate the standardization process.
+
+
+## The path towards IETF Standardization
+* The [wiki](https://github.com/cs3org/OCM-API/wiki) is launched to collect minutes of the ongoing meetings.
