@@ -6,10 +6,10 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 ### Origins of the project at [GÉANT](https://geant.org)
 * In December 2013, the GÉANT Association (formerly known as TERENA) and ownCloud Inc. made an agreement that serves to facilitate the desire of various National Research and Education Networking organisations (NRENs) to introduce services based on ownCloud technology and/or to offer the technology to their constituencies. Such technology appeared to be the most promising in order to provide on-premise file-based sync&share.
-* As part of this collaboration effort, in January 2015, Christian Schmitz from [ownCloud](https://oc.owncloud.com/opencloudmesh.html) initiated an idea to interconnect the individual on-premise private cloud domains at the server side in order to provide federated sharing and syncing functionality between the different administrative domains.
+* As part of this collaboration effort, in January 2015, ownCloud initiated an idea to interconnect the individual on-premise private cloud domains at the server side in order to provide [federated sharing functionalities](https://oc.owncloud.com/opencloudmesh.html) between the different administrative domains.
 * The initiative was presented at the [TF-Storage Meeting 2015](https://wiki.geant.org/display/CISS/17th+TF-Storage+meeting) ([slides available from the web archive](https://web.archive.org/web/20200930061326/https:/www.terena.org/activities/tf-storage/ws19/slides/20151014-ocm.pdf)) and subsequently to the [Cloud Sync&Share Storage (CS3) Workshop 2016](https://cs3.ethz.ch/program.html) to an emerging community of vendors, NRENs and other institutions. A [follow-up presentation](https://indico.cern.ch/event/565381/contributions/2401967) took place at CS3 2017.
-* Minutes of the early meetings and actions are available at the [GÉANT wiki](https://wiki.geant.org/display/OCM/Open+Cloud+Mesh).
 * Following that initial effort, implementations appeared in the market featuring a `1.0-proposal1` OCM API version, prior to official standardization. A Campfire-style discussion about current developments and standardization plans was held at [CS3 2020](https://indico.cern.ch/event/854707/timetable/#20200128.detailed).
+* Minutes of the early meetings and actions are available at the [GÉANT wiki](https://wiki.geant.org/display/OCM/Open+Cloud+Mesh).
 
 
 ### The EU-funded [CS3MESH4EOSC project](https://cs3mesh4eosc.eu)
