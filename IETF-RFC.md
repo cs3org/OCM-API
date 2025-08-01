@@ -925,22 +925,22 @@ Here is an example of headers needed to sign a request.
 
 ~~~~~
   {
-    "(request-target)": "post /path",
+    "@request-target": "post /path",
     "content-length": 380,
     "date": "Mon, 08 Jul 2024 14:16:20 GMT",
-    "digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
+    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
     "host": "hostname.of.the.recipient",
     "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"rsa-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
   }
 ~~~~~
 
-* '(request-target)' contains the reached endpoint and the used
-method,
+* '@request-target' (optional) contains the reached endpoint and
+the used method,
 * 'content-length' is the total length of the payload of the
 request,
 * 'date' is the date and time when the request has been
 sent,
-* 'digest' is a checksum of the payload of the
+* 'content-digest' is a checksum of the payload of the
 request,
 * 'host' is the hostname of the recipient of the request (remote when
 signing outgoing request, local on incoming request),
@@ -953,7 +953,7 @@ and details on its generation:
   signature
   * 'signature' the signature of an array containing the properties
   listed in 'headers'. Some properties like content-length, date,
-  digest, and host are mandatory to protect against authenticity
+  content-digest, and host are mandatory to protect against authenticity
   override.
 
 
@@ -967,10 +967,9 @@ outgoing requests:
 
 ~~~~~
 headers = {
-    '(request-target)': 'post /path',
     'content-length': length_of(payload),
     'date': current_gmt_datetime(),  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
-    'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
+    'content-digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
     'host': 'recipient-fqdn',
 }
 
@@ -978,7 +977,7 @@ signed = ssl_sign(concatenate_with_newlines(headers), private_key, 'sha256')
 signature = {
     'keyId': 'sender-fqdn',  # The sending server's FQDN; find its public key through OCM API discovery
     'algorithm': 'rsa-sha256',
-    'headers': 'content-length date digest host',
+    'headers': 'content-length date content-digest host',
     'signature': signed,
 }
 
@@ -990,10 +989,8 @@ headers['Signature'] = format_signature(signature)
 The first step would be to confirm the validity of each
 properties:
 
-* `(request-target)` and `host` are immutable to the type of the
-request and the local/current host,
-* `content-length` and `digest` can be re-generated and compared from
-the payload of the request,
+* `content-length` and `content-digest` can be regenerated and compared
+from the payload of the request,
 * a maximum TTL must be applied to `date` and current
 timestamp,
 * regarding data contained in the `Signature`
@@ -1002,7 +999,7 @@ header:
   signatory,
   * `headers` is used to generate the clear version of the
   signature and must contain at least `content-length`, `date`,
-  `digest` and `host`,
+  `content-digest` and `host`,
   * `signature` is the encrypted version of the
   signature.
 
@@ -1011,10 +1008,9 @@ the signature and the public key:
 
 ~~~~~
 clear = {
-    '(request-target)': 'post /path',
     'content-length': length_of(payload),
     'date': 'Mon, 08 Jul 2024 14:16:20 GMT',  # The date used in the verification process
-    'digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
+    'content-digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
     'host': 'sender-fqdn',
 }
 
@@ -1096,8 +1092,7 @@ Anna Manou, Rita Meneses, Zheng Meyer-Zhao, Crystal Michelle Chua,
 Yoann Moulin, Daniel Müller, Frederik Müller, Rasmus Munk,
 Michał Orzechowski, Jacek Pawel Kitowski, Iosif Peterfi,
 Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse,
-Carla Sauvanaud, Klaus Scheibenberger, Christian Schmitz,
-Marcin Sieprawski, Tilo Steiger, C.D. Tiwari, Alejandro Unger and 
-Tom Wezepoel.
+Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
+Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
 
 --- back
