@@ -789,6 +789,7 @@ Notification it MUST be one of:
   * 'SHARE_DECLINED'
 * REQUIRED providerId (string) - copied from the Share Creation
 Notification for the Share this notification is about
+* REQUIRED sender (string) - FQDN of the Sending Server
 * OPTIONAL resourceType (string) - copied from the Share Creation
 Notification for the Share this notification is about
 * OPTIONAL notification (object) - optional additional parameters,

@@ -889,7 +889,8 @@ Notification it MUST be one of:
       <t>'SHARE_DECLINED'</t>
     </list></t>
   <t>REQUIRED providerId (string) - copied from the Share Creation
-Notification for the Share this notification is about</t>
+    Notification for the Share this notification is about</t>
+  <t>REQUIRED sender (string) - FQDN of the Sending Server</t>
   <t>OPTIONAL resourceType (string) - copied from the Share Creation
 Notification for the Share this notification is about</t>
   <t>OPTIONAL notification (object) - optional additional parameters,

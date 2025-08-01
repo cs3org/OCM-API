@@ -754,6 +754,7 @@ components:
         - notificationType
         - resourceType
         - providerId
+        - sender
       properties:
         notificationType:
           type: string
@@ -776,6 +777,11 @@ components:
             then see `NewShare/providerId` for the required information.
             If the resourceType is `user`, then this is the user identifier
             previously sent via `/invite-accepted`.
+        sender:
+          type: string
+          description: |
+            FQDN of the Sending Server which provides access to the shared
+            resource.
         notification:
           type: object
           description: |
