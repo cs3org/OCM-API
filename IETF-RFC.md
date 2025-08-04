@@ -805,6 +805,13 @@ of trusted users, along with any related share. The recipient MAY
 reciprocally remove that provider from the list of trusted users, along
 with any related share.
 
+Notifications from Sending Server to Receiving Server SHOULD use 
+[httpsig](https://datatracker.ietf.org/doc/rfc9421) so the
+Receiving Server can authenticate the origin of the notification.
+Receiving Servers SHOULD decline notifications from Sending Servers
+without [httpsig](https://datatracker.ietf.org/doc/rfc9421) as it
+can't identify where the notification is coming from.
+
 
 ### Receiving Party Notification
 If the Share Creation Notification is not discarded by the Receiving
@@ -876,7 +883,7 @@ if the Sending Party understood and processed the reshare request or not.
 
 # Resharing
 The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be
-used by theReceiving Server to persuade the Sending Server to share the
+used by the Receiving Server to persuade the Sending Server to share the
 same Resource with another Receiving Party.
 The details of the payload and side effects such a notification may
 have are out of scope of this version of this specification.
