@@ -348,7 +348,7 @@ components:
               name:
                 type: string
                 description: >
-                  A supported resource type (file, folder, calendar, contact, ...). 
+                  A supported resource type (file, calendar, contact, ...). 
                   Implementations MUST offer support for at least one resource type, 
                   where `file` is the commonly supported one. 
                   Each resource type is identified by its `name`: the list MUST NOT 
