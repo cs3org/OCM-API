@@ -358,8 +358,8 @@ components:
                 type: array
                 description: |
                   The supported recipient share types. 
-                  MUST contain `"user"` at a minimum, plus optionally `"group"` and `"federation"`. Example: `["user"]`
-                  The supported recipient share types.
+                  MUST contain `"user"` at a minimum, plus optionally 
+                  `"group"` and `"federation"`. Example: `["user"]`
                 items:
                   type: string
                   enum:
