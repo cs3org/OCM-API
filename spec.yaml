@@ -359,7 +359,7 @@ components:
                 description: |
                   The supported recipient share types. 
                   MUST contain `"user"` at a minimum, plus optionally 
-                  `"group"` and `"federation"`. Example: `["user"]`
+                  `"group"` and `"federation"`.
                 items:
                   type: string
                   enum:
