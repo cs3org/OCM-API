@@ -13,7 +13,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 
 ### The EU-funded [CS3MESH4EOSC project](https://cs3mesh4eosc.eu)
-* In January 2020, a consortium of multiple NRENs and independent actors of the [CS3 community](www.cs3community.org), led by CERN, kick-started the CS3MESH4EOSC project.
+* In January 2020, a consortium of multiple NRENs and independent actors of the [CS3 community](https://www.cs3community.org), led by CERN, kick-started the CS3MESH4EOSC project.
 * [Technical Workshop](https://indico.cern.ch/event/928998) held in June 2020: **the `1.0.0` release of the OCM API was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#100---2020-07-01---bjoern-schiessle-bjoernschiessleorg)**. On the occasion, the OCM repository was migrated to the [cs3org](https://github.com/cs3org) GitHub Organization. The standard was already implemented by ownCloud, Nextcloud and Seafile, and used in production to federate multiple instances.
 * [Paper presented at CHEP 2021](https://www.epj-conferences.org/articles/epjconf/abs/2021/05/epjconf_chep2021_02041/epjconf_chep2021_02041.html) about the emerging ScienceMesh federation.
 * [Automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) initiated and hosted by PonderSource.
@@ -25,7 +25,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 
 ### [NL-net](https://nlnet.nl) funded efforts
-* In October 2023 a [W3C Community Group](https://www.w3.org/community/ocm/) was launched.
+* In October 2023 a [W3C Community Group](https://www.w3.org/community/ocm) was launched.
 * A Campfire and Panel session about OCM took place at [CS3 2024](https://indico.cern.ch/event/1332413/timetable/#20240312.detailed), held back at CERN on its 10th anniversary. Subsequently, the CS3 community initiated thematic SIGs, including an OCM SIG.
 * The OCM Test Suite was revamped, and the specification underwent a major rewrite in order to improve clarity and adopt the IETF Internet-Draft format.
 * [Technical Workshop](https://indico.cern.ch/event/1451374/) held in November 2024: **a new version was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#120---2024-11-20---michiel-b-de-jong-michielpondersourcecom) and the Internet-Draft document was presented**.
@@ -35,5 +35,8 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * The Internet-Draft document was presented at [IETF 123](https://datatracker.ietf.org/meeting/123/agenda), as part of the [Dispatch session](https://datatracker.ietf.org/meeting/123/session/dispatch) ([recording](https://youtu.be/LJMnsFVR3rU?t=452)). **Version 1.2.1 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#121---2025-07-17---giuseppe-lo-presti-lopresticernch)** in preparation for that event. Following a successful dispatch, a non-WG [IETF mailing list](https://mailman3.ietf.org/mailman3/lists/ocm.ietf.org) was provided to initiate the standardization process.
 
 
-## The path towards IETF Standardization
+### The path towards IETF Standardization
 * The [wiki](https://github.com/cs3org/OCM-API/wiki) is launched to collect minutes of the ongoing meetings.
+* The [W3C Community Group](https://www.w3.org/community/ocm), with 24 participants, was archived in August 2025 as work transitioned to the IETF mailing list.
+* In preparation for the IETF WG, a [charter](https://github.com/ietf-artarea/charters/tree/main/ocm) was submitted to define its mandate.
+
