@@ -348,15 +348,18 @@ components:
               name:
                 type: string
                 description: >
-                  A supported resource type (file, folder, calendar, contact,
-                  ...).
-                  Implementations MUST support `file` at a minimum.
+                  A supported resource type (file, calendar, contact, ...). 
+                  Implementations MUST offer support for at least one resource type, 
+                  where `file` is the commonly supported one. 
+                  Each resource type is identified by its `name`: the list MUST NOT 
+                  contain more than one resource type object per given `name`
                 example: file
               shareTypes:
                 type: array
                 description: |
-                  The supported recipient share types.
-                  Implementations MUST support `user` at a minimum.
+                  The supported recipient share types. 
+                  MUST contain `"user"` at a minimum, plus optionally 
+                  `"group"` and `"federation"`.
                 items:
                   type: string
                   enum:
@@ -545,7 +548,7 @@ components:
         resourceType:
           type: string
           description: |
-            Resource type (file, folder, calendar, contact, ...)
+            Resource type (file, calendar, contact, ...)
           example: file
         expiration:
           type: integer
@@ -768,7 +771,7 @@ components:
         resourceType:
           type: string
           description: |
-            Resource type (file, folder, user, calendar, contact, ...)
+            Resource type (file, user, calendar, contact, ...)
         providerId:
           type: string
           description: |

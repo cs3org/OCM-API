@@ -60,7 +60,8 @@ We define the following concepts (with some non-normative references to
 related concepts from OAuth and elsewhere):
 
 * __Resource__ - the piece of data or interaction to which access is
-being granted, e.g. a file, folder, video call, or printer queue
+being granted, including but not limited to: a file or folder, a video
+call, a contact, a printer queue, etc.
 * __Share__ - a policy rule stating that certain actors are allowed
 access to a Resource. Also: a record in a database representing this
 rule
@@ -454,7 +455,7 @@ endpoint. Example: `"MyCloudStorage"`
 server supports in both the Sending Server role and the Receiving
 Server role, with their access protocols. Each item in this list should
 itself be an object containing the following fields:
-  * name (string) -  A supported resource type (file, folder, calendar,
+  * name (string) -  A supported resource type (file, calendar,
   contact, ...).
                 Implementations MUST offer support for at least one
                 resource type, where `file` is the commonly supported
@@ -619,7 +620,7 @@ with the fields as described below
         a group of users that is spread out over various servers,
         including at least one user at the Receiving Server.
 * REQUIRED resourceType (string)
-          Resource type (file, folder, calendar, contact, ...)
+          Resource type (file, calendar, contact, ...)
 * OPTIONAL expiration (integer)
           The expiration time for the OCM share, in seconds
           of UTC time since Unix epoch. If omitted, it is assumed
