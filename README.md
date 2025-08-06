@@ -20,7 +20,7 @@ The Open Cloud Mesh API specification is an open source, community-driven projec
 
 If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md) and the [IETF Note Well](https://www.ietf.org/about/note-well/).
 
-To contribute to the Draft, please do all edits in `IETF-RFC.md` only. A GitHub action will regenerate the `IETF-RFC.xml` file.
+To contribute to the Draft, please do all edits in `IETF-RFC.md` only. A [GitHub action](https://github.com/cs3org/OCM-API/actions/workflows/rfc.yml) is available to prepare a new version of the `IETF-RFC.xml` file for submission to the IETF Datatracker.
 
 ## History and Changelog
 
