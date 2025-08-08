@@ -66,10 +66,11 @@ call, a contact, a printer queue, etc.
 access to a Resource.  Also: a record in a database representing this
 rule
 * __Sending Party__ - a person or party who is authorized to create
-Shares (similar to "Resource Owner" in OAuth)
+Shares (similar to "Resource Owner" in OAuth), identified by it's 
+OCM Address
 * __Receiving Party__ - a person, group or party who is granted access 
 to the Resource through the Share (similar to "Requesting Party / RqP"
-in OAuth-UMA)
+in OAuth-UMA), identified by it'S OCM Address
 * __Sending Server__ - the server that:
   * holds the Resource ("file server" or "Entreprise File Sync and Share
   (EFSS) server" role),
@@ -112,8 +113,10 @@ Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact
 between parties and servers in the Invite Flow, containing an Invite
 Token (see below) and the Invite Sender's OCM Address
-* __Invite Sender__ - the party sending an Invite
-* __Invite Receiver__ - the party receiving an Invite
+* __Invite Sender__ - the party sending an Invite, identified by it's
+OCM Address
+* __Invite Receiver__ - the party receiving an Invite, identified by
+it's OCM Address
 * __Invite Sender OCM Server__ - the server holding an address book
 used by the Invite Sender, to which details of the Invite Receiver are
 to be added
@@ -577,7 +580,7 @@ with the fields as described below
 ## Fields
 
 * REQUIRED shareWith (string)
-          Consumer specific identifier of the user, group or federation
+          OCM Address of the user, group or federation
           the provider wants to share the resource with.  This is known
           in advance.  Please note that the consumer service endpoint is
           known in advance as well, so this is no part of the request
@@ -597,11 +600,11 @@ with the fields as described below
           repeated.
         Example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
 * REQUIRED owner (string) -
-          Provider specific identifier of the user who owns the
+          OCM Address of the user who owns the
           resource.
         Example: "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl"
 * REQUIRED sender (string) -
-          Provider specific identifier of the user that wants to share
+          OCM Address of the user that wants to share
           the resource.  Please note that the requesting provider is
           being identified on a higher level, so the former `remote`
           property is not part of the request body.
@@ -738,15 +741,15 @@ The Receiving Server MAY discard the notification if any of the
 following hold true:
 
 * the HTTP Signature is missing but the Sending Server does expose a
-keypair discoverable from the FQDN part of the `sender` field in the
-request body
+keypair discoverable from the FQDN part of the `sender` OCM Address in 
+the request body
 * the HTTP Signature is missing
 * the HTTP Signature is not valid
 * no keypair is trusted or discoverable from the FQDN part of the
-`sender` field in the request body
+`sender` OCM Address in the request body
 * the keypair used to generate the HTTP Signature doesn't match the one
-trusted or discoverable from the FQDN part of the `sender` field in the
-request body
+trusted or discoverable from the FQDN part of the `sender` OCM Address in 
+the request body
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
 * the Sending Party is not trusted by the Receiving Party (e.g. no
@@ -770,7 +773,7 @@ notification that this happened.
 # Share Acceptance Notification
 In response to a Share Creation Notification, the Receiving Server MAY
 discover the OCM API of the Sending Server, starting from the `<fqdn>`
-part of the `sender` field in the Share Creation Notification.
+part of the `sender` OCM Address in the Share Creation Notification.
 
 If the OCM API of the Sending Server is successfully discovered, the
 Receiving Server MAY make a HTTP POST request

@@ -489,7 +489,7 @@ components:
         shareWith:
           type: string
           description: >
-            Consumer specific identifier of the user, group or federation the
+            OCM Address of the user, group or federation the
             provider
             wants to share the resource with. This is known in advance.
             Please note that the consumer service endpoint is known in advance
@@ -515,12 +515,12 @@ components:
           example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
         owner:
           description: |
-            Provider specific identifier of the user who owns the resource.
+            OCM Address of the user who owns the resource.
           type: string
           example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
         sender:
           description: |
-            Provider specific identifier of the user that wants to share the
+            OCM Address of the user that wants to share the
             resource. Please note that the requesting provider is being
             identified on a higher level, so the former `remote` property
             is not part of the request body.
