@@ -939,9 +939,11 @@ Here is an example of headers needed to sign a request.
     "@request-target": "post /path",
     "content-length": 380,
     "date": "Mon, 08 Jul 2024 14:16:20 GMT",
-    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
+    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4...",
     "host": "hostname.of.the.recipient",
-    "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"rsa-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+    "Signature": "keyId=\"https://author.hostname/key\",algorithm=
+      \"rsa-sha256\",headers=\"content-length date digest host\",
+      signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
   }
 ~~~~~
 
@@ -978,15 +980,18 @@ outgoing requests:
 
 ~~~~~
 headers = {
-    'content-length': length_of(payload),
-    'date': current_gmt_datetime(),  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
-    'content-digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
-    'host': 'recipient-fqdn',
+  'content-length': length_of(payload),
+  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
+  'date': current_gmt_datetime(),
+  'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
+        utf8_encode(payload))),
+  'host': 'recipient-fqdn',
 }
 
-signed = ssl_sign(concatenate_with_newlines(headers), private_key, 'sha256')
+signed = ssl_sign(concatenate_with_newlines(headers),
+    private_key, 'sha256')
 signature = {
-    'keyId': 'sender-fqdn',  # The sending server's FQDN; find its public key through OCM API discovery
+    'keyId': 'sender.fqdn',  # The sending server's FQDN
     'algorithm': 'rsa-sha256',
     'headers': 'content-length date content-digest host',
     'signature': signed,
@@ -1020,13 +1025,15 @@ the signature and the public key:
 ~~~~~
 clear = {
     'content-length': length_of(payload),
-    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',  # The date used in the verification process
-    'content-digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
+    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',
+    'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
+          utf8_encode(payload))),  # Recompute digest for verification
     'host': 'sender-fqdn',
 }
 
 signed = headers['Signature']
-verification_result = ssl_verify(concatenate_with_newlines(clear), signed, public_key, 'sha256')
+verification_result = ssl_verify(concatenate_with_newlines(clear),
+                                 signed, public_key, 'sha256')
 
 if not verification_result then
     raise InvalidSignatureException
