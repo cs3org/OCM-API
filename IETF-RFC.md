@@ -489,7 +489,7 @@ itself be an object containing the following fields:
                     endpoint.  This value is provided for documentation
                     purposes, and it SHOULD NOT be intended as a prefix
                     for share requests.
-    * datatx (string) - The top-level path to be used for data transfers.
+    * datatx (string) - The top-level path used for data transfers.
                     This value is provided for documentation purposes,
                     and it SHOULD NOT be intended as a prefix.  In
                     addition, implementations are expected to execute
@@ -554,7 +554,7 @@ request to confirm its origin.
   * REQUIRED publicKeyPem (string) - PEM-encoded version of the public
   key.
             Example:
-            "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"
+            "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
 a user can accept an invite, when query parameters `"token"` and
 `"providerDomain"` are provided.  Implementations that offer the
@@ -853,7 +853,8 @@ receiver MUST make a HTTP PROPFIND request to
 `https://<sender-host><sender-ocm-path>/<key>` in order to access the
 remote resource.  Additionally, the receiver MUST pass an
 `Authorization: bearer` header with either the short-lived bearer token
-obtained in step 2, if applicable, or the `protocol.webdav.sharedSecret` value.
+obtained in step 2, if applicable, or the `protocol.webdav.sharedSecret`
+value.
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a resource within that shared folder, it SHOULD append
@@ -880,7 +881,8 @@ Some implementations have experimented with a
 effects such a notification may have are out of scope of this version
 of this specification.
 The Receiving Party sending such a notification has no way of knowing
-if the Sending Party understood and processed the reshare request or not.
+if the Sending Party understood and processed the reshare request
+or not.
 
 # Resharing
 The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be
@@ -889,7 +891,8 @@ same Resource with another Receiving Party.
 The details of the payload and side effects such a notification may
 have are out of scope of this version of this specification.
 Note that the Receiving Party sending such a notification has no way of
-knowing if the Sending Party understood and processed the reshare request or not.
+knowing if the Sending Party understood and processed the reshare
+request or not.
 
 # IANA Considerations
 This document has no IANA actions.
