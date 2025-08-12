@@ -891,7 +891,7 @@ This document has no IANA actions.
 There are several areas that are not covered by this specification. Most
 importantly we do not provide a way of establishing trust between
 servers, even though some features of the protocol rely on trust, such
-as the mfa-enforced criteria.
+as the `mfa-enforced` requirement.
 
 Trust needs to be established out of band, but there are some features
 of the protocol that _can_ be used to assist operators in establishing
