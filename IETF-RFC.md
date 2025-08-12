@@ -904,8 +904,8 @@ implement measures for auditing and adding only trusted servers into the
 discovery service.
 
 ### httpsig
-Using signed messages to verify that an OCM server is the server you
-think it is, is realy best practice, and should be done unless you have
+It is recommended to use signed messages to verify that an OCM server
+is the server you expect it to be, and should be done unless you have
 a niche use case. 
 
 ## Legacy shared secrets
