@@ -48,6 +48,15 @@ the Resource. The actual resource access is then left to protocols such
 as WebDAV and others.
 
 --- middle
+# Introduction
+
+Open Cloud Mesh (OCM) is a server-to-server protocol designed to enable federation between Enterprise File Sync and Share (EFSS) platforms. Initially conceived of in 2015 and deployed since 2016, OCM has been implemented by several platforms, including CERNBox, Nextcloud, OpenCloud, ownCloud, and Seafile.
+
+A core use case of OCM is when a user (e.g., Alice on System A) wishes to share a resource (e.g., a file) with another user (e.g., Bob on System B) without transferring the resource itself or requiring Bob to log in to System A.
+
+While this scenario is illustrative, OCM is designed to support a broader range of interactions, including but not limited to file transfers.
+
+OCM defines the exchange up to the point where other established protocols such as WebDAV or JMAP can take over. This layered design makes OCM flexible and agnostic to the underlying data exchange mechanisms, enabling seamless integration between diverse systems.
 
 # Terms
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
