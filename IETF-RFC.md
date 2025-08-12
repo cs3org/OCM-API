@@ -888,7 +888,7 @@ This document has no IANA actions.
 
 # Security Considerations
 ## Trust
-There are several areas that is not covered by this specification. Most
+There are several areas that are not covered by this specification. Most
 importantly we do not provide a way of establishing trust between
 servers, even though some features of the protocol rely on trust, such
 as the mfa-enforced criteria.
