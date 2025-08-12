@@ -909,8 +909,9 @@ is the server you expect it to be, and should be done unless you have
 a niche use case. 
 
 ## Legacy shared secrets
-Using the legacy format of shared secrets instead of short lived tokens
-is not a good idea.
+The legacy format of an OCM Share Notification with shared secrets is
+only provided for backwards compatibility with existing implementations.
+Implementers SHOULD NOT use it and prefer short-lived tokens instead.
 
 
 # Appendix A: Multi Factor Authentication
