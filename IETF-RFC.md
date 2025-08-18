@@ -66,11 +66,11 @@ call, a contact, a printer queue, etc.
 access to a Resource.  Also: a record in a database representing this
 rule
 * __Sending Party__ - a person or party who is authorized to create
-Shares (similar to "Resource Owner" in OAuth), identified by it's 
+Shares (similar to "Resource Owner" in OAuth), identified by its 
 OCM Address
 * __Receiving Party__ - a person, group or party who is granted access 
 to the Resource through the Share (similar to "Requesting Party / RqP"
-in OAuth-UMA), identified by it'S OCM Address
+in OAuth-UMA), identified by its OCM Address
 * __Sending Server__ - the server that:
   * holds the Resource ("file server" or "Entreprise File Sync and Share
   (EFSS) server" role),
@@ -113,10 +113,10 @@ Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - out-of-band message used to establish contact
 between parties and servers in the Invite Flow, containing an Invite
 Token (see below) and the Invite Sender's OCM Address
-* __Invite Sender__ - the party sending an Invite, identified by it's
+* __Invite Sender__ - the party sending an Invite, identified by its
 OCM Address
 * __Invite Receiver__ - the party receiving an Invite, identified by
-it's OCM Address
+its OCM Address
 * __Invite Sender OCM Server__ - the server holding an address book
 used by the Invite Sender, to which details of the Invite Receiver are
 to be added
