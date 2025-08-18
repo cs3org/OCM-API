@@ -748,8 +748,8 @@ the request body
 * no keypair is trusted or discoverable from the FQDN part of the
 `sender` OCM Address in the request body
 * the keypair used to generate the HTTP Signature doesn't match the one
-trusted or discoverable from the FQDN part of the `sender` OCM Address in 
-the request body
+trusted or discoverable from the FQDN part of the `sender` OCM Address 
+in the request body
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
 * the Sending Party is not trusted by the Receiving Party (e.g. no
