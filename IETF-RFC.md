@@ -36,15 +36,10 @@ author:
     uri: https://code.smolnet.org/micke
 
 --- abstract
-# Introduction
-Open Cloud Mesh is a server federation protocol that is used to notify a
-Receiving Party that they have been granted access to some Resource. It
-has similarities with authorization flows such as OAuth, as well as with
-social internet protocols such as ActivityPub and email.
-
-Initially conceived of in 2015 and deployed since 2016, OCM has been
-implemented by several platforms, including CERNBox, Nextcloud,
-OpenCloud, ownCloud, and Seafile.
+Open Cloud Mesh (OCM) is a server federation protocol that is used to
+notify a Receiving Party that they have been granted access to some
+Resource. It has similarities with authorization flows such as OAuth,
+as well as with social internet protocols such as ActivityPub and email.
 
 A core use case of OCM is when a user (e.g., Alice on System A) wishes
 to share a resource (e.g., a file) with another user (e.g., Bob on
@@ -61,6 +56,24 @@ the Resource. The actual resource access is then left to protocols such
 as WebDAV and others.
 
 --- middle
+# Introduction
+
+Open Cloud Mesh was initially conceived of in 2015 and has been deployed
+since 2016. OCM has been implemented by several platforms, including
+CERNBox, Nextcloud, OpenCloud, ownCloud, and Seafile.
+
+The goal of OCM is to provide a secure, scalable, and flexible
+infrastructure for securely sharing and collaborating on resources and
+has seen wide adoption, not least in the academic sector.
+
+The core idea of OCM is to make it simple for users to do the right
+thing. This is achieved by providing a protocol that abstracts away
+security and authentication details from the users to the servers acting
+on behalf of the users. Another important point of the protocol is the
+invitation mechanism that lets users connect over established human
+relationships and uses those connections to establish contact between
+their respective OCM servers.
+
 
 # Terms
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
