@@ -741,14 +741,14 @@ The Receiving Server MAY discard the notification if any of the
 following hold true:
 
 * the HTTP Signature is missing but the Sending Server does expose a
-keypair discoverable from the FQDN part of the `sender` OCM Address in 
-the request body
+keypair discoverable from the FQDN part of the `sender` field in the
+request body
 * the HTTP Signature is missing
 * the HTTP Signature is not valid
 * no keypair is trusted or discoverable from the FQDN part of the
-`sender` OCM Address in the request body
+`sender` field in the request body
 * the keypair used to generate the HTTP Signature doesn't match the one
-trusted or discoverable from the FQDN part of the `sender` OCM Address 
+trusted or discoverable from the FQDN part of the `sender` field 
 in the request body
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
@@ -773,7 +773,7 @@ notification that this happened.
 # Share Acceptance Notification
 In response to a Share Creation Notification, the Receiving Server MAY
 discover the OCM API of the Sending Server, starting from the `<fqdn>`
-part of the `sender` OCM Address in the Share Creation Notification.
+part of the `sender` field in the Share Creation Notification.
 
 If the OCM API of the Sending Server is successfully discovered, the
 Receiving Server MAY make a HTTP POST request
