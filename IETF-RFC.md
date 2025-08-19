@@ -1125,8 +1125,8 @@ Ron Trompert, Benedikt Wegmann and Johnatan Xu.
 
 We would also like to thank Ishank Arora, Gianmaria Del Monte,
 Jörn Friedrich Dreyer, Hugo González Labrador, Maxence Lange,
-Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and Björn Schießle
-for their direct contributions to the specification.
+Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins, Björn Schießle
+and Matthias Kraus for their direct contributions to the specification.
 
 Over the years many more people have been involved in the development
 of OCM. We would like to thank all of them for their contributions,
