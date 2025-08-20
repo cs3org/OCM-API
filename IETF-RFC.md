@@ -56,6 +56,7 @@ Resource access is subsequently managed by other protocols, such as
 [WebDAV](https://datatracker.ietf.org/doc/rfc4918/).
 
 --- middle
+
 # Introduction
 
 Open Cloud Mesh was initially conceived of in 2015 and has been deployed
