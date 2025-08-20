@@ -27,7 +27,7 @@ jobs:
           kramdown-rfc IETF-RFC.md > IETF-RFC.xml 2> /tmp/result \
             echo "result<<EOF" >> $GITHUB_OUTPUT \
             cat /tmp/result >> $GITHUB_OUTPUT \
-            echo "EOF" >> $GITHUB_OUTPUT \
+            echo "EOF" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v4
         with:
