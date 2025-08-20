@@ -1022,7 +1022,7 @@ request,
 signing outgoing request, local on incoming request),
 * 'Signature' contains the signature generated using the private key
 and details on its generation:
-  * 'keyId' is a unique id, formatted as an url.  hostname is used to
+  * 'keyId' is a unique id, formatted as an url; hostname is used to
   retrieve the public key via custom discovery
   * 'algorithm' specify the algorithm used to generate signature
   * 'headers' specify the properties used when generating the
