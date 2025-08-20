@@ -53,7 +53,7 @@ transfers.
 Open Cloud Mesh handles interactions only up to the point where the
 Receiving Party is informed of their access to the Resource.  Actual 
 Resource access is subsequently managed by other protocols, such as 
-WebDAV.
+[WebDAV](https://datatracker.ietf.org/doc/rfc4918/).
 
 --- middle
 # Introduction
@@ -118,7 +118,9 @@ that a Share has been created.
   * actively or passively notifies the receiving user or group of any 
   incoming Share Creation Notification,
   * acts as an API client, allowing the receiving user to access the
-  Resource through an API (e.g., WebDAV) of the sending server.
+  Resource through an API (e.g., 
+  [WebDAV](https://datatracker.ietf.org/doc/rfc4918/)) of the sending
+  server.
 * __Sending Gesture__ - A user interface interaction from the Sending
 Party to the Sending Server, conveying the intention to create a Share.
 * __Share Creation__ - The addition of a Share to the database state of
@@ -519,10 +521,11 @@ itself be an object containing the following fields:
                 }
                 ```
                 Fields:
-    * webdav (string) - The top-level WebDAV path at this endpoint.  In
-                    order to access a Remote Resource,
-                    implementations MAY use this path as a prefix, or
-                    as the full path (see sharing examples).
+    * webdav (string) - The top-level
+                    [WebDAV](https://datatracker.ietf.org/doc/rfc4918/)
+                    path at this endpoint.  In order to access a Remote
+                    Resource, implementations MAY use this path as a
+                    prefix, or as the full path (see sharing examples).
     * webapp (string) - The top-level path for web apps at this
                     endpoint.  This value is provided for documentation
                     purposes, and it SHOULD NOT be intended as a prefix
@@ -531,7 +534,9 @@ itself be an object containing the following fields:
                     This value is provided for documentation purposes,
                     and it SHOULD NOT be intended as a prefix.  In
                     addition, implementations are expected to execute
-                    the transfer using WebDAV as the wire protocol.
+                    the transfer using
+                    [WebDAV](https://datatracker.ietf.org/doc/rfc4918/)
+                    as the wire protocol.
     * Any additional protocol supported for this Resource type MAY be
                     advertised here, where the value MAY correspond to
                     a top-level URI to be used for that protocol.
@@ -546,8 +551,9 @@ supported by this OCM Server.
     * `"enforce-mfa"` - to indicate that this OCM Server can apply a
     Sending Server's MFA requirements for a Share on their behalf.
     * `"webdav-uri"` - to indicate that this OCM Server can append a
-    relative URI to the path listed for WebDAV in the appropriate
-    `resourceTypes` entry
+    relative URI to the path listed for
+    [WebDAV](https://datatracker.ietf.org/doc/rfc4918/) in the
+    appropriate `resourceTypes` entry
     * `"protocol-object"` - to indicate that this OCM Server can
     receive a Share Creation Notification whose `protocol` object
     contains one property per supported protocol instead of containing
@@ -958,6 +964,21 @@ a niche use case.
 The legacy format of an OCM Share Notification with shared secrets is
 only provided for backwards compatibility with existing implementations.
 Implementers SHOULD NOT use it and prefer short-lived tokens instead.
+
+# References
+
+## Normative References
+
+[1] Backman, A., Richer, J. and Sporny, M. "HTTP Message Signatures",
+[RFC 9421](https://tools.ietf.org/html/rfc9421), February 2024.
+[2] Dusseault, L. M. "HTTP Extensions for Web Distributed Authoring
+and Versioning",
+[RFC 4918](https://datatracker.ietf.org/html/rfc4918/), June 2007. 
+
+## Informative References
+
+[1] Hardt, D. (ed), "The OAuth 2.0 Authorization Framework",
+[RFC 6749](https://datatracker.ietf.org/html/rfc6749), October 2012.
 
 
 # Appendix A: Multi-factor Authentication
