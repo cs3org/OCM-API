@@ -24,9 +24,9 @@ jobs:
       - name: Convert Markdown to XML and save output
         id: convert
         run: |
-          result=$(kramdown-rfc IETF-RFC.md > IETF-RFC.xml > 2>&1 > /dev/null)
+          result=$(kramdown-rfc IETF-RFC.md > IETF-RFC.xml 2> /tmp/result)
           echo "result<<EOF" >> $GITHUB_OUTPUT
-          echo "$result" >> $GITHUB_OUTPUT
+          cat /tmp/result >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - uses: actions/upload-artifact@v4
