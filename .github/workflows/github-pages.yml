@@ -14,6 +14,7 @@ jobs:
           rm -rf dist
           mkdir -p dist
           cp ./docs.html ./dist/index.html
+          cp ./docs.html ./dist/docs.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -39,4 +40,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
 
