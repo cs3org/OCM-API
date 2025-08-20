@@ -1117,8 +1117,7 @@ format:
     * REQUIRED: `url` - an absolute URL identifying the 
     OCM Server. It MUST:
       * include scheme `http://` or `https://`
-      * include host 
-      (either a FQDN or IP address, with an optional PORT)
+      * include host (either a FQDN or an IP address)
       * MAY include a non-default port
       * MUST NOT include a base path (e.g., `/ocm`)
       * MUST NOT include userinfo, query, or fragment
