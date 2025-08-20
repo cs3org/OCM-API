@@ -1175,6 +1175,6 @@ Yoann Moulin, Daniel Müller, Frederik Müller, Rasmus Munk,
 Michał Orzechowski, Jacek Pawel Kitowski, Iosif Peterfi,
 Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse,
 Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
-Tilo Steiger, C.D.  Tiwari, Alejandro Unger and Tom Wezepoel.
+Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
 
 --- back
