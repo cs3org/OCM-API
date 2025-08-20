@@ -38,7 +38,7 @@ author:
 --- abstract
 Open Cloud Mesh (OCM) is a server federation protocol that is used to
 notify a Receiving Party that they have been granted access to some
-Resource. It has similarities with authorization flows such as OAuth,
+Resource.  It has similarities with authorization flows such as OAuth,
 as well as with social internet protocols such as ActivityPub and email.
 
 A core use case of OCM is when a user (e.g., Alice on System A) wishes
@@ -50,16 +50,16 @@ While this scenario is illustrative, OCM is designed to support a
 broader range of interactions, including but not limited to file
 transfers.
 
-Open Cloud Mesh only handles the necessary interactions up to the point
-where the Receiving Party is informed that they were granted access to
-the Resource.  The actual resource access is then left to protocols such
-as WebDAV and others.
+Open Cloud Mesh handles interactions only up to the point where the
+Receiving Party is informed of their access to the Resource.  Actual 
+Resource access is subsequently managed by other protocols, such as 
+WebDAV.
 
 --- middle
 # Introduction
 
 Open Cloud Mesh was initially conceived of in 2015 and has been deployed
-since 2016. OCM has been implemented by several platforms, including
+since 2016.  OCM has been implemented by several platforms, including
 CERNBox, Nextcloud, OpenCloud, ownCloud, and Seafile.
 
 The goal of OCM is to provide a secure, scalable, and flexible
@@ -67,9 +67,9 @@ infrastructure for securely sharing and collaborating on resources and
 has seen wide adoption, not least in the academic sector.
 
 The core idea of OCM is to make it simple for users to do the right
-thing. This is achieved by providing a protocol that abstracts away
+thing.  This is achieved by providing a protocol that abstracts away
 security and authentication details from the users to the servers acting
-on behalf of the users. Another important point of the protocol is the
+on behalf of the users.  Another important point of the protocol is the
 invitation mechanism that lets users connect over established human
 relationships and uses those connections to establish contact between
 their respective OCM servers.
@@ -82,76 +82,84 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
 described in BCP 14 [RFC2119] [RFC8174] when, and only when, they
 appear in all capitals, as shown here.
 
-We define the following concepts (with some non-normative references to
-related concepts from OAuth and elsewhere):
+We define the following concepts, with some non-normative references to
+related concepts from OAuth and elsewhere:
 
-* __Resource__ - the piece of data or interaction to which access is
+* __Resource__ - The piece of data or interaction to which access is
 being granted, including but not limited to: a file or folder, a video
 call, a contact, a printer queue, etc.
-* __Share__ - a policy rule stating that certain actors are allowed
-access to a Resource.  Also: a record in a database representing this
-rule
-* __Sending Party__ - a person or party who is authorized to create
-Shares (similar to "Resource Owner" in OAuth)
-* __Receiving Party__ - a person, group or party who is granted access 
-to the Resource through the Share (similar to "Requesting Party / RqP"
-in OAuth-UMA)
-* __Sending Server__ - the server that:
+* __Remote Resource__ - A Resource provided by the Sending Server.
+* __Shared Resource__ - A Resource shared by an OCM Server, becoming a
+Remote Resource if accepted by the Invite Receiver OCM Server.
+* __Share__ - A policy rule stating that certain actors have specific
+access rights to a Resource; it MAY also refer to a record in a 
+database representing this rule.
+* __Sending Party__ - A person or party who is authorized to create
+Shares; similar to "Resource Owner" in OAuth.
+* __Receiving Party__ - A person, group or party who is granted access 
+to the Resource through the Share; similar to "Requesting Party / RqP"
+in OAuth-UMA.
+* __Share Creation Notification__ - A server-to-server request from the
+sending server to the receiving server, notifying the receiving server
+that a Share has been created.
+* __Sending Server__ - The server that:
   * holds the Resource ("file server" or "Entreprise File Sync and Share
   (EFSS) server" role),
   * provides access to it (by exposing at least one "API"),
   * takes the decision to create the Share based on user interface
   gestures from the Sending Party (the "Authorization Server" role in
-  OAuth)
+  OAuth),
   * takes the decision about authorizing attempts to access the Resource
-  (the "Resource Server" role in OAuth)
-  * sends out Share Creation Notifications when appropriate (see below)
-* __Receiving Server__ - the server that:
-  * receives Share Creation Notifications (see below)
+  (the "Resource Server" role in OAuth),
+  * sends out Share Creation Notifications when appropriate (see below).
+* __Receiving Server__ - The server that:
+  * receives Share Creation Notifications (see below),
   * actively or passively notifies the receiving user or group of any 
-  incoming Share Creation Notification
+  incoming Share Creation Notification,
   * acts as an API client, allowing the receiving user to access the
-  Resource through an API (e.g. WebDAV) of the sending server
-* __Sending Gesture__ - a user interface interaction from the Sending
-Party to the Sending Server, conveying the intention to create a Share
-* __Share Creation__ - the addition of a Share to the database state of
+  Resource through an API (e.g., WebDAV) of the sending server.
+* __Sending Gesture__ - A user interface interaction from the Sending
+Party to the Sending Server, conveying the intention to create a Share.
+* __Share Creation__ - The addition of a Share to the database state of
 the Sending Server, in response to a successful Sending Gesture or for
-another reason
-* __Share Creation Notification__ - a server-to-server request from the
-sending server to the receiving server, notifying the receiving server
-that a Share has been created
-* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`
-* __OCM Server__ - a server that supports OCM.
-* __Discovering Server__ - a server that tries to obtain information in
-OCM API discovery
-* __Discoverable Server__ - a server that tries to supply information in
-OCM API discovery
-* __OCM Address__ - a string of the form 
+another reason.
+* __Sharing User__ - A user providing access to a Resource through a 
+Share.
+* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`.
+* __OCM Server__ - A server that supports OCM.
+* __OCM API Discovery__ - Process of evaluating properties of a Remote
+Resource, after establishing contact with an OCM Server.
+* __Discovering Server__ - A server that tries to obtain information in
+OCM API Discovery.
+* __Discoverable Server__ - A server that tries to supply information in
+OCM API Discovery.
+* __OCM Address__ - A string of the form 
 `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely
-identify a user or group "at" an OCM Server.
+identify a user or group "at" an OCM Server and MAY be referred to as
+Federated Cloud ID.  
 `<Receiving Party's identifier>` is an opaque string, unique at the
-server. `<fqdn>` is the Fully Qualified Domain Name by which the server
+server.  `<fqdn>` is the Fully Qualified Domain Name by which the server
 is identified.  This MUST be the domain at which the `/.well-known/ocm`
 endpoint of that server is hosted.
-* __OCM Notification__ - a message from the Receiving Server to the
+* __OCM Notification__ - A message from the Receiving Server to the
 Sending Server or vice versa, using the OCM Notifications endpoint.
-* __Invite Message__ - out-of-band message used to establish contact
+* __Invite Message__ - Out-of-band message used to establish contact
 between parties and servers in the Invite Flow, containing an Invite
-Token (see below) and the Invite Sender's OCM Address
-* __Invite Sender__ - the party sending an Invite
-* __Invite Receiver__ - the party receiving an Invite
-* __Invite Sender OCM Server__ - the server holding an address book
+Token (see below) and the Invite Sender's OCM Address.
+* __Invite Sender__ - The party sending an Invite.
+* __Invite Receiver__ - The party receiving an Invite.
+* __Invite Sender OCM Server__ - The server holding an address book
 used by the Invite Sender, to which details of the Invite Receiver are
-to be added
-* __Invite Receiver OCM Server__ - the server holding an address book
+to be added.
+* __Invite Receiver OCM Server__ - The server holding an address book
 used by the Invite Receiver, to which details of the Invite Sender are
-to be added
-* __Invite Token__ - a hard-to-guess string used in the Invite Flow,
+to be added.
+* __Invite Token__ - A hard-to-guess string used in the Invite Flow,
 generated by the Invite Sender OCM Server and linked uniquely to the
-Invite Sender's OCM Address
-* __Invite Creation Gesture__ - gesture from the Invite Sender to the
+Invite Sender's OCM Address.
+* __Invite Creation Gesture__ - Gesture from the Invite Sender to the
 Invite Sender OCM Server, resulting in the creation of an Invite Token.
-* __Invite Acceptance Gesture__ - gesture from the Invite Receiver to
+* __Invite Acceptance Gesture__ - Gesture from the Invite Receiver to
 the Invite Receiver OCM Server, supplying the Invite Token as well as
 the OCM Address of the Invite Sender, effectively allowlisting the
 Invite Sender OCM Server for sending Share Creation Notifications to
@@ -162,22 +170,22 @@ well as the OCM Address of the Invite Receiver, effectively allowlisting
 the Invite Sender OCM Server for sending Share Creation Notifications to
 the Invite Receiver OCM Server.
 * __Invite Acceptance Response__ - HTTP response to the Invite
-Acceptance Request
-* __Share Name__ - a human-readable string, provided by the Sending
+Acceptance Request.
+* __Share Name__ - A human-readable string, provided by the Sending
 Party or the Sending Server, to help the Receiving Party understand
-which Resource the Share grants access to
+which Resource the Share grants access to.
 * __Share Permissions__ - protocol-specific allowances granted to the
-Receiving Party on the modes of accessing the Resource
-* __Share Requirements__ - protocol-specific restrictions on the modes
-of accessing the Resource
-* __WAYF Page__ - a Where-Are-You-From page is a discovery service used
-to identify the OCM Server of an Invite Receiver
-* __Directory Service__ - a third-party service that exposes a list of
-trusted OCM Servers
+Receiving Party on the modes of accessing the Resource.
+* __Share Requirements__ - Protocol-specific restrictions on the modes
+of accessing the Resource.
+* __WAYF Page__ - A Where-Are-You-From page is a discovery service used
+to identify the OCM Server of an Invite Receiver.
+* __Directory Service__ - A third-party service that exposes a list of
+trusted OCM Servers.
 
 # General Flow
 The lifecycle of an Open Cloud Mesh Share starts with prerequisites such
-as establishing trust, establishing contact, and OCM API discovery.
+as establishing trust, establishing contact, and OCM API Discovery.
 
 Then the share creation involves the Sending Party making a Sending
 Gesture to the Sending Server, the Sending Server carrying out the
@@ -186,12 +194,12 @@ Notification to the Receiving Server.
 
 After this, the Receiving Server MAY notify the Receiving Party and/or
 the Sending Server, and will act as an API client through which the
-Receiving Party can access the Resource.  After that, the Share may be
+Receiving Party can access the Resource.  After that, the Share MAY be
 updated, deleted, and/or reshared.
 
 # Establishing Contact
 Before the Sending Server can send a Share Creation Notification to the
-Receiving Server, it needs to establish the Receiving Party's OCM
+Receiving Server, it MUST establish the Receiving Party's OCM
 Address (containing the Receiving Server's FQDN, and the Receiving
 Party's identifier), among other things.  Some steps may preceed the
 Sending Gesture, allowing the Sending Party to establish (with some
@@ -253,7 +261,7 @@ makes the Invite Acceptance Gesture.  This step MAY be facilitated if
 the Invite Sender OCM Server implements a WAYF Page, such that the
 Invite Message would include a link to it for the Invite Receiver to
 navigate to: the Invite Receiver would then be able to indicate their
-OCM Server and proceed with the Invite Acceptance Gesture without
+OCM Server and proceed with the Invite Acceptance Gsture without
 manually copying the Invite Token.
 * the Invite Receiver OCM Server discovers the OCM API of the Invite
 Sender OCM Server using generic OCM API Discovery (see section below)
@@ -271,15 +279,16 @@ API
 * its request body containing a JSON document representing an object
 with the following string fields:
   * REQUIRED: `recipientProvider` - FQDN of the Invite Receiver OCM
-  Server
-  * REQUIRED: `token` - the Invite Token.  The Invite Sender OCM Server
-  SHOULD recall which Invite Sender OCM Address this token was linked to
-  * REQUIRED: `userID` - the Invite Receiver's identifier at their OCM
-  Server
-  * REQUIRED: `email` - non-normative / informational; an email address
+  Server.
+  * REQUIRED: `token` - The Invite Token.  The Invite Sender OCM Server
+  SHOULD recall which Invite Sender OCM Address this token was linked 
+  to.
+  * REQUIRED: `userID` - The Invite Receiver's identifier at their OCM
+  Server.
+  * REQUIRED: `email` - Non-normative / informational; an email address
   for the Invite Receiver.  Not necessarily at the same FQDN as their
-  OCM Server
-  * REQUIRED: `name` - human-readable name of the Invite Receiver, as a
+  OCM Server.
+  * REQUIRED: `name` - Human-readable name of the Invite Receiver, as a
   suggestion for display in the Invite Sender's address book
 * using TLS
 * using [httpsig](https://datatracker.ietf.org/doc/rfc9421)
@@ -355,11 +364,11 @@ Both servers MAY also allowlist each other as a server with which at
 least one of their users wishes to interact.
 
 Note that Invites act symmetrically, so once contact has been
-established, both the Invite Sender and the Invite Receiver may take on
+established, both the Invite Sender and the Invite Receiver MAY take on
 either the Sending Party or the Receiving Party role in subsequent
 Share Creation events.
 
-Both parties may delete the other party from their address book at any
+Both parties MAY delete the other party from their address book at any
 time without notifying them.
 
 ### Security Advantages
@@ -372,10 +381,10 @@ attacker could still send the Receiving Party an unsolicited Share, but
 they would first need to convince the Receiving Party through an
 out-of-band communication channel to accept their invite.  In many use
 cases, the Receiving Party has had other forms of contact with the
-Sending Party (e.g. in-person or email back-and-forth). The out-of-band
-Invite Message thus leverages the filters and context which the
-Receiving Party may already benefit from in that out-of-band
-communication.  For instance, a careful Receiving Party may choose to
+Sending Party (e.g., in-person or email back-and-forth).  The
+out-of-band Invite Message thus leverages the filters and context which 
+the Receiving Party may already benefit from in that out-of-band
+communication.  For instance, a careful Receiving Party MAY choose to
 only accept Invites that reach them via a private or moderated
 messaging platform.
 
@@ -409,8 +418,8 @@ Invite Sender OCM server.
 # OCM API Discovery
 ## Introduction
 After establishing contact as discussed in the previous section, the
-Sharing User can send the Share Creation Gesture to the Sending Server,
-providing the Sending Server with the following information:
+Sharing User MAY send the Share Creation Gesture to the Sending Server.
+The Sharing User MUST provide the following information:
 
 * Resource to be shared
 * Protocol to be offered for access
@@ -434,7 +443,7 @@ The Sending Server MAY first perform denylist and allowlist checks on
 the FQDN.
 
 If a finite allowlist of Receiving Servers exists on the Sending Server
-side, then this list may already contain all necessary information.
+side, then this list MAY already contain all necessary information.
 
 If the FQDN passes the denylist and/or allowlist checks, but no details
 about its OCM API are known, the Sending Server can use the following
@@ -443,7 +452,7 @@ process to try to fetch this information from the Receiving Server.
 This process MAY be influenced by a VPN connection and/or IP
 allowlisting.
 
-When OCM API discovery can occur in preparation of a Share Creation
+When OCM API Discovery can occur in preparation of a Share Creation
 Notification, the Sending Server takes on the 'Discovering Server' role
 and the Receiving Server plays the role of 'Discoverable Server'.
 
@@ -452,9 +461,9 @@ At the start of the process, the Discovering Server has either an OCM
 Address, or just an FQDN from for instance the `recipientProvider`
 field of an Invite Acceptance Request.
 
-Step 1: In case it has an OCM Address, it should first extract `<fqdn>`
+Step 1: In case it has an OCM Address, it SHOULD first extract `<fqdn>`
 from it (the part after the last `@` sign).
-Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP
+Step 2: The Discovering Server SHOULD attempt OCM API Discovery a HTTP
 GET request to `https://<fqdn>/.well-known/ocm`.
 Step 3: If that results in a valid HTTP response with a valid JSON
 response body within reasonable time, go to step 7.
@@ -479,7 +488,7 @@ this endpoint.  Example: `"https://my-cloud-storage.org/ocm"`
 endpoint.  Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this
 server supports in both the Sending Server role and the Receiving
-Server role, with their access protocols.  Each item in this list should
+Server role, with their access protocols.  Each item in this list SHOULD
 itself be an object containing the following fields:
   * name (string) -  A supported resource type (file, calendar,
   contact, ...).
@@ -493,11 +502,11 @@ itself be an object containing the following fields:
                 `"user"` at a minimum, plus optionally `"group"` and
                 `"federation"`.
                 Example: `["user"]`
-  * protocols (object) - The supported protocols for accessing shared
-                resources of this type.
-                Implementations that offer `file` resources MUST
+  * protocols (object) - The supported protocols for accessing Shared
+                Resources of this type.
+                Implementations that offer `file` Resources MUST
                 support at least `webdav`,
-                any other combination of resources and protocols is
+                any other combination of Resources and protocols is
                 optional.  Example:
                 ```json
                 {
@@ -508,7 +517,7 @@ itself be an object containing the following fields:
                 ```
                 Fields:
     * webdav (string) - The top-level WebDAV path at this endpoint.  In
-                    order to access a remote shared resource,
+                    order to access a Remote Resource,
                     implementations MAY use this path as a prefix, or
                     as the full path (see sharing examples).
     * webapp (string) - The top-level path for web apps at this
@@ -520,7 +529,7 @@ itself be an object containing the following fields:
                     and it SHOULD NOT be intended as a prefix.  In
                     addition, implementations are expected to execute
                     the transfer using WebDAV as the wire protocol.
-    * Any additional protocol supported for this resource type MAY be
+    * Any additional protocol supported for this Resource type MAY be
                     advertised here, where the value MAY correspond to
                     a top-level URI to be used for that protocol.
               
@@ -529,7 +538,7 @@ supported by this OCM Server.
           As implementations MUST accept Share Creation Notifications
           to be compliant, it is not necessary to expose that as a
           capability.
-          Example: `["receive-code", "webdav-uri"]`. The array MAY
+          Example: `["receive-code", "webdav-uri"]`.  The array MAY
           include for instance:
     * `"enforce-mfa"` - to indicate that this OCM Server can apply a
     Sending Server's MFA requirements for a Share on their behalf.
@@ -551,25 +560,25 @@ supported by this OCM Server.
     Page to facilitate the Invite flow.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a
 Share Creation Notification.
-          As all Receiving Servers should require the use of TLS in API
+          As all Receiving Servers SHOULD require the use of TLS in API
           calls, it is not necessary to expose that as a criterium.
-          Example: `["http-request-signatures", "code"]`. The array MAY
+          Example: `["http-request-signatures", "code"]`.  The array MAY
           include for instance:
     * `"http-request-signatures"` - to indicate that API requests
     without http signatures will be rejected.
     * `"code"` - to indicate that API requests without code will be
-    rejected (i.e. the `sharedSecret` in the protocol details will be
+    rejected (i.e.  the `sharedSecret` in the protocol details will be
     ignored).
-    * `"denylist"` - some servers may be blocked based on their IP
+    * `"denylist"` - some servers MAY be blocked based on their IP
     address
-    * `"allowlist"` - unknown servers may be blocked based on their IP
+    * `"allowlist"` - unknown servers MAY be blocked based on their IP
     address
-    * `"invite"` - an invite must have been exchanged between the
+    * `"invite"` - an invite MUST have been exchanged between the
     sender and the receiver before a Share Creation Notification can be
     sent
 
 * OPTIONAL: publicKey (object) - The signatory used to sign outgoing
-request to confirm its origin. 
+request to confirm its origin.  
             The signatory is optional, but if present, it MUST contain
             two string fields, `id` and `publicKeyPem`.
             properties:
@@ -604,39 +613,39 @@ with the fields as described below
 
 * REQUIRED shareWith (string)
           Consumer specific identifier of the user, group or federation
-          the provider wants to share the resource with.  This is known
+          the provider wants to share the Resource with.  This is known
           in advance.  Please note that the consumer service endpoint is
           known in advance as well, so this is no part of the request
           body.
         Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
 * REQUIRED name (string)
-       Name of the resource (file or folder).
+       Name of the Resource (file or folder).
         Example: "resource.txt"
 * OPTIONAL description (string)
-        Optional description of the resource (file or folder).
+        Optional description of the Resource (file or folder).
         Example: "This is the Open API Specification file (in YAML
           format) of the Open Cloud Mesh API."
 * REQUIRED providerId (string)
-          Identifier to identify the shared resource at the provider
+          Identifier to identify the Shared Resource at the provider
           side.  This is unique per provider such that if the same
-          resource is shared twice, this providerId will not be
+          Resource is shared twice, this providerId will not be
           repeated.
         Example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
 * REQUIRED owner (string) -
           Provider specific identifier of the user who owns the
-          resource.
+          Resource.
         Example: "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl"
 * REQUIRED sender (string) -
           Provider specific identifier of the user that wants to share
-          the resource.  Please note that the requesting provider is
+          the Resource.  Please note that the requesting provider is
           being identified on a higher level, so the former `remote`
           property is not part of the request body.
         Example: "527bd5b5d689e2c32ae974c6229ff785@apiwise.nl"
 * OPTIONAL ownerDisplayName (string)
-          Display name of the owner of the resource
+          Display name of the owner of the Resource
         Example: "Dimitri"
 * OPTIONAL senderDisplayName (string)
-          Display name of the user that wants to share the resource
+          Display name of the user that wants to share the Resource
         Example: "John Doe"
 * REQUIRED shareType (string)
         SHOULD have a value of "user", "group", or "federation", to
@@ -687,7 +696,7 @@ If `multi` is given, one or more protocol
                 Otherwise, at least `webdav` is expected to be
                 supported, and its options MAY be given in the opaque
                 `options` payload for compatibility with v1.0
-                implementations (see examples). Note though that this
+                implementations (see examples).  Note though that this
                 format is deprecated.
                 Warning: client implementers should be aware that v1.1
                 servers MAY support both `webdav` and `multi`, but v1.0
@@ -695,13 +704,13 @@ If `multi` is given, one or more protocol
 
    * Protocol details for `webdav` MAY contain:
      * REQUIRED uri (string)
-                    An URI to access the remote resource.  The URI
+                    A URI to access the Remote Resource.  The URI
                     SHOULD be relative, in which case the prefix
                     exposed by the `/.well-known/ocm` endpoint MUST
                     be used.  Absolute URIs are deprecated.
-     * OPTIONAL sharedSecret (string) - required if no `code` field is
-                    given for the Share as a whole (see above). An
-                    optional secret to be used to access the resource,
+     * OPTIONAL sharedSecret (string) - REQUIRED if no `code` field is
+                    given for the Share as a whole (see above).  An
+                    optional secret to be used to access the Resource,
                     such as a bearer token.
                     To prevent leaking it in logs it MUST NOT appear in
                     any URI.
@@ -711,12 +720,12 @@ If `multi` is given, one or more protocol
                       - `read` allows read-only access including
                       download of a copy.
                       - `write` allows create, update, and delete
-                      rights on the resource.
+                      rights on the Resource.
                       - `share` allows re-share rights on the
-                      resource.
+                      Resource.
      * OPTIONAL requirements (array of strings) -
                       The requirements that the sharee MUST fulfill to
-                      access the resource.  A subset of:
+                      access the Resource.  A subset of:
                       - `mfa-enforced` requires the consumer to be
                       MFA-authenticated.  This MAY be used if the
                       recipient provider exposes the `enforce-mfa`
@@ -727,8 +736,8 @@ If `multi` is given, one or more protocol
                       `receive-code` capability.
    * Protocol details for `webapp` MAY contain:
      * REQUIRED uri (string)
-                    An URI to a client-browsable view of the shared
-                    resource, such that users may use the web
+                    A URI to a client-browsable view of the Shared
+                    Resource, such that users MAY use the web
                     applications available at the site.  The URI SHOULD
                     be relative, in which case the prefix exposed by
                     the `/.well-known/ocm` endpoint MUST be used.
@@ -746,13 +755,13 @@ If `multi` is given, one or more protocol
                     web app, for example in the form of a bearer token.
    * Protocol details for `datatx` MAY contain:
      * REQUIRED srcUri (string)
-                    An URI to access the remote resource.  The URI
+                    A URI to access the Remote Resource.  The URI
                     SHOULD be relative, in which case the prefix
                     exposed by the `/.well-known/ocm` endpoint MUST be
                     used.  Absolute URIs are deprecated.
      * OPTIONAL sharedSecret (string)
                     An optional secret to be used to access the
-                    resource, for example in the form of a bearer
+                    Resource, for example in the form of a bearer
                     token.  To prevent leaking it in logs it MUST NOT
                     appear in any URI.
      * OPTIONAL size (integer)
@@ -775,12 +784,12 @@ trusted or discoverable from the FQDN part of the `sender` field in the
 request body
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
-* the Sending Party is not trusted by the Receiving Party (e.g. no
+* the Sending Party is not trusted by the Receiving Party (e.g., no
 Invite was exchanged and/or the Sending Party's OCM Address does not
 appear in the Receiving Party's address book)
 * the Receiving Server is unable to act as an API client for (any of)
-the protocol(s) listed for accessing the resource
-* an initial check shows that the resource cannot successfully be
+the protocol(s) listed for accessing the Resource
+* an initial check shows that the Resource cannot successfully be
 accessed through (any of) the protocol(s) listed
 
 # Receiving Party Notification
@@ -854,43 +863,43 @@ notification that this happened.
 To access the Resource, the Receiving Server MAY use multiple ways,
 depending on the body of the Share Creation Notification.  The procedure
 is as follows:
-1. The receiver MUST extract the OCM Server FQDN from the `sender`
+1.  The receiver MUST extract the OCM Server FQDN from the `sender`
 field of the received share, and MUST query the
 [Discovery](#ocm-api-discovery) endpoint at that address: the
 `resourceTypes[0].protocols.webdav` value is the `<sender-ocm-path>` to
 be used in step 3.
-2. If `code` is not empty, the receiver SHOULD make a signed POST
+2.  If `code` is not empty, the receiver SHOULD make a signed POST
 request to the `/token` path inside the Sending Server's OCM API, to
 exchange the code for a short-lived bearer token, and then use that
 bearer token to access the Resource.
-3. If `protocol.name` = `webdav`, the receiver SHOULD inspect the
+3.  If `protocol.name` = `webdav`, the receiver SHOULD inspect the
 `protocol.options` property.  If it contains a `sharedSecret`, as in
 the [legacy
 example](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post),
 then the receiver SHOULD make a HTTP PROPFIND request to
-`https://<sharedSecret>:@<sender-host><sender-ocm-path>`. Note that
+`https://<sharedSecret>:@<sender-host><sender-ocm-path>`.  Note that
 this access method, based on Basic Auth, is _deprecated_ and may be
 removed in a future release of the Protocol.
-4. Otherwise, if `protocol.name` = `multi`, the receiver MUST inspect
+4.  Otherwise, if `protocol.name` = `multi`, the receiver MUST inspect
 the `protocol.webdav.uri` property: if it's a complete URI, the
 receiver MUST make a HTTP PROPFIND request against it to access the
-remote resource.  If it only contains an identifier `<key>`, the
+Remote Resource.  If it only contains an identifier `<key>`, the
 receiver MUST make a HTTP PROPFIND request to
 `https://<sender-host><sender-ocm-path>/<key>` in order to access the
-remote resource.  Additionally, the receiver MUST pass an
+Remote Resource.  Additionally, the receiver MUST pass an
 `Authorization: bearer` header with either the short-lived bearer token
 obtained in step 2, if applicable, or the `protocol.webdav.sharedSecret`
 value.
 
 In all cases, in case the Shared Resource is a folder and the Receiving
-Server accesses a resource within that shared folder, it SHOULD append
-its relative path to that URL. In other words, the Sending Server
+Server accesses a Resource within that shared folder, it SHOULD append
+its relative path to that URL.  In other words, the Sending Server
 SHOULD support requests to URLs such as
 `https://<sender-host><sender-ocm-path>/path/to/resource.txt`.
 
 Additionally, if `protocol.<protocolname>.requirements` includes
 `mfa-enforced`, the Receiving Server MUST ensure that the Receiving
-Party has been authenticated with MFA, or prompt the consmer in order
+Party has been authenticated with MFA, or prompt the consumer in order
 to elevate their session, if applicable.
 
 # Share Deletion
@@ -925,14 +934,14 @@ This document has no IANA actions.
 
 # Security Considerations
 ## Trust
-There are several areas that are not covered by this specification. Most
-importantly we do not provide a way of establishing trust between
+There are several areas that are not covered by this specification.  
+Most importantly we do not provide a way of establishing trust between
 servers, even though some features of the protocol rely on trust, such
 as the `mfa-enforced` requirement.
 
 Trust needs to be established out of band, but there are some features
 of the protocol that _can_ be used to assist operators in establishing
-trust. For instance, invite flow can be used to establish that users
+trust.  For instance, invite flow can be used to establish that users
 know and have out of band connections with other users on an OCM server.
 
 Further more the Directory Service feature can be used to establish a
@@ -941,9 +950,9 @@ implement measures for auditing and adding only trusted servers into the
 discovery service.
 
 ### httpsig
-It is recommended to use signed messages to verify that an OCM server
-is the server you expect it to be, and should be done unless you have
-a niche use case. 
+It is RECOMMENDED to use signed messages to verify that an OCM server
+is the server you expect it to be, and SHOULD be done unless you have
+a niche use case.  
 
 ## Legacy shared secrets
 The legacy format of an OCM Share Notification with shared secrets is
@@ -951,13 +960,13 @@ only provided for backwards compatibility with existing implementations.
 Implementers SHOULD NOT use it and prefer short-lived tokens instead.
 
 
-# Appendix A: Multi Factor Authentication
+# Appendix A: Multi-factor Authentication
 If a Receiving Server exposes the capability `enforce-mfa`, it
 indicates that it will try and comply with a MFA requirement set on a
 Share.  If the Sending Server trusts the Receiving Server, the Sending
 Server MAY set the requirement `mfa-enforced` on a Share, which the
 Receiving Server MUST honor.  A compliant Receiving Server that signals
-that it is MFA-capable MUST NOT allow access to a resource protected
+that it is MFA-capable MUST NOT allow access to a Resource protected
 with the `mfa-enforced` requirement, if the Receiving Party has not
 provided a second factor to establish their identity with greater
 confidence.
@@ -979,7 +988,7 @@ A request is signed by adding the signature in the headers.  The sender
 also needs to expose the public key used to generate the signature.  The
 receiver can then validate the signature and therefore the origin of
 the request.
-To help debugging, it is recommended to also add all properties used in
+To help debugging, it is RECOMMENDED to also add all properties used in
 the signature as headers, even if they can easily be re-generated from
 the payload.
 
@@ -1013,13 +1022,13 @@ request,
 signing outgoing request, local on incoming request),
 * 'Signature' contains the signature generated using the private key
 and details on its generation:
-  * 'keyId' is a unique id, formatted as an url. hostname is used to
+  * 'keyId' is a unique id, formatted as an url; hostname is used to
   retrieve the public key via custom discovery
   * 'algorithm' specify the algorithm used to generate signature
   * 'headers' specify the properties used when generating the
   signature
   * 'signature' the signature of an array containing the properties
-  listed in 'headers'. Some properties like content-length, date,
+  listed in 'headers'.  Some properties like content-length, date,
   content-digest, and host are mandatory to protect against authenticity
   override.
 
@@ -1061,14 +1070,14 @@ properties:
 
 * `content-length` and `content-digest` can be regenerated and compared
 from the payload of the request,
-* a maximum TTL must be applied to `date` and current
+* a maximum TTL MUST be applied to `date` and current
 timestamp,
 * regarding data contained in the `Signature`
 header:
   * using `keyId` to get the public key from remote
   signatory,
   * `headers` is used to generate the clear version of the
-  signature and must contain at least `content-length`, `date`,
+  signature and MUST contain at least `content-length`, `date`,
   `content-digest` and `host`,
   * `signature` is the encrypted version of the
   signature.
@@ -1095,7 +1104,7 @@ if not verification_result then
 
 ## Validating the payload
 
-Following the validation of the signature, the host should also confirm
+Following the validation of the signature, the host SHOULD also confirm
 the validity of the payload, that is ensuring that the actions implied
 in the payload actually initiated on behalf of the source of the
 request.
@@ -1136,7 +1145,7 @@ format:
 
 # Acknowledgements
 Our deepest thanks and appreciation go to the people who started the
-work on what would become this specification in 2015. In particular we
+work on what would become this specification in 2015.  In particular we
 want to thank (in alphabetical order) Guido Aben, Russell Albert,
 Holger Angenent, David Antoš, Hrachya Astsatryan, Kurt Bauer,
 Charles du Jeu, Andreas Eckey, David Gillard, Andranik Hayrapetyan Wahi,
@@ -1147,12 +1156,12 @@ Woojin Seok, Rogier Spoor, Christian Sprajc, Peter Szegedi,
 Ron Trompert, Benedikt Wegmann and Johnatan Xu.
 
 We would also like to thank Ishank Arora, Gianmaria Del Monte,
-Jörn Friedrich Dreyer, Hugo González Labrador, Maxence Lange,
-Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and Björn Schießle
-for their direct contributions to the specification.
+Jörn Friedrich Dreyer, Richard Freitag, Hugo González Labrador, 
+Maxence Lange, Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and 
+Björn Schießle for their direct contributions to the specification.
 
 Over the years many more people have been involved in the development
-of OCM. We would like to thank all of them for their contributions,
+of OCM.  We would like to thank all of them for their contributions,
 including Jean-Thomas Acquaviva, Samuel Alfageme Sainz,
 Karsten Asshauer, Miroslav Bauer, Felix Böhm, Maciej Brzeźniak,
 Diogo Castro, Gavin Charles Kennedy, Jarosław Czub, Milan Danecek,
