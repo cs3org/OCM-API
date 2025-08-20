@@ -466,8 +466,8 @@ field of an Invite Acceptance Request.
 
 Step 1: In case it has an OCM Address, it SHOULD first extract `<fqdn>`
 from it (the part after the last `@` sign).
-Step 2: The Discovering Server SHOULD attempt OCM API Discovery a HTTP
-GET request to `https://<fqdn>/.well-known/ocm`.
+Step 2: The Discovering Server SHOULD attempt OCM API Discovery via a
+HTTP GET request to `https://<fqdn>/.well-known/ocm`.
 Step 3: If that results in a valid HTTP response with a valid JSON
 response body within reasonable time, go to step 7.
 Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as
@@ -616,10 +616,9 @@ with the fields as described below
 
 * REQUIRED shareWith (string)
           OCM Address of the user, group or federation
-          the provider wants to share the Resource with.  This is known
-          in advance.  Please note that the consumer service endpoint is
-          known in advance as well, so this is no part of the request
-          body.
+          the provider wants to share the Resource with.  This MUST be
+          known in advance, either via a previous Invitation or through
+          other means.
         Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
 * REQUIRED name (string)
        Name of the Resource (file or folder).
@@ -640,9 +639,7 @@ with the fields as described below
         Example: "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl"
 * REQUIRED sender (string) -
           OCM Address of the user that wants to share
-          the Resource.  Please note that the requesting provider is
-          being identified on a higher level, so the former `remote`
-          property is not part of the request body.
+          the Resource.
         Example: "527bd5b5d689e2c32ae974c6229ff785@apiwise.nl"
 * OPTIONAL ownerDisplayName (string)
           Display name of the owner of the Resource
@@ -652,7 +649,7 @@ with the fields as described below
         Example: "John Doe"
 * REQUIRED shareType (string)
         SHOULD have a value of "user", "group", or "federation", to
-        indicated that the first part of the `shareWith` OCM Address
+        indicate that the first part of the `shareWith` OCM Address
         refers to a Receiving Party who is a single user of the
         Receiving Server, a group of users at the Receiving Servers, or
         a group of users that is spread out over various servers,
