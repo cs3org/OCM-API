@@ -95,10 +95,11 @@ Remote Resource if accepted by the Invite Receiver OCM Server.
 access rights to a Resource; it MAY also refer to a record in a 
 database representing this rule.
 * __Sending Party__ - A person or party who is authorized to create
-Shares; similar to "Resource Owner" in OAuth.
+Shares; similar to "Resource Owner" in OAuth, identified by its 
+OCM Address.
 * __Receiving Party__ - A person, group or party who is granted access 
 to the Resource through the Share; similar to "Requesting Party / RqP"
-in OAuth-UMA.
+in OAuth-UMA, identified by its OCM Address.
 * __Share Creation Notification__ - A server-to-server request from the
 sending server to the receiving server, notifying the receiving server
 that a Share has been created.
@@ -146,8 +147,10 @@ Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - Out-of-band message used to establish contact
 between parties and servers in the Invite Flow, containing an Invite
 Token (see below) and the Invite Sender's OCM Address.
-* __Invite Sender__ - The party sending an Invite.
-* __Invite Receiver__ - The party receiving an Invite.
+* __Invite Sender__ - The party sending an Invite, identified by its
+OCM Address.
+* __Invite Receiver__ - The party receiving an Invite, identified by its
+OCM Address.
 * __Invite Sender OCM Server__ - The server holding an address book
 used by the Invite Sender, to which details of the Invite Receiver are
 to be added.
@@ -612,7 +615,7 @@ with the fields as described below
 ## Fields
 
 * REQUIRED shareWith (string)
-          Consumer specific identifier of the user, group or federation
+          OCM Address of the user, group or federation
           the provider wants to share the Resource with.  This MUST be
           known in advance, either via a previous Invitation or through
           other means.
@@ -631,11 +634,11 @@ with the fields as described below
           repeated.
         Example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
 * REQUIRED owner (string) -
-          Provider specific identifier of the user who owns the
+          OCM Address of the user who owns the
           Resource.
         Example: "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl"
 * REQUIRED sender (string) -
-          Provider specific identifier of the user that wants to share
+          OCM Address of the user that wants to share
           the Resource.
         Example: "527bd5b5d689e2c32ae974c6229ff785@apiwise.nl"
 * OPTIONAL ownerDisplayName (string)
@@ -777,8 +780,8 @@ request body
 * no keypair is trusted or discoverable from the FQDN part of the
 `sender` field in the request body
 * the keypair used to generate the HTTP Signature doesn't match the one
-trusted or discoverable from the FQDN part of the `sender` field in the
-request body
+trusted or discoverable from the FQDN part of the `sender` field 
+in the request body
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
 * the Sending Party is not trusted by the Receiving Party (e.g., no
@@ -1120,20 +1123,32 @@ format:
   Servers exposed by the Directory Service
   * REQUIRED: `servers` - a JSON array of objects to describe the list
   of OCM Servers with the following string fields:
-    * REQUIRED: `url` - the OCM Server's FQDN
-    * REQUIRED: `displayName` - a human-readable name for the OCM Server
+    * REQUIRED: `url` - an absolute URL identifying the 
+    OCM Server. It MUST:
+      * include scheme: either `https://` or 
+      (for testing purposes) `http://`
+      * include host (either a FQDN or an IP address)
+      * MAY include a non-default port
+      * MUST NOT include a base path (e.g., `/ocm`)
+      * MUST NOT include userinfo, query, or fragment
+    * REQUIRED: `displayName` - a human-readable name 
+    for the OCM Server
   Example:
   ```json
   {
     "federation" : "The ScienceMesh Directory",
     "servers" : [
       {
-       "url" : "https://ocm-server-1.fqdn",
+       "url" : "https://ocm-server-1.example.org",
        "displayName" : "OCM Server 1"
       },
       {
-       "url" : "https://ocm-server-2.fqdn",
+       "url" : "https://ocm-server-2.example.org:4443",
        "displayName" : "OCM Server 2"
+      },
+      {
+       "url" : "http://192.168.1.1:8080",
+       "displayName" : "OCM Server 3"
       }
     ]
   }
@@ -1153,9 +1168,10 @@ Woojin Seok, Rogier Spoor, Christian Sprajc, Peter Szegedi,
 Ron Trompert, Benedikt Wegmann and Johnatan Xu.
 
 We would also like to thank Ishank Arora, Gianmaria Del Monte,
-Jörn Friedrich Dreyer, Richard Freitag, Hugo González Labrador, 
-Maxence Lange, Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and 
-Björn Schießle for their direct contributions to the specification.
+Jörn Friedrich Dreyer, Richard Freitag, Hugo González Labrador,
+Matthias Kraus, Maxence Lange, Lovisa Lugnegård, Sandro Mesterheide,
+Antoon Prins and Björn Schießle for their direct contributions
+to the specification.
 
 Over the years many more people have been involved in the development
 of OCM.  We would like to thank all of them for their contributions,

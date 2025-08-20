@@ -489,8 +489,8 @@ components:
         shareWith:
           type: string
           description: >
-            Consumer specific identifier of the user, group or federation the
-            provider wants to share the Resource with. This MUST be known
+            OCM Address of the user, group or federation the
+            provider wants to share the resource with. This MUST be known
             in advance, either via a previous Invitation or through other means.
           example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
         name:
@@ -512,12 +512,12 @@ components:
           example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
         owner:
           description: |
-            Provider specific identifier of the user who owns the resource.
+            OCM Address of the user who owns the resource.
           type: string
           example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
         sender:
           description: |
-            Provider specific identifier of the user that wants to share the
+            OCM Address of the user that wants to share the
             resource.
           type: string
           example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
