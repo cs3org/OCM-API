@@ -1126,20 +1126,32 @@ format:
   Servers exposed by the Directory Service
   * REQUIRED: `servers` - a JSON array of objects to describe the list
   of OCM Servers with the following string fields:
-    * REQUIRED: `url` - the OCM Server's FQDN
-    * REQUIRED: `displayName` - a human-readable name for the OCM Server
+    * REQUIRED: `url` - an absolute URL identifying the 
+    OCM Server. It MUST:
+      * include scheme: either `https://` or 
+      (for testing purposes) `http://`
+      * include host (either a FQDN or an IP address)
+      * MAY include a non-default port
+      * MUST NOT include a base path (e.g., `/ocm`)
+      * MUST NOT include userinfo, query, or fragment
+    * REQUIRED: `displayName` - a human-readable name 
+    for the OCM Server
   Example:
   ```json
   {
     "federation" : "The ScienceMesh Directory",
     "servers" : [
       {
-       "url" : "https://ocm-server-1.fqdn",
+       "url" : "https://ocm-server-1.example.org",
        "displayName" : "OCM Server 1"
       },
       {
-       "url" : "https://ocm-server-2.fqdn",
+       "url" : "https://ocm-server-2.example.org:4443",
        "displayName" : "OCM Server 2"
+      },
+      {
+       "url" : "http://192.168.1.1:8080",
+       "displayName" : "OCM Server 3"
       }
     ]
   }
