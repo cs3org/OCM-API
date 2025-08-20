@@ -12,7 +12,7 @@
 ]>
 
 
-<rfc ipr="trust200902" docName="draft-lopresti-open-cloud-mesh-04" category="std" consensus="true" submissionType="IETF">
+<rfc ipr="trust200902" docName="draft-lopresti-open-cloud-mesh-05" category="std" consensus="true" submissionType="IETF">
   <front>
     <title>Open Cloud Mesh</title>
 
@@ -45,7 +45,7 @@
       </address>
     </author>
 
-    <date year="2025" month="August" day="05"/>
+    <date year="2025" month="August" day="20"/>
 
     <area>Security</area>
     
@@ -55,16 +55,24 @@
 
 
 <?line 38?>
+<t>Open Cloud Mesh (OCM) is a server federation protocol that is used to
+notify a Receiving Party that they have been granted access to some
+Resource.  It has similarities with authorization flows such as OAuth,
+as well as with social internet protocols such as ActivityPub and email.</t>
 
-<t>Open Cloud Mesh is a server federation protocol that is used to notify a
-Receiving Party that they have been granted access to some Resource. It
-has similarities with authorization flows such as OAuth, as well as with
-social internet protocols such as ActivityPub and email.</t>
+<t>A core use case of OCM is when a user (e.g., Alice on System A) wishes
+to share a resource (e.g., a file) with another user (e.g., Bob on
+System B) without transferring the resource itself or requiring Bob to
+log in to System A.</t>
 
-<t>Open Cloud Mesh only handles the necessary interactions up to the point
-where the Receiving Party is informed that they were granted access to
-the Resource. The actual resource access is then left to protocols such
-as WebDAV and others.</t>
+<t>While this scenario is illustrative, OCM is designed to support a
+broader range of interactions, including but not limited to file
+transfers.</t>
+
+<t>Open Cloud Mesh handles interactions only up to the point where the
+Receiving Party is informed of their access to the Resource.  Actual 
+Resource access is subsequently managed by other protocols, such as 
+WebDAV.</t>
 
 
 
@@ -77,7 +85,24 @@ as WebDAV and others.</t>
   <middle>
 
 
-<?line 50?>
+<?line 58?>
+<t># Introduction</t>
+
+<t>Open Cloud Mesh was initially conceived of in 2015 and has been deployed
+since 2016.  OCM has been implemented by several platforms, including
+CERNBox, Nextcloud, OpenCloud, ownCloud, and Seafile.</t>
+
+<t>The goal of OCM is to provide a secure, scalable, and flexible
+infrastructure for securely sharing and collaborating on resources and
+has seen wide adoption, not least in the academic sector.</t>
+
+<t>The core idea of OCM is to make it simple for users to do the right
+thing.  This is achieved by providing a protocol that abstracts away
+security and authentication details from the users to the servers acting
+on behalf of the users.  Another important point of the protocol is the
+invitation mechanism that lets users connect over established human
+relationships and uses those connections to establish contact between
+their respective OCM servers.</t>
 
 <section anchor="terms"><name>Terms</name>
 <t>The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
@@ -86,81 +111,92 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
 described in BCP 14 [RFC2119] [RFC8174] when, and only when, they
 appear in all capitals, as shown here.</t>
 
-<t>We define the following concepts (with some non-normative references to
-related concepts from OAuth and elsewhere):</t>
+<t>We define the following concepts, with some non-normative references to
+related concepts from OAuth and elsewhere:</t>
 
 <t><list style="symbols">
-  <t><strong>Resource</strong> - the piece of data or interaction to which access is
+  <t><strong>Resource</strong> - The piece of data or interaction to which access is
 being granted, including but not limited to: a file or folder, a video
 call, a contact, a printer queue, etc.</t>
-  <t><strong>Share</strong> - a policy rule stating that certain actors are allowed
-access to a Resource. Also: a record in a database representing this
-rule</t>
-  <t><strong>Sending Party</strong> - a person or party who is authorized to create
-Shares (similar to "Resource Owner" in OAuth)</t>
-  <t><strong>Receiving Party</strong> - a person, group or party who is granted access 
-to the Resource through the Share (similar to "Requesting Party / RqP"
-in OAuth-UMA)</t>
-  <t><strong>Sending Server</strong> - the server that:
+  <t><strong>Remote Resource</strong> - A Resource provided by the Sending Server.</t>
+  <t><strong>Shared Resource</strong> - A Resource shared by an OCM Server, becoming a
+Remote Resource if accepted by the Invite Receiver OCM Server.</t>
+  <t><strong>Share</strong> - A policy rule stating that certain actors have specific
+access rights to a Resource; it MAY also refer to a record in a 
+database representing this rule.</t>
+  <t><strong>Sending Party</strong> - A person or party who is authorized to create
+Shares; similar to "Resource Owner" in OAuth, identified by its 
+OCM Address.</t>
+  <t><strong>Receiving Party</strong> - A person, group or party who is granted access 
+to the Resource through the Share; similar to "Requesting Party / RqP"
+in OAuth-UMA, identified by its OCM Address.</t>
+  <t><strong>Share Creation Notification</strong> - A server-to-server request from the
+sending server to the receiving server, notifying the receiving server
+that a Share has been created.</t>
+  <t><strong>Sending Server</strong> - The server that:
   <list style="symbols">
       <t>holds the Resource ("file server" or "Entreprise File Sync and Share
 (EFSS) server" role),</t>
       <t>provides access to it (by exposing at least one "API"),</t>
       <t>takes the decision to create the Share based on user interface
 gestures from the Sending Party (the "Authorization Server" role in
-OAuth)</t>
+OAuth),</t>
       <t>takes the decision about authorizing attempts to access the Resource
-(the "Resource Server" role in OAuth)</t>
-      <t>sends out Share Creation Notifications when appropriate (see below)</t>
+(the "Resource Server" role in OAuth),</t>
+      <t>sends out Share Creation Notifications when appropriate (see below).</t>
     </list></t>
-  <t><strong>Receiving Server</strong> - the server that:
+  <t><strong>Receiving Server</strong> - The server that:
   <list style="symbols">
-      <t>receives Share Creation Notifications (see below)</t>
+      <t>receives Share Creation Notifications (see below),</t>
       <t>actively or passively notifies the receiving user or group of any 
-incoming Share Creation Notification</t>
+incoming Share Creation Notification,</t>
       <t>acts as an API client, allowing the receiving user to access the
-Resource through an API (e.g. WebDAV) of the sending server</t>
+Resource through an API (e.g., WebDAV) of the sending server.</t>
     </list></t>
-  <t><strong>Sending Gesture</strong> - a user interface interaction from the Sending
-Party to the Sending Server, conveying the intention to create a Share</t>
-  <t><strong>Share Creation</strong> - the addition of a Share to the database state of
+  <t><strong>Sending Gesture</strong> - A user interface interaction from the Sending
+Party to the Sending Server, conveying the intention to create a Share.</t>
+  <t><strong>Share Creation</strong> - The addition of a Share to the database state of
 the Sending Server, in response to a successful Sending Gesture or for
-another reason</t>
-  <t><strong>Share Creation Notification</strong> - a server-to-server request from the
-sending server to the receiving server, notifying the receiving server
-that a Share has been created</t>
-  <t><strong>FQDN</strong> - Fully Qualified Domain Name, such as <spanx style="verb">"cloud.example.com"</spanx></t>
-  <t><strong>OCM Server</strong> - a server that supports OCM.</t>
-  <t><strong>Discovering Server</strong> - a server that tries to obtain information in
-OCM API discovery</t>
-  <t><strong>Discoverable Server</strong> - a server that tries to supply information in
-OCM API discovery</t>
-  <t><strong>OCM Address</strong> - a string of the form 
+another reason.</t>
+  <t><strong>Sharing User</strong> - A user providing access to a Resource through a 
+Share.</t>
+  <t><strong>FQDN</strong> - Fully Qualified Domain Name, such as <spanx style="verb">"cloud.example.com"</spanx>.</t>
+  <t><strong>OCM Server</strong> - A server that supports OCM.</t>
+  <t><strong>OCM API Discovery</strong> - Process of evaluating properties of a Remote
+Resource, after establishing contact with an OCM Server.</t>
+  <t><strong>Discovering Server</strong> - A server that tries to obtain information in
+OCM API Discovery.</t>
+  <t><strong>Discoverable Server</strong> - A server that tries to supply information in
+OCM API Discovery.</t>
+  <t><strong>OCM Address</strong> - A string of the form 
 <spanx style="verb">&lt;Receiving Party's identifier&gt;@&lt;fqdn&gt;</spanx> which can be used to uniquely
-identify a user or group "at" an OCM Server.
+identify a user or group "at" an OCM Server and MAY be referred to as
+Federated Cloud ID.<br />
 <spanx style="verb">&lt;Receiving Party's identifier&gt;</spanx> is an opaque string, unique at the
-server. <spanx style="verb">&lt;fqdn&gt;</spanx> is the Fully Qualified Domain Name by which the server
-is identified. This MUST be the domain at which the <spanx style="verb">/.well-known/ocm</spanx>
+server.  <spanx style="verb">&lt;fqdn&gt;</spanx> is the Fully Qualified Domain Name by which the server
+is identified.  This MUST be the domain at which the <spanx style="verb">/.well-known/ocm</spanx>
 endpoint of that server is hosted.</t>
-  <t><strong>OCM Notification</strong> - a message from the Receiving Server to the
+  <t><strong>OCM Notification</strong> - A message from the Receiving Server to the
 Sending Server or vice versa, using the OCM Notifications endpoint.</t>
-  <t><strong>Invite Message</strong> - out-of-band message used to establish contact
+  <t><strong>Invite Message</strong> - Out-of-band message used to establish contact
 between parties and servers in the Invite Flow, containing an Invite
-Token (see below) and the Invite Sender's OCM Address</t>
-  <t><strong>Invite Sender</strong> - the party sending an Invite</t>
-  <t><strong>Invite Receiver</strong> - the party receiving an Invite</t>
-  <t><strong>Invite Sender OCM Server</strong> - the server holding an address book
+Token (see below) and the Invite Sender's OCM Address.</t>
+  <t><strong>Invite Sender</strong> - The party sending an Invite, identified by its
+OCM Address.</t>
+  <t><strong>Invite Receiver</strong> - The party receiving an Invite, identified by its
+OCM Address.</t>
+  <t><strong>Invite Sender OCM Server</strong> - The server holding an address book
 used by the Invite Sender, to which details of the Invite Receiver are
-to be added</t>
-  <t><strong>Invite Receiver OCM Server</strong> - the server holding an address book
+to be added.</t>
+  <t><strong>Invite Receiver OCM Server</strong> - The server holding an address book
 used by the Invite Receiver, to which details of the Invite Sender are
-to be added</t>
-  <t><strong>Invite Token</strong> - a hard-to-guess string used in the Invite Flow,
+to be added.</t>
+  <t><strong>Invite Token</strong> - A hard-to-guess string used in the Invite Flow,
 generated by the Invite Sender OCM Server and linked uniquely to the
-Invite Sender's OCM Address</t>
-  <t><strong>Invite Creation Gesture</strong> - gesture from the Invite Sender to the
+Invite Sender's OCM Address.</t>
+  <t><strong>Invite Creation Gesture</strong> - Gesture from the Invite Sender to the
 Invite Sender OCM Server, resulting in the creation of an Invite Token.</t>
-  <t><strong>Invite Acceptance Gesture</strong> - gesture from the Invite Receiver to
+  <t><strong>Invite Acceptance Gesture</strong> - Gesture from the Invite Receiver to
 the Invite Receiver OCM Server, supplying the Invite Token as well as
 the OCM Address of the Invite Sender, effectively allowlisting the
 Invite Sender OCM Server for sending Share Creation Notifications to
@@ -171,24 +207,24 @@ well as the OCM Address of the Invite Receiver, effectively allowlisting
 the Invite Sender OCM Server for sending Share Creation Notifications to
 the Invite Receiver OCM Server.</t>
   <t><strong>Invite Acceptance Response</strong> - HTTP response to the Invite
-Acceptance Request</t>
-  <t><strong>Share Name</strong> - a human-readable string, provided by the Sending
+Acceptance Request.</t>
+  <t><strong>Share Name</strong> - A human-readable string, provided by the Sending
 Party or the Sending Server, to help the Receiving Party understand
-which Resource the Share grants access to</t>
+which Resource the Share grants access to.</t>
   <t><strong>Share Permissions</strong> - protocol-specific allowances granted to the
-Receiving Party on the modes of accessing the Resource</t>
-  <t><strong>Share Requirements</strong> - protocol-specific restrictions on the modes
-of accessing the Resource</t>
-  <t><strong>WAYF Page</strong> - a Where-Are-You-From page is a discovery service used
-to identify the OCM Server of an Invite Receiver</t>
-  <t><strong>Directory Service</strong> - a third-party service that exposes a list of
-trusted OCM Servers</t>
+Receiving Party on the modes of accessing the Resource.</t>
+  <t><strong>Share Requirements</strong> - Protocol-specific restrictions on the modes
+of accessing the Resource.</t>
+  <t><strong>WAYF Page</strong> - A Where-Are-You-From page is a discovery service used
+to identify the OCM Server of an Invite Receiver.</t>
+  <t><strong>Directory Service</strong> - A third-party service that exposes a list of
+trusted OCM Servers.</t>
 </list></t>
 
 </section>
 <section anchor="general-flow"><name>General Flow</name>
 <t>The lifecycle of an Open Cloud Mesh Share starts with prerequisites such
-as establishing trust, establishing contact, and OCM API discovery.</t>
+as establishing trust, establishing contact, and OCM API Discovery.</t>
 
 <t>Then the share creation involves the Sending Party making a Sending
 Gesture to the Sending Server, the Sending Server carrying out the
@@ -197,17 +233,17 @@ Notification to the Receiving Server.</t>
 
 <t>After this, the Receiving Server MAY notify the Receiving Party and/or
 the Sending Server, and will act as an API client through which the
-Receiving Party can access the Resource. After that, the Share may be 
+Receiving Party can access the Resource.  After that, the Share MAY be
 updated, deleted, and/or reshared.</t>
 
 </section>
 <section anchor="establishing-contact"><name>Establishing Contact</name>
 <t>Before the Sending Server can send a Share Creation Notification to the
-Receiving Server, it needs to establish the Receiving Party's OCM
+Receiving Server, it MUST establish the Receiving Party's OCM
 Address (containing the Receiving Server's FQDN, and the Receiving
-Party's identifier), among other things. Some steps may preceed the
+Party's identifier), among other things.  Some steps may preceed the
 Sending Gesture, allowing the Sending Party to establish (with some
-level of trust) the OCM Address of the Receiving Party. In other cases,
+level of trust) the OCM Address of the Receiving Party.  In other cases,
 establishing the OCM Address of the Receiving Party happens as part of
 the Sending Gesture.</t>
 
@@ -222,7 +258,7 @@ link to a URL that includes the string in some form.</t>
 <section anchor="address-books"><name>Address books</name>
 <t>The Sending Server MAY offer the Sending Party an address book tool,
 where OCM Addresses can be stored over time in a labeled and/or
-searchable way. This decouples the act by which the OCM Address string
+searchable way.  This decouples the act by which the OCM Address string
 is passed into the Sending Server's database from the selection of the
 Receiving Party in preparation for Share Creation.</t>
 
@@ -230,7 +266,7 @@ Receiving Party in preparation for Share Creation.</t>
 <section anchor="public-link-flow"><name>Public Link Flow</name>
 <t>An interface for anonymously viewing a Resource on the Sending Server
 MAY allow any internet user to type or paste an OCM address into an HTML
-form, as a Sending Gesture. This means that the Sending Party and the
+form, as a Sending Gesture.  This means that the Sending Party and the
 Receiving Party could be the same person, so contact between them does
 not need to be explicitly established.</t>
 
@@ -239,7 +275,7 @@ not need to be explicitly established.</t>
 <t>Similarly, an interface on the Sending Server MAY allow any internet
 user to type or paste an OCM address into an HTML form, as a Sending
 Gesture for a given Resource, without itself providing a way to access
-that particular Resource. A link to this interface could then for
+that particular Resource.  A link to this interface could then for
 instance be shared on a mailing list, allowing all subscribers to
 effectively request access to the Resource by making a Sending Gesture
 to the Sending Server with their own OCM Address.</t>
@@ -266,11 +302,11 @@ the Invite Sender to create the Invite Message</t>
 Invite Message, containing the Invite Token and the Invite Sender OCM
 Server FQDN, to the Invite Receiver</t>
   <t>the Invite Receiver navigates to the Invite Receiver OCM Server and
-makes the Invite Acceptance Gesture. This step MAY be facilitated if
+makes the Invite Acceptance Gesture.  This step MAY be facilitated if
 the Invite Sender OCM Server implements a WAYF Page, such that the
 Invite Message would include a link to it for the Invite Receiver to
 navigate to: the Invite Receiver would then be able to indicate their
-OCM Server and proceed with the Invite Acceptance Gesture without
+OCM Server and proceed with the Invite Acceptance Gsture without
 manually copying the Invite Token.</t>
   <t>the Invite Receiver OCM Server discovers the OCM API of the Invite
 Sender OCM Server using generic OCM API Discovery (see section below)</t>
@@ -292,15 +328,16 @@ API</t>
 with the following string fields:
   <list style="symbols">
       <t>REQUIRED: <spanx style="verb">recipientProvider</spanx> - FQDN of the Invite Receiver OCM
-Server</t>
-      <t>REQUIRED: <spanx style="verb">token</spanx> - the Invite Token. The Invite Sender OCM Server
-SHOULD recall which Invite Sender OCM Address this token was linked to</t>
-      <t>REQUIRED: <spanx style="verb">userID</spanx> - the Invite Receiver's identifier at their OCM
-Server</t>
-      <t>REQUIRED: <spanx style="verb">email</spanx> - non-normative / informational; an email address
-for the Invite Receiver. Not necessarily at the same FQDN as their OCM
-Server</t>
-      <t>REQUIRED: <spanx style="verb">name</spanx> - human-readable name of the Invite Receiver, as a
+Server.</t>
+      <t>REQUIRED: <spanx style="verb">token</spanx> - The Invite Token.  The Invite Sender OCM Server
+SHOULD recall which Invite Sender OCM Address this token was linked 
+to.</t>
+      <t>REQUIRED: <spanx style="verb">userID</spanx> - The Invite Receiver's identifier at their OCM
+Server.</t>
+      <t>REQUIRED: <spanx style="verb">email</spanx> - Non-normative / informational; an email address
+for the Invite Receiver.  Not necessarily at the same FQDN as their
+OCM Server.</t>
+      <t>REQUIRED: <spanx style="verb">name</spanx> - Human-readable name of the Invite Receiver, as a
 suggestion for display in the Invite Sender's address book</t>
     </list></t>
   <t>using TLS</t>
@@ -312,7 +349,7 @@ trusting the Invite Sender OCM Server before making the Invite
 Acceptance Request.</t>
 
 <t>Since the Invite Flow does not require either Party to type or remember
-the <spanx style="verb">userID</spanx>, this string does not need to be human-memorable. Even if
+the <spanx style="verb">userID</spanx>, this string does not need to be human-memorable.  Even if
 the Invite Receiver has a memorable username at the Invite Receiver OCM
 Server, this <spanx style="verb">userID</spanx> that forms part of their OCM Address does not need
 to match it.</t>
@@ -322,15 +359,15 @@ correlation of identities.</t>
 
 <t>If the Invite Sender OCM Server implements a WAYF Page, such a page MAY
 include a fixed list of servers, in addition to, or instead of, a
-free-text input where any OCM Server can be entered. This is especially
+free-text input where any OCM Server can be entered.  This is especially
 useful if the Invite Sender is part of a federation of associated OCM
-Servers. In order to populate the list of associated OCM Servers, the
+Servers.  In order to populate the list of associated OCM Servers, the
 Invite Sender's server MAY make use of a Directory Service, which is
 expected to follow the specification detailed in Appendix C.</t>
 
 <t>Implementors that provide a WAYF Page SHOULD make the URL for the API
 endpoint of such a Directory Service configurable, allowing the OCM
-Server to be part of a network of associated OCM Servers. The
+Server to be part of a network of associated OCM Servers.  The
 configuration mechanism MAY allow an OCM Server to be part of multiple
 networks, thus displaying a union of multiple lists in its WAYF Page.</t>
 
@@ -347,7 +384,7 @@ with the following string fields:
       <t>REQUIRED: <spanx style="verb">userID</spanx> - the Invite Sender's identifier at their OCM
 Server</t>
       <t>REQUIRED: <spanx style="verb">email</spanx> - non-normative / informational; an email address
-for the Invite Sender. Not necessarily at the same FQDN as their OCM
+for the Invite Sender.  Not necessarily at the same FQDN as their OCM
 Server</t>
       <t>REQUIRED: <spanx style="verb">name</spanx> - human-readable name of the Invite Sender, as a
 suggestion for display in the Invite Receiver's address book</t>
@@ -375,7 +412,7 @@ the Invite Sender's username at their OCM Server.</t>
 <section anchor="addition-into-address-books"><name>Addition into address books</name>
 <t>Following these step, both servers MAY display the <spanx style="verb">name</spanx> of the other
 party as a trusted or allowlisted contact, and enable selecting them as
-a Receiving Party. OCM Servers MAY enforce a policy to only accept
+a Receiving Party.  OCM Servers MAY enforce a policy to only accept
 Share Creation Notifications from such trusted contacts, or MAY display
 a warning to users when a Share Creation Notification from an unknown
 party is received.</t>
@@ -384,37 +421,37 @@ party is received.</t>
 least one of their users wishes to interact.</t>
 
 <t>Note that Invites act symmetrically, so once contact has been
-established, both the Invite Sender and the Invite Receiver may take on
+established, both the Invite Sender and the Invite Receiver MAY take on
 either the Sending Party or the Receiving Party role in subsequent
 Share Creation events.</t>
 
-<t>Both parties may delete the other party from their address book at any
+<t>Both parties MAY delete the other party from their address book at any
 time without notifying them.</t>
 
 </section>
 <section anchor="security-advantages"><name>Security Advantages</name>
 <t>It is important to underscore the value of the Invite in this scenario,
-as it provides four important security advantages. First of all, if the
+as it provides four important security advantages.  First of all, if the
 Receiving Server blocks Share Creation Notifications from Sending
 Parties who are not in the address book of the Receiving Party, then
-this protects the Receiving Party from receiving unsolicited Shares. An
+this protects the Receiving Party from receiving unsolicited Shares.  An
 attacker could still send the Receiving Party an unsolicited Share, but
 they would first need to convince the Receiving Party through an
-out-of-band communication channel to accept their invite. In many use
+out-of-band communication channel to accept their invite.  In many use
 cases, the Receiving Party has had other forms of contact with the
-Sending Party (e.g. in-person or email back-and-forth). The out-of-band
-Invite Message thus leverages the filters and context which the
-Receiving Party may already benefit from in that out-of-band
-communication. For instance, a careful Receiving Party may choose to
+Sending Party (e.g., in-person or email back-and-forth).  The
+out-of-band Invite Message thus leverages the filters and context which 
+the Receiving Party may already benefit from in that out-of-band
+communication.  For instance, a careful Receiving Party MAY choose to
 only accept Invites that reach them via a private or moderated
 messaging platform.</t>
 
 <t>Second, when the Receiving Party accepts the Invite, the Receiving
 Server knows that the Sending Server they are about to interact with is
 trusted by the Sending Party, which in turn is trusted by the Receiving
-Party, which in turn is trusted by them. In other words, one of their
+Party, which in turn is trusted by them.  In other words, one of their
 users is requesting the allowlisting of a server they wish to interact
-with, in order to interact with a party they know out-of-band. This
+with, in order to interact with a party they know out-of-band.  This
 gives the Receiving Server reason to put more trust in the Sending
 Server than it would put into an arbitrary internet-hosted server.</t>
 
@@ -425,11 +462,11 @@ delegated by the Sending Party, which is one of its registered users.</t>
 
 <t>Fourth, related to the second one, it removes the partial 'open relay'
 problem that exists when the Sending Server is allowed to include any
-Receiving Server FQDN in the Sending Gesture. Without the use of
+Receiving Server FQDN in the Sending Gesture.  Without the use of
 Invites, a Distributed Denial of Service attack could be organised if
 many internet users collude to flood a given OCM Server with Share
 Creation Notifications which will be hard to distinguish from
-legitimate requests without human interaction. An unsolicited (invalid)
+legitimate requests without human interaction.  An unsolicited (invalid)
 Invite Acceptance Request is much easier to filter out than an
 unsolicited (possibly valid, possibly invalid) Share Creation
 Notification Request, since the Invite Acceptance Request needs to
@@ -442,8 +479,8 @@ Invite Sender OCM server.</t>
 <section anchor="ocm-api-discovery"><name>OCM API Discovery</name>
 <t>## Introduction
 After establishing contact as discussed in the previous section, the
-Sharing User can send the Share Creation Gesture to the Sending Server,
-providing the Sending Server with the following information:</t>
+Sharing User MAY send the Share Creation Gesture to the Sending Server.
+The Sharing User MUST provide the following information:</t>
 
 <t><list style="symbols">
   <t>Resource to be shared</t>
@@ -471,7 +508,7 @@ any)</t>
 the FQDN.</t>
 
 <t>If a finite allowlist of Receiving Servers exists on the Sending Server
-side, then this list may already contain all necessary information.</t>
+side, then this list MAY already contain all necessary information.</t>
 
 <t>If the FQDN passes the denylist and/or allowlist checks, but no details
 about its OCM API are known, the Sending Server can use the following
@@ -480,7 +517,7 @@ process to try to fetch this information from the Receiving Server.</t>
 <t>This process MAY be influenced by a VPN connection and/or IP
 allowlisting.</t>
 
-<t>When OCM API discovery can occur in preparation of a Share Creation
+<t>When OCM API Discovery can occur in preparation of a Share Creation
 Notification, the Sending Server takes on the 'Discovering Server' role
 and the Receiving Server plays the role of 'Discoverable Server'.</t>
 
@@ -489,10 +526,10 @@ and the Receiving Server plays the role of 'Discoverable Server'.</t>
 Address, or just an FQDN from for instance the <spanx style="verb">recipientProvider</spanx>
 field of an Invite Acceptance Request.</t>
 
-<t>Step 1: In case it has an OCM Address, it should first extract <spanx style="verb">&lt;fqdn&gt;</spanx>
+<t>Step 1: In case it has an OCM Address, it SHOULD first extract <spanx style="verb">&lt;fqdn&gt;</spanx>
 from it (the part after the last <spanx style="verb">@</spanx> sign).
-Step 2: The Discovering Server SHOULD attempt OCM API discovery a HTTP
-GET request to <spanx style="verb">https://&lt;fqdn&gt;/.well-known/ocm</spanx>.
+Step 2: The Discovering Server SHOULD attempt OCM API Discovery via a
+HTTP GET request to <spanx style="verb">https://&lt;fqdn&gt;/.well-known/ocm</spanx>.
 Step 3: If that results in a valid HTTP response with a valid JSON
 response body within reasonable time, go to step 7.
 Step 4: If not, try a HTTP GET with <spanx style="verb">https://&lt;fqdn&gt;/ocm-provider</spanx> as
@@ -511,34 +548,34 @@ contain the following information about its OCM API:</t>
   <t>REQUIRED: enabled (boolean) - Whether the OCM service is enabled at
 this endpoint</t>
   <t>REQUIRED: apiVersion (string) - The OCM API version this endpoint
-supports. Example: <spanx style="verb">"1.2.1"</spanx></t>
+supports.  Example: <spanx style="verb">"1.2.1"</spanx></t>
   <t>REQUIRED: endPoint (string) - The URI of the OCM API available at
-this endpoint. Example: <spanx style="verb">"https://my-cloud-storage.org/ocm"</spanx></t>
+this endpoint.  Example: <spanx style="verb">"https://my-cloud-storage.org/ocm"</spanx></t>
   <t>OPTIONAL: provider (string) - A friendly branding name of this
-endpoint. Example: <spanx style="verb">"MyCloudStorage"</spanx></t>
+endpoint.  Example: <spanx style="verb">"MyCloudStorage"</spanx></t>
   <t>REQUIRED: resourceTypes (array) - A list of all resource types this
 server supports in both the Sending Server role and the Receiving
-Server role, with their access protocols. Each item in this list should
+Server role, with their access protocols.  Each item in this list SHOULD
 itself be an object containing the following fields:
   <list style="symbols">
       <t>name (string) -  A supported resource type (file, calendar,
 contact, ...).
             Implementations MUST offer support for at least one
             resource type, where <spanx style="verb">file</spanx> is the commonly supported
-            one. Each resource type is identified by its <spanx style="verb">name</spanx>:
+            one.  Each resource type is identified by its <spanx style="verb">name</spanx>:
             the list MUST NOT contain more than one resource type
             object per given <spanx style="verb">name</spanx>.</t>
       <t>shareTypes (array of string) -
-            The supported recipient share types. MUST contain
+            The supported recipient share types.  MUST contain
             <spanx style="verb">"user"</spanx> at a minimum, plus optionally <spanx style="verb">"group"</spanx> and
             <spanx style="verb">"federation"</spanx>.
             Example: <spanx style="verb">["user"]</spanx></t>
-      <t>protocols (object) - The supported protocols for accessing shared
-            resources of this type.
-            Implementations that offer <spanx style="verb">file</spanx> resources MUST
+      <t>protocols (object) - The supported protocols for accessing Shared
+            Resources of this type.
+            Implementations that offer <spanx style="verb">file</spanx> Resources MUST
             support at least <spanx style="verb">webdav</spanx>,
-            any other combination of resources and protocols is
-            optional. Example:
+            any other combination of Resources and protocols is
+            optional.  Example:
             <spanx style="verb">json
             {
               "webdav": "/remote/dav/ocm/",
@@ -548,20 +585,20 @@ contact, ...).
            </spanx>
             Fields:
       <list style="symbols">
-          <t>webdav (string) - The top-level WebDAV path at this endpoint. In
-              order to access a remote shared resource,
+          <t>webdav (string) - The top-level WebDAV path at this endpoint.  In
+              order to access a Remote Resource,
               implementations MAY use this path as a prefix, or
               as the full path (see sharing examples).</t>
           <t>webapp (string) - The top-level path for web apps at this
-              endpoint. This value is provided for documentation
+              endpoint.  This value is provided for documentation
               purposes, and it SHOULD NOT be intended as a prefix
               for share requests.</t>
-          <t>datatx (string) - The top-level path to be used for data transfers.
+          <t>datatx (string) - The top-level path used for data transfers.
               This value is provided for documentation purposes,
-              and it SHOULD NOT be intended as a prefix. In
+              and it SHOULD NOT be intended as a prefix.  In
               addition, implementations are expected to execute
               the transfer using WebDAV as the wire protocol.</t>
-          <t>Any additional protocol supported for this resource type MAY be
+          <t>Any additional protocol supported for this Resource type MAY be
               advertised here, where the value MAY correspond to
               a top-level URI to be used for that protocol.</t>
         </list></t>
@@ -571,7 +608,7 @@ supported by this OCM Server.
         As implementations MUST accept Share Creation Notifications
         to be compliant, it is not necessary to expose that as a
         capability.
-        Example: <spanx style="verb">["receive-code", "webdav-uri"]</spanx>. The array MAY
+        Example: <spanx style="verb">["receive-code", "webdav-uri"]</spanx>.  The array MAY
         include for instance:
   <list style="symbols">
       <t><spanx style="verb">"enforce-mfa"</spanx> - to indicate that this OCM Server can apply a
@@ -584,7 +621,7 @@ supported by this OCM Server.
   contains one property per supported protocol instead of containing
   the standard <spanx style="verb">name</spanx> and <spanx style="verb">options</spanx> properties.</t>
       <t><spanx style="verb">"invites"</spanx> - to indicate the server would support acting as an
-  Invite Sender or Invite Receiver OCM Server. This might be useful
+  Invite Sender or Invite Receiver OCM Server.  This might be useful
   for suggesting to a user that existing contacts might be upgraded
   to the more secure (and possibly required) invite flow.</t>
       <t><spanx style="verb">"receive-code"</spanx> - to indicate that this OCM Server can receive a
@@ -595,44 +632,44 @@ supported by this OCM Server.
     </list></t>
   <t>OPTIONAL: criteria (array of string) - The criteria for accepting a
 Share Creation Notification.
-        As all Receiving Servers should require the use of TLS in API
+        As all Receiving Servers SHOULD require the use of TLS in API
         calls, it is not necessary to expose that as a criterium.
-        Example: <spanx style="verb">["http-request-signatures", "code"]</spanx>. The array MAY
+        Example: <spanx style="verb">["http-request-signatures", "code"]</spanx>.  The array MAY
         include for instance:
   <list style="symbols">
       <t><spanx style="verb">"http-request-signatures"</spanx> - to indicate that API requests
   without http signatures will be rejected.</t>
       <t><spanx style="verb">"code"</spanx> - to indicate that API requests without code will be
-  rejected (i.e. the <spanx style="verb">sharedSecret</spanx> in the protocol details will be
+  rejected (i.e.  the <spanx style="verb">sharedSecret</spanx> in the protocol details will be
   ignored).</t>
-      <t><spanx style="verb">"denylist"</spanx> - some servers may be blocked based on their IP
+      <t><spanx style="verb">"denylist"</spanx> - some servers MAY be blocked based on their IP
   address</t>
-      <t><spanx style="verb">"allowlist"</spanx> - unknown servers may be blocked based on their IP
+      <t><spanx style="verb">"allowlist"</spanx> - unknown servers MAY be blocked based on their IP
   address</t>
-      <t><spanx style="verb">"invite"</spanx> - an invite must have been exchanged between the
+      <t><spanx style="verb">"invite"</spanx> - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent</t>
     </list></t>
   <t>OPTIONAL: publicKey (object) - The signatory used to sign outgoing
-request to confirm its origin. 
+request to confirm its origin.<br />
           The signatory is optional, but if present, it MUST contain
           two string fields, <spanx style="verb">id</spanx> and <spanx style="verb">publicKeyPem</spanx>.
           properties:
   <list style="symbols">
-      <t>REQUIRED keyId (string) unique id of the key in URI format. The
+      <t>REQUIRED keyId (string) unique id of the key in URI format.  The
         hostname set the origin of the request and MUST be
         identical to the current discovery endpoint.
         Example: https://my-cloud-storage.org/ocm#signature</t>
       <t>REQUIRED publicKeyPem (string) - PEM-encoded version of the public
 key.
         Example:
-        "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n"</t>
+        "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"</t>
     </list></t>
   <t>OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
 a user can accept an invite, when query parameters <spanx style="verb">"token"</spanx> and
-<spanx style="verb">"providerDomain"</spanx> are provided. Implementations that offer the
+<spanx style="verb">"providerDomain"</spanx> are provided.  Implementations that offer the
 <spanx style="verb">"invites"</spanx> capability SHOULD provide this URL as well in order to
-enhance the UX of the Invite Flow. If for example
+enhance the UX of the Invite Flow.  If for example
 <spanx style="verb">"/index.php/apps/sciencemesh/accept"</spanx> is specified here then a WAYF
 Page SHOULD redirect the end-user to
 <spanx style="verb">/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&amp;providerDomain=example.com</spanx>.</t>
@@ -656,44 +693,41 @@ with the fields as described below</t>
 
 <t><list style="symbols">
   <t>REQUIRED shareWith (string)
-        Consumer specific identifier of the user, group or federation
-        the provider wants to share the resource with. This is known
-        in advance. Please note that the consumer service endpoint is
-        known in advance as well, so this is no part of the request
-        body.
+        OCM Address of the user, group or federation
+        the provider wants to share the Resource with.  This MUST be
+        known in advance, either via a previous Invitation or through
+        other means.
       Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"</t>
   <t>REQUIRED name (string)
-     Name of the resource (file or folder).
+     Name of the Resource (file or folder).
       Example: "resource.txt"</t>
   <t>OPTIONAL description (string)
-      Optional description of the resource (file or folder).
+      Optional description of the Resource (file or folder).
       Example: "This is the Open API Specification file (in YAML
         format) of the Open Cloud Mesh API."</t>
   <t>REQUIRED providerId (string)
-        Identifier to identify the shared resource at the provider
-        side. This is unique per provider such that if the same
-        resource is shared twice, this providerId will not be
+        Identifier to identify the Shared Resource at the provider
+        side.  This is unique per provider such that if the same
+        Resource is shared twice, this providerId will not be
         repeated.
       Example: 7c084226-d9a1-11e6-bf26-cec0c932ce01</t>
   <t>REQUIRED owner (string) -
-        Provider specific identifier of the user who owns the
-        resource.
+        OCM Address of the user who owns the
+        Resource.
       Example: "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl"</t>
   <t>REQUIRED sender (string) -
-        Provider specific identifier of the user that wants to share
-        the resource. Please note that the requesting provider is
-        being identified on a higher level, so the former <spanx style="verb">remote</spanx>
-        property is not part of the request body.
+        OCM Address of the user that wants to share
+        the Resource.
       Example: "527bd5b5d689e2c32ae974c6229ff785@apiwise.nl"</t>
   <t>OPTIONAL ownerDisplayName (string)
-        Display name of the owner of the resource
+        Display name of the owner of the Resource
       Example: "Dimitri"</t>
   <t>OPTIONAL senderDisplayName (string)
-        Display name of the user that wants to share the resource
+        Display name of the user that wants to share the Resource
       Example: "John Doe"</t>
   <t>REQUIRED shareType (string)
       SHOULD have a value of "user", "group", or "federation", to
-      indicated that the first part of the <spanx style="verb">shareWith</spanx> OCM Address
+      indicate that the first part of the <spanx style="verb">shareWith</spanx> OCM Address
       refers to a Receiving Party who is a single user of the
       Receiving Server, a group of users at the Receiving Servers, or
       a group of users that is spread out over various servers,
@@ -702,7 +736,7 @@ with the fields as described below</t>
         Resource type (file, calendar, contact, ...)</t>
   <t>OPTIONAL expiration (integer)
         The expiration time for the OCM share, in seconds
-        of UTC time since Unix epoch. If omitted, it is assumed
+        of UTC time since Unix epoch.  If omitted, it is assumed
         that the share does not expire.</t>
   <t>OPTIONAL code (string)
         A nonce to be exchanged for a (potentially short-lived)
@@ -743,7 +777,7 @@ with the fields as described below</t>
                 Otherwise, at least <spanx style="verb">webdav</spanx> is expected to be
                 supported, and its options MAY be given in the opaque
                 <spanx style="verb">options</spanx> payload for compatibility with v1.0
-                implementations (see examples). Note though that this
+                implementations (see examples).  Note though that this
                 format is deprecated.
                 Warning: client implementers should be aware that v1.1
                 servers MAY support both <spanx style="verb">webdav</spanx> and <spanx style="verb">multi</spanx>, but v1.0
@@ -753,48 +787,48 @@ with the fields as described below</t>
   <t>Protocol details for <spanx style="verb">webdav</spanx> MAY contain:
   <list style="symbols">
       <t>REQUIRED uri (string)
-             An URI to access the remote resource. The URI
+             A URI to access the Remote Resource.  The URI
              SHOULD be relative, in which case the prefix
              exposed by the <spanx style="verb">/.well-known/ocm</spanx> endpoint MUST
-             be used. Absolute URIs are deprecated.</t>
-      <t>OPTIONAL sharedSecret (string) - required if no <spanx style="verb">code</spanx> field is
-             given for the Share as a whole (see above). An
-             optional secret to be used to access the resource,
+             be used.  Absolute URIs are deprecated.</t>
+      <t>OPTIONAL sharedSecret (string) - REQUIRED if no <spanx style="verb">code</spanx> field is
+             given for the Share as a whole (see above).  An
+             optional secret to be used to access the Resource,
              such as a bearer token.
              To prevent leaking it in logs it MUST NOT appear in
              any URI.</t>
       <t>OPTIONAL permissions (array of strings) -
-               The permissions granted to the sharee. A subset
+               The permissions granted to the sharee.  A subset
                of:
                - <spanx style="verb">read</spanx> allows read-only access including
                download of a copy.
                - <spanx style="verb">write</spanx> allows create, update, and delete
-               rights on the resource.
+               rights on the Resource.
                - <spanx style="verb">share</spanx> allows re-share rights on the
-               resource.</t>
+               Resource.</t>
       <t>OPTIONAL requirements (array of strings) -
                The requirements that the sharee MUST fulfill to
-               access the resource. A subset of:
+               access the Resource.  A subset of:
                - <spanx style="verb">mfa-enforced</spanx> requires the consumer to be
-               MFA-authenticated. This MAY be used if the
+               MFA-authenticated.  This MAY be used if the
                recipient provider exposes the <spanx style="verb">enforce-mfa</spanx>
                capability.
                - <spanx style="verb">use-code</spanx> requires the consumer to exchange
-               the given <spanx style="verb">code</spanx> via a signed HTTPS request. This
+               the given <spanx style="verb">code</spanx> via a signed HTTPS request.  This
                MAY be used if the recipient provider exposes the
                <spanx style="verb">receive-code</spanx> capability.</t>
     </list></t>
   <t>Protocol details for <spanx style="verb">webapp</spanx> MAY contain:
   <list style="symbols">
       <t>REQUIRED uri (string)
-             An URI to a client-browsable view of the shared
-             resource, such that users may use the web
-             applications available at the site. The URI SHOULD
+             A URI to a client-browsable view of the Shared
+             Resource, such that users MAY use the web
+             applications available at the site.  The URI SHOULD
              be relative, in which case the prefix exposed by
              the <spanx style="verb">/.well-known/ocm</spanx> endpoint MUST be used.
              Absolute URIs are deprecated.</t>
       <t>REQUIRED viewMode (string)
-             The permissions granted to the sharee. A subset of:
+             The permissions granted to the sharee.  A subset of:
              - <spanx style="verb">view</spanx> allows access to the web app in view-only
              mode.
              - <spanx style="verb">read</spanx> allows read and download access via the
@@ -808,14 +842,14 @@ with the fields as described below</t>
   <t>Protocol details for <spanx style="verb">datatx</spanx> MAY contain:
   <list style="symbols">
       <t>REQUIRED srcUri (string)
-             An URI to access the remote resource. The URI
+             A URI to access the Remote Resource.  The URI
              SHOULD be relative, in which case the prefix
              exposed by the <spanx style="verb">/.well-known/ocm</spanx> endpoint MUST be
-             used. Absolute URIs are deprecated.</t>
+             used.  Absolute URIs are deprecated.</t>
       <t>OPTIONAL sharedSecret (string)
              An optional secret to be used to access the
-             resource, for example in the form of a bearer
-             token. To prevent leaking it in logs it MUST NOT
+             Resource, for example in the form of a bearer
+             token.  To prevent leaking it in logs it MUST NOT
              appear in any URI.</t>
       <t>OPTIONAL size (integer)
              The size of the file to be transferred from the
@@ -837,16 +871,16 @@ request body</t>
   <t>no keypair is trusted or discoverable from the FQDN part of the
 <spanx style="verb">sender</spanx> field in the request body</t>
   <t>the keypair used to generate the HTTP Signature doesn't match the one
-trusted or discoverable from the FQDN part of the <spanx style="verb">sender</spanx> field in the
-request body</t>
+trusted or discoverable from the FQDN part of the <spanx style="verb">sender</spanx> field 
+in the request body</t>
   <t>the Sending Server is denylisted</t>
   <t>the Sending Server is not allowlisted</t>
-  <t>the Sending Party is not trusted by the Receiving Party (e.g. no
+  <t>the Sending Party is not trusted by the Receiving Party (e.g., no
 Invite was exchanged and/or the Sending Party's OCM Address does not
 appear in the Receiving Party's address book)</t>
   <t>the Receiving Server is unable to act as an API client for (any of)
-the protocol(s) listed for accessing the resource</t>
-  <t>an initial check shows that the resource cannot successfully be
+the protocol(s) listed for accessing the Resource</t>
+  <t>an initial check shows that the Resource cannot successfully be
 accessed through (any of) the protocol(s) listed</t>
 </list></t>
 
@@ -898,13 +932,13 @@ depending on the notification and the resource type</t>
 </list></t>
 
 <t>For example, a notification MAY be sent by a recipient to let the
-provider know that the recipient declined a share. In this case, the
+provider know that the recipient declined a share.  In this case, the
 provider site MAY mark the share as declined for its user(s).
 Similarly, it MAY be sent by a provider to let the recipient know that
 the provider removed a given share, such that the recipient MAY clean
-it up from its database. A notification MAY also be sent to let a
+it up from its database.  A notification MAY also be sent to let a
 recipient know that the provider removed that recipient from the list
-of trusted users, along with any related share. The recipient MAY
+of trusted users, along with any related share.  The recipient MAY
 reciprocally remove that provider from the list of trusted users, along
 with any related share.</t>
 
@@ -930,44 +964,45 @@ notification that this happened.</t>
 </section>
 <section anchor="resource-access"><name>Resource Access</name>
 <t>To access the Resource, the Receiving Server MAY use multiple ways,
-depending on the body of the Share Creation Notification. The procedure
+depending on the body of the Share Creation Notification.  The procedure
 is as follows:
-1. The receiver MUST extract the OCM Server FQDN from the <spanx style="verb">sender</spanx>
+1.  The receiver MUST extract the OCM Server FQDN from the <spanx style="verb">sender</spanx>
 field of the received share, and MUST query the
 <xref target="ocm-api-discovery">Discovery</xref> endpoint at that address: the
 <spanx style="verb">resourceTypes[0].protocols.webdav</spanx> value is the <spanx style="verb">&lt;sender-ocm-path&gt;</spanx> to
 be used in step 3.
-2. If <spanx style="verb">code</spanx> is not empty, the receiver SHOULD make a signed POST
+2.  If <spanx style="verb">code</spanx> is not empty, the receiver SHOULD make a signed POST
 request to the <spanx style="verb">/token</spanx> path inside the Sending Server's OCM API, to
 exchange the code for a short-lived bearer token, and then use that
 bearer token to access the Resource.
-3. If <spanx style="verb">protocol.name</spanx> = <spanx style="verb">webdav</spanx>, the receiver SHOULD inspect the
-<spanx style="verb">protocol.options</spanx> property. If it contains a <spanx style="verb">sharedSecret</spanx>, as in
+3.  If <spanx style="verb">protocol.name</spanx> = <spanx style="verb">webdav</spanx>, the receiver SHOULD inspect the
+<spanx style="verb">protocol.options</spanx> property.  If it contains a <spanx style="verb">sharedSecret</spanx>, as in
 the <eref target="https://cs3org.github.io/OCM-API/docs.html?branch=develop&amp;repo=OCM-API&amp;user=cs3org#/paths/~1shares/post">legacy
 example</eref>,
 then the receiver SHOULD make a HTTP PROPFIND request to
-<spanx style="verb">https://&lt;sharedSecret&gt;:@&lt;sender-host&gt;&lt;sender-ocm-path&gt;</spanx>. Note that
+<spanx style="verb">https://&lt;sharedSecret&gt;:@&lt;sender-host&gt;&lt;sender-ocm-path&gt;</spanx>.  Note that
 this access method, based on Basic Auth, is <em>deprecated</em> and may be
 removed in a future release of the Protocol.
-4. Otherwise, if <spanx style="verb">protocol.name</spanx> = <spanx style="verb">multi</spanx>, the receiver MUST inspect
+4.  Otherwise, if <spanx style="verb">protocol.name</spanx> = <spanx style="verb">multi</spanx>, the receiver MUST inspect
 the <spanx style="verb">protocol.webdav.uri</spanx> property: if it's a complete URI, the
 receiver MUST make a HTTP PROPFIND request against it to access the
-remote resource. If it only contains an identifier <spanx style="verb">&lt;key&gt;</spanx>, the
+Remote Resource.  If it only contains an identifier <spanx style="verb">&lt;key&gt;</spanx>, the
 receiver MUST make a HTTP PROPFIND request to
 <spanx style="verb">https://&lt;sender-host&gt;&lt;sender-ocm-path&gt;/&lt;key&gt;</spanx> in order to access the
-remote resource. Additionally, the receiver MUST pass an
+Remote Resource.  Additionally, the receiver MUST pass an
 <spanx style="verb">Authorization: bearer</spanx> header with either the short-lived bearer token
-obtained in step 2, if applicable, or the <spanx style="verb">protocol.webdav.sharedSecret</spanx> value.</t>
+obtained in step 2, if applicable, or the <spanx style="verb">protocol.webdav.sharedSecret</spanx>
+value.</t>
 
 <t>In all cases, in case the Shared Resource is a folder and the Receiving
-Server accesses a resource within that shared folder, it SHOULD append
-its relative path to that URL. In other words, the Sending Server
+Server accesses a Resource within that shared folder, it SHOULD append
+its relative path to that URL.  In other words, the Sending Server
 SHOULD support requests to URLs such as
 <spanx style="verb">https://&lt;sender-host&gt;&lt;sender-ocm-path&gt;/path/to/resource.txt</spanx>.</t>
 
 <t>Additionally, if <spanx style="verb">protocol.&lt;protocolname&gt;.requirements</spanx> includes
 <spanx style="verb">mfa-enforced</spanx>, the Receiving Server MUST ensure that the Receiving
-Party has been authenticated with MFA, or prompt the consmer in order
+Party has been authenticated with MFA, or prompt the consumer in order
 to elevate their session, if applicable.</t>
 
 </section>
@@ -986,7 +1021,8 @@ the Receiving Server.</t>
 effects such a notification may have are out of scope of this version
 of this specification.
 The Receiving Party sending such a notification has no way of knowing
-if the Sending Party understood and processed the reshare request or not.</t>
+if the Sending Party understood and processed the reshare request
+or not.</t>
 
 </section>
 <section anchor="resharing"><name>Resharing</name>
@@ -996,20 +1032,51 @@ same Resource with another Receiving Party.
 The details of the payload and side effects such a notification may
 have are out of scope of this version of this specification.
 Note that the Receiving Party sending such a notification has no way of
-knowing if the Sending Party understood and processed the reshare request or not.</t>
+knowing if the Sending Party understood and processed the reshare
+request or not.</t>
 
 </section>
 <section anchor="iana-considerations"><name>IANA Considerations</name>
 <t>This document has no IANA actions.</t>
 
 </section>
-<section anchor="appendix-a-multi-factor-authentication"><name>Appendix A: Multi Factor Authentication</name>
+<section anchor="security-considerations"><name>Security Considerations</name>
+<t>## Trust
+There are several areas that are not covered by this specification.<br />
+Most importantly we do not provide a way of establishing trust between
+servers, even though some features of the protocol rely on trust, such
+as the <spanx style="verb">mfa-enforced</spanx> requirement.</t>
+
+<t>Trust needs to be established out of band, but there are some features
+of the protocol that <em>can</em> be used to assist operators in establishing
+trust.  For instance, invite flow can be used to establish that users
+know and have out of band connections with other users on an OCM server.</t>
+
+<t>Further more the Directory Service feature can be used to establish a
+trusted federation, where a central authority can be trusted to
+implement measures for auditing and adding only trusted servers into the
+discovery service.</t>
+
+<section anchor="httpsig"><name>httpsig</name>
+<t>It is RECOMMENDED to use signed messages to verify that an OCM server
+is the server you expect it to be, and SHOULD be done unless you have
+a niche use case.</t>
+
+</section>
+<section anchor="legacy-shared-secrets"><name>Legacy shared secrets</name>
+<t>The legacy format of an OCM Share Notification with shared secrets is
+only provided for backwards compatibility with existing implementations.
+Implementers SHOULD NOT use it and prefer short-lived tokens instead.</t>
+
+</section>
+</section>
+<section anchor="appendix-a-multi-factor-authentication"><name>Appendix A: Multi-factor Authentication</name>
 <t>If a Receiving Server exposes the capability <spanx style="verb">enforce-mfa</spanx>, it
 indicates that it will try and comply with a MFA requirement set on a
-Share. If the Sending Server trusts the Receiving Server, the Sending
+Share.  If the Sending Server trusts the Receiving Server, the Sending
 Server MAY set the requirement <spanx style="verb">mfa-enforced</spanx> on a Share, which the
-Receiving Server MUST honor. A compliant Receiving Server that signals
-that it is MFA-capable MUST NOT allow access to a resource protected
+Receiving Server MUST honor.  A compliant Receiving Server that signals
+that it is MFA-capable MUST NOT allow access to a Resource protected
 with the <spanx style="verb">mfa-enforced</spanx> requirement, if the Receiving Party has not
 provided a second factor to establish their identity with greater
 confidence.</t>
@@ -1020,7 +1087,7 @@ establish a trust with the Receiving Server such that it is reasonable
 to assume that the Receiving Server will honor the MFA requirement.
 This establishment of trust will inevitably be implementation
 dependent, and can be done for example using a pre approved allow list
-of trusted Receiving Servers. The procedure of establishing trust is
+of trusted Receiving Servers.  The procedure of establishing trust is
 out of scope for this specification: a mechanism similar to the
 <eref target="https://sciencemesh.io">ScienceMesh</eref> integration for the
 <xref target="invite-flow">Invite</xref> capability may be envisaged.</t>
@@ -1028,11 +1095,11 @@ out of scope for this specification: a mechanism similar to the
 </section>
 <section anchor="appendix-b-request-signing"><name>Appendix B: Request Signing</name>
 
-<t>A request is signed by adding the signature in the headers. The sender
-also needs to expose the public key used to generate the signature. The
+<t>A request is signed by adding the signature in the headers.  The sender
+also needs to expose the public key used to generate the signature.  The
 receiver can then validate the signature and therefore the origin of
 the request.
-To help debugging, it is recommended to also add all properties used in
+To help debugging, it is RECOMMENDED to also add all properties used in
 the signature as headers, even if they can easily be re-generated from
 the payload.</t>
 
@@ -1046,9 +1113,11 @@ encrypt nor affect its payload.</t>
     "@request-target": "post /path",
     "content-length": 380,
     "date": "Mon, 08 Jul 2024 14:16:20 GMT",
-    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4Tg0xCZMTcSWXXUZI2\\/xtHM40S0=",
+    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4...",
     "host": "hostname.of.the.recipient",
-    "Signature": "keyId=\"https://author.hostname/key\",algorithm=\"rsa-sha256\",headers=\"content-length date digest host\",signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+    "Signature": "keyId=\"https://author.hostname/key\",algorithm=
+      \"rsa-sha256\",headers=\"content-length date digest host\",
+      signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
   }
 ]]></artwork></figure>
 
@@ -1066,13 +1135,13 @@ signing outgoing request, local on incoming request),</t>
   <t>'Signature' contains the signature generated using the private key
 and details on its generation:
   <list style="symbols">
-      <t>'keyId' is a unique id, formatted as an url. hostname is used to
+      <t>'keyId' is a unique id, formatted as an url; hostname is used to
 retrieve the public key via custom discovery</t>
       <t>'algorithm' specify the algorithm used to generate signature</t>
       <t>'headers' specify the properties used when generating the
 signature</t>
       <t>'signature' the signature of an array containing the properties
-listed in 'headers'. Some properties like content-length, date,
+listed in 'headers'.  Some properties like content-length, date,
 content-digest, and host are mandatory to protect against authenticity
 override.</t>
     </list></t>
@@ -1088,15 +1157,18 @@ outgoing requests:</t>
 
 <figure><artwork><![CDATA[
 headers = {
-    'content-length': length_of(payload),
-    'date': current_gmt_datetime(),  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
-    'content-digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),
-    'host': 'recipient-fqdn',
+  'content-length': length_of(payload),
+  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
+  'date': current_gmt_datetime(),
+  'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
+        utf8_encode(payload))),
+  'host': 'recipient-fqdn',
 }
 
-signed = ssl_sign(concatenate_with_newlines(headers), private_key, 'sha256')
+signed = ssl_sign(concatenate_with_newlines(headers),
+    private_key, 'sha256')
 signature = {
-    'keyId': 'sender-fqdn',  # The sending server's FQDN; find its public key through OCM API discovery
+    'keyId': 'sender.fqdn',  # The sending server's FQDN
     'algorithm': 'rsa-sha256',
     'headers': 'content-length date content-digest host',
     'signature': signed,
@@ -1114,7 +1186,7 @@ properties:</t>
 <t><list style="symbols">
   <t><spanx style="verb">content-length</spanx> and <spanx style="verb">content-digest</spanx> can be regenerated and compared
 from the payload of the request,</t>
-  <t>a maximum TTL must be applied to <spanx style="verb">date</spanx> and current
+  <t>a maximum TTL MUST be applied to <spanx style="verb">date</spanx> and current
 timestamp,</t>
   <t>regarding data contained in the <spanx style="verb">Signature</spanx>
 header:
@@ -1122,7 +1194,7 @@ header:
       <t>using <spanx style="verb">keyId</spanx> to get the public key from remote
 signatory,</t>
       <t><spanx style="verb">headers</spanx> is used to generate the clear version of the
-signature and must contain at least <spanx style="verb">content-length</spanx>, <spanx style="verb">date</spanx>,
+signature and MUST contain at least <spanx style="verb">content-length</spanx>, <spanx style="verb">date</spanx>,
 <spanx style="verb">content-digest</spanx> and <spanx style="verb">host</spanx>,</t>
       <t><spanx style="verb">signature</spanx> is the encrypted version of the
 signature.</t>
@@ -1135,13 +1207,15 @@ the signature and the public key:</t>
 <figure><artwork><![CDATA[
 clear = {
     'content-length': length_of(payload),
-    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',  # The date used in the verification process
-    'content-digest': 'SHA-256=' + base64_encode(hash('sha256', utf8_encode(payload))),  # Recompute the digest for verification
+    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',
+    'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
+          utf8_encode(payload))),  # Recompute digest for verification
     'host': 'sender-fqdn',
 }
 
 signed = headers['Signature']
-verification_result = ssl_verify(concatenate_with_newlines(clear), signed, public_key, 'sha256')
+verification_result = ssl_verify(concatenate_with_newlines(clear),
+                                 signed, public_key, 'sha256')
 
 if not verification_result then
     raise InvalidSignatureException
@@ -1150,11 +1224,12 @@ if not verification_result then
 </section>
 <section anchor="validating-the-payload"><name>Validating the payload</name>
 
-<t>Following the validation of the signature, the host should also confirm
+<t>Following the validation of the signature, the host SHOULD also confirm
 the validity of the payload, that is ensuring that the actions implied
-in the payload actually initiated on behalf of the source of the request.</t>
+in the payload actually initiated on behalf of the source of the
+request.</t>
 
-<t>As an example, if the payload is about initiating a new share the file
+<t>As an example, if the payload is about initiating a new share, the file
 owner has to be an account from the instance at the origin of the
 request.</t>
 
@@ -1163,27 +1238,39 @@ request.</t>
 <section anchor="appendix-c-directory-service"><name>Appendix C: Directory Service</name>
 
 <t>A third-party Directory Service is a back-end service used to federate
-multiple OCM Servers and facilitate the Invite flow. It is expected to
+multiple OCM Servers and facilitate the Invite flow.  It is expected to
 expose, via anonymous HTTP GET, a JSON document with the following
 format:
   * REQUIRED: <spanx style="verb">federation</spanx> - a human-readable name for the list of OCM
   Servers exposed by the Directory Service
   * REQUIRED: <spanx style="verb">servers</spanx> - a JSON array of objects to describe the list
   of OCM Servers with the following string fields:
-    * REQUIRED: <spanx style="verb">url</spanx> - the OCM Server's FQDN
-    * REQUIRED: <spanx style="verb">displayName</spanx> - a human-readable name for the OCM Server
+    * REQUIRED: <spanx style="verb">url</spanx> - an absolute URL identifying the 
+    OCM Server. It MUST:
+      * include scheme: either <spanx style="verb">https://</spanx> or 
+      (for testing purposes) <spanx style="verb">http://</spanx>
+      * include host (either a FQDN or an IP address)
+      * MAY include a non-default port
+      * MUST NOT include a base path (e.g., <spanx style="verb">/ocm</spanx>)
+      * MUST NOT include userinfo, query, or fragment
+    * REQUIRED: <spanx style="verb">displayName</spanx> - a human-readable name 
+    for the OCM Server
   Example:
   <spanx style="verb">json
   {
     "federation" : "The ScienceMesh Directory",
     "servers" : [
       {
-       "url" : "https://ocm-server-1.fqdn",
+       "url" : "https://ocm-server-1.example.org",
        "displayName" : "OCM Server 1"
       },
       {
-       "url" : "https://ocm-server-2.fqdn",
+       "url" : "https://ocm-server-2.example.org:4443",
        "displayName" : "OCM Server 2"
+      },
+      {
+       "url" : "http://192.168.1.1:8080",
+       "displayName" : "OCM Server 3"
       }
     ]
   }
@@ -1192,7 +1279,7 @@ format:
 </section>
 <section anchor="acknowledgements"><name>Acknowledgements</name>
 <t>Our deepest thanks and appreciation go to the people who started the
-work on what would become this specification in 2015. In particular we
+work on what would become this specification in 2015.  In particular we
 want to thank (in alphabetical order) Guido Aben, Russell Albert,
 Holger Angenent, David Antoš, Hrachya Astsatryan, Kurt Bauer,
 Charles du Jeu, Andreas Eckey, David Gillard, Andranik Hayrapetyan Wahi,
@@ -1203,12 +1290,13 @@ Woojin Seok, Rogier Spoor, Christian Sprajc, Peter Szegedi,
 Ron Trompert, Benedikt Wegmann and Johnatan Xu.</t>
 
 <t>We would also like to thank Ishank Arora, Gianmaria Del Monte,
-Jörn Friedrich Dreyer, Hugo González Labrador, Maxence Lange,
-Lovisa Lugnegård, Sandro Mesterheide, Antoon Prins and Björn Schießle
-for their direct contributions to the specification.</t>
+Jörn Friedrich Dreyer, Richard Freitag, Hugo González Labrador,
+Matthias Kraus, Maxence Lange, Lovisa Lugnegård, Sandro Mesterheide,
+Antoon Prins and Björn Schießle for their direct contributions
+to the specification.</t>
 
 <t>Over the years many more people have been involved in the development
-of OCM. We would like to thank all of them for their contributions,
+of OCM.  We would like to thank all of them for their contributions,
 including Jean-Thomas Acquaviva, Samuel Alfageme Sainz,
 Karsten Asshauer, Miroslav Bauer, Felix Böhm, Maciej Brzeźniak,
 Diogo Castro, Gavin Charles Kennedy, Jarosław Czub, Milan Danecek,
@@ -1241,370 +1329,395 @@ Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.</t>
   </back>
 
 <!-- ##markdown-source:
-H4sIAAAAAAAAA+1923IbR5bge31FBh3RJHsAkKLkG6ftMSVSEm1RoknKbrfb
-IRRQCaDMQhW6LqSgjZ6H+ZGNedhfmIeNfevo/9pzy1tVgaTdPT0bG8OIbgtA
-VebJkyfP/ZwcDodRndaZPlTbb1Y6V8+yoknUma4W21FSTPN4CT8lZTyrh1mx
-KnVVp8MCHhxO8cHhEh4c7j+JpnGt50W5PlRVnURRuioPVV02VX2wv//5/kEU
-lzo+VJd62pRpvY6u9fq2KJNDdZrXusx1PTzGKaKoquM8eRdnRQ7TrnUFX8Cb
-S3jw5Op5FMVNvSjKw0ipoUrz6lC9GKlXhTonuOBbpRjgF2lT6dVKt34synmc
-px/iOi3yQ/Xs5OI1fa2XcZodqrm8NDIL/WoKsI2mC3oIAD9Ui7peHe7tyfd7
-5sHIAXQ2ejpSiVZfF/ncA+gsnS5SnQW/hNCcF3miS3VZNOVU+2At+dWvVvRA
-Rb+P4N0QqgrACp6YFssALPU0ni8mMKEPVbxI0vCHhwKFb/7NIL0GGkjzEE3X
-2v86BOfy7euTKx+M6zgvvqoaIKBRpbuzT4tEj6plkeEDMNTeEsePouFwqOIJ
-kFY8BZpr0b1KKxWrSpc3sPKZBvBpdrUqi7qYFpmqF3GNDwG1JKouVF7U6Wyt
-4uhCT3V6k+ZzdR6X9ZofrBd6rRbxjVYTDfPMyxhIPlHxdKqrCl+viqVWF1pw
-pE7raBFXqkqXaRbDYUl1pW7TeqGY9gUXapYVt/BUM4UfKvXmCH4c4L9udZbR
-f+GVqCqmaZwBuvmQ2SW4F4+mNUBcr8+biYKTx3gddXFS5BmuIk8yAAeWpHKN
-8MflmkcHRAJUgJMVLgkfWBXwQ3S70KWmz23kAALTfFaUS0SiRdQtPt7BUcQD
-GBRdwSeYsIGllfKleTYl6HKV6VmNkIQrjmDF3+vJ8dF3tNgCHi2rEdPDMk1g
-cVH0kbrS5bKKcJJrhAiIsVJbZ28vr7YG/F/1+g39++Lk27enFyfH+O/Ll0ev
-Xtl/RPLE5cs3b18du3+5N5+9OTs7eX3ML8O3Kvgq2jo7+gF+QSi33pxfnb55
-ffRqCxAGq4MlAmNuljqvVYzILYCyeBeAGxHeqijR1bRMJ/AB3nn67Fw9eqJ+
-vHj+7ODRo89/on999ujTJz8p2J+cp6Ed5o+4E1EMnDAu8fUYKGoar9I6ziqi
-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
-SgwqmXetc+DH5q37BaveSeh2tJtN7EDcQ3ezg6qcvv3/T1neJNT+bsry30oG
-93DNBxBAP7eSfvYPVW83HQZWeTert1X6Qfc6r90fp3J9sB4iCr4yOoyvkjp5
-mGvs+8YIr7aX+97wCgdx8mCtb1wmVBncewNiwg+wN8hPdUtnXM7F6osrqcQ7
-m7GTBvcNxtdaHUkp/5hL1yZNb0cucplL7mccXev1Kk7d5RskyWw3BWkD4Udn
-KFBljS7WWf1I3H1gbfwdvfhU4g1PgHFnAPMaeBUPBTPqBVP1gGlmMSfANMHp
-g9H0K+W+7eR6yXX0i4F7OA67/Z9Meii1Uel/BNHo9SRtPWevIcLHNnVSC1ru
-5YVpBISl7y5aIi0yOoO37pmy7YDdqe2Zq9XK2NzQ0tdGpsnNJTa9938iZ9rh
-o7Mb+Z7fHbCFvIKK8HpcGyj9LefTpdSpi1qboAfK729n8xamcY5IdG2TsVQc
-71nFjxTj5J6KBhrVDw2mhrUxH+SGSUeWuxJjZT+Fm/T1xnP3Fuj1fXevYtsX
-vjZtwoVa0p+YIcAAc0H3Hk6K9+YaNkwKNT1e3chLqqagkQwygqvdYrVqqkXI
-+OhaQWntyI0LNXdpNlfzoRnUCzb7Qo1/XbIj6SqJnyXTL5LQZEF9Ub0oIliR
-BXZYoB6xtBp2/FGNTh52E48CcJ0bnu8ElWtgGVVe25JwR8N27/fUT/QeBMyt
-N+zGRl6965Lal+ZSWxfKNzZsyfY/uZc13QWe6xh0JwAUF/cPimuhwX2+eqXj
-gxId/e1o5Tt2QrL/ne3YzXb08RdkEoDlkrpO0F6T8ZD1OBOTGyZyZvr25cuj
-i5N3R8+enZxfnRxv+18enzx7dfoav7w7Zw0AmBar1FPC7myVF/p46UzmLSZJ
-7VOiwHnWk0LxD5g3eMCrV7DquV8fa1O5BxHYAULT4nUMBnJVFX5fiOi5U9Yx
-2SV4RRxCSJjcCMu5g+CEZRyhjaxniBqVeqLQPJtoEL8UUGOOSj1WCRVoPA3C
-QSpqx0vnu7z2uXDlxqEqoZo7v+9gObp3RSqSXBtsO7iD2gPPgm00An7WBEdN
-S0oRD8E1fd4oZKdiV50IIGhW0vS3dnfwjii1pIVdkokGVoEujnpgU72wSYck
-87SlSBS8kbn92vQlxatY8CJubpiUr213UtmUq/Z6GI6yYMHHcyr/6pgynFFt
-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
-C+UnYwDAzAAA
+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
 
 -->
 
