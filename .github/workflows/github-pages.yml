@@ -8,12 +8,26 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
 
       - name: Build site
         run: |
           rm -rf dist
           mkdir -p dist
-          cp ./docs.html ./dist/index.html
+
+          pandoc README.md \
+            --from=gfm \
+            --to=html5 \
+            --standalone \
+            --metadata title="README" \
+            -o dist/index.html
+
+          cp ./logo.png ./dist/logo.png
+          cp ./docs.html ./dist/docs.html
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -39,4 +53,5 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
 
