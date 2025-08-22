@@ -1992,8 +1992,8 @@ with the following format:
     * OPTIONAL: `rocrate` - an embedded JSON object
       following the [ROCRATE] data-entities
       specification.
-    * REQUIRED: `id` - the unique identifier of the
-      resource at the OCM Server
+    * REQUIRED: `providerId` - the unique identifier
+      of the resource at the OCM Server
   Example:
  ```json
  {
