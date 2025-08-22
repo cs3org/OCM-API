@@ -148,7 +148,11 @@ characters.
         ocm-address = identifier "@" host [ ":" port]
 
     The identifier is an opaque, case-sensitive utf-8 string. It is 
-    separated from the host by the last "@" in the OCM Address.
+    separated from the host by the last "@" in the OCM Address. It is
+    possible to have multiple @-signs in a OCM-address, e.g. when an 
+    email address is the local part of the address like 
+    `nomen.nescio@example.org@ocm.example.org`.
+
     host is an IP literal encapsulated within square brackets, an IPv4 
     address in dotted decimal form, or a registered name as described in
     [RFC3986].
