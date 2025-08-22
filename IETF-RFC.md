@@ -139,14 +139,31 @@ related concepts from OAuth [RFC6749] and elsewhere:
   OCM API Discovery.
 * __Discoverable Server__ - A server that tries to supply information in
   OCM API Discovery.
-* __OCM Address__ - A string of the form
-  `<Receiving Party's identifier>@<fqdn>` which can be used to uniquely
-  identify a user or group "at" an OCM Server and MAY be referred to as
-  Federated Cloud ID.
-  `<Receiving Party's identifier>` is an opaque string, unique at the
-  server.  `<fqdn>` is the Fully Qualified Domain Name by which the
-  server is identified.  This MUST be the domain at which the
-  `/.well-known/ocm` endpoint of that server is hosted.
+* __OCM Address__ - identifies a user or group "at" an OCM Server.
+The OCM Address contains a server specific Party identifier, a host
+locating the OCM Server and an optional port. The OCM Address is not a
+URI as it does not have scheme and the identifier may contain reserved
+characters.
+
+        ocm-address = identifier "@" host [ ":" port]
+
+    The identifier is an opaque, case-sensitive utf-8 string. It is 
+    separated from the host by the last "@" in the OCM Address.
+    host is an IP literal encapsulated within square brackets, an IPv4 
+    address in dotted decimal form, or a registered name as described in
+    [RFC3986].
+
+        host = IP-literal / IPv4address / reg-name
+
+    The optional port subcomponent can be used to specify a port to use
+    for discovery. Implementers SHOULD omit the port component and its 
+    ":" delimiter if its value would be the same as the default ports 
+    "443" or "80" of HTTPS or HTTP.
+
+    The OCM Server MUST be discoverable at the given host and optional 
+    port via the Well-Known [RFC8615] path `/.well-known/ocm`. The OCM 
+    Address MUST NOT contain a path.
+
 * __OCM Notification__ - A message from the Receiving Server to the
   Sending Server or vice versa, using the OCM Notifications endpoint.
 * __Invite Message__ - Out-of-band message used to establish contact
@@ -1000,6 +1017,13 @@ Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
+
+[RFC3986] Berners-Lee, T., Fielding, R. and Masinter, L. 
+"[Uniform Resource Identifier (URI): Generic Syntax
+](https://datatracker.ietf.org/doc/html/rfc3986)", January 2005
+
+[RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers 
+(URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
 
 ## Informative References
