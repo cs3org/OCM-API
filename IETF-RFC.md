@@ -672,7 +672,7 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   SHOULD have a value of "user", "group", or "federation", to
   indicate that the first part of the `shareWith` OCM Address
   refers to a Receiving Party who is a single user of the
-  Receiving Server, a group of users at the Receiving Servers, or
+  Receiving Server, a group of users at the Receiving Server, or
   a group of users that is spread out over various servers,
   including at least one user at the Receiving Server.
 * REQUIRED resourceType (string)
