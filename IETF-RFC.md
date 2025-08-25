@@ -516,7 +516,9 @@ Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as
 the URL instead.
 Step 5: If that results in a valid HTTP response with a valid JSON
 response body within reasonable time, go to step 7.
-Step 6: If not, fail.
+Step 6: If not, fail. Implementations MAY fallback to `http` instead
+`https` in testing setups and retry steps 2-5 using `http`. This SHOULD
+only be allowed as Opt-In.
 Step 7: The JSON response body is the data that was discovered.
 
 ## Fields
