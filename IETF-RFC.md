@@ -160,9 +160,7 @@ characters.
         host = IP-literal / IPv4address / reg-name
 
     The optional port subcomponent can be used to specify a port to use
-    for discovery. Implementers SHOULD omit the port component and its 
-    ":" delimiter if its value would be the same as the default ports 
-    "443" or "80" of HTTPS or HTTP.
+    for discovery (see Discovery Process).
 
     The OCM Server MUST be discoverable at the given host and optional 
     port via the Well-Known [RFC8615] path `/.well-known/ocm`. The OCM 
