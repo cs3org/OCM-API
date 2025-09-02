@@ -649,10 +649,9 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   Example: "This is the Open API Specification file (in YAML
   format) of the Open Cloud Mesh API."
 * REQUIRED providerId (string)
-  Identifier to identify the Shared Resource at the provider
-  side.  This is unique per provider such that if the same
-  Resource is shared twice, this providerId will not be
-  repeated.
+  Opaque value to identify the Shared Resource at the provider side.
+  This MUST be unique per Resource and per share, such that multiple
+  shares of a given Resource are guaranteed to get different values.
   Example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
 * REQUIRED owner (string) -
   OCM Address of the user who owns the
