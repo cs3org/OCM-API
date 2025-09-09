@@ -1,6 +1,8 @@
-# Open Cloud Mesh Protocol Specification
+<center> <h1>Open Cloud Mesh Protocol Specification</h1> </center>
 
-![Open Cloud Mesh Protocol Specification](logo.png)
+<p align="center">
+  <img src="logo/svg/OpenCloudMesh-text-vertical.svg" alt="Open Cloud Mesh Logo"/>
+</p>
 
 This repository contains the text of the [Open Cloud Mesh IETF Draft](https://datatracker.ietf.org/doc/draft-lopresti-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
 
