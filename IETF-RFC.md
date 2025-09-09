@@ -1054,6 +1054,9 @@ been shared, the Receiving Party MAY make an HTTP POST request
 
 ## Fields
 
+* REQUIRED sender (string)
+  OCM Address of the user who will be requested to share
+  the resource.
 * REQUIRED shareWith (string)
   OCM Address of the user, group or federation that wants to
   receive a share of the resource.
