@@ -894,14 +894,21 @@ components:
     RequestShare:
       type: object
       required:
+        - sender
         - shareWith
         - shareId
       properties:
+        sender:
+          type: string
+          description: >
+            OCM Address of the user who will be requested to share
+            the resource.
+          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
         shareWith:
           type: string
           description: >
-            Consumer specific identifier of the user, group or federation that
-            wants to recive a share of the resource.
+            OCM Address of the user, group or federation that
+            wants to receive a share of the resource.
           example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
         shareId:
           type: string
