@@ -1241,7 +1241,7 @@ Christoph Herzog, David Jericho, Frank Karlitschek, Christian Kracher,
 Ralph Krimmel, Massimo Lamanna, Simon Leinen, Jari Miettinen,
 Jakub Moscicki, Frederik Orellana, Vlad Roman, Christian Schmitz,
 Woojin Seok, Rogier Spoor, Christian Sprajc, Peter Szegedi,
-Ron Trompert, Benedikt Wegmann and Johnatan Xu.
+Ron Trompert, Benedikt Wegmann and Jonathan Xu.
 
 We would also like to thank Ishank Arora, Gianmaria Del Monte,
 Jörn Friedrich Dreyer, Richard Freitag, Hugo González Labrador,
