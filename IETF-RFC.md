@@ -1236,13 +1236,12 @@ Our deepest thanks and appreciation go to the people who started the
 work on what would become this specification in 2015.  In particular we
 want to thank (in alphabetical order) Guido Aben, Russell Albert,
 Holger Angenent, David Antoš, Hrachya Astsatryan, Kurt Bauer,
-Charles du Jeu, Andreas Eckey, David Gillard,
-Andranik Hayrapetyan Wahi, Dimitri van Hees, Christoph Herzog,
-David Jericho, Frank Karlitschek, Christian Kracher, Ralph Krimmel,
-Massimo Lamanna, Simon Leinen, Jari Miettinen, Jakub Moscicki,
-Frederik Orellana, Vlad Roman, Christian Schmitz, Woojin Seok,
-Rogier Spoor, Christian Sprajc, Peter Szegedi, Ron Trompert,
-Benedikt Wegmann and Johnatan Xu.
+Charles du Jeu, Andreas Eckey, David Gillard, Andranik Hayrapetyan Wahi,
+Dimitri van Hees, Christoph Herzog, David Jericho, Frank Karlitschek,
+Christian Kracher, Ralph Krimmel, Massimo Lamanna, Simon Leinen,
+Jari Miettinen, Jakub Moscicki, Frederik Orellana, Vlad Roman,
+Christian Schmitz, Woojin Seok, Rogier Spoor, Christian Sprajc,
+Peter Szegedi, Ron Trompert, Benedikt Wegmann and Jonathan Xu.
 
 We would also like to thank Ishank Arora, Gianmaria Del Monte,
 Jörn Friedrich Dreyer, Richard Freitag, Hugo González Labrador,
