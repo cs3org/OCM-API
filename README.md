@@ -1,6 +1,8 @@
-# Open Cloud Mesh Protocol Specification
+<center> <h1>Open Cloud Mesh Protocol Specification</h1> </center>
 
-![Open Cloud Mesh Protocol Specification](logo.png)
+<p align="center">
+  <img src="logo/svg/OpenCloudMesh-text-vertical.svg" alt="Open Cloud Mesh Logo"/>
+</p>
 
 This repository contains the text of the [Open Cloud Mesh IETF Draft](https://datatracker.ietf.org/doc/draft-lopresti-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
 
@@ -30,3 +32,9 @@ Previously released versions ([changelog](CHANGELOG.md)):
 * Version 1.2.0: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.2.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.0&repo=OCM-API&user=cs3org)
 * Version 1.1.0: [README](https://github.com/cs3org/OCM-API/blob/v1.1.0/README.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org)
 * Version 1.0.0: [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org)
+
+## Acknowledgements
+
+### Logo 
+The OCM logo was originally created by Dimitri van Hees, in collaboration with Christian Schmitz, during their work on the OpenCloudMesh project.
+The work was funded and supported by ownCloud as part of the OpenCloudMesh team effort.
