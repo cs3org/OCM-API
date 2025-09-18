@@ -33,9 +33,3 @@ Previously released versions ([changelog](CHANGELOG.md)):
 * Version 1.2.0: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.2.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.0&repo=OCM-API&user=cs3org)
 * Version 1.1.0: [README](https://github.com/cs3org/OCM-API/blob/v1.1.0/README.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org)
 * Version 1.0.0: [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org)
-
-## Acknowledgements
-
-### Logo 
-The OCM logo was originally created by Dimitri van Hees, in collaboration with Christian Schmitz, during their work on the OpenCloudMesh project.
-The work was funded and supported by ownCloud as part of the OpenCloudMesh team effort.
