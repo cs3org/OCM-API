@@ -39,4 +39,5 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * The [wiki](https://github.com/cs3org/OCM-API/wiki) is launched to collect minutes of the ongoing meetings.
 * The [W3C Community Group](https://www.w3.org/community/ocm), with 24 participants, was archived in August 2025 as work transitioned to the IETF mailing list.
 * In preparation for the IETF WG, a [charter](https://github.com/ietf-artarea/charters/tree/main/ocm) was submitted to define its mandate.
+* Presentation about the standardization efforts at [NORDUnet Community Workshop 2025](https://nordu.net/ncw2025/talks/#60203d81-3987-42e4-8232-6538410d3466).
 
