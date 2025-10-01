@@ -970,7 +970,14 @@ request or not.
 
 # IANA Considerations
 
-This document has no IANA actions.
+## Well-Known URI for the Discovery
+
+The following value is to be registered in the "Well-Known URIs"
+registry (using the template from [RFC5785]):
+   URI suffix: ocm
+   Change controller: IETF
+   Specification document(s): the present Draft, once in RFC form
+   Related information: N/A
 
 # Security Considerations
 
