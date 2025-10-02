@@ -535,7 +535,7 @@ contain the following information about its OCM API:
 * REQUIRED: resourceTypes (array) - A list of all resource types this
   server supports in both the Sending Server role and the Receiving
   Server role, with their access protocols.  Each item in this list
-  SHOULD itself be an object containing the following fields:
+  MUST itself be an object containing the following fields:
   - name (string) - A supported resource type (file, calendar,
     contact, ...).
     Implementations MUST offer support for at least one
@@ -657,9 +657,9 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 ## Fields
 
 * REQUIRED shareWith (string)
-  OCM Address of the user, group or federation
-  the provider wants to share the Resource with.  This MUST be
-  known in advance, either via a previous Invitation or through
+  OCM Address of the user, group or federation the provider
+  wants to share the Resource with.  This MUST be known
+  in advance, either via a previous Invitation or through
   other means.
   Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
 * REQUIRED name (string)
@@ -690,11 +690,19 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   Example: "John Doe"
 * REQUIRED shareType (string)
   SHOULD have a value of "user", "group", or "federation", to
-  indicate that the first part of the `shareWith` OCM Address
-  refers to a Receiving Party who is a single user of the
-  Receiving Server, a group of users at the Receiving Server, or
-  a group of users that is spread out over various servers,
-  including at least one user at the Receiving Server.
+  indicate that the first part of the `shareWith` OCM Address refers
+  to a Receiving Party who is a single user of the Receiving Server,
+  a group of users at the Receiving Server, or a group of users that
+  spans multiple OCM Servers belonging to a federation as exposed by
+  a Directory Service, including at least one user at the Receiving
+  Server.
+  In the federation case, OCM Servers MAY resolve the actual
+  recipients by either querying external AAI systems, or exchanging
+  the groups' metadata between themselves.  Such exchange is out of
+  scope for this version of the this specification.
+  Alternatively, the Receiving Server MAY hold the federated groups'
+  metadata and act as an OCM proxy, forwarding the OCM requests to
+  the actual members of the federation.
 * REQUIRED resourceType (string)
   Resource type (file, calendar, contact, ...)
 * OPTIONAL expiration (integer)
