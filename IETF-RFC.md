@@ -690,18 +690,19 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   Example: "John Doe"
 * REQUIRED shareType (string)
   SHOULD have a value of "user", "group", or "federation", to
-  indicate that the first part of the `shareWith` OCM Address
-  refers to a Receiving Party who is a single user of the
-  Receiving Server, a group of users at the Receiving Server, or
-  a group of users that is spread out over various servers,
-  including at least one user at the Receiving Server.
-  In the federation case, the Receiving Server MAY resolve the
-  actual recipients by interpreting the Receiving Party as a
-  reference to a central AAI system, and query it.
-  Alternatively, the Receiving Server MAY hold the federated
-  groups metadata and act as an OCM Proxy, forwarding the OCM
-  requests to the actual OCM Servers hosting the members of
-  the federated group.
+  indicate that the first part of the `shareWith` OCM Address refers
+  to a Receiving Party who is a single user of the Receiving Server,
+  a group of users at the Receiving Server, or a group of users that
+  spans multiple OCM Servers belonging to a federation as exposed by
+  a Directory Service, including at least one user at the Receiving
+  Server.
+  In the federation case, OCM Servers MAY resolve the actual
+  recipients by either querying external AAI systems, or exchanging
+  the groups' metadata between themselves.  Such exchange is out of
+  scope for this version of the this specification.
+  Alternatively, the Receiving Server MAY hold the federated groups'
+  metadata and act as an OCM proxy, forwarding the OCM requests to
+  the actual members of the federation.
 * REQUIRED resourceType (string)
   Resource type (file, calendar, contact, ...)
 * OPTIONAL expiration (integer)
