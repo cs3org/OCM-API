@@ -223,8 +223,9 @@ Notification to the Receiving Server.
 
 After this, the Receiving Server MAY notify the Receiving Party and/or
 the Sending Server, and will act as an API client through which the
-Receiving Party can access the Resource.  After that, the Share MAY be
-updated, deleted, and/or reshared.
+Receiving Party can access the Resource.  The Receiving Party or
+the Sending Party MAY then update or delete the Share: the respective
+Server MAY send a Notification to the other party about the change.
 
 # Establishing Contact
 
@@ -966,7 +967,8 @@ The details of the payload and side effects such a notification may
 have are out of scope of this version of this specification.
 Note that the Receiving Party sending such a notification has no way of
 knowing if the Sending Party understood and processed the reshare
-request or not.
+request or not.  In all cases, the Receiving Server MUST NOT reshare
+a Resource without an explicit grant from the Sending Server.
 
 # IANA Considerations
 
