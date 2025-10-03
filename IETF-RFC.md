@@ -442,8 +442,8 @@ formats. If no WAYF page is available, only the invite string format
 can be used. This format is considered canonical.  
 
 Implementations **MUST** accept invites in the invite string format.  
-The link format is only useful if the implementation also exposes the
-`inviteAcceptDialog`.
+The link format is only useful if the Receiving OCM Server exposes
+the `inviteAcceptDialog` in its Discovery endpoint.
 
 ### Security Advantages
 
