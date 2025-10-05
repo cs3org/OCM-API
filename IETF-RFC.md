@@ -403,6 +403,15 @@ party is received.
 Both servers MAY also allowlist each other as a server with which at
 least one of their users wishes to interact.
 
+In addition, if the identity provider of either server supports the
+registration of external users, it may happen that the just received
+email contact from the other party matches an external user already
+known in the local identity provider, and therefore already present
+in the address book.  In such a case, implementers MAY support linking
+of the two identities belonging to that same user, so that when a Share
+Creation gesture is made to that recipient, both a regular share and an
+OCM Share Creation Notification are issued.
+
 Note that Invites act symmetrically, so once contact has been
 established, both the Invite Sender and the Invite Receiver MAY take on
 either the Sending Party or the Receiving Party role in subsequent
