@@ -425,25 +425,26 @@ and a `provider`. There are two recognized formats:
   `provider` is `my-cloud-storage.org`, the combined string is
   `a55a966e-15c1-4cb9-a39d-4e4c54399baf@my-cloud-storage.org`,
   which when base64-encoded becomes
-  `YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQG15LWNsb3VkLXN0b3JhZ2Uub3Jn`.
+  `YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQG15LWNsb3VkLXN0b
+  3JhZ2Uub3Jn`.
 
   When parsing an invite string, implementors must base64-decode it,
   then split on the last `@` sign, taking care to allow multiple `@`
   characters in the token part.
 
 * **Link format:**
-  If the inviting OCM server supports a WAYF page, the invite may be
+  If the inviting OCM Server supports a WAYF page, the invite may be
   provided as a link with the token as a request parameter. Example:
 
-  `https://my-cloud-storage.org/wayf?token=a55a966e-15c1-4cb9-a39d-4e4c54399baf`
+  `https://my-cloud-storage.org/wayf?token=
+  a55a966e-15c1-4cb9-a39d-4e4c54399baf`
 
-While links are convenient, implementors should ideally provide both
-formats. If no WAYF page is available, only the invite string format
-can be used. This format is considered canonical.  
-
-Implementations **MUST** accept invites in the invite string format.  
-The link format is only useful if the Receiving OCM Server exposes
-the `inviteAcceptDialog` in its Discovery endpoint.
+Implementations MUST be able to accept invites in the invite string
+format.  This format is considered canonical.  The link format is only
+useful if the Receiving OCM Server exposes the `inviteAcceptDialog`
+in its Discovery endpoint.  Implmentations SHOULD support the link
+format when they implement a WAYF Page that leverages those
+`inviteAcceptDialog` targets.
 
 ### Security Advantages
 
