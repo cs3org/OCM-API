@@ -8,7 +8,7 @@
 This repository contains the text of the [Open Cloud Mesh IETF Draft](https://datatracker.ietf.org/doc/draft-lopresti-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
 
 The documents are available as follows:
-* **Latest official version, 1.2.1**: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.2.1/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.1&repo=OCM-API&user=cs3org)
+* **Latest official version, 1.2.2**: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.2.2/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.2&repo=OCM-API&user=cs3org)
 * Development branch: [RFC-formatted Draft](IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.

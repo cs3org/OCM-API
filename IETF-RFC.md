@@ -572,7 +572,7 @@ contain the following information about its OCM API:
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at
   this endpoint
 * REQUIRED: apiVersion (string) - The OCM API version this endpoint
-  supports.  Example: `"1.2.1"`
+  supports.  Example: `"1.2.2"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at
   this endpoint.  Example: `"https://my-cloud-storage.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
