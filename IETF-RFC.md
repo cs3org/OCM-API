@@ -749,7 +749,10 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   metadata and act as an OCM proxy, forwarding the OCM requests to
   the actual members of the federation.
 * REQUIRED resourceType (string)
-  Resource type (file, calendar, contact, ...)
+  Resource type (file, folder, calendar, contact, ...).  If the
+  Resource is a folder, implementations SHOULD advertise it as
+  `folder` rather than `file`, in order to streamline the processing
+  by the Receiving Server.
 * OPTIONAL expiration (integer)
   The expiration time for the OCM share, in seconds
   of UTC time since Unix epoch.  If omitted, it is assumed
