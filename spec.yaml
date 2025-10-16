@@ -543,7 +543,7 @@ components:
         resourceType:
           type: string
           description: |
-            Resource type (file, calendar, contact, ...)
+            Resource type (file, folder, calendar, contact, ...)
           example: file
         expiration:
           type: integer
@@ -766,7 +766,7 @@ components:
         resourceType:
           type: string
           description: |
-            Resource type (file, user, calendar, contact, ...)
+            Resource type (file, folder, user, calendar, contact, ...)
         providerId:
           type: string
           description: |
