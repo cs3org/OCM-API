@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.2] - 2025-10-21 - Giuseppe Lo Presti <lopresti@cern.ch>
+
+* Further improvements and clarifications in the spec, prior to
+  handing over to the IETF.
+* Introduced concept of Invite string for the Invite flow.
+
 ## [1.2.1] - 2025-07-17 - Giuseppe Lo Presti <lopresti@cern.ch>
 
 * Overall review of the spec in the ongoing quest to improve clarity

@@ -5,7 +5,7 @@ info:
     Open Cloud Mesh OpenAPI Specification.
     The semantic of the Protocol Specification is detailed in the
     [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md) document.
-  version: 1.2.1
+  version: 1.2.2
   x-logo:
     url: logo.png
 servers:
@@ -327,7 +327,7 @@ components:
         apiVersion:
           type: string
           description: The OCM API version this endpoint supports
-          example: 1.2.1
+          example: 1.2.2
         endPoint:
           type: string
           description: The URI of the OCM API available at this endpoint
@@ -348,17 +348,17 @@ components:
               name:
                 type: string
                 description: >
-                  A supported resource type (file, calendar, contact, ...). 
-                  Implementations MUST offer support for at least one resource type, 
-                  where `file` is the commonly supported one. 
-                  Each resource type is identified by its `name`: the list MUST NOT 
+                  A supported resource type (file, calendar, contact, ...).
+                  Implementations MUST offer support for at least one resource type,
+                  where `file` is the commonly supported one.
+                  Each resource type is identified by its `name`: the list MUST NOT
                   contain more than one resource type object per given `name`
                 example: file
               shareTypes:
                 type: array
                 description: |
-                  The supported recipient share types. 
-                  MUST contain `"user"` at a minimum, plus optionally 
+                  The supported recipient share types.
+                  MUST contain `"user"` at a minimum, plus optionally
                   `"group"` and `"federation"`.
                 items:
                   type: string
