@@ -41,9 +41,9 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * The [W3C Community Group](https://www.w3.org/community/ocm), with 24 participants, was archived in August 2025 as work transitioned to the IETF mailing list.
 * In preparation for the IETF WG, a [charter](https://github.com/ietf-artarea/charters/tree/main/ocm) was submitted to define its mandate.
 * Presentation about the standardization efforts at [NORDUnet Community Workshop 2025](https://nordu.net/ncw2025/talks/#60203d81-3987-42e4-8232-6538410d3466).
-* The [IESG](https://www.ietf.org/about/groups/iesg) amended and approved the WG charter, and [voted](https://datatracker.ietf.org/doc/charter-ietf-ocm/ballot) the formation of the Working Group. On the occasion, **Version 1.2.2 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#122---2025-10-21---giuseppe-lo-presti-lopresticernch)** with all refinements accepted so far before the WG starts its mandate.
+* The [IESG](https://www.ietf.org/about/groups/iesg) amended and approved the WG charter, and [voted](https://datatracker.ietf.org/doc/charter-ietf-ocm/ballot) the formation of the Working Group. **Version 1.2.2 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#122---2025-10-21---giuseppe-lo-presti-lopresticernch)** on the occasion, with all refinements accepted so far before the WG starts its mandate.
 
 
 ### [SovereignTech](https://www.sovereign.tech) funded efforts
-* In October 2025 a [grant was awarded]() with a set of milestones to implement several missing pieces and introduce automated testing in each vendor's CI pipeline.
+* In October 2025 a [grant was awarded](https://www.sovereign.tech/programs/fund) with a set of milestones to implement several missing pieces and introduce automated testing in each vendor's CI pipeline.
 
