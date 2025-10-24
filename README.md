@@ -19,7 +19,7 @@ In this Org we maintain an [OCM-stub](https://github.com/cs3org/OCM-stub) refere
 
 ## Contributing
 
-The Open Cloud Mesh API specification is an open source, community-driven project. The project is actively working on forming an [IETF Working Group](https://www.ietf.org/process/wgs/), please join our [IETF Mailing List](https://mailman3.ietf.org/mailman3/lists/ocm.ietf.org/) if you are interested.
+The Open Cloud Mesh API specification is an open source, community-driven project. The project has been adopted by a dedicated [IETF Working Group](https://datatracker.ietf.org/wg/ocm/about), please join our [IETF Mailing List](https://mailman3.ietf.org/mailman3/lists/ocm.ietf.org/) if you are interested.
 
 If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md) and the [IETF Note Well](https://www.ietf.org/about/note-well/).
 
