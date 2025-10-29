@@ -645,7 +645,7 @@ contain the following information about its OCM API:
   to the more secure (and possibly required) invite flow.
   _ `"receive-code"` - to indicate that this OCM Server can receive a
   `code` as part of a Share Creation Notification, and exchange it
-  for a bearer token at the Sending Server's `/token` API endpoint.
+  for a bearer token at the Sending Server's tokenEndPoint.
   _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
   Page to facilitate the Invite flow.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a
@@ -687,6 +687,11 @@ contain the following information about its OCM API:
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
   Page SHOULD redirect the end-user to
 `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
+* OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where
+  the Sending Server can exchange a `code` for a bearer token.
+  Implementations that offer the `"receive-code"` capability MUST
+  provide this URL as well.
+  Example: `"https://my-cloud-storage.org/ocm/token"`.
 
 # Share Creation Notification
 
@@ -759,7 +764,7 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   that the share does not expire.
 * OPTIONAL code (string)
   A nonce to be exchanged for a (potentially short-lived)
-  bearer token at the Sending Server's /token endpoint.
+  bearer token at the Sending Server's tokenEndPoint [RFC6749]
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are: - `webdav`, to access the data -
@@ -961,9 +966,10 @@ is as follows:
     `resourceTypes[0].protocols.webdav` value is the
     `<sender-ocm-path>` to be used in step 3.
 2.  If `code` is not empty, the receiver SHOULD make a signed POST
-    request to the `/token` path inside the Sending Server's OCM API, to
+    request to the path in the Sending Server’s tokenEndPoint, to
     exchange the code for a short-lived bearer token, and then use that
-    bearer token to access the Resource.
+    bearer token to access the Resource (See the [Code Flow](
+    #code-flow) section).
 3.  If `protocol.name` = `webdav`, the receiver SHOULD inspect the
     `protocol.options` property.  If it contains a `sharedSecret`, as in
     the [legacy example](
@@ -993,6 +999,83 @@ Additionally, if `protocol.<protocolname>.requirements` includes
 `mfa-enforced`, the Receiving Server MUST ensure that the Receiving
 Party has been authenticated with MFA, or prompt the consumer in order
 to elevate their session, if applicable.
+
+
+# Code Flow
+
+This section defines the procedure for issuing short-lived bearer access
+tokens for use by the Receiving Server when accessing a resource shared
+through OCM.  The mechanism is aligned with the OAuth 2.0
+*authorization_code* grant type but is performed entirely as a
+server to server interaction between the Sending and Receiving Servers.
+No user interaction or redirect is involved. [RFC6749]
+
+##  Token Request
+
+To obtain an access token, the Receiving Server MUST send an HTTP POST
+request to the Sending Server’s tokenEndPoint as discovered in the
+OCM provider metadata.
+
+```
+POST {tokenEndPoint} HTTP/1.1
+Host: my-cloud-storage.org
+Date: Wed, 05 Nov 2025 14:00:00 GMT
+Content-Type: application/x-www-form-urlencoded
+Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
+Content-Length: 101
+Signature-Input: 
+    sig1=("@method" "@target-uri" "content-digest" "date"); \
+    created=1730815200; keyid="receiver.example.org#2025"; \
+    alg="rsa-sha256"
+Signature: sig1=:
+    bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP2rN3qD4tR5hC=:
+
+grant_type=authorization_code&
+client_id=receiver.example.org&
+code=ABCD1234
+```
+
+The request MUST be signed using an HTTP Message Signature
+[RFC9421].  The `client_id` identifies the Receiving Server and MUST be
+set to it’s fully qualified domain name.  The `code` parameter carries
+the authorization code that was issued by the Sending Server in the
+Share Creation Notification. It is allowed to send the additional
+parameters defined in [RFC6749] for the authorization_code grant type,
+but they MUST be ignored.
+
+##  Token Response
+
+If the request is valid and the code is accepted, the Sending Server
+MUST respond with HTTP 200 OK and a JSON object containing the issued
+token:
+
+```
+{
+  "access_token": "8f3d3f26-f1e6-4b47-9e3e-9af6c0d4ad8b",
+  "token_type": "Bearer",
+  "expires_in": 300
+}
+```
+The `access_token` is an opaque bearer credential with no internal
+structure visible to the Receiving Server.  The token authorizes the
+Receiving Server to access the shared resource using the appropriate
+transport protocol (e.g., WebDAV).  The `expires_in` value indicates
+the token lifetime in seconds.  No `refresh_token` is issued, instead
+the same request to the tokenEndPoint MUST be repeated before the
+access_token has expired, to recieve a new `access_token` that can then
+be used in the same manner.
+
+##  Error Responses
+
+If the request is invalid, the Sending Server MUST return an HTTP 400
+response with a JSON object containing an OAuth 2.0 error code
+[RFC6749]:
+```
+{ "error": "invalid_request" }
+```
+
+Permitted error codes are `invalid_request`, `invalid_client`,
+`invalid_grant`, `unauthorized_client` and `unsupported_grant_type`.
 
 # Share Deletion
 
@@ -1067,6 +1150,15 @@ The legacy format of an OCM Share Notification with shared secrets is
 only provided for backwards compatibility with existing implementations.
 Implementers SHOULD NOT use it and prefer short-lived tokens instead.
 
+##  Code Flow
+
+All `{tokenEndPoint}` requests MUST be transmitted over HTTPS and
+signed using HTTP Signatures.  Bearer tokens MUST be treated as 
+confidential and never logged, persisted beyond their lifetime, or
+transmitted over unsecured channels.
+
+
+
 # References
 
 ## Normative References
@@ -1089,14 +1181,12 @@ Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 "[Uniform Resource Identifier (URI): Generic Syntax
 ](https://datatracker.ietf.org/doc/html/rfc3986)", January 2005
 
+[RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
+https://datatracker.ietf.org/html/rfc6749)", October 2012.
+
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers 
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
-
-## Informative References
-
-[RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
-https://datatracker.ietf.org/html/rfc6749)", October 2012.
 
 # Appendix A: Multi-factor Authentication
 
