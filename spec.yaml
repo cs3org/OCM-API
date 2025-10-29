@@ -231,19 +231,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /token:
+  /{tokenEndPoint}:
     post:
       summary: Token Exchange endpoint
       description: >
         This optional endpoint allows to obtain a (potentially short-lived) bearer token in exchange for a code.
         See [Resource Access](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access)
-        for more details.
+        for more details. The actual endpoint URL is discovered via OCM provider metadata
+        (tokenEndPoint).
       requestBody:
         content:
-          application/json:
+          application/x-www-form-urlencoded:
             schema:
               $ref: "#/components/schemas/TokenRequest"
-        description: The JSON request body.
+        description: Form-encoded request body.
         required: true
       responses:
         "200":
@@ -252,7 +253,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TokenResponse"
-        "403":
+        "400":
           description: Token denied.
           content:
             application/json:
@@ -466,6 +467,12 @@ components:
                 -----BEGIN PUBLIC KEY-----
                 MII...QDD
                 -----END PUBLIC KEY-----
+        tokenEndPoint:
+          type: string
+          description: >
+            Optional URL path of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
+            If the `receive-code` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
+          example: /index.php/apps/sciencemesh/token
         inviteAcceptDialog:
           type: string
           description: >
@@ -554,7 +561,7 @@ components:
           type: string
           description: |
             A nonce to be exchanged for a (potentially short-lived) bearer token
-            at the Sending Server's `/token` endpoint.
+            at the Sending Server's {tokenEndPoint}.
         protocol:
           type: object
           description: |
@@ -637,9 +644,9 @@ components:
                         MFA-authenticated. This requirement MAY be used if the
                         recipient provider exposes the `enforce-mfa` capability.
                       - `use-code` requires the recipient to exchange the given
-                        `code` via a signed HTTPS request to `/token` at the Sending
-                        Server, in order to get a short-lived token to be used for
-                        subsequent access. This requirement MAY be used if the
+                        `code` via a signed HTTPS request to {tokenEndPoint} at the
+                        Sending Server, in order to get a short-lived token to be used
+                        for subsequent access. This requirement MAY be used if the
                         recipient provider exposes the `receive-code` capability.
                     enum:
                       - mfa-enforced
@@ -842,6 +849,10 @@ components:
           example: John Doe
     TokenRequest:
       type: object
+      required:
+        - grant_type
+        - client_id
+        - code
       properties:
         client_id:
           type: string
@@ -854,8 +865,14 @@ components:
           example: xyz
         grant_type:
           type: string
-          description: Must be set to 'ocm_authorization_code'
-          example: ocm_authorization_code
+          description: Must be set to 'authorization_code'
+          enum: ["authorization_code"]
+          example: authorization_code
+        redirect_uri:
+          type: string
+          description: >
+            Optional parameter that MUST be ignored by the server.
+          example: https://receiver.org/ocm/callback
     TokenResponse:
       type: object
       properties:
@@ -865,13 +882,9 @@ components:
           example: asdfgh
         token_type:
           type: string
-          description: Must be set to 'bearer'
-          example: bearer
+          description: Must be set to 'Bearer'
+          example: Bearer
         expires_in:
           type: number
           description: Number of seconds before this access_token will need to be refreshed.
-          example: 3600
-        refresh_token:
-          type: string
-          description: A refresh token
-          example: qwertyuiop
+          example: 300
