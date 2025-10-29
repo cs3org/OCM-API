@@ -1294,6 +1294,9 @@ format:
 }
 ```
 
+A Directory Service MUST sign its responses using httpsig [RFC9421], so
+clients can verify the authenticity of the response.
+
 # Acknowledgements
 
 Our deepest thanks and appreciation go to the people who started the
