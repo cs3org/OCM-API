@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-lopresti-open-cloud-mesh-07
+docname: draft-lopresti-open-cloud-mesh-06
 category: std
 
 ipr: trust200902
