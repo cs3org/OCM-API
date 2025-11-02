@@ -208,6 +208,14 @@ characters.
   Receiving Party on the modes of accessing the Resource.
 * __Share Requirements__ - Protocol-specific restrictions on the modes
   of accessing the Resource.
+* __Trusted Server__ - An OCM Server that is considered trustworthy by
+    another OCM Server, based on out-of-band information, federation
+    membership or prior interactions, SHOULD be recorded in an internal
+    registry of trusted servers, that SHOULD be updated over time based
+    on new information. The registry SHOULD include the FQDN of the 
+    trusted server and the Public Key used for HTTP Signatures. It MAY
+    also include additional metadata such as the inviteAcceptDialog URL
+    or supported capabilities.
 * __WAYF Page__ - A Where-Are-You-From page is a discovery service used
   to identify the OCM Server of an Invite Receiver.
 * __Directory Service__ - A third-party service that exposes a list of
