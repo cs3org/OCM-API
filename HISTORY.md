@@ -42,7 +42,9 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * In preparation for the IETF WG, a [charter](https://github.com/ietf-artarea/charters/tree/main/ocm) was submitted to define its mandate.
 * Presentation about the standardization efforts at [NORDUnet Community Workshop 2025](https://nordu.net/ncw2025/talks/#60203d81-3987-42e4-8232-6538410d3466).
 * The [IESG](https://www.ietf.org/about/groups/iesg) amended and approved the WG charter, and [voted](https://datatracker.ietf.org/doc/charter-ietf-ocm/ballot) the formation of the Working Group, which [became official on October 23rd, 2025](https://datatracker.ietf.org/doc/charter-ietf-ocm). **Version 1.2.2 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#122---2025-10-21---giuseppe-lo-presti-lopresticernch)** on the occasion, with all refinements accepted so far before the WG starts its mandate.
+* To gather interest on the just-formed WG, a [HotRFC talk](https://datatracker.ietf.org/meeting/124/materials/slides-124-hotrfc-sessa-10-open-cloud-mesh-00) is given at [IETF 124](https://datatracker.ietf.org/meeting/124/agenda).
 
 
 ### [Sovereign Tech](https://www.sovereign.tech) funded efforts
 * In October 2025 a [grant was awarded](https://www.sovereign.tech/programs/fund) with a set of milestones to implement several missing pieces and introduce automated testing in each vendor's CI pipeline, as well as to support the IETF standardization efforts. This engagement was first made public at the [Open Source at CERN in 2025/2026 event](https://indico.cern.ch/event/1546072), featuring a number of funding agencies including Sovereign Tech, with a [lightning talk](https://indico.cern.ch/event/1546072/contributions/6754920) about CERNBox and OCM.
+* Presentations and demonstrations about the OCM-based EOSC Federation of Cloud Storage Systems at the [EOSC Symposium 2025](https://indico.cern.ch/event/1543880/timetable).
