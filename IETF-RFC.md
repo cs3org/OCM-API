@@ -1014,7 +1014,8 @@ No user interaction or redirect is involved. [RFC6749]
 
 To obtain an access token, the Receiving Server MUST send an HTTP POST
 request to the Sending Server’s tokenEndPoint as discovered in the
-OCM provider metadata.
+OCM provider metadata, following section 4.4.2 of [RFC6749].  Here
+follows an example of such POST request:
 
 ```
 POST {tokenEndPoint} HTTP/1.1
@@ -1032,22 +1033,22 @@ Signature: sig1=:
 
 grant_type=authorization_code&
 client_id=receiver.example.org&
-code=ABCD1234
+code=my_secret_code
 ```
 
 The request MUST be signed using an HTTP Message Signature
 [RFC9421].  The `client_id` identifies the Receiving Server and MUST be
-set to it’s fully qualified domain name.  The `code` parameter carries
+set to its fully qualified domain name.  The `code` parameter carries
 the authorization code that was issued by the Sending Server in the
-Share Creation Notification. It is allowed to send the additional
-parameters defined in [RFC6749] for the authorization_code grant type,
+Share Creation Notification.  It is allowed to send the additional
+parameters defined in [RFC6749] for the `authorization_code` grant type,
 but they MUST be ignored.
 
 ##  Token Response
 
 If the request is valid and the code is accepted, the Sending Server
-MUST respond with HTTP 200 OK and a JSON object containing the issued
-token:
+MUST respond with HTTP 200 OK and a OAuth-compliant JSON object
+containing the issued token:
 
 ```
 {
@@ -1056,14 +1057,15 @@ token:
   "expires_in": 300
 }
 ```
+
 The `access_token` is an opaque bearer credential with no internal
 structure visible to the Receiving Server.  The token authorizes the
 Receiving Server to access the shared resource using the appropriate
 transport protocol (e.g., WebDAV).  The `expires_in` value indicates
 the token lifetime in seconds.  No `refresh_token` is issued, instead
 the same request to the tokenEndPoint MUST be repeated before the
-access_token has expired, to recieve a new `access_token` that can then
-be used in the same manner.
+`access_token` has expired, to recieve a new `access_token` that can
+then be used in the same manner.
 
 ##  Error Responses
 
