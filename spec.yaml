@@ -18,7 +18,7 @@ paths:
     get:
       summary: Discovery endpoint
       description: >
-        Following RFC 8615, this endpoint returns the properties and
+        Following [RFC8615], this endpoint returns the properties and
         capabilities offered by an OCM Server. This endpoint MUST be
         served at the OCM Server's root FQDN, e.g. as in
         `https://my-cloud-storage.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
@@ -108,9 +108,9 @@ paths:
             Retry-After:
               description: >
                 Indication for the client when the service could be requested
-                again in HTTP Date format as used by the  Internet Message
+                again in HTTP Date format as used by the Internet Message
                 Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the
-                number of seconds  (e.g. 3000 if you the service is expected to
+                number of seconds (e.g. 3000 if you the service is expected to
                 be available again within 50 minutes).
               schema:
                 type: string
@@ -424,7 +424,7 @@ components:
               - webdav-uri
               - protocol-object
               - invites
-              - receive-code
+              - exchange-token
           example:
             - webdav-uri
             - protocol-object
@@ -438,7 +438,7 @@ components:
             type: string
             enum:
               - http-request-signatures
-              - code
+              - token-exchange
               - denylist
               - allowlist
               - invite
@@ -471,7 +471,7 @@ components:
           type: string
           description: >
             Optional URL path of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
-            If the `receive-code` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
+            If the `exchange-token` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
           example: /index.php/apps/sciencemesh/token
         inviteAcceptDialog:
           type: string
@@ -557,11 +557,6 @@ components:
           description: >
             The expiration time for the share, in seconds of UTC time since
             Unix epoch. If omitted, it is assumed that the share does not expire.
-        code:
-          type: string
-          description: |
-            A nonce to be exchanged for a (potentially short-lived) bearer token
-            at the Sending Server's {tokenEndPoint}.
         protocol:
           type: object
           description: |
@@ -611,11 +606,8 @@ components:
                 sharedSecret:
                   type: string
                   description: >
-                    An optional secret to be used to access the resource, such
-                    as a bearer token. If a `code` is provided, it SHOULD be used
-                    instead via the code flow interaction, and the `sharedSecret`
-                    SHOULD be omitted. To prevent leaking it in logs it MUST NOT
-                    appear in any URI.
+                    A secret to be used to access the resource, such as a bearer token.
+                    To prevent leaking it in logs it MUST NOT appear in any URI.
                 permissions:
                   type: array
                   items:
@@ -640,17 +632,17 @@ components:
                       present it MUST NOT be empty. A recipient provider MUST reject
                       a share whose requirements it does not understand.
                       The following requirements are currently supported:
-                      - `mfa-enforced` requires the user accessing the resource to be
+                      - `must-use-mfa` requires the user accessing the resource to be
                         MFA-authenticated. This requirement MAY be used if the
                         recipient provider exposes the `enforce-mfa` capability.
-                      - `use-code` requires the recipient to exchange the given
-                        `code` via a signed HTTPS request to {tokenEndPoint} at the
+                      - `must-exchange-token` requires the recipient to exchange the given
+                        `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
                         Sending Server, in order to get a short-lived token to be used
-                        for subsequent access. This requirement MAY be used if the
-                        recipient provider exposes the `receive-code` capability.
+                        for subsequent access [RFC6749]. This requirement MAY be used if
+                        the recipient provider exposes the `exchange-token` capability.
                     enum:
-                      - mfa-enforced
-                      - use-code
+                      - must-use-mfa
+                      - must-exchange-token
             webapp:
               type: object
               properties:
