@@ -636,7 +636,7 @@ contain the following information about its OCM API:
   As implementations MUST accept Share Creation Notifications
   to be compliant, it is not necessary to expose that as a
   capability.
-  Example: `["receive-code", "webdav-uri"]`.  The array MAY
+  Example: `["exchange-token", "webdav-uri"]`.  The array MAY
   include for instance:
   _ `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
@@ -651,29 +651,29 @@ contain the following information about its OCM API:
   Invite Sender or Invite Receiver OCM Server.  This might be useful
   for suggesting to a user that existing contacts might be upgraded
   to the more secure (and possibly required) invite flow.
-  _ `"receive-code"` - to indicate that this OCM Server can receive a
-  `code` as part of a Share Creation Notification, and exchange it
-  for a bearer token at the Sending Server's tokenEndPoint.
+  _ `"exchange-token"` - to indicate that this OCM Server exposes a
+  [RFC6749]-compliant endpoint, which allows to exchange a secret
+  received in the protocol properties of a Share Creation Notification
+  for a short-lived bearer token.
   _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
   Page to facilitate the Invite flow.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a
   Share Creation Notification.
   As all Receiving Servers SHOULD require the use of TLS in API
   calls, it is not necessary to expose that as a criterium.
-  Example: `["http-request-signatures", "code"]`.  The array MAY
-  include for instance:
+  Example: `["http-request-signatures"]`.  The array MAY include
+  for instance:
   _ `"http-request-signatures"` - to indicate that API requests
   without http signatures will be rejected.
-  _ `"code"` - to indicate that API requests without code will be
-  rejected (i.e.  the `sharedSecret` in the protocol details will be
-  ignored).
+  _ `"token-exchange"` - to indicate that API requests without
+  token exchange will be rejected (see the [Code Flow](#code-flow)
+  section).
   _ `"denylist"` - some servers MAY be blocked based on their IP
   address
   _ `"allowlist"` - unknown servers MAY be blocked based on their IP
   address \* `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-
 * OPTIONAL: publicKey (object) - The signatory used to sign outgoing
   request to confirm its origin.
    The signatory is optional, but if present, it MUST contain
@@ -697,7 +697,7 @@ contain the following information about its OCM API:
 `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where
   the Sending Server can exchange a `code` for a bearer token.
-  Implementations that offer the `"receive-code"` capability MUST
+  Implementations that offer the `"exchange-token"` capability MUST
   provide this URL as well.
   Example: `"https://my-cloud-storage.org/ocm/token"`.
 
@@ -770,9 +770,6 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   The expiration time for the OCM share, in seconds
   of UTC time since Unix epoch.  If omitted, it is assumed
   that the share does not expire.
-* OPTIONAL code (string)
-  A nonce to be exchanged for a (potentially short-lived)
-  bearer token at the Sending Server's tokenEndPoint [RFC6749]
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are: - `webdav`, to access the data -
@@ -817,12 +814,10 @@ servers MAY only support `webdav`.
     SHOULD be relative, in which case the prefix
     exposed by the `/.well-known/ocm` endpoint MUST
     be used.  Absolute URIs are deprecated.
-  - OPTIONAL sharedSecret (string) - REQUIRED if no `code` field is
-    given for the Share as a whole (see above).  An
-    optional secret to be used to access the Resource,
-    such as a bearer token.
-    To prevent leaking it in logs it MUST NOT appear in
-    any URI.
+  - REQUIRED sharedSecret (string)
+    A secret to be used to access the Resource, such as
+    a bearer token.  To prevent leaking it in logs it
+    MUST NOT appear in any URI.
   - OPTIONAL permissions (array of strings) -
     The permissions granted to the sharee.  A subset
     of: - `read` allows read-only access including
@@ -831,13 +826,14 @@ servers MAY only support `webdav`.
     Resource.
   - OPTIONAL requirements (array of strings) -
     The requirements that the sharee MUST fulfill to
-    access the Resource.  A subset of: - `mfa-enforced` requires the
+    access the Resource.  A subset of: - `must-use-mfa` requires the
     consumer to be MFA-authenticated.  This MAY be used if the
     recipient provider exposes the `enforce-mfa`
-    capability.  - `use-code` requires the consumer to exchange
-    the given `code` via a signed HTTPS request.  This
-    MAY be used if the recipient provider exposes the
-    `receive-code` capability.
+    capability.  - `must-exchange-token` requires the recipient to
+    exchange the given `sharedSecret` via a signed HTTPS request
+    to the Sending Server's {tokenEndPoint} [RFC6749].
+    This MAY be used if the recipient provider exposes the
+    `exchange-token` capability.
 * Protocol details for `webapp` MAY contain:
   - REQUIRED uri (string)
     A URI to a client-browsable view of the Shared
