@@ -695,8 +695,8 @@ contain the following information about its OCM API:
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
   Page SHOULD redirect the end-user to
 `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
-* OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where
-  the Sending Server can exchange a `code` for a bearer token.
+* OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where the
+  Sending Server can exchange a secret for a short-lived bearer token.
   Implementations that offer the `"exchange-token"` capability MUST
   provide this URL as well.
   Example: `"https://my-cloud-storage.org/ocm/token"`.
@@ -961,48 +961,52 @@ notification that this happened.
 # Resource Access
 
 To access the Resource, the Receiving Server MAY use multiple ways,
-depending on the body of the Share Creation Notification.  The procedure
-is as follows:
+depending on the body of the Share Creation Notification and the
+protocol required for access.  The procedure is as follows:
 
 1.  The receiver MUST extract the OCM Server FQDN from the `sender`
     field of the received share, and MUST query the
-    [Discovery](#ocm-api-discovery) endpoint at that address: the
-    `resourceTypes[0].protocols.webdav` value is the
-    `<sender-ocm-path>` to be used in step 3.
-2.  If `code` is not empty, the receiver SHOULD make a signed POST
-    request to the path in the Sending Server’s tokenEndPoint, to
-    exchange the code for a short-lived bearer token, and then use that
-    bearer token to access the Resource (See the [Code Flow](
-    #code-flow) section).
-3.  If `protocol.name` = `webdav`, the receiver SHOULD inspect the
-    `protocol.options` property.  If it contains a `sharedSecret`, as in
-    the [legacy example](
-https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org#/paths/~1shares/post),
-    then the receiver SHOULD make a HTTP PROPFIND request to
-    `https://<sharedSecret>:@<sender-host><sender-ocm-path>`.  Note that
-    this access method, based on Basic Auth, is _deprecated_ and may be
-    removed in a future release of the Protocol.
-4.  Otherwise, if `protocol.name` = `multi`, the receiver MUST inspect
-    the `protocol.webdav.uri` property: if it's a complete URI, the
-    receiver MUST make a HTTP PROPFIND request against it to access the
-    Remote Resource.  If it only contains an identifier `<key>`, the
-    receiver MUST make a HTTP PROPFIND request to
-    `https://<sender-host><sender-ocm-path>/<key>` in order to access
-    the Remote Resource.  Additionally, the receiver MUST pass an
-    `Authorization: bearer` header with either the short-lived bearer
-    token obtained in step 2, if applicable, or the
-    `protocol.webdav.sharedSecret` value.
+    [Discovery](#ocm-api-discovery) endpoint at that address: let
+    `<sender-ocm-path>` be the `resourceTypes[0].protocols.webdav` value
+    to be used later, if defined.
+2.  If `protocol.name` is `multi`, the receiver MUST inspect the
+    `protocol.{protocolName}` properties corresponding to the protocol
+    of concern, and act according to its semantics.  For the specific
+    case where `protocol.webdav` is available and the receiver wants
+    to use it, the following steps are to be followed.
+3.  The `protocol.webdav.requirements` MUST be inspected:
+3.1. If it includes `must-exchange-token`, the receiver MUST make a
+     signed POST request to the path in the Sending Server’s
+     {tokenEndPoint}, to exchange the `protocol.webdav.sharedSecret`
+     token for a short-lived bearer token, and then use that bearer
+     token to access the Resource (See the [Code Flow](#code-flow)
+     section).
+3.2. If it includes `must-use-mfa`, the Receiving Server MUST ensure
+     that the Receiving Party has been authenticated with MFA, or prompt
+     the consumer in order to elevate their session, if applicable.
+4. The `protocol.webdav.uri` property MUST now be inspected: if it's a
+   complete URI, the receiver MUST make a HTTP PROPFIND request against
+   it to access the Remote Resource, otherwise it is to be taken as an
+   identifier `<id>`, in which case the receiver MUST make a HTTP
+   PROPFIND request to: `https://<sender-host><sender-ocm-path>/<id>`
+   in order to access to the Remote Resource.  The receiver MUST pass
+   an `Authorization: bearer` header with either the short-lived bearer
+   token obtained in step 3.1., if applicable, or the
+   `protocol.webdav.sharedSecret` value.
+5. Otherwise, if `protocol.name` is `webdav` the receiver SHOULD inspect
+   the `protocol.options` property: if `protocol.options.sharedSecret`
+   is defined, then the receiver SHOULD make a HTTP PROPFIND request to
+   `https://<sharedSecret>:@<sender-host><sender-ocm-path>`.  Note that
+   this access method, based on Basic Auth, is _deprecated_ and may be
+   removed in a future release of the Protocol.  If a secret cannot be
+   identified (e.g. because `protocol.options` is undefined), then
+   the receiver SHOULD discard the share as invalid.
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
 its relative path to that URL.  In other words, the Sending Server
 SHOULD support requests to URLs such as
 `https://<sender-host><sender-ocm-path>/path/to/resource.txt`.
-
-Additionally, if `protocol.<protocolname>.requirements` includes
-`mfa-enforced`, the Receiving Server MUST ensure that the Receiving
-Party has been authenticated with MFA, or prompt the consumer in order
-to elevate their session, if applicable.
 
 
 # Code Flow
@@ -1017,7 +1021,7 @@ No user interaction or redirect is involved. [RFC6749]
 ##  Token Request
 
 To obtain an access token, the Receiving Server MUST send an HTTP POST
-request to the Sending Server’s tokenEndPoint as discovered in the
+request to the Sending Server’s {tokenEndPoint} as discovered in the
 OCM provider metadata, following section 4.4.2 of [RFC6749].  Here
 follows an example of such POST request:
 
@@ -1043,7 +1047,7 @@ code=my_secret_code
 The request MUST be signed using an HTTP Message Signature
 [RFC9421].  The `client_id` identifies the Receiving Server and MUST be
 set to its fully qualified domain name.  The `code` parameter carries
-the authorization code that was issued by the Sending Server in the
+the authorization secret that was issued by the Sending Server in the
 Share Creation Notification.  It is allowed to send the additional
 parameters defined in [RFC6749] for the `authorization_code` grant type,
 but they MUST be ignored.
@@ -1067,7 +1071,7 @@ structure visible to the Receiving Server.  The token authorizes the
 Receiving Server to access the shared resource using the appropriate
 transport protocol (e.g., WebDAV).  The `expires_in` value indicates
 the token lifetime in seconds.  No `refresh_token` is issued, instead
-the same request to the tokenEndPoint MUST be repeated before the
+the same request to the {tokenEndPoint} MUST be repeated before the
 `access_token` has expired, to recieve a new `access_token` that can
 then be used in the same manner.
 

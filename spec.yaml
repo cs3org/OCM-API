@@ -235,7 +235,7 @@ paths:
     post:
       summary: Token Exchange endpoint
       description: >
-        This optional endpoint allows to obtain a (potentially short-lived) bearer token in exchange for a code.
+        This optional endpoint allows to obtain a (potentially short-lived) bearer token in exchange for a secret.
         See [Resource Access](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access)
         for more details. The actual endpoint URL is discovered via OCM provider metadata
         (tokenEndPoint).
@@ -372,30 +372,26 @@ components:
               protocols:
                 type: object
                 description: >
-                  The supported protocols to access shared resources at this
-                  endpoint.
+                  The supported protocols to access shared resources at this endpoint.
                   Implementations MUST support at least `webdav` for `file` resources,
                   any other combination of resources and protocols is optional.
                 properties:
                   webdav:
                     type: string
                     description: >
-                      The top-level WebDAV path at this endpoint. In order to
-                      access
+                      The top-level WebDAV path at this endpoint. In order to access
                       a remote shared resource, implementations SHOULD use this path
                       as a prefix (see sharing examples).
                   webapp:
                     type: string
                     description: >
-                      The top-level path for web apps at this endpoint. In order
-                      to
+                      The top-level path for web apps at this endpoint. In order to
                       access a remote web app, implementations SHOULD use this path
                       as a prefix (see sharing examples).
                   datatx:
                     type: string
                     description: >
-                      The top-level path to be used for data transfers. In order
-                      to
+                      The top-level path to be used for data transfers. In order to
                       access a remote shared resource, implementations SHOULD use
                       this path as a prefix (see sharing examples). In addition,
                       implementations are expected to execute the transfer using
@@ -403,8 +399,7 @@ components:
                 additionalProperties:
                     type: string
                     description: >
-                      Any additional protocol supported for this resource type
-                      MAY
+                      Any additional protocol supported for this resource type MAY
                       be advertised here, where the value MAY correspond to a top-level
                       URI to be used for that protocol.
                 example:
@@ -673,13 +668,10 @@ components:
                   type: string
                   description: >
                     An optional secret to be used to access the remote web app, such as
-                    a bearer token. To prevent leaking it in logs it MUST NOT appear
-                    in any URI. If a `code` is provided, then the sending host MUST
-                    accept the short-lived bearer token when serving the web app,
-                    which can be exchanged in the code flow interaction. The exchange
-                    MAY already have happened if the recipient accessed the underlying
-                    resource via WebDAV, in a multi-protocol scenario. In this case,
-                    the `sharedSecret` SHOULD be omitted.
+                    a bearer token.  To prevent leaking it in logs it MUST NOT appear
+                    in any URI.  In a multi-protocol share scenario with WebDAV, the
+                    access requirements provided in the `webdav` part MUST apply for
+                    `webapp` accesses as well.
             datatx:
               type: object
               properties:
@@ -687,10 +679,10 @@ components:
                   type: string
                   description: >
                     An optional secret to be used to access the resource, such as
-                    a bearer token. If a `code` is provided, it SHOULD be used
-                    instead via the code flow interaction, and the `sharedSecret`
-                    SHOULD be omitted. To prevent leaking it in logs it MUST NOT
-                    appear in any URI.
+                    a bearer token.  To prevent leaking it in logs it MUST NOT
+                    appear in any URI.  In a multi-protocol share scenario with WebDAV,
+                    the access requirements provided in the `webdav` part MUST apply
+                    for `datatx` transfers as well.
                 srcUri:
                   type: string
                   description: >
@@ -853,7 +845,7 @@ components:
           example: receiver.org
         code:
           type: string
-          description: Code received in the Share Creation Notification
+          description: Secret received in the Share Creation Notification
           example: xyz
         grant_type:
           type: string
