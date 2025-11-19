@@ -85,60 +85,443 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
 described in BCP 14 [RFC2119] [RFC8174] when, and only when,
 they appear in all capitals, as shown here.
 
-We define the following concepts, with some non-normative references to
-related concepts from OAuth [RFC6749] and elsewhere:
+## Functions
 
-* __Resource__ - The piece of data or interaction to which access is
-  being granted, including but not limited to: a file or folder, a video
-  call, a contact, a printer queue, etc.
-* __Remote Resource__ - A Resource provided by the Sending Server.
-* __Shared Resource__ - A Resource shared by an OCM Server, becoming a
-  Remote Resource if accepted by the Invite Receiver OCM Server.
-* __Share__ - A policy rule stating that certain actors have specific
-  access rights to a Resource; it MAY also refer to a record in a
-  database representing this rule.
-* __Sending Party__ - A person or party who is authorized to create
-  Shares; similar to "Resource Owner" in OAuth [RFC6749], identified by
-  its OCM Address.
-* __Receiving Party__ - A person, group or party who is granted access
-  to the Resource through the Share; similar to "Requesting Party / RqP"
-  in OAuth-UMA, identified by its OCM Address.
-* __Share Creation Notification__ - A server-to-server request from the
-  sending server to the receiving server, notifying the receiving server
-  that a Share has been created.
-* __Sending Server__ - The server that:
-  - holds the Resource ("file server" or "Entreprise File Sync and Share
-    (EFSS) server" role),
-  - provides access to it (by exposing at least one "API"),
-  - takes the decision to create the Share based on user interface
-    gestures from the Sending Party (the "Authorization Server" role in
-    OAuth [RFC6749]),
-  - takes the decision about authorizing attempts to access the Resource
-    (the "Resource Server" role in OAuth [RFC6749]),
-  - sends out Share Creation Notifications when appropriate (see below).
-* __Receiving Server__ - The server that:
-  - receives Share Creation Notifications (see below),
-  - actively or passively notifies the receiving user or group of any
-    incoming Share Creation Notification,
-  - acts as an API client, allowing the receiving user to access the
-    Resource through an API (e.g., WebDAV [RFC4918]) of the sending
-    server.
-* __Sending Gesture__ - A user interface interaction from the Sending
-  Party to the Sending Server, conveying the intention to create a
-  Share.
-* __Share Creation__ - The addition of a Share to the database state of
-  the Sending Server, in response to a successful Sending Gesture or for
-  another reason.
-* __Sharing User__ - A user providing access to a Resource through a
-  Share.
-* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`.
-* __OCM Server__ - A server that supports OCM.
-* __OCM API Discovery__ - Process of evaluating properties of a Remote
-  Resource, after establishing contact with an OCM Server.
-* __Discovering Server__ - A server that tries to obtain information in
-  OCM API Discovery.
+Open Cloud Mesh defines distinct functions, it is not neccessary for an
+implementation to provide all of them.  In fact, it may be useful to
+have separate implementations for different functions.
+
+### OCM Provider
+
+An OCM Provider is an entity that can take on the two _roles_ of a
+_Sending Server_ and a _Receiving Server_. An OCM Provider MUST be a
+_Discoverable Server_ and SHOULD be able to receive _Notifications_.
+
+### OCM Directory Service
+
+An OCM Directory Service is an entity that exposes information about a
+_Federation_ of OCM Providers.
+
+## Roles
+
+Open Cloud Mesh defines two distinct roles that an OCM Provider MUST
+take on: the _Sending Server_ role and the _Receiving Server_ role.
+
+### Sending Server
+
+A Sending Server is an OCM Provider that holds Resources and exposes
+APIs to allow access to them.  It allows its users to create _Shares_
+or _Invites_ to give other users access to those Resources. A Sending
+Server MAY provide its users with the ability to generate _Invites_ to
+establish contact with other users on other OCM Providers. When doing
+so it MAY provide a _WAYF Page_ to facilitate the Invite Flow. The WAYF
+page MAY be limited to a set of trusted OCM Providers, for instance
+those in the same _Federation_.
+
+
+### Receiving Server
+
+A Receiving Server is an OCM Provider that receives _Share_ Creation
+Notifications from Sending Servers, notifies its users about incoming
+_Shares_, and acts as an API client to allow its users to access Remote
+Resources. It MAY provide it's users with an _Address Book_ of
+_Contacts_ and the ability to accept _Invites_.
+
+## Object models
+
+An implementor of OCM MAY choose any internal object model to represent
+an _Address Book_, a _Contact_, an _Invite_, a _Provider_, a _Share_,
+and  a _User_.  However, the following diagrams are provided to clarify
+the concepts and their relationships.
+
+### Address Book
+
+An _OCM Provider_ MAY offer its _Users_ an address book tool, where OCM
+Addresses can be stored over time in a labeled and/or searchable way.
+This decouples the act by which the OCM Address string is passed into
+the Sending Server's database from the selection of the Receiving Party
+in preparation for Share Creation.
+
+The Address Book entity maintains a collection of contacts for a user
+within the OCM provider. It serves as the primary mechanism for managing
+federated relationships between users across different OCM Servers.
+_Contacts_ may be added to the Address Book through the Invite flow or
+direct entry. It provides a convenient way for users to organize and
+access their federated contacts, and MAY allow users to generate
+_Invites_.
+
+```
++-----------------+
+|  Address Book   |
+|                 |
+| - owner: User   |--------+
+| - contacts: []  |        |
++-----------------+        |
+       |                   |
+       | contains          | generates
+       | 0..*              |
+       v                   v
++-----------------+  +----------------+
+|    Contact      |  |    Invites     |
++-----------------+  +----------------+
+```
+#### Properties
+
+* __owner__: Reference to the User who owns this address book
+* __contacts__: Array of Contact objects stored in the address book
+
+#### Relationships
+
+* An Address Book belongs one or more Users.
+* An Address Book contains zero or more Contacts.
+* An Address Book MAY allow its owner to generate Invites.
+
+### Contact
+A Contact represents a federated user relationship established through
+the OCM protocol. Contacts are stored in _Address Books_ and may be
+created through the Invite process or via direct entry. A Contact MAY
+of course contain much more detailed information about the referenced
+user.
+
+```
++-----------------+
+|    Contact      |
++-----------------+
+| - addedDate     |
+| - email         |
+| - name          |
+| - ocmAddress    |
+| - trusted       |
++-----------------+
+       ^
+       | referenced by
+       |
++-----------------+
+|  Address Book   |
++-----------------+
+```
+#### Properties
+
+* __addedDate__: Timestamp of when contact was added
+* __email__: Contact email address (informational)
+* __name__: Human-readable display name
+* __ocmAddress__: Full OCM Address
+* __trusted__: Indicates if contact has been added through the
+               Invite flow (trusted), via direct entry (untrusted)
+               or is blocked
+* __userID__: The identifier of the contact at their OCM Server
+
+##### Contact States
+
+* __Blocked__: Contact blocked from sending Shares
+* __Trusted__: Established through completed Invite flow
+* __Untrusted__: Added directly without Invite verification
+
+#### Relationships
+
+* A Contact may be referenced by one or more Address Books.
+
+### Invite
+
+The Invite entity represents the bidirectional trust establishment
+mechanism in OCM. It facilitates secure contact exchange between users
+on different OCM Servers.
+
+```
++-----------------+
+|     Invite      |
++-----------------+
+| - acceptedTime  |
+| - createdTime   |
+| - sender: User  |
+| - status        |
+| - token         |
++-----------------+
+       |
+       | generated by
+       v
++-----------------+
+|   Address Book  |
++-----------------+
+
+```
+#### Properties
+
+* __acceptedTime__: Timestamp of invite acceptance (if accepted)
+* __createdTime__: Timestamp of invite creation
+* __sender__: Reference to the User who sent the Invite
+* __status__: Current state (pending, accepted, expired, revoked)
+* __token__: Unique, hard-to-guess string generated by Invite Sender
+             OCM Server
+
+##### Invite States
+
+* __Accepted__: Invite successfully accepted by Invite Receiver
+* __Expired__: Invite no longer valid after a certain time
+* __Pending__: Invite created but not yet accepted
+* __Revoked__: Invite invalidated by Invite Sender before acceptance
+
+#### Relationships
+
+* An Invite is generated by an Address Book entry action.
+* An Invite is associated with exactly one User as the sender.
+
+### Provider
+
+The Provider entity represents an OCM Server's capabilities and
+configuration as discovered through the OCM API Discovery process. It
+represents both the Sending Server and Receiving Server roles, and an
+implementor might find it useful to have a Provider object model to
+store the discovered information about federation peers or other remote
+OCM Providers.
+
+```
+            +-----------------------+
+            |      Provider         |
+            |    (OCM Server)       |
+            +-----------------------+
+            | - apiVersion          |
+            | - enabled: bool       |
+            | - endPoint            |
+            | - inviteAcceptDialog  |
+            | - provider            |
+            | - publicKey           |
+            | - tokenEndpoint       |
+            +-----------------------+
+                   |
+                   | exposes
+                   |
+         +---------+---------+----------------------+
+         |                   |                      |
+         v                   v                      v                   
++------------------+  +------------------+   +------------------+       
+| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]    |       
++------------------+  +------------------+   +------------------+
+| - name           |  | - enforce-mfa    |   | - allowlist      |
+| - shareTypes[]   |  | - exchange-token |   | - denylist       |
+| - protocols{}    |  | - invite-wayf    |   | - http-signatures|
++------------------+  | - invites        |   | - invite         |
+       |              | - webdav-uri     |   | - token-exchange |
+       |              +------------------+   +------------------+
+       | supports                            
+       v                                     
++------------------+                         
+|   Protocols      |
++------------------+
+| - datatx         |
+| - webapp         |
+| - webdav         |
+| - ...            |
++------------------+
+```
+
+#### Properties
+
+* __apiVersion__: Version string of supported OCM API
+* __capabilities__: Optional features supported
+* __criteria__: Requirements for accepting Share Creation Notifications
+* __enabled__: Boolean indicating if OCM service is active
+* __endPoint__: Base URI for OCM API endpoints
+* __provider__: Friendly branding name
+* __publicKey__: Optional public key for HTTP signatures
+* __resourceTypes__: Array of supported resource types with protocols
+
+### Share
+
+The Share entity represents a policy granting access to a _Resource_
+from a Sending Party to a Receiving Party.
+
+
+```
++-----------------+                      +------------------+
+|  Sending Party  |                      | Receiving Party  |
++-----------------+                      +------------------+
+       |                                        |
+       | creates                                | accesses
+       v                                        v
++------------------+     notification    +------------------+ 
+|     Share        |-------------------->| Receiving Server |
++------------------+                     +------------------+
+| - expiration     |                            | 
+| - name           |                            | mediates access to
+| - owner          |                            v 
+| - permissions[]  |                     +------------------+
+| - protocol       |                     | Resource (remote)|
+| - providerId     |                     +------------------+
+| - requirements[] |
+| - resourceType   |
+| - sender         |
+| - shareType      |
+| - shareWith      |
+| - state          |
++------------------+
+       |
+       | governs access to
+       v
++-----------------+
+|    Resource     |
++-----------------+
+```
+
+#### Properties
+
+* __expiration__: Optional expiration timestamp
+* __name__: Human-readable name of the shared Resource
+* __owner__: OCM Address of the Resource owner
+* __permissions__: Array of granted permissions (read, write, share)
+* __protocol__: Access protocol configuration (webdav, webapp, datatx)
+* __providerId__: Unique identifier for the Share at the provider
+* __requirements__: Array of access requirements (must-use-mfa,
+                    must-exchange-token)
+* __resourceType__: Type of resource (file, folder, calendar, etc.)
+* __sender__: OCM Address of the party creating the Share
+* __shareType__: Type of recipient (user, group, federation)
+* __shareWith__: OCM Address of the Receiving Party
+* __state__: Current state of the Share (accepted, pending, deleted)
+
+##### Share States
+
+* __Accepted__: Share accepted, Resource accessible
+* __Deleted__: Share removed or expired
+* __Pending__: Awaiting acceptance by Receiving Party
+
+#### Relationships
+
+* A Share is created by a User (local).
+* A Share is received by a User (remote).
+* A Share governs access to a Resource.
+
+### User
+
+The User entity represents the party in OCM who can send and receive
+Shares and Invites and manage Contacts, and interact with Resources.
+
+```
+                     +-----------------------+
+                     |        User           |
+                     +-----------------------+
+                     | - email               |
+                     | - name                |
+                     | - ocmAddress          |
+                     | - uid                 |
+                     +-----------------------+
+                            |
+                  +---------+---------+
+                  |                   |
+                  | owns              | participates in
+                  v                   v
+         +------------------+  +------------------+
+         |  Address Book    |  |    Shares        |
+         +------------------+  +------------------+
+         | - contacts[]     |  | - receiving[]    |
+         +------------------+  | - sending[]      |
+                  |            +------------------+
+                  |
+                  | issues
+                  v
+         +------------------+
+         |    Invites       |
+         +------------------+
+         | - sent[]         |
+         +------------------+
+```
+
+#### Properties
+
+* __email__: User's email address
+* __name__: Human-readable display name
+* __ocmAddress__: Full OCM Address
+* __uid__: Unique identifier within the OCM Provider
+
+#### Relationships
+
+* A User owns one or more Address Book(s).
+* A User issues zero or more Invites.
+* A User participates in zero or more Shares as Sending or Receiving
+  Party.
+
+### Resource
+
+The Resource entity represents the data or service being shared between
+OCM Providers. It is the target of Shares and is accessed by the
+Receiving Party through the Sending Server's API. In general a Resource
+is a much more complex entity, but for the purpose of OCM we only need
+to model a few key properties.
+
+```
++-----------------+
+|    Resource     |
++-----------------+
+| - location      |
+| - owner: User   |
+| - resourceID    |
+| - type          |
++-----------------+
+       ^
+       |
+       | accessed via
+       |
+       v
++------------------+
+|     Share        |
++------------------+
+```
+
+#### Properties
+
+* __location__: URI or path to access the Resource
+* __owner__: Reference to the User who owns the Resource
+* __resourceID__: Unique identifier of the Resource
+* __type__: Type of Resource (file, folder, calendar, etc.)
+
+
+## Defined Terms
+
+We define the following concepts (in alphabetical order), with some
+non-normative references to related concepts from OAuth [RFC6749] and
+elsewhere:
+
+* __Directory Service__ - A third-party service that exposes a list of
+  trusted OCM Servers.
 * __Discoverable Server__ - A server that tries to supply information in
   OCM API Discovery.
+* __Federation__ - A group of OCM Providers that have established
+  mutual trust and agree on certain policies for interaction. A
+  Federation MAY be facilitated by a Directory Service.
+* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`.
+* __Invite Acceptance Gesture__ - Gesture from the Invite Receiver to
+  the Invite Receiver OCM Server, supplying the Invite Token as well as
+  the OCM Address of the Invite Sender, effectively allowlisting the
+  Invite Sender OCM Server for sending Share Creation Notifications to
+  the Invite Receiver OCM Server.
+* __Invite Acceptance Response__ - HTTP response to the Invite
+  Acceptance Request.
+* __Invite Acceptance Request__ - API call from the Invite Receiver OCM
+  Server to the Invite Sender OCM Server, supplying the Invite Token as
+  well as the OCM Address of the Invite Receiver, effectively
+  allowlisting the Invite Sender OCM Server for sending Share Creation
+  Notifications to the Invite Receiver OCM Server.
+* __Invite Creation Gesture__ - Gesture from the Invite Sender to the
+  Invite Sender OCM Server, resulting in the creation of an Invite
+  Token.
+* __Invite Message__ - Out-of-band message used to establish contact
+  between parties and servers in the Invite Flow, containing an Invite
+  Token (see below) and the Invite Sender's OCM Address.
+* __Invite Receiver__ - The party receiving an Invite, identified by its
+  OCM Address.
+* __Invite Receiver OCM Server__ - The server holding an address book
+  used by the Invite Receiver, to which details of the Invite Sender are
+  to be added.
+* __Invite Sender__ - The party sending an Invite, identified by its
+  OCM Address.
+* __Invite Sender OCM Server__ - The server holding an address book
+  used by the Invite Sender, to which details of the Invite Receiver are
+  to be added.
+* __Invite String__ - A base64 encoded string containing an Invite Token
+  and the FQDN of an Invite Sender OCM Server joined by an `@`-sign.
+* __Invite Token__ - A hard-to-guess string used in the Invite Flow,
+  generated by the Invite Sender OCM Server and linked uniquely to the
+  Invite Sender's OCM Address.
 * __OCM Address__ - identifies a user or group "at" an OCM Server.
 The OCM Address contains a server specific Party identifier, a host
 locating the OCM Server and an optional port. The OCM Address is not a
@@ -166,41 +549,52 @@ characters.
     port via the Well-Known [RFC8615] path `/.well-known/ocm`. The OCM 
     Address MUST NOT contain a path.
 
+* __OCM API Discovery__ - Process of evaluating properties of a Remote
+  Resource, after establishing contact with an OCM Server.
+* __OCM Server__ - A server that has the OCM Provider function.
+* __Discovering Server__ - A server that tries to obtain information in
+  OCM API Discovery.
 * __OCM Notification__ - A message from the Receiving Server to the
   Sending Server or vice versa, using the OCM Notifications endpoint.
-* __Invite Message__ - Out-of-band message used to establish contact
-  between parties and servers in the Invite Flow, containing an Invite
-  Token (see below) and the Invite Sender's OCM Address.
-* __Invite Sender__ - The party sending an Invite, identified by its
-  OCM Address.
-* __Invite Receiver__ - The party receiving an Invite, identified by its
-  OCM Address.
-* __Invite Sender OCM Server__ - The server holding an address book
-  used by the Invite Sender, to which details of the Invite Receiver are
-  to be added.
-* __Invite Receiver OCM Server__ - The server holding an address book
-  used by the Invite Receiver, to which details of the Invite Sender are
-  to be added.
-* __Invite Token__ - A hard-to-guess string used in the Invite Flow,
-  generated by the Invite Sender OCM Server and linked uniquely to the
-  Invite Sender's OCM Address.
-* __Invite String__ - A base64 encoded string containing an Invite Token
-  and the FQDN of an Invite Sender OCM Server joined by an `@`-sign.
-* __Invite Creation Gesture__ - Gesture from the Invite Sender to the
-  Invite Sender OCM Server, resulting in the creation of an Invite
-  Token.
-* __Invite Acceptance Gesture__ - Gesture from the Invite Receiver to
-  the Invite Receiver OCM Server, supplying the Invite Token as well as
-  the OCM Address of the Invite Sender, effectively allowlisting the
-  Invite Sender OCM Server for sending Share Creation Notifications to
-  the Invite Receiver OCM Server.
-* __Invite Acceptance Request__ - API call from the Invite Receiver OCM
-  Server to the Invite Sender OCM Server, supplying the Invite Token as
-  well as the OCM Address of the Invite Receiver, effectively
-  allowlisting the Invite Sender OCM Server for sending Share Creation
-  Notifications to the Invite Receiver OCM Server.
-* __Invite Acceptance Response__ - HTTP response to the Invite
-  Acceptance Request.
+* __Receiving Party__ - A person, group or party who is granted access
+  to the Resource through the Share; similar to "Requesting Party / RqP"
+  in OAuth-UMA, identified by its OCM Address.
+* __Receiving Server__ - The server that:
+  - receives Share Creation Notifications (see below),
+  - actively or passively notifies the receiving user or group of any
+    incoming Share Creation Notification,
+  - acts as an API client, allowing the receiving user to access the
+    Resource through an API (e.g., WebDAV [RFC4918]) of the sending
+    server.
+* __Remote Resource__ - A Resource provided by the Sending Server.
+* __Resource__ - The piece of data or interaction to which access is
+  being granted, including but not limited to: a file or folder, a video
+  call, a contact, a printer queue, etc.
+* __Sending Gesture__ - A user interface interaction from the Sending
+  Party to the Sending Server, conveying the intention to create a
+  Share.
+* __Sending Party__ - A person or party who is authorized to create
+  Shares; similar to "Resource Owner" in OAuth [RFC6749], identified by
+  its OCM Address.
+* __Sending Server__ - The server that:
+  - holds the Resource ("file server" or "Entreprise File Sync and Share
+    (EFSS) server" role),
+  - provides access to it (by exposing at least one "API"),
+  - takes the decision to create the Share based on user interface
+    gestures from the Sending Party (the "Authorization Server" role in
+    OAuth [RFC6749]),
+  - takes the decision about authorizing attempts to access the Resource
+    (the "Resource Server" role in OAuth [RFC6749]),
+  - sends out Share Creation Notifications when appropriate (see below).
+* __Share__ - A policy rule stating that certain actors have specific
+  access rights to a Resource; it MAY also refer to a record in a
+  database representing this rule.
+* __Share Creation__ - The addition of a Share to the database state of
+  the Sending Server, in response to a successful Sending Gesture or for
+  another reason.
+* __Share Creation Notification__ - A server-to-server request from the
+  sending server to the receiving server, notifying the receiving server
+  that a Share has been created.
 * __Share Name__ - A human-readable string, provided by the Sending
   Party or the Sending Server, to help the Receiving Party understand
   which Resource the Share grants access to.
@@ -208,6 +602,10 @@ characters.
   Receiving Party on the modes of accessing the Resource.
 * __Share Requirements__ - Protocol-specific restrictions on the modes
   of accessing the Resource.
+* __Shared Resource__ - A Resource shared by an OCM Server, becoming a
+  Remote Resource if accepted by the Invite Receiver OCM Server.
+* __Sharing User__ - A user providing access to a Resource through a
+  Share.
 * __Trusted Server__ - An OCM Server that is considered trustworthy by
     another OCM Server, based on out-of-band information, federation
     membership or prior interactions, SHOULD be recorded in an internal
@@ -218,8 +616,6 @@ characters.
     or supported capabilities.
 * __WAYF Page__ - A Where-Are-You-From page is a discovery service used
   to identify the OCM Server of an Invite Receiver.
-* __Directory Service__ - A third-party service that exposes a list of
-  trusted OCM Servers.
 
 # General Flow
 
@@ -255,14 +651,6 @@ Address with the Sending Party through some out-of-band means, and the
 Sending Party enters this string into the user interface of the Sending
 Server, by means of typing or pasting into an HTML form, or clicking a
 link to a URL that includes the string in some form.
-
-## Address books
-
-The Sending Server MAY offer the Sending Party an address book tool,
-where OCM Addresses can be stored over time in a labeled and/or
-searchable way.  This decouples the act by which the OCM Address string
-is passed into the Sending Server's database from the selection of the
-Receiving Party in preparation for Share Creation.
 
 ## Public Link Flow
 
@@ -314,6 +702,34 @@ Share Creation Notification from an unknown Sending Party is received
   Sender OCM Server using generic OCM API Discovery (see section below)
 * the Invite Receiver OCM Server sends the Invite Acceptance Request to
   the Invite Sender OCM Server
+
+```
+Invite Sender                                    Invite Receiver
+OCM Server                                       OCM Server
++-------------+                                  +-------------+
+|   Server    |                                  |   Server    |
++-------------+                                  +-------------+
+      |                                                 |
+      | generates                                       | processes
+      v                                                 ^
++-------------+      Invite Message (OOB)        +-------------+
+|   Invite    |--------------------------------->|   Invite    |
+|   Token     |                                  |  Reception  |
++-------------+                                  +-------------+
+      |                                                 |
+      |                                                 |
+      v                                                 v
++-------------+      Invite Acceptance Request   +-------------+
+|  Contact    |<---------------------------------|  Accepting  |
+|   Added     |                                  |   Invite    |
++-------------+                                  +-------------+
+                                                        |
+                                                        v
+                                                 +-------------+
+                                                 |  Contact    |
+                                                 |   Added     |
+                                                 +-------------+
+```
 
 ### Invite Acceptance Request Details
 
