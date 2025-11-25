@@ -1,10 +1,10 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-lopresti-open-cloud-mesh-08
+docname: draft-ietf-ocm-open-cloud-mesh-00
 category: std
 
 ipr: trust200902
-area: Security
+area: Applications and Real-Time
 keyword: Internet-Draft
 
 stand_alone: yes

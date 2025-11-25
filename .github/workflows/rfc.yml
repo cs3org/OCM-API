@@ -18,8 +18,8 @@ jobs:
       - name: Install kramdown-rfc
         run: gem install --no-document kramdown-rfc
 
-      - name: Bump I-D version
-        run: perl -pe 's/open-cloud-mesh-(\d+)/"open-cloud-mesh-" . sprintf("%02d", $1 + 1)/e' -i IETF-RFC.md || exit -1
+     #- name: Bump I-D version
+     #  run: perl -pe 's/open-cloud-mesh-(\d+)/"open-cloud-mesh-" . sprintf("%02d", $1 + 1)/e' -i IETF-RFC.md || exit -1
 
       - name: Convert Markdown to XML and save output
         id: convert
