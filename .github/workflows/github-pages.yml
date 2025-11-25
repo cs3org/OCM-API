@@ -26,6 +26,7 @@ jobs:
             --metadata title="README" \
             -o dist/index.html
 
+          cp ./logo/OpenCloudMesh-text-vertical-300x116.png ./dist/logo.png
           cp -R ./logo ./dist/logo
           cp ./docs.html ./dist/docs.html
       - name: Upload Pages artifact
