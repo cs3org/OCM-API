@@ -57,6 +57,7 @@
 
       const script = document.createElement('script');
       script.src = redocScriptUrl;
+      script.type = 'module';
       script.async = true;
       script.defer = true;
       document.body.appendChild(script);
