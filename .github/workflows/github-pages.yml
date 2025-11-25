@@ -17,7 +17,7 @@ jobs:
       - name: Build site
         run: |
           rm -rf dist
-          mkdir -p dist
+          mkdir -p dist/scripts
 
           pandoc README.md \
             --from=gfm \
@@ -28,7 +28,7 @@ jobs:
 
           cp -R ./logo ./dist/logo
           cp ./docs.html ./dist/docs.html
-
+          cp ./scripts/scripts/redoc.standalone-v3.0.0-rc.0.js ./dist/scripts/redoc.standalone-v3.0.0-rc.0.js
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
