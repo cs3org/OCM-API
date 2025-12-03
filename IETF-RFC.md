@@ -653,6 +653,9 @@ contain the following information about its OCM API:
   for a short-lived bearer token.
   _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
   Page to facilitate the Invite flow.
+  _ `"http-sig"` - to indicate that this OCM Server supports
+  [RFC9421] HTTP Message Signatures and advertises public keys in the
+  `publicKeys` array for signature verification.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a
   Share Creation Notification.
   As all Receiving Servers SHOULD require the use of TLS in API
@@ -670,19 +673,37 @@ contain the following information about its OCM API:
   address \* `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-* OPTIONAL: publicKey (object) - The signatory used to sign outgoing
-  request to confirm its origin.
-   The signatory is optional, but if present, it MUST contain
-  two string fields, `id` and `publicKeyPem`.
+* OPTIONAL: publicKey (object) - DEPRECATED: Use publicKeys array
+  instead for RFC 9421 support.
+  Legacy field for draft-cavage HTTP Signatures (RSA only).
+  Maintained for backward compatibility with existing deployments.
+  The signatory is optional, but if present, it MUST contain
+  two string fields, `keyId` and `publicKeyPem`.
   properties:
   - REQUIRED keyId (string) unique id of the key in URI format.  The
     hostname set the origin of the request and MUST be
     identical to the current discovery endpoint.
     Example: https://my-cloud-storage.org/ocm#signature
-  - REQUIRED publicKeyPem (string) - PEM-encoded version of the public
-    key.
+  - REQUIRED publicKeyPem (string) - PEM-encoded RSA public key for
+    draft-cavage signatures.
     Example:
     "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"
+* OPTIONAL: publicKeys (array of objects) - Array of public keys for
+  [RFC9421] HTTP Message Signatures.
+  Servers advertising the "http-sig" capability MUST provide this
+  field. Clients SHOULD prefer [RFC9421] signatures when this capability
+  is present. Each object in the array MUST contain:
+  - REQUIRED keyId (string) - Unique identifier for this key in URI
+    format. Hostname MUST match the discovery endpoint hostname.
+    Example: https://my-cloud-storage.org/ocm#key-1
+  - REQUIRED publicKeyPem (string) - PEM-encoded public key for
+    [RFC9421] signatures.
+    Example:
+    "----BEGIN PUBLIC KEY----\nMCowBQYDK...\n----END PUBLIC KEY----\n"
+  - REQUIRED algorithm (string) - Cryptographic algorithm identifier
+    from the IANA HTTP Signature Algorithms Registry as defined in
+    [RFC9421] Section 6.2.
+    Example: "ed25519"
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
