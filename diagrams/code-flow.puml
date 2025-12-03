@@ -7,7 +7,7 @@ participant "Disco" as Bob_Disco #eececd
 participant "EFSS" as Bob_EFSS #eececd
 actor "Bob" as Bob_user #eececd
 == Invite ==
-Bob_user -> Bob_EFSS: Add contact 'Alice'
+Bob_user -> Bob_EFSS: Create token for 'Alice'
 Bob_EFSS -> Bob_user: token
 Bob_user -> Alice_user: OCM invite [ token, FQDN ]
 Alice_user -> Alice_EFSS: Add contact [ token ]
@@ -19,7 +19,7 @@ Alice_EFSS -> Alice_user: 'Bob' is a trusted contact
 Alice_user -> Alice_EFSS: Share doc with 'Bob'
 Alice_EFSS -> Bob_Disco: GET /.well-known/ocm
 Bob_Disco -> Alice_EFSS: endpoints, capabilities, pubkey
-Alice_EFSS -> Bob_EFSS: (signed) POST /ocm/share
+Alice_EFSS -> Bob_EFSS: (signed) POST /ocm/share [ refreshToken ]
 Bob_EFSS -> Alice_Disco: GET /.well-known/ocm
 Alice_Disco -> Bob_EFSS: pubkey
 Bob_EFSS --> Alice_EFSS: 201 created
