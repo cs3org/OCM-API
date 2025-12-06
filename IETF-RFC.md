@@ -623,11 +623,6 @@ contain the following information about its OCM API:
       endpoint.  This value is provided for documentation
       purposes, and it SHOULD NOT be intended as a prefix
       for share requests.
-    - datatx (string) - The top-level path used for data transfers.
-      This value is provided for documentation purposes,
-      and it SHOULD NOT be intended as a prefix.  In
-      addition, implementations are expected to execute
-      the transfer using WebDAV [RFC4918] as the wire protocol.
     - Any additional protocol supported for this Resource type MAY be
       advertised here, where the value MAY correspond to
       a top-level URI to be used for that protocol.
@@ -773,42 +768,42 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are: - `webdav`, to access the data -
-  `webapp`, to access remote web applications - `datatx`, to transfer
-  the data to the remote endpoint.
-
-          Other custom protocols might be added in the future.
-
-          In case a single protocol is offered, there are three ways to
-          specify this object:
-          Option 1: Set the `name` field to the name of the protocol,
-          and put the protocol details in a field named `options`.
-          Option 2: Set the `name` field to the name of the protocol,
-          and put the protocol details in a field carrying the name of
-          the protocol.
-          Option 3: Set the `name` field to `multi`, and put the
-          protocol details in a field carrying the name of the protocol.
-
-                Option 1 using the `options` field is now deprecated.
-                Implementations are encouraged to transition to the new
-                optional properties defined below, such that this field
-                may be removed in a future major version of the spec.
-
-          When specifying more than one protocol as different ways to
-          access the Share, the `name` field needs to be set to `multi`.
-
-If `multi` is given, one or more protocol
-endpoints are expected to be defined according to the
-optional properties specified below.
-Otherwise, at least `webdav` is expected to be
-supported, and its options MAY be given in the opaque
-`options` payload for compatibility with v1.0
-implementations (see examples).  Note though that this
-format is deprecated.
-Warning: client implementers should be aware that v1.1
-servers MAY support both `webdav` and `multi`, but v1.0
-servers MAY only support `webdav`.
-
+  `webapp`, to access remote web applications.
+  Other custom protocols might be added in the future.
+  In case a single protocol is offered, there are three ways to
+  specify this object:
+  Option 1: Set the `name` field to the name of the protocol,
+  and put the protocol details in a field named `options`.
+  Option 2: Set the `name` field to the name of the protocol,
+  and put the protocol details in a field carrying the name of
+  the protocol.
+  Option 3: Set the `name` field to `multi`, and put the
+  protocol details in a field carrying the name of the protocol.
+  Option 1 using the `options` field is now deprecated.
+  Implementations are encouraged to transition to the new
+  optional properties defined below, such that this field
+  may be removed in a future major version of the spec.
+  When specifying more than one protocol as different ways to
+  access the Share, the `name` field needs to be set to `multi`.
+  If `multi` is given, one or more protocol
+  endpoints are expected to be defined according to the
+  optional properties specified below.
+  Otherwise, at least `webdav` is expected to be
+  supported, and its options MAY be given in the opaque
+  `options` payload for compatibility with v1.0
+  implementations (see examples).  Note though that this
+  format is deprecated.
+  Warning: client implementers should be aware that v1.1+
+  servers MAY support both `webdav` and `multi`, but v1.0
+  servers MAY only support `webdav`.
 * Protocol details for `webdav` MAY contain:
+  - OPTIONAL accessType (array of strings) - The type of access
+    being granted to the remote resource.  If omitted, it defaults to
+    `['remote']`.  A subset of: - `remote` signals the recipient that
+    the resource is available for remote access and interactive
+    browsing.  - `datatx` signals the recipient to transfer the
+    resource from the given URI. The recipient MAY delegate a
+    third-party service to execute the data transfer on their behalf.
   - REQUIRED uri (string)
     A URI to access the Remote Resource.  The URI
     SHOULD be relative, in which case the prefix
@@ -834,6 +829,9 @@ servers MAY only support `webdav`.
     to the Sending Server's {tokenEndPoint} [RFC6749].
     This MAY be used if the recipient provider exposes the
     `exchange-token` capability.
+  - OPTIONAL size (integer)
+    The size of the resource to be transferred, useful
+    especially in case of `datatx` access type.
 * Protocol details for `webapp` MAY contain:
   - REQUIRED uri (string)
     A URI to a client-browsable view of the Shared
@@ -850,20 +848,6 @@ servers MAY only support `webdav`.
   - OPTIONAL sharedSecret (string)
     An optional secret to be used to access the remote
     web app, for example in the form of a bearer token.
-* Protocol details for `datatx` MAY contain:
-  - REQUIRED srcUri (string)
-    A URI to access the Remote Resource.  The URI
-    SHOULD be relative, in which case the prefix
-    exposed by the `/.well-known/ocm` endpoint MUST be
-    used.  Absolute URIs are deprecated.
-  - OPTIONAL sharedSecret (string)
-    An optional secret to be used to access the
-    Resource, for example in the form of a bearer
-    token.  To prevent leaking it in logs it MUST NOT
-    appear in any URI.
-  - OPTIONAL size (integer)
-    The size of the file to be transferred from the
-    sending server.
 
 ## Decision to Discard
 
