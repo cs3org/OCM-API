@@ -74,7 +74,7 @@ thing.  This is achieved by providing a protocol that abstracts away
 security and authentication details from the users to the servers acting
 on behalf of the users.  Another important point of the protocol is the
 invitation mechanism that lets users connect over established human
-relationships and uses those connections to establish contact between
+relationships and use those connections to establish contact between
 their respective OCM servers.
 
 # Terms
@@ -855,6 +855,27 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     An optional secret to be used to access the remote
     web app, for example in the form of a bearer token.
 
+## Response
+
+The Share Creation Notification Response SHOULD be a HTTP response:
+
+* in response to the Share Creation Notification Request
+* using `application/json` as the `Content-Type` HTTP response header
+
+A 201 response status means the Share Creation Notification Request was
+successful.  In this case, the response body MUST contain a JSON
+document representing an object with the following string fields:
+  - REQUIRED: `recipientDisplayName` - the Recipient's display name.
+A 400 response status means some parameters were invalid or missing.
+A 401 response status means the Sender cannot be authenticated as
+a trusted service.
+A 403 response status means the Sender is not authorized to create
+shares.
+A 501 response status means either the Receiver does not support
+incoming external shares, or the share type or the resource type
+are not supported.
+A 503 response status means that the Receiver is temporary unavailable.
+
 ## Decision to Discard
 
 The Receiving Server MAY discard the notification if any of the
@@ -880,7 +901,7 @@ following hold true:
 * an initial check shows that the Resource cannot successfully be
   accessed through (any of) the protocol(s) listed
 
-# Receiving Party Notification
+## Receiving Party Notification
 
 If the Share Creation Notification is not discarded by the Receiving
 Server, they MAY notify the Receiving Party passively by adding the
@@ -890,6 +911,7 @@ instance a push notification or an email message.
 They could give the Receiving Party the option to accept or reject the
 share, or add the share automatically and only send an informational
 notification that this happened.
+
 
 # Share Acceptance Notification
 
@@ -936,17 +958,6 @@ httpsig [RFC9421] so the Receiving Server can authenticate the origin
 of the notification.  Receiving Servers SHOULD decline notifications
 from Sending Servers without httpsig as it can't identify where the 
 notification is coming from.
-
-### Receiving Party Notification
-
-If the Share Creation Notification is not discarded by the Receiving
-Server, they MAY notify the Receiving Party passively by adding the
-Share to some inbox list, and MAY also notify them actively through for
-instance a push notification or an email message.
-
-They could give the Receiving Party the option to accept or reject the
-Share, or add the Share automatically and only send an informational
-notification that this happened.
 
 # Resource Access
 
