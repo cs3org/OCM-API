@@ -607,22 +607,23 @@ contain the following information about its OCM API:
     support at least `webdav`,
     any other combination of Resources and protocols is
     optional.  Example:
-    `json
+    ```json
             {
               "webdav": "/remote/dav/ocm/",
               "webapp": "/app/ocm/",
               "talk": "/apps/spreed/api/"
             }
-            `
+    ```
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
       endpoint.  In order to access a Remote Resource, implementations
-      MAY use this path as a prefix, or as the full path (see sharing
-      examples).
+      SHOULD use this path as a prefix (see sharing examples).
     - webapp (string) - The top-level path for web apps at this
-      endpoint.  This value is provided for documentation
-      purposes, and it SHOULD NOT be intended as a prefix
-      for share requests.
+      endpoint.  In order to access a remote web app, implementations
+      SHOULD use this path as a prefix (see sharing examples).
+    - ssh (string) - The top-level address in the form `host:port`
+      of an endpoint that supports ssh and scp with a public/private
+      key based authentication.
     - Any additional protocol supported for this Resource type MAY be
       advertised here, where the value MAY correspond to
       a top-level URI to be used for that protocol.
@@ -770,7 +771,8 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are: - `webdav`, to access the data -
-  `webapp`, to access remote web applications.
+  `webapp`, to access remote web applications - `ssh`, to access
+  the data via a public/private key pair.
   Other custom protocols might be added in the future.
   In case a single protocol is offered, there are three ways to
   specify this object:
@@ -854,6 +856,21 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   - OPTIONAL sharedSecret (string)
     An optional secret to be used to access the remote
     web app, for example in the form of a bearer token.
+* Protocol details for `ssh` MAY contain:
+  - OPTIONAL accessType (array of strings) - The type of access
+    being granted to the remote resource.  If omitted, it defaults to
+    `['remote']`.  A subset of: - `remote` signals the recipient that
+    the resource is available for remote access, e.g. via sshfs.
+    - `datatx` signals the recipient to transfer the resource
+    from the given URI via scp.  The recipient MAY delegate a
+    third-party service to execute the data transfer on their behalf.
+  - REQUIRED uri (string)
+    The full address to be used for ssh or scp access, in the form
+    `username@host.fqdn:port/resource/path`, where authentication is
+    expected to take place via public/private key: the Receiving Server
+    MUST reply to such a Share Creation Notification by sending back
+    their public key, for the Sender Server to authorize access to the
+    Resource.
 
 ## Response
 
@@ -866,6 +883,9 @@ A 201 response status means the Share Creation Notification Request was
 successful.  In this case, the response body MUST contain a JSON
 document representing an object with the following string fields:
   - REQUIRED: `recipientDisplayName` - the Recipient's display name.
+  - OPTIONAL: `recipientPublicKey` - the Recipient's public key.
+    This property MUST be returned when the protocol of the incoming
+    share was `ssh`.
 A 400 response status means some parameters were invalid or missing.
 A 401 response status means the Sender cannot be authenticated as
 a trusted service.

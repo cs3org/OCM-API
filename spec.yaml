@@ -72,8 +72,14 @@ paths:
                 properties:
                   recipientDisplayName:
                     type: string
-                    description: display name of the recipient
+                    description: >
+                      Display name of the recipient
                     example: John Doe
+                  recipientPublicKey:
+                    type: string
+                    description: >
+                      The public key of the recipient. This value MUST be provided
+                      in case the Share Creation Notification includes the `ssh` protocol.
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
@@ -83,26 +89,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/400"
         "401":
-          description: Client cannot be authenticated as a trusted service.
+          description: Sender cannot be authenticated as a trusted service.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "403":
-          description: Trusted service is not authorized to create shares.
+          description: Sender is not authorized to create shares.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "501":
-          description: The consumer doesn't support incoming external shares, the share
+          description: The Receiver doesn't support incoming external shares, the share
             type or the resource type is not supported.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "503":
-          description: The consumer is temporary unavailable (e.g. due to planned
+          description: The Receiver is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
@@ -388,6 +394,12 @@ components:
                       The top-level path for web apps at this endpoint. In order to
                       access a remote web app, implementations SHOULD use this path
                       as a prefix (see sharing examples).
+                  ssh:
+                    type: string
+                    description: >
+                      The top-level address in the form `host:port` of an endpoint
+                      that supports ssh and scp with a public/private key based
+                      authentication.
                 additionalProperties:
                     type: string
                     description: >
@@ -688,7 +700,30 @@ components:
                     in any URI.  In a multi-protocol share scenario with WebDAV, the
                     access requirements provided in the `webdav` part MUST apply for
                     `webapp` accesses as well.
-
+            ssh:
+              type: object
+              properties:
+                accessType:
+                  type: array
+                  description: >
+                    The type of access being granted to the remote resource.
+                    If omitted, it defaults to `['remote']`.
+                    - `remote` signals the recipient that the resource is available
+                      for remote access, e.g. via sshfs.
+                    - `datatx` signals the recipient to transfer the resource from
+                      the given URI via scp. The recipient MAY delegate a third-party
+                      service to execute the data transfer on their behalf.
+                  items:
+                    type: string
+                    enum:
+                      - remote
+                      - datatx
+                uri:
+                  type: string
+                  description: >
+                    The full address to be used for ssh or scp access, in the form
+                    `username@host.fqdn:port/resource/path`, where authentication is
+                    expected to take place via public/private key.
           additionalProperties:
             type: object
             description: >
@@ -724,6 +759,9 @@ components:
                 uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 viewMode: read
+              ssh:
+                accessType: ['datatx']
+                uri: extuser@my-cloud-storage.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
       required:
