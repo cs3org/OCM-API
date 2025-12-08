@@ -763,8 +763,10 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   by the Receiving Server.
 * OPTIONAL expiration (integer)
   The expiration time for the OCM share, in seconds
-  of UTC time since Unix epoch.  If omitted, it is assumed
-  that the share does not expire.
+  of UTC time since Unix epoch.  If omitted, it is assumed that the
+  share does not expire.  A sender server MAY use it to signal that
+  the resource represents a cached copy of a dataset that was made
+  available for an efficient data transfer to the destination server.
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are: - `webdav`, to access the data -
@@ -801,9 +803,13 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     being granted to the remote resource.  If omitted, it defaults to
     `['remote']`.  A subset of: - `remote` signals the recipient that
     the resource is available for remote access and interactive
-    browsing.  - `datatx` signals the recipient to transfer the
-    resource from the given URI. The recipient MAY delegate a
-    third-party service to execute the data transfer on their behalf.
+    browsing.  - `datatx` signals the recipient that the resource is
+    available for data transfer.  If no expiration is given, the share
+    is suitable e.g. for sync use-cases, whereas if an expiration date
+    is set, the above clause MAY apply and the recipient SHOULD notify
+    the sender upon completing the data transfer, in order to ease
+    cache operations on the Sending Server.  The recipient MAY delegate
+    a third-party service to execute the data transfer on their behalf.
   - REQUIRED uri (string)
     A URI to access the Remote Resource.  The URI
     SHOULD be relative, in which case the prefix
