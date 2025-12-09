@@ -1359,7 +1359,7 @@ request.
 A third-party Directory Service is a back-end service used to federate
 multiple OCM Servers and facilitate the Invite flow.  It is expected to
 expose, via anonymous HTTPS GET, a signed JWS document [RFC7515], where
-the signature MUST be made available offline and the payload MUST
+the signing key MUST be made available offline and the payload MUST
 adhere to the following format:
 
 * REQUIRED: `federation` - a human-readable name for the list of OCM
