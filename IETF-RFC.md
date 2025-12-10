@@ -1187,6 +1187,9 @@ https://datatracker.ietf.org/html/rfc6749)", October 2012.
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers 
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
+[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
+(JWS)](https://datatracker.ietf.org/doc/html/rfc7515), May 2015."
+
 
 # Appendix A: Multi-factor Authentication
 
@@ -1345,8 +1348,9 @@ request.
 
 A third-party Directory Service is a back-end service used to federate
 multiple OCM Servers and facilitate the Invite flow.  It is expected to
-expose, via anonymous HTTP GET, a JSON document with the following
-format:
+expose, via anonymous HTTPS GET, a signed JWS document [RFC7515], where
+the signing key MUST be made available offline and the payload MUST
+adhere to the following format:
 
 * REQUIRED: `federation` - a human-readable name for the list of OCM
   Servers exposed by the Directory Service
@@ -1362,25 +1366,29 @@ format:
     - MUST NOT include userinfo, query, or fragment
   - REQUIRED: `displayName` - a human-readable name
     for the OCM Server
-    Example:
+Example:
 
 ```json
 {
-  "federation": "The ScienceMesh Directory",
-  "servers": [
-    {
-      "url": "https://ocm-server-1.example.org",
-      "displayName": "OCM Server 1"
-    },
-    {
-      "url": "https://ocm-server-2.example.org:4443",
-      "displayName": "OCM Server 2"
-    },
-    {
-      "url": "http://192.168.1.1:8080",
-      "displayName": "OCM Server 3"
-    }
-  ]
+  "payload": {
+    "federation": "The ScienceMesh Directory",
+    "servers": [
+      {
+        "url": "https://ocm-server-1.example.org",
+        "displayName": "OCM Server 1"
+      },
+      {
+        "url": "https://ocm-server-2.example.org:4443",
+        "displayName": "OCM Server 2"
+      },
+      {
+        "url": "http://192.168.1.1:8080",
+        "displayName": "OCM Server 3"
+      }
+    ]
+  },
+  "protected": {"alg": "RS256"},
+  "signature": "..."
 }
 ```
 
