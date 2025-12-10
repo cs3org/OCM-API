@@ -866,11 +866,12 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     third-party service to execute the data transfer on their behalf.
   - REQUIRED uri (string)
     The full address to be used for ssh or scp access, in the form
-    `username@host.fqdn:port/resource/path`, where authentication is
-    expected to take place via public/private key: the Receiving Server
-    MUST reply to such a Share Creation Notification by sending back
-    their public key, for the Sender Server to authorize access to the
-    Resource.
+    `username@host.fqdn:port/resource/path`, where the `username` is
+    chosen by the Sending Server and does not necessarily need to match
+    the recipient's OCM Address.  Authentication is expected to take
+    place via public/private key: the Receiving Server MUST reply to
+    such a Share Creation Notification by sending back their public
+    key, for the Sender Server to authorize access to the Resource.
 
 ## Response
 
