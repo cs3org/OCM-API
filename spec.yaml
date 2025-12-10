@@ -237,34 +237,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /{tokenEndPoint}:
-    post:
-      summary: Token Exchange endpoint
-      description: >
-        This optional endpoint allows to obtain a (potentially short-lived) bearer token in exchange for a secret.
-        See [Resource Access](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access)
-        for more details. The actual endpoint URL is discovered via OCM provider metadata
-        (tokenEndPoint).
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/TokenRequest"
-        description: Form-encoded request body.
-        required: true
-      responses:
-        "200":
-          description: Token issued.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TokenResponse"
-        "400":
-          description: Token denied.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 components:
   parameters:
     id:
@@ -505,9 +477,37 @@ components:
                 example: ed25519
         tokenEndPoint:
           type: string
+          format: uri
           description: >
             Optional URL path of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
             If the `exchange-token` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
+
+
+            **Token Exchange API:**
+
+            This optional endpoint allows obtaining a (potentially short-lived) bearer token in exchange for a secret.
+            See [Resource Access](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access) for more details.
+
+
+            **HTTP Request:**
+
+            - Method: POST
+
+            - URL: The URL discovered in this field
+
+            - Content-Type: application/x-www-form-urlencoded
+
+            - Body: TokenRequest schema (form-encoded, required)
+
+
+            **HTTP Responses:**
+
+            - 200: Token issued (application/json with TokenResponse schema)
+
+            - 400: Token denied (application/json with Error schema)
+
+
+            See TokenRequest and TokenResponse schemas for the complete data structure.
           example: /index.php/apps/sciencemesh/token
         inviteAcceptDialog:
           type: string
