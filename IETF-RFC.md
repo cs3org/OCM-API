@@ -683,33 +683,6 @@ Share Creation Notification from an unknown Sending Party is received
 * the Invite Receiver OCM Server sends the Invite Acceptance Request to
   the Invite Sender OCM Server
 
-```
-Invite Sender                                    Invite Receiver
-OCM Server                                       OCM Server
-+-------------+                                  +-------------+
-|   Server    |                                  |   Server    |
-+-------------+                                  +-------------+
-      |                                                 |
-      | generates                                       | processes
-      v                                                 ^
-+-------------+      Invite Message (OOB)        +-------------+
-|   Invite    |--------------------------------->|   Invite    |
-|   Token     |                                  |  Reception  |
-+-------------+                                  +-------------+
-      |                                                 |
-      |                                                 |
-      v                                                 v
-+-------------+      Invite Acceptance Request   +-------------+
-|  Contact    |<---------------------------------|  Accepting  |
-|   Added     |                                  |   Invite    |
-+-------------+                                  +-------------+
-                                                        |
-                                                        v
-                                                 +-------------+
-                                                 |  Contact    |
-                                                 |   Added     |
-                                                 +-------------+
-```
 
 ### Invite Acceptance Request Details
 
