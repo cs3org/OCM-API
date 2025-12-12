@@ -905,7 +905,7 @@ A 201 response status means the Share Creation Notification Request was
 successful.  In this case, the response body MUST contain a JSON
 document representing an object with the following string fields:
   - REQUIRED: `recipientDisplayName` - the Recipient's display name.
-  - OPTIONAL: `recipientPublicKey` - the Recipient's public key.
+  - OPTIONAL: `recipientPublicKeys` - the Recipient's public key(s).
     This property MUST be returned when the protocol of the incoming
     share was `ssh`.
 A 400 response status means some parameters were invalid or missing.
