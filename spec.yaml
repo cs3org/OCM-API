@@ -75,10 +75,12 @@ paths:
                     description: >
                       Display name of the recipient
                     example: John Doe
-                  recipientPublicKey:
-                    type: string
+                  recipientPublicKeys:
+                    type: array
+                    items:
+                      type: string
                     description: >
-                      The public key of the recipient. This value MUST be provided
+                      The public key(s) of the recipient. This value MUST be provided
                       in case the Share Creation Notification includes the `ssh` protocol.
         "400":
           description: >
