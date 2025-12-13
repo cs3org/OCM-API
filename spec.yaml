@@ -591,8 +591,9 @@ components:
           description: |
             JSON object with specific options for each protocol.
             The supported protocols are:
-            - `webdav`, to access the data
+            - `webdav`, to access the data via WebDAV
             - `webapp`, to access remote web applications
+            - `ssh`, to access the data via SFTP/SCP
             Other custom protocols might be added in the future.
           required:
             - name
