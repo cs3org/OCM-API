@@ -87,14 +87,14 @@ they appear in all capitals, as shown here.
 
 ## Functions
 
-Open Cloud Mesh defines distinct functions, it is not neccessary for an
+Open Cloud Mesh defines distinct functions.  It is not necessary for an
 implementation to provide all of them.  In fact, it may be useful to
 have separate implementations for different functions.
 
 ### OCM Provider
 
 An OCM Provider is an entity that can take on the two _roles_ of a
-_Sending Server_ and a _Receiving Server_. An OCM Provider MUST be a
+_Sending Server_ and a _Receiving Server_.  An OCM Provider MUST be a
 _Discoverable Server_ and SHOULD be able to receive _Notifications_.
 
 ### OCM Directory Service
@@ -111,10 +111,10 @@ take on: the _Sending Server_ role and the _Receiving Server_ role.
 
 A Sending Server is an OCM Provider that holds Resources and exposes
 APIs to allow access to them.  It allows its users to create _Shares_
-to give other users access to those Resources. A Sending Server MAY
+to give other users access to those Resources.  A Sending Server MAY
 provide its users with the ability to generate _Invites_ to establish
-contact with other users on other OCM Providers. When doing so it MAY
-provide a _WAYF Page_ to facilitate the Invite Flow. The WAYF page MAY
+contact with other users on other OCM Providers.  When doing so it MAY
+provide a _WAYF Page_ to facilitate the Invite Flow.  The WAYF page MAY
 be limited to a set of trusted OCM Providers, for instance those in the
 same _Federation_.
 
@@ -124,7 +124,7 @@ same _Federation_.
 A Receiving Server is an OCM Provider that receives _Share_ Creation
 Notifications from Sending Servers, notifies its users about incoming
 _Shares_, and acts as an API client to allow its users to access Remote
-Resources. It MAY provide it's users with an _Address Book_ of
+Resources.  It MAY provide its users with an _Address Book_ of
 _Contacts_ and the ability to accept _Invites_.
 
 
@@ -139,7 +139,7 @@ elsewhere:
 * __Discoverable Server__ - A server that tries to supply information in
   OCM API Discovery.
 * __Federation__ - A group of OCM Providers that have established
-  mutual trust and agree on certain policies for interaction. A
+  mutual trust and agree on certain policies for interaction.  A
   Federation MAY be facilitated by a Directory Service.
 * __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`.
 * __Invite Acceptance Gesture__ - Gesture from the Invite Receiver to
@@ -177,19 +177,19 @@ elsewhere:
   Invite Sender's OCM Address.
 * __OCM Address__ - identifies a user or group "at" an OCM Server.
 The OCM Address contains a server specific Party identifier, a host
-locating the OCM Server and an optional port. The OCM Address is not a
+locating the OCM Server and an optional port.  The OCM Address is not a
 URI as it does not have scheme and the identifier may contain reserved
 characters.
 
         ocm-address = identifier "@" host [ ":" port]
 
-    The identifier is an opaque, case-sensitive UTF-8 string. It is 
-    separated from the host by the last "@" in the OCM Address. It is
-    possible to have multiple @-signs in a OCM-address, e.g. when an 
-    email address is the local part of the address like 
+    The identifier is an opaque, case-sensitive UTF-8 string.  It is
+    separated from the host by the last "@" in the OCM Address.  It is
+    possible to have multiple @-signs in a OCM-address, e.g. when an
+    email address is the local part of the address like
     `nomen.nescio@example.org@ocm.example.org`.
 
-    host is an IP literal encapsulated within square brackets, an IPv4 
+    host is an IP literal encapsulated within square brackets, an IPv4
     address in dotted decimal form, or a registered name as described in
     [RFC3986].
 
@@ -198,8 +198,8 @@ characters.
     The optional port subcomponent can be used to specify a port to use
     for discovery (see Discovery Process).
 
-    The OCM Server MUST be discoverable at the given host and optional 
-    port via the Well-Known [RFC8615] path `/.well-known/ocm`. The OCM 
+    The OCM Server MUST be discoverable at the given host and optional
+    port via the Well-Known [RFC8615] path `/.well-known/ocm`.  The OCM
     Address MUST NOT contain a path.
 
 * __OCM API Discovery__ - Process of evaluating properties of a Remote
@@ -262,15 +262,15 @@ characters.
     another OCM Server, based on out-of-band information, federation
     membership or prior interactions, SHOULD be recorded in an internal
     registry of trusted servers, that SHOULD be updated over time based
-    on new information. The registry SHOULD include the FQDN of the 
-    trusted server and the Public Key used for HTTP Signatures. It MAY
+    on new information.  The registry SHOULD include the FQDN of the
+    trusted server and the Public Key used for HTTP Signatures.  It MAY
     also include additional metadata such as the inviteAcceptDialog URL
     or supported capabilities.
 * __WAYF Page__ - A Where-Are-You-From page is a discovery service used
   to identify the OCM Server of an Invite Receiver.
 
 In Appendix D, an object model is presented as a non-normative guide for
-implementators to understand the relationships between these terms.
+implementers to understand the relationships between these terms.
 
 # General Flow
 
@@ -476,11 +476,11 @@ time without notifying them.
 
 ### Invite format
 To accept an invite, two pieces of information are required: a `token`
-and a `provider`. There are two recognized formats:
+and a `provider`.  There are two recognized formats:
 
 * **Invite string format:**
   A base64-encoded string containing the token and the provider’s FQDN,
-  joined by an `@` sign. Example:
+  joined by an `@` sign.  Example:
 
   If the `token` is `a55a966e-15c1-4cb9-a39d-4e4c54399baf` and the
   `provider` is `my-cloud-storage.org`, the combined string is
@@ -495,7 +495,7 @@ and a `provider`. There are two recognized formats:
 
 * **Link format:**
   If the inviting OCM Server supports a WAYF page, the invite may be
-  provided as a link with the token as a request parameter. Example:
+  provided as a link with the token as a request parameter.  Example:
 
   `https://my-cloud-storage.org/wayf?token=
   a55a966e-15c1-4cb9-a39d-4e4c54399baf`
@@ -611,7 +611,7 @@ Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as
 the URL instead.
 Step 5: If that results in a valid HTTP response with a valid JSON
 response body within reasonable time, go to step 7.
-Step 6: If not, fail. Implementations MAY fallback to HTTP instead
+Step 6: If not, fail.  Implementations MAY fallback to HTTP instead
 of HTTPS in testing setups and retry steps 2-5, in particular when
 an optional port is given in the address.
 Step 7: The JSON response body is the data that was discovered.
@@ -988,7 +988,7 @@ with any related share.
 Notifications from Sending Server to Receiving Server SHOULD use
 httpsig [RFC9421] so the Receiving Server can authenticate the origin
 of the notification.  Receiving Servers SHOULD decline notifications
-from Sending Servers without httpsig as it can't identify where the 
+from Sending Servers without httpsig as it can't identify where the
 notification is coming from.
 
 ### Receiving Party Notification
@@ -1076,7 +1076,7 @@ Date: Wed, 05 Nov 2025 14:00:00 GMT
 Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
-Signature-Input: 
+Signature-Input:
     sig1=("@method" "@target-uri" "content-digest" "date"); \
     created=1730815200; keyid="receiver.example.org#2025"; \
     alg="rsa-sha256"
@@ -1207,7 +1207,7 @@ Implementers SHOULD NOT use it and prefer short-lived tokens instead.
 ##  Code Flow
 
 All `{tokenEndPoint}` requests MUST be transmitted over HTTPS and
-signed using HTTP Signatures.  Bearer tokens MUST be treated as 
+signed using HTTP Signatures.  Bearer tokens MUST be treated as
 confidential and never logged, persisted beyond their lifetime, or
 transmitted over unsecured channels.
 
@@ -1231,14 +1231,14 @@ Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 
-[RFC3986] Berners-Lee, T., Fielding, R. and Masinter, L. 
+[RFC3986] Berners-Lee, T., Fielding, R. and Masinter, L.
 "[Uniform Resource Identifier (URI): Generic Syntax
 ](https://datatracker.ietf.org/doc/html/rfc3986)", January 2005
 
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
 
-[RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers 
+[RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
 
@@ -1444,7 +1444,7 @@ format:
 
 An implementor of OCM MAY choose any internal object model to represent
 an _Address Book_, a _Contact_, an _Invite_, a _Provider_, a _Share_,
-and  a _User_.  However, the following diagrams are provided to clarify
+and a _User_.  The following diagrams are provided to clarify
 the concepts and their relationships, as a guide for implementors.
 
 ## Address Book
@@ -1456,12 +1456,12 @@ the Sending Server's database from the selection of the _Receiving
 Party_ in preparation for Share Creation.
 
 The Address Book entity maintains a collection of contacts for a user
-within the OCM provider. It serves as the primary mechanism for managing
-federated relationships between users across different OCM Servers.
-_Contacts_ may be added to the Address Book through the Invite flow or
-direct entry. It provides a convenient way for users to organize and
-access their federated contacts, and MAY allow users to generate
-_Invites_.
+within the OCM provider.  It serves as the primary mechanism for
+managing federated relationships between users across different OCM
+Servers. _Contacts_ may be added to the Address Book through the Invite
+flow or direct entry.  It provides a convenient way for users to
+organize and access their federated contacts, and MAY allow users to
+generate _Invites_.
 
 ```
 +-----------------+
@@ -1491,8 +1491,8 @@ _Invites_.
 
 ## Contact
 A Contact represents a federated user relationship established through
-the OCM protocol. Contacts are stored in _Address Books_ and may be
-created through the Invite process or via direct entry. A Contact MAY
+the OCM protocol.  Contacts are stored in _Address Books_ and may be
+created through the Invite process or via direct entry.  A Contact MAY
 of course contain much more detailed information about the referenced
 user such as if it was added via _Invites_ or direct entry.
 
@@ -1528,7 +1528,7 @@ user such as if it was added via _Invites_ or direct entry.
 ## Invite
 
 The Invite entity represents the bidirectional trust establishment
-mechanism in OCM. It facilitates secure contact exchange between users
+mechanism in OCM.  It facilitates secure contact exchange between users
 on different OCM Servers.
 
 ```
@@ -1564,7 +1564,7 @@ on different OCM Servers.
 ## Provider
 
 The Provider entity represents an OCM Server's capabilities and
-configuration as discovered through the OCM API Discovery process. It
+configuration as discovered through the OCM API Discovery process.  It
 represents both the Sending Server and Receiving Server roles, and an
 implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
@@ -1576,7 +1576,7 @@ OCM Providers.
             |    (OCM Server)       |
             +-----------------------+
             | - apiVersion          |
-            | - enabled: bool       |
+            | - enabled             |
             | - endPoint            |
             | - inviteAcceptDialog  |
             | - provider            |
@@ -1588,9 +1588,9 @@ OCM Providers.
                    |
          +---------+---------+----------------------+
          |                   |                      |
-         v                   v                      v                   
-+------------------+  +------------------+   +------------------+       
-| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]    |       
+         v                   v                      v
++------------------+  +------------------+   +------------------+
+| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]    |
 +------------------+  +------------------+   +------------------+
 | - name           |  | - enforce-mfa    |   | - allowlist      |
 | - shareTypes[]   |  | - exchange-token |   | - denylist       |
@@ -1598,12 +1598,12 @@ OCM Providers.
 +------------------+  | - invites        |   | - invite         |
        |              | - webdav-uri     |   | - token-exchange |
        |              +------------------+   +------------------+
-       | supports                            
-       v                                     
-+------------------+                         
+       | supports
+       v
++------------------+
 |   Protocols      |
 +------------------+
-| - datatx         |
+| - ssh            |
 | - webapp         |
 | - webdav         |
 | - ...            |
@@ -1634,10 +1634,10 @@ from a Sending Party to a Receiving Party.
        |                                        |
        | creates                                | accesses
        v                                        v
-+------------------+     notification    +------------------+ 
++------------------+     notification    +------------------+
 |     Share        |-------------------->| Receiving Server |
 +------------------+                     +------------------+
-| - expiration     |                            | 
+| - expiration     |                            |
 | - name           |                            | mediates access to
 | - owner          |                            v
 | - protocol       |                     +------------------+
@@ -1662,7 +1662,7 @@ from a Sending Party to a Receiving Party.
 * __expiration__: Optional expiration timestamp
 * __name__: Human-readable name of the shared Resource
 * __owner__: OCM Address of the Resource owner
-* __protocol__: Access protocol configuration (webdav, webapp, datatx)
+* __protocol__: Access protocol name and details (webdav, ssh, webapp)
 * __providerId__: Unique identifier for the Share at the provider
 * __requirements__: Array of access requirements (must-use-mfa,
                     must-exchange-token)
@@ -1736,8 +1736,8 @@ Shares and Invites and manage Contacts, and interact with Resources.
 ## Resource
 
 The Resource entity represents the data or service being shared between
-OCM Providers. It is the target of Shares and is accessed by the
-Receiving Party through the Sending Server's API. In general a Resource
+OCM Providers.  It is the target of Shares and is accessed by the
+Receiving Party through the Sending Server's API.  In general a Resource
 is a much more complex entity, but for the purpose of OCM we only need
 to model a few key properties.
 
