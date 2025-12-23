@@ -388,17 +388,18 @@ components:
           type: array
           description: >
             The optional capabilities exposed at this endpoint according to the
-            present
-            specifications.
+            present specifications.
           items:
             type: string
             enum:
               - enforce-mfa
-              - webdav-uri
-              - protocol-object
-              - invites
               - exchange-token
               - http-sig
+              - invites
+              - invite-wayf
+              - notifications
+              - protocol-object
+              - webdav-uri
           example:
             - webdav-uri
             - protocol-object
