@@ -12,7 +12,7 @@ servers:
   - url: https://{discovery_fqdn}
     variables:
       discovery_fqdn:
-        default: my-cloud-storage.org
+        default: cloud.example.org
 paths:
   /.well-known/ocm:
     get:
@@ -21,7 +21,7 @@ paths:
         Following [RFC8615], this endpoint returns the properties and
         capabilities offered by an OCM Server. This endpoint MUST be
         served at the OCM Server's root FQDN, e.g. as in
-        `https://my-cloud-storage.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
+        `https://cloud.example.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
         for more details.
       responses:
         "200":
@@ -312,7 +312,7 @@ components:
         endPoint:
           type: string
           description: The URI of the OCM API available at this endpoint
-          example: https://my-cloud-storage.org/ocm
+          example: https://cloud.example.org/ocm
         provider:
           type: string
           description: A friendly branding name of this endpoint
@@ -434,7 +434,7 @@ components:
               description: >
                 unique id of the key in URI format. The hostname set the origin
                 of the request and MUST be identical to the current discovery endpoint.
-              example: https://my-cloud-storage.org/ocm#signature
+              example: https://cloud.example.org/ocm#signature
             publicKeyPem:
               type: string
               description: |
@@ -462,7 +462,7 @@ components:
                 description: >
                   Unique identifier for this key in URI format.
                   Hostname MUST match the discovery endpoint hostname.
-                example: https://my-cloud-storage.org/ocm#key-1
+                example: https://cloud.example.org/ocm#key-1
               publicKeyPem:
                 type: string
                 description: |
@@ -789,7 +789,7 @@ components:
                 viewMode: read
               ssh:
                 accessType: ['datatx']
-                uri: extuser@my-cloud-storage.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
+                uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
       required:
