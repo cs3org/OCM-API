@@ -710,8 +710,8 @@ contain the following information about its OCM API:
   `"invites"` capability SHOULD provide this URL as well in order to
   enhance the UX of the Invite Flow.  If for example
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
-  Page SHOULD redirect the end-user to
-`/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
+  Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
+  accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where the
   Sending Server can exchange a secret for a short-lived bearer token.
   Implementations that offer the `"exchange-token"` capability MUST
