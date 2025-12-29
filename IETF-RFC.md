@@ -131,7 +131,7 @@ related concepts from OAuth [RFC6749] and elsewhere:
   another reason.
 * __Sharing User__ - A user providing access to a Resource through a
   Share.
-* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.com"`.
+* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.org"`.
 * __OCM Server__ - A server that supports OCM.
 * __OCM API Discovery__ - Process of evaluating properties of a Remote
   Resource, after establishing contact with an OCM Server.
@@ -439,8 +439,8 @@ and a `provider`. There are two recognized formats:
   joined by an `@` sign. Example:
 
   If the `token` is `a55a966e-15c1-4cb9-a39d-4e4c54399baf` and the
-  `provider` is `my-cloud-storage.org`, the combined string is
-  `a55a966e-15c1-4cb9-a39d-4e4c54399baf@my-cloud-storage.org`,
+  `provider` is `cloud.example.org`, the combined string is
+  `a55a966e-15c1-4cb9-a39d-4e4c54399baf@cloud.example.org`,
   which when base64-encoded becomes
   `YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQG15LWNsb3VkLXN0b
   3JhZ2Uub3Jn`.
@@ -453,7 +453,7 @@ and a `provider`. There are two recognized formats:
   If the inviting OCM Server supports a WAYF page, the invite may be
   provided as a link with the token as a request parameter. Example:
 
-  `https://my-cloud-storage.org/wayf?token=
+  `https://cloud.example.org/wayf?token=
   a55a966e-15c1-4cb9-a39d-4e4c54399baf`
 
 Implementations MUST be able to accept invites in the invite string
@@ -582,7 +582,7 @@ contain the following information about its OCM API:
 * REQUIRED: apiVersion (string) - The OCM API version this endpoint
   supports.  Example: `"1.2.2"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at
-  this endpoint.  Example: `"https://my-cloud-storage.org/ocm"`
+  this endpoint.  Example: `"https://cloud.example.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
   endpoint.  Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this
@@ -685,7 +685,7 @@ contain the following information about its OCM API:
   - REQUIRED keyId (string) unique id of the key in URI format.  The
     hostname set the origin of the request and MUST be
     identical to the current discovery endpoint.
-    Example: https://my-cloud-storage.org/ocm#signature
+    Example: https://cloud.example.org/ocm#signature
   - REQUIRED publicKeyPem (string) - PEM-encoded RSA public key for
     draft-cavage signatures.
     Example:
@@ -697,7 +697,7 @@ contain the following information about its OCM API:
   is present. Each object in the array MUST contain:
   - REQUIRED keyId (string) - Unique identifier for this key in URI
     format. Hostname MUST match the discovery endpoint hostname.
-    Example: https://my-cloud-storage.org/ocm#key-1
+    Example: https://cloud.example.org/ocm#key-1
   - REQUIRED publicKeyPem (string) - PEM-encoded public key for
     [RFC9421] signatures.
     Example:
@@ -712,13 +712,13 @@ contain the following information about its OCM API:
   `"invites"` capability SHOULD provide this URL as well in order to
   enhance the UX of the Invite Flow.  If for example
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
-  Page SHOULD redirect the end-user to
-`/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
+  Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
+  accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where the
   Sending Server can exchange a secret for a short-lived bearer token.
   Implementations that offer the `"exchange-token"` capability MUST
   provide this URL as well.
-  Example: `"https://my-cloud-storage.org/ocm/token"`.
+  Example: `"https://cloud.example.org/ocm/token"`.
 
 # Share Creation Notification
 
@@ -1072,7 +1072,7 @@ follows an example of such POST request:
 
 ```
 POST {tokenEndPoint} HTTP/1.1
-Host: my-cloud-storage.org
+Host: cloud.example.org
 Date: Wed, 05 Nov 2025 14:00:00 GMT
 Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
