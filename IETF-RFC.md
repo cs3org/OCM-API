@@ -85,7 +85,8 @@ NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
 described in BCP 14 [RFC2119] [RFC8174] when, and only when,
 they appear in all capitals, as shown here.
 
-## Functions
+We define the following concepts, with some non-normative references to
+related concepts from OAuth [RFC6749] and elsewhere:
 
 * __Resource__ - The piece of data or interaction to which access is
   being granted, including but not limited to: a file or folder, a video
@@ -268,6 +269,48 @@ characters.
     or supported capabilities.
 * __WAYF Page__ - A Where-Are-You-From page is a discovery service used
   to identify the OCM Server of an Invite Receiver.
+
+## Functions
+
+Open Cloud Mesh defines distinct functions.  It is not necessary for an
+implementation to provide all of them.  In fact, it may be useful to
+have separate implementations for different functions.
+
+### OCM Provider
+
+An OCM Provider is an entity that can take on the two _roles_ of a
+_Sending Server_ and a _Receiving Server_.  An OCM Provider MUST be a
+_Discoverable Server_ and SHOULD be able to receive _Notifications_.
+
+### OCM Directory Service
+
+An OCM Directory Service is an entity that exposes information about a
+_Federation_ of OCM Providers.
+
+## Roles
+
+Open Cloud Mesh defines two distinct roles that an OCM Provider MUST
+take on: the _Sending Server_ role and the _Receiving Server_ role.
+
+### Sending Server
+
+A Sending Server is an OCM Provider that holds Resources and exposes
+APIs to allow access to them.  It allows its users to create _Shares_
+to give other users access to those Resources.  A Sending Server MAY
+provide its users with the ability to generate _Invites_ to establish
+contact with other users on other OCM Providers.  When doing so it MAY
+provide a _WAYF Page_ to facilitate the Invite Flow.  The WAYF page MAY
+be limited to a set of trusted OCM Providers, for instance those in the
+same _Federation_.
+
+
+### Receiving Server
+
+A Receiving Server is an OCM Provider that receives _Share_ Creation
+Notifications from Sending Servers, notifies its users about incoming
+_Shares_, and acts as an API client to allow its users to access Remote
+Resources.  It MAY provide its users with an _Address Book_ of
+_Contacts_ and the ability to accept _Invites_.
 
 In Appendix D, an object model is presented as a non-normative guide for
 implementers to understand the relationships between these terms.
