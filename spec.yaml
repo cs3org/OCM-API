@@ -625,7 +625,7 @@ components:
                 - uri
                 - permissions
               properties:
-                accessType:
+                accessTypes:
                   type: array
                   description: >
                     The type of access being granted to the remote resource.
@@ -731,7 +731,7 @@ components:
             ssh:
               type: object
               properties:
-                accessType:
+                accessTypes:
                   type: array
                   description: >
                     The type of access being granted to the remote resource.
@@ -776,7 +776,7 @@ components:
             multipleProtocols:
               name: multi
               webdav:
-                accessType: ['remote', 'datatx']
+                accessTypes: ['remote', 'datatx']
                 uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 permissions:

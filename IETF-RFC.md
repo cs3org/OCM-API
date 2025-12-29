@@ -822,7 +822,7 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   servers MAY support both `webdav` and `multi`, but v1.0
   servers MAY only support `webdav`.
 * Protocol details for `webdav` MAY contain:
-  - OPTIONAL accessType (array of strings) - The type of access
+  - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
     `['remote']`.  A subset of: - `remote` signals the recipient that
     the resource is available for remote access and interactive
@@ -878,7 +878,7 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     An optional secret to be used to access the remote
     web app, for example in the form of a bearer token.
 * Protocol details for `ssh` MAY contain:
-  - OPTIONAL accessType (array of strings) - The type of access
+  - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
     `['remote']`.  A subset of: - `remote` signals the recipient that
     the resource is available for remote access, e.g. via sshfs.
