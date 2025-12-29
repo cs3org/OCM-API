@@ -1,0 +1,101 @@
+{
+  "title": "OCM API Discovery",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "enabled": {
+      "type": "boolean"
+    },
+    "apiVersion": {
+      "type": "string"
+    },
+    "endPoint": {
+      "type": "string", 
+      "format": "uri"
+    },
+    "provider": {
+      "type": "string"
+    },
+    "resourceTypes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/resourceType" }
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Capabilities values of 'exchange-token', 'webdav-uri', 'protocol-object', 'invites', 'invite-wayf' defined in draft",
+      "items": {
+        "type": "string"
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "description": "Criteria values of 'http-request-signatures', 'token-exchange', 'denlyist' and 'allowlist' are defined in draft",
+      "items": {
+        "type": "string"
+      }
+    },
+    "publicKey": {
+      "$ref": "#/$defs/publicKey" 
+    },
+    "inviteAcceptDialog": {
+      "type": "string",
+      "format": "uri"
+    },
+    "tokenEndPoint": {
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "required": [
+    "enabled", 
+    "apiVersion", 
+    "endPoint", 
+    "resourceTypes"
+  ],
+  "$defs": {
+    "resourceType": {
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "shareTypes": {
+          "type": "array"
+        },
+        "protocols": { "$ref": "#/$defs/protocols" }
+      },
+      "required": ["name", "shareTypes", "protocols"]
+    },
+    "protocols": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "Additional protocols besides 'webdav', 'webapp' and 'datatx' may be defined.",
+      "properties": {
+        "webdav": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "webapp": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "datatx": {
+          "type": "string",
+          "pattern": "^/"
+        }
+      }
+    },
+    "publicKey": {
+      "type": "object",
+      "properties": {
+        "keyId": {
+          "type": "string"
+        },
+        "publicKeyPem": {
+          "type": "string"
+        }
+      },
+      "required": ["keyId", "publicKeyPem" ]
+
+    }
+  }
+}

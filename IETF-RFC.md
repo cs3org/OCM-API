@@ -1,10 +1,10 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-lopresti-open-cloud-mesh-08
+docname: draft-ietf-ocm-open-cloud-mesh-00
 category: std
 
 ipr: trust200902
-area: Security
+area: Applications and Real-Time
 keyword: Internet-Draft
 
 stand_alone: yes
@@ -74,7 +74,7 @@ thing.  This is achieved by providing a protocol that abstracts away
 security and authentication details from the users to the servers acting
 on behalf of the users.  Another important point of the protocol is the
 invitation mechanism that lets users connect over established human
-relationships and uses those connections to establish contact between
+relationships and use those connections to establish contact between
 their respective OCM servers.
 
 # Terms
@@ -87,55 +87,55 @@ they appear in all capitals, as shown here.
 
 ## Functions
 
-Open Cloud Mesh defines distinct functions.  It is not necessary for an
-implementation to provide all of them.  In fact, it may be useful to
-have separate implementations for different functions.
-
-### OCM Provider
-
-An OCM Provider is an entity that can take on the two _roles_ of a
-_Sending Server_ and a _Receiving Server_.  An OCM Provider MUST be a
-_Discoverable Server_ and SHOULD be able to receive _Notifications_.
-
-### OCM Directory Service
-
-An OCM Directory Service is an entity that exposes information about a
-_Federation_ of OCM Providers.
-
-## Roles
-
-Open Cloud Mesh defines two distinct roles that an OCM Provider MUST
-take on: the _Sending Server_ role and the _Receiving Server_ role.
-
-### Sending Server
-
-A Sending Server is an OCM Provider that holds Resources and exposes
-APIs to allow access to them.  It allows its users to create _Shares_
-to give other users access to those Resources.  A Sending Server MAY
-provide its users with the ability to generate _Invites_ to establish
-contact with other users on other OCM Providers.  When doing so it MAY
-provide a _WAYF Page_ to facilitate the Invite Flow.  The WAYF page MAY
-be limited to a set of trusted OCM Providers, for instance those in the
-same _Federation_.
-
-
-### Receiving Server
-
-A Receiving Server is an OCM Provider that receives _Share_ Creation
-Notifications from Sending Servers, notifies its users about incoming
-_Shares_, and acts as an API client to allow its users to access Remote
-Resources.  It MAY provide its users with an _Address Book_ of
-_Contacts_ and the ability to accept _Invites_.
-
-
-## Defined Terms
-
-We define the following concepts (in alphabetical order), with some
-non-normative references to related concepts from OAuth [RFC6749] and
-elsewhere:
-
-* __Directory Service__ - A third-party service that exposes a list of
-  trusted OCM Servers.
+* __Resource__ - The piece of data or interaction to which access is
+  being granted, including but not limited to: a file or folder, a video
+  call, a contact, a printer queue, etc.
+* __Remote Resource__ - A Resource provided by the Sending Server.
+* __Shared Resource__ - A Resource shared by an OCM Server, becoming a
+  Remote Resource if accepted by the Invite Receiver OCM Server.
+* __Share__ - A policy rule stating that certain actors have specific
+  access rights to a Resource; it MAY also refer to a record in a
+  database representing this rule.
+* __Sending Party__ - A person or party who is authorized to create
+  Shares; similar to "Resource Owner" in OAuth [RFC6749], identified by
+  its OCM Address.
+* __Receiving Party__ - A person, group or party who is granted access
+  to the Resource through the Share; similar to "Requesting Party / RqP"
+  in OAuth-UMA, identified by its OCM Address.
+* __Share Creation Notification__ - A server-to-server request from the
+  sending server to the receiving server, notifying the receiving server
+  that a Share has been created.
+* __Sending Server__ - The server that:
+  - holds the Resource ("file server" or "Entreprise File Sync and Share
+    (EFSS) server" role),
+  - provides access to it (by exposing at least one "API"),
+  - takes the decision to create the Share based on user interface
+    gestures from the Sending Party (the "Authorization Server" role in
+    OAuth [RFC6749]),
+  - takes the decision about authorizing attempts to access the Resource
+    (the "Resource Server" role in OAuth [RFC6749]),
+  - sends out Share Creation Notifications when appropriate (see below).
+* __Receiving Server__ - The server that:
+  - receives Share Creation Notifications (see below),
+  - actively or passively notifies the receiving user or group of any
+    incoming Share Creation Notification,
+  - acts as an API client, allowing the receiving user to access the
+    Resource through an API (e.g., WebDAV [RFC4918]) of the sending
+    server.
+* __Sending Gesture__ - A user interface interaction from the Sending
+  Party to the Sending Server, conveying the intention to create a
+  Share.
+* __Share Creation__ - The addition of a Share to the database state of
+  the Sending Server, in response to a successful Sending Gesture or for
+  another reason.
+* __Sharing User__ - A user providing access to a Resource through a
+  Share.
+* __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.org"`.
+* __OCM Server__ - A server that supports OCM.
+* __OCM API Discovery__ - Process of evaluating properties of a Remote
+  Resource, after establishing contact with an OCM Server.
+* __Discovering Server__ - A server that tries to obtain information in
+  OCM API Discovery.
 * __Discoverable Server__ - A server that tries to supply information in
   OCM API Discovery.
 * __Federation__ - A group of OCM Providers that have established
@@ -483,8 +483,8 @@ and a `provider`.  There are two recognized formats:
   joined by an `@` sign.  Example:
 
   If the `token` is `a55a966e-15c1-4cb9-a39d-4e4c54399baf` and the
-  `provider` is `my-cloud-storage.org`, the combined string is
-  `a55a966e-15c1-4cb9-a39d-4e4c54399baf@my-cloud-storage.org`,
+  `provider` is `cloud.example.org`, the combined string is
+  `a55a966e-15c1-4cb9-a39d-4e4c54399baf@cloud.example.org`,
   which when base64-encoded becomes
   `YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQG15LWNsb3VkLXN0b
   3JhZ2Uub3Jn`.
@@ -497,7 +497,7 @@ and a `provider`.  There are two recognized formats:
   If the inviting OCM Server supports a WAYF page, the invite may be
   provided as a link with the token as a request parameter.  Example:
 
-  `https://my-cloud-storage.org/wayf?token=
+  `https://cloud.example.org/wayf?token=
   a55a966e-15c1-4cb9-a39d-4e4c54399baf`
 
 Implementations MUST be able to accept invites in the invite string
@@ -626,7 +626,7 @@ contain the following information about its OCM API:
 * REQUIRED: apiVersion (string) - The OCM API version this endpoint
   supports.  Example: `"1.2.2"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at
-  this endpoint.  Example: `"https://my-cloud-storage.org/ocm"`
+  this endpoint.  Example: `"https://cloud.example.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
   endpoint.  Example: `"MyCloudStorage"`
 * REQUIRED: resourceTypes (array) - A list of all resource types this
@@ -651,27 +651,23 @@ contain the following information about its OCM API:
     support at least `webdav`,
     any other combination of Resources and protocols is
     optional.  Example:
-    `json
+    ```json
             {
               "webdav": "/remote/dav/ocm/",
               "webapp": "/app/ocm/",
               "talk": "/apps/spreed/api/"
             }
-            `
+    ```
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
       endpoint.  In order to access a Remote Resource, implementations
-      MAY use this path as a prefix, or as the full path (see sharing
-      examples).
+      SHOULD use this path as a prefix (see sharing examples).
     - webapp (string) - The top-level path for web apps at this
-      endpoint.  This value is provided for documentation
-      purposes, and it SHOULD NOT be intended as a prefix
-      for share requests.
-    - datatx (string) - The top-level path used for data transfers.
-      This value is provided for documentation purposes,
-      and it SHOULD NOT be intended as a prefix.  In
-      addition, implementations are expected to execute
-      the transfer using WebDAV [RFC4918] as the wire protocol.
+      endpoint.  In order to access a remote web app, implementations
+      SHOULD use this path as a prefix (see sharing examples).
+    - ssh (string) - The top-level address in the form `host:port`
+      of an endpoint that supports ssh and scp with a public/private
+      key based authentication.
     - Any additional protocol supported for this Resource type MAY be
       advertised here, where the value MAY correspond to
       a top-level URI to be used for that protocol.
@@ -681,9 +677,24 @@ contain the following information about its OCM API:
   to be compliant, it is not necessary to expose that as a
   capability.
   Example: `["exchange-token", "webdav-uri"]`.  The array MAY
-  include for instance:
+  include one or more of the following items:
   _ `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
+  _ `"exchange-token"` - to indicate that this OCM Server exposes a
+  [RFC6749]-compliant endpoint, which allows to exchange a secret
+  received in the protocol properties of a Share Creation Notification
+  for a short-lived bearer token.
+  _ `"http-sig"` - to indicate that this OCM Server supports
+  [RFC9421] HTTP Message Signatures and advertises public keys in the
+  `publicKeys` array for signature verification.
+  _ `"invites"` - to indicate the server would support acting as an
+  Invite Sender or Invite Receiver OCM Server.  This might be useful
+  for suggesting to a user that existing contacts might be upgraded
+  to the more secure (and possibly required) invite flow.
+  _ `"notifications"` - to indicate that this OCM Server handles
+  notifications to exchange updates on shares and invites.
+  _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
+  Page to facilitate the Invite flow.
   _ `"webdav-uri"` - to indicate that this OCM Server can append a
   relative URI to the path listed for WebDAV [RFC4918] in the
   appropriate `resourceTypes` entry `"protocol-object"` - to
@@ -691,16 +702,6 @@ contain the following information about its OCM API:
   Notification whose `protocol` object contains one property per
   supported protocol instead of containing the standard `name` and
   `options` properties.
-  _ `"invites"` - to indicate the server would support acting as an
-  Invite Sender or Invite Receiver OCM Server.  This might be useful
-  for suggesting to a user that existing contacts might be upgraded
-  to the more secure (and possibly required) invite flow.
-  _ `"exchange-token"` - to indicate that this OCM Server exposes a
-  [RFC6749]-compliant endpoint, which allows to exchange a secret
-  received in the protocol properties of a Share Creation Notification
-  for a short-lived bearer token.
-  _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
-  Page to facilitate the Invite flow.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a
   Share Creation Notification.
   As all Receiving Servers SHOULD require the use of TLS in API
@@ -718,32 +719,50 @@ contain the following information about its OCM API:
   address \* `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-* OPTIONAL: publicKey (object) - The signatory used to sign outgoing
-  request to confirm its origin.
-   The signatory is optional, but if present, it MUST contain
-  two string fields, `id` and `publicKeyPem`.
+* OPTIONAL: publicKey (object) - DEPRECATED: Use publicKeys array
+  instead for RFC 9421 support.
+  Legacy field for draft-cavage HTTP Signatures (RSA only).
+  Maintained for backward compatibility with existing deployments.
+  The signatory is optional, but if present, it MUST contain
+  two string fields, `keyId` and `publicKeyPem`.
   properties:
   - REQUIRED keyId (string) unique id of the key in URI format.  The
     hostname set the origin of the request and MUST be
     identical to the current discovery endpoint.
-    Example: https://my-cloud-storage.org/ocm#signature
-  - REQUIRED publicKeyPem (string) - PEM-encoded version of the public
-    key.
+    Example: https://cloud.example.org/ocm#signature
+  - REQUIRED publicKeyPem (string) - PEM-encoded RSA public key for
+    draft-cavage signatures.
     Example:
     "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"
+* OPTIONAL: publicKeys (array of objects) - Array of public keys for
+  [RFC9421] HTTP Message Signatures.
+  Servers advertising the "http-sig" capability MUST provide this
+  field. Clients SHOULD prefer [RFC9421] signatures when this capability
+  is present. Each object in the array MUST contain:
+  - REQUIRED keyId (string) - Unique identifier for this key in URI
+    format. Hostname MUST match the discovery endpoint hostname.
+    Example: https://cloud.example.org/ocm#key-1
+  - REQUIRED publicKeyPem (string) - PEM-encoded public key for
+    [RFC9421] signatures.
+    Example:
+    "----BEGIN PUBLIC KEY----\nMCowBQYDK...\n----END PUBLIC KEY----\n"
+  - REQUIRED algorithm (string) - Cryptographic algorithm identifier
+    from the IANA HTTP Signature Algorithms Registry as defined in
+    [RFC9421] Section 6.2.
+    Example: "ed25519"
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
   `"invites"` capability SHOULD provide this URL as well in order to
   enhance the UX of the Invite Flow.  If for example
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
-  Page SHOULD redirect the end-user to
-`/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
+  Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
+  accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where the
   Sending Server can exchange a secret for a short-lived bearer token.
   Implementations that offer the `"exchange-token"` capability MUST
   provide this URL as well.
-  Example: `"https://my-cloud-storage.org/ocm/token"`.
+  Example: `"https://cloud.example.org/ocm/token"`.
 
 # Share Creation Notification
 
@@ -812,47 +831,54 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
   by the Receiving Server.
 * OPTIONAL expiration (integer)
   The expiration time for the OCM share, in seconds
-  of UTC time since Unix epoch.  If omitted, it is assumed
-  that the share does not expire.
+  of UTC time since Unix epoch.  If omitted, it is assumed that the
+  share does not expire.  A sender server MAY use it to signal that
+  the resource represents a cached copy of a dataset that was made
+  available for an efficient data transfer to the destination server.
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are: - `webdav`, to access the data -
-  `webapp`, to access remote web applications - `datatx`, to transfer
-  the data to the remote endpoint.
-
-          Other custom protocols might be added in the future.
-
-          In case a single protocol is offered, there are three ways to
-          specify this object:
-          Option 1: Set the `name` field to the name of the protocol,
-          and put the protocol details in a field named `options`.
-          Option 2: Set the `name` field to the name of the protocol,
-          and put the protocol details in a field carrying the name of
-          the protocol.
-          Option 3: Set the `name` field to `multi`, and put the
-          protocol details in a field carrying the name of the protocol.
-
-                Option 1 using the `options` field is now deprecated.
-                Implementations are encouraged to transition to the new
-                optional properties defined below, such that this field
-                may be removed in a future major version of the spec.
-
-          When specifying more than one protocol as different ways to
-          access the Share, the `name` field needs to be set to `multi`.
-
-If `multi` is given, one or more protocol
-endpoints are expected to be defined according to the
-optional properties specified below.
-Otherwise, at least `webdav` is expected to be
-supported, and its options MAY be given in the opaque
-`options` payload for compatibility with v1.0
-implementations (see examples).  Note though that this
-format is deprecated.
-Warning: client implementers should be aware that v1.1
-servers MAY support both `webdav` and `multi`, but v1.0
-servers MAY only support `webdav`.
-
+  `webapp`, to access remote web applications - `ssh`, to access
+  the data via a public/private key pair.
+  Other custom protocols might be added in the future.
+  In case a single protocol is offered, there are three ways to
+  specify this object:
+  Option 1: Set the `name` field to the name of the protocol,
+  and put the protocol details in a field named `options`.
+  Option 2: Set the `name` field to the name of the protocol,
+  and put the protocol details in a field carrying the name of
+  the protocol.
+  Option 3: Set the `name` field to `multi`, and put the
+  protocol details in a field carrying the name of the protocol.
+  Option 1 using the `options` field is now deprecated.
+  Implementations are encouraged to transition to the new
+  optional properties defined below, such that this field
+  may be removed in a future major version of the spec.
+  When specifying more than one protocol as different ways to
+  access the Share, the `name` field needs to be set to `multi`.
+  If `multi` is given, one or more protocol
+  endpoints are expected to be defined according to the
+  optional properties specified below.
+  Otherwise, at least `webdav` is expected to be
+  supported, and its options MAY be given in the opaque
+  `options` payload for compatibility with v1.0
+  implementations (see examples).  Note though that this
+  format is deprecated.
+  Warning: client implementers should be aware that v1.1+
+  servers MAY support both `webdav` and `multi`, but v1.0
+  servers MAY only support `webdav`.
 * Protocol details for `webdav` MAY contain:
+  - OPTIONAL accessTypes (array of strings) - The type of access
+    being granted to the remote resource.  If omitted, it defaults to
+    `['remote']`.  A subset of: - `remote` signals the recipient that
+    the resource is available for remote access and interactive
+    browsing.  - `datatx` signals the recipient that the resource is
+    available for data transfer.  If no expiration is given, the share
+    is suitable e.g. for sync use-cases, whereas if an expiration date
+    is set, the above clause MAY apply and the recipient SHOULD notify
+    the sender upon completing the data transfer, in order to ease
+    cache operations on the Sending Server.  The recipient MAY delegate
+    a third-party service to execute the data transfer on their behalf.
   - REQUIRED uri (string)
     A URI to access the Remote Resource.  The URI
     SHOULD be relative, in which case the prefix
@@ -878,6 +904,9 @@ servers MAY only support `webdav`.
     to the Sending Server's {tokenEndPoint} [RFC6749].
     This MAY be used if the recipient provider exposes the
     `exchange-token` capability.
+  - OPTIONAL size (integer)
+    The size of the resource to be transferred, useful
+    especially in case of `datatx` access type.
 * Protocol details for `webapp` MAY contain:
   - REQUIRED uri (string)
     A URI to a client-browsable view of the Shared
@@ -894,20 +923,46 @@ servers MAY only support `webdav`.
   - OPTIONAL sharedSecret (string)
     An optional secret to be used to access the remote
     web app, for example in the form of a bearer token.
-* Protocol details for `datatx` MAY contain:
-  - REQUIRED srcUri (string)
-    A URI to access the Remote Resource.  The URI
-    SHOULD be relative, in which case the prefix
-    exposed by the `/.well-known/ocm` endpoint MUST be
-    used.  Absolute URIs are deprecated.
-  - OPTIONAL sharedSecret (string)
-    An optional secret to be used to access the
-    Resource, for example in the form of a bearer
-    token.  To prevent leaking it in logs it MUST NOT
-    appear in any URI.
-  - OPTIONAL size (integer)
-    The size of the file to be transferred from the
-    sending server.
+* Protocol details for `ssh` MAY contain:
+  - OPTIONAL accessTypes (array of strings) - The type of access
+    being granted to the remote resource.  If omitted, it defaults to
+    `['remote']`.  A subset of: - `remote` signals the recipient that
+    the resource is available for remote access, e.g. via sshfs.
+    - `datatx` signals the recipient to transfer the resource
+    from the given URI via scp.  The recipient MAY delegate a
+    third-party service to execute the data transfer on their behalf.
+  - REQUIRED uri (string)
+    The full address to be used for ssh or scp access, in the form
+    `username@host.fqdn:port/resource/path`, where the `username` is
+    chosen by the Sending Server and does not necessarily need to match
+    the recipient's OCM Address.  Authentication is expected to take
+    place via public/private key: the Receiving Server MUST reply to
+    such a Share Creation Notification by sending back their public
+    key, for the Sender Server to authorize access to the Resource.
+
+## Response
+
+The Share Creation Notification Response SHOULD be a HTTP response:
+
+* in response to the Share Creation Notification Request
+* using `application/json` as the `Content-Type` HTTP response header
+
+A 201 response status means the Share Creation Notification Request was
+successful.  In this case, the response body MUST contain a JSON
+document representing an object with the following string fields:
+  - REQUIRED: `recipientDisplayName` - the Recipient's display name.
+  - OPTIONAL: `recipientPublicKeys` - the Recipient's public key(s).
+    This property MUST be returned when the protocol of the incoming
+    share was `ssh`.
+A 400 response status means some parameters were invalid or missing.
+A 401 response status means the Sender cannot be authenticated as
+a trusted service.
+A 403 response status means the Sender is not authorized to create
+shares.
+A 501 response status means either the Receiver does not support
+incoming external shares, or the share type or the resource type
+are not supported.
+A 503 response status means that the Receiver is temporary unavailable.
 
 ## Decision to Discard
 
@@ -934,7 +989,7 @@ following hold true:
 * an initial check shows that the Resource cannot successfully be
   accessed through (any of) the protocol(s) listed
 
-# Receiving Party Notification
+## Receiving Party Notification
 
 If the Share Creation Notification is not discarded by the Receiving
 Server, they MAY notify the Receiving Party passively by adding the
@@ -944,6 +999,7 @@ instance a push notification or an email message.
 They could give the Receiving Party the option to accept or reject the
 share, or add the share automatically and only send an informational
 notification that this happened.
+
 
 # Share Acceptance Notification
 
@@ -990,17 +1046,6 @@ httpsig [RFC9421] so the Receiving Server can authenticate the origin
 of the notification.  Receiving Servers SHOULD decline notifications
 from Sending Servers without httpsig as it can't identify where the
 notification is coming from.
-
-### Receiving Party Notification
-
-If the Share Creation Notification is not discarded by the Receiving
-Server, they MAY notify the Receiving Party passively by adding the
-Share to some inbox list, and MAY also notify them actively through for
-instance a push notification or an email message.
-
-They could give the Receiving Party the option to accept or reject the
-Share, or add the Share automatically and only send an informational
-notification that this happened.
 
 # Resource Access
 
@@ -1071,7 +1116,7 @@ follows an example of such POST request:
 
 ```
 POST {tokenEndPoint} HTTP/1.1
-Host: my-cloud-storage.org
+Host: cloud.example.org
 Date: Wed, 05 Nov 2025 14:00:00 GMT
 Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
@@ -1241,6 +1286,9 @@ https://datatracker.ietf.org/html/rfc6749)", October 2012.
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
+[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
+(JWS)](https://datatracker.ietf.org/doc/html/rfc7515), May 2015."
+
 
 # Appendix A: Multi-factor Authentication
 
@@ -1399,8 +1447,9 @@ request.
 
 A third-party Directory Service is a back-end service used to federate
 multiple OCM Servers and facilitate the Invite flow.  It is expected to
-expose, via anonymous HTTP GET, a JSON document with the following
-format:
+expose, via anonymous HTTPS GET, a signed JWS document [RFC7515], where
+the signing key MUST be made available offline and the payload MUST
+adhere to the following format:
 
 * REQUIRED: `federation` - a human-readable name for the list of OCM
   Servers exposed by the Directory Service
@@ -1416,25 +1465,29 @@ format:
     - MUST NOT include userinfo, query, or fragment
   - REQUIRED: `displayName` - a human-readable name
     for the OCM Server
-    Example:
+Example:
 
 ```json
 {
-  "federation": "The ScienceMesh Directory",
-  "servers": [
-    {
-      "url": "https://ocm-server-1.example.org",
-      "displayName": "OCM Server 1"
-    },
-    {
-      "url": "https://ocm-server-2.example.org:4443",
-      "displayName": "OCM Server 2"
-    },
-    {
-      "url": "http://192.168.1.1:8080",
-      "displayName": "OCM Server 3"
-    }
-  ]
+  "payload": {
+    "federation": "The ScienceMesh Directory",
+    "servers": [
+      {
+        "url": "https://ocm-server-1.example.org",
+        "displayName": "OCM Server 1"
+      },
+      {
+        "url": "https://ocm-server-2.example.org:4443",
+        "displayName": "OCM Server 2"
+      },
+      {
+        "url": "http://192.168.1.1:8080",
+        "displayName": "OCM Server 3"
+      }
+    ]
+  },
+  "protected": {"alg": "RS256"},
+  "signature": "..."
 }
 ```
 

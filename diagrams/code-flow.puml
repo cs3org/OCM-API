@@ -1,26 +1,35 @@
 @startuml
 
-participant "Alice" as Alice_user #fdf2d0
+actor "Alice" as Alice_user #fdf2d0
 participant "EFSS" as Alice_EFSS #fdf2d0
 participant "Disco" as Alice_Disco #fdf2d0
 participant "Disco" as Bob_Disco #eececd
-participant "EFSS" as Bob_OCM #eececd
-participant "Bob" as Bob_user #eececd
-Bob_user -> Bob_OCM: Add contact 'Alice'
-Bob_user -> Alice_user: OCM invite [ token, FQDN ]
-Alice_user -> Alice_EFSS: Add contact 'Bob'
-Alice_EFSS -> Bob_OCM: POST /invite_accept [ token ]
-Bob_OCM -> Alice_EFSS: 201 created
+participant "EFSS" as Bob_EFSS #eececd
+actor "Bob" as Bob_user #eececd
+==Invite==
+Bob_user -> Bob_EFSS: Create token for 'Alice'
+Bob_EFSS -> Bob_user: token
+Bob_user -> Alice_user: OCM invite [ inviteString (token@Bob_FQDN) ]
+Alice_user -> Alice_EFSS: Add contact [ inviteString ]
+Alice_EFSS -> Bob_EFSS: **POST /ocm/invite-accepted** [ token ]
+Bob_EFSS -> Bob_user: 'Alice' is a trusted contact
+Bob_EFSS --> Alice_EFSS: 201 created
+Alice_EFSS -> Alice_user: 'Bob' is a trusted contact
+==Share==
 Alice_user -> Alice_EFSS: Share doc with 'Bob'
 Alice_EFSS -> Bob_Disco: GET /.well-known/ocm
 Bob_Disco -> Alice_EFSS: endpoints, capabilities, pubkey
-Alice_EFSS -> Bob_OCM: (signed) POST /ocm/share
-Bob_OCM -> Alice_Disco: GET /.well-known/ocm
-Alice_Disco -> Bob_OCM: pubkey
-Bob_OCM -> Alice_EFSS: 201 created
-Bob_OCM -> Alice_EFSS: (signed) /ocm/token
-Alice_EFSS -> Bob_OCM: short-lived bearer token
-Bob_OCM --> Alice_EFSS: (bearer) PROPFIND
-Alice_EFSS -> Bob_OCM: OK
+Alice_EFSS -> Bob_EFSS: (signed) **POST /ocm/share** [ refreshToken ]
+Bob_EFSS -> Alice_Disco: GET /.well-known/ocm
+Alice_Disco -> Bob_EFSS: pubkey
+Bob_EFSS --> Alice_EFSS: 201 created
+Bob_EFSS -> Bob_user: doc was shared by 'Alice'
+==Access==
+Bob_user -> Bob_EFSS: Access Alice's doc
+Bob_EFSS -> Alice_EFSS: (signed) **POST /ocm/token** [ refreshToken ]
+Alice_EFSS -> Bob_EFSS: short-lived bearer token
+Bob_EFSS -> Alice_EFSS: (bearer) PROPFIND
+Alice_EFSS --> Bob_EFSS: OK
+Bob_EFSS -> Bob_user: Display doc
 
 @enduml

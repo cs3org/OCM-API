@@ -12,7 +12,7 @@ servers:
   - url: https://{discovery_fqdn}
     variables:
       discovery_fqdn:
-        default: my-cloud-storage.org
+        default: cloud.example.org
 paths:
   /.well-known/ocm:
     get:
@@ -21,7 +21,7 @@ paths:
         Following [RFC8615], this endpoint returns the properties and
         capabilities offered by an OCM Server. This endpoint MUST be
         served at the OCM Server's root FQDN, e.g. as in
-        `https://my-cloud-storage.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
+        `https://cloud.example.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
         for more details.
       responses:
         "200":
@@ -72,8 +72,16 @@ paths:
                 properties:
                   recipientDisplayName:
                     type: string
-                    description: display name of the recipient
+                    description: >
+                      Display name of the recipient
                     example: John Doe
+                  recipientPublicKeys:
+                    type: array
+                    items:
+                      type: string
+                    description: >
+                      The public key(s) of the recipient. This value MUST be provided
+                      in case the Share Creation Notification includes the `ssh` protocol.
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `shareWith` is not
@@ -83,26 +91,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/400"
         "401":
-          description: Client cannot be authenticated as a trusted service.
+          description: Sender cannot be authenticated as a trusted service.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "403":
-          description: Trusted service is not authorized to create shares.
+          description: Sender is not authorized to create shares.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "501":
-          description: The consumer doesn't support incoming external shares, the share
+          description: The Receiver doesn't support incoming external shares, the share
             type or the resource type is not supported.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "503":
-          description: The consumer is temporary unavailable (e.g. due to planned
+          description: The Receiver is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
@@ -231,34 +239,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /{tokenEndPoint}:
-    post:
-      summary: Token Exchange endpoint
-      description: >
-        This optional endpoint allows to obtain a (potentially short-lived) bearer token in exchange for a secret.
-        See [Resource Access](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#resource-access)
-        for more details. The actual endpoint URL is discovered via OCM provider metadata
-        (tokenEndPoint).
-      requestBody:
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/TokenRequest"
-        description: Form-encoded request body.
-        required: true
-      responses:
-        "200":
-          description: Token issued.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TokenResponse"
-        "400":
-          description: Token denied.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 components:
   parameters:
     id:
@@ -332,7 +312,7 @@ components:
         endPoint:
           type: string
           description: The URI of the OCM API available at this endpoint
-          example: https://my-cloud-storage.org/ocm
+          example: https://cloud.example.org/ocm
         provider:
           type: string
           description: A friendly branding name of this endpoint
@@ -388,14 +368,12 @@ components:
                       The top-level path for web apps at this endpoint. In order to
                       access a remote web app, implementations SHOULD use this path
                       as a prefix (see sharing examples).
-                  datatx:
+                  ssh:
                     type: string
                     description: >
-                      The top-level path to be used for data transfers. In order to
-                      access a remote shared resource, implementations SHOULD use
-                      this path as a prefix (see sharing examples). In addition,
-                      implementations are expected to execute the transfer using
-                      WebDAV as the wire protocol.
+                      The top-level address in the form `host:port` of an endpoint
+                      that supports ssh and scp with a public/private key based
+                      authentication.
                 additionalProperties:
                     type: string
                     description: >
@@ -410,19 +388,22 @@ components:
           type: array
           description: >
             The optional capabilities exposed at this endpoint according to the
-            present
-            specifications.
+            present specifications.
           items:
             type: string
             enum:
               - enforce-mfa
-              - webdav-uri
-              - protocol-object
-              - invites
               - exchange-token
+              - http-sig
+              - invites
+              - invite-wayf
+              - notifications
+              - protocol-object
+              - webdav-uri
           example:
             - webdav-uri
             - protocol-object
+            - http-sig
         criteria:
           type: array
           description: |
@@ -442,31 +423,82 @@ components:
             - invite
         publicKey:
           type: object
+          deprecated: true
           description: >
-            The signatory used to sign outgoing request to confirm its origin.
-            The 
-            signatory is optional but it MUST contain `id` and `publicKeyPem`.
+            DEPRECATED: Use publicKeys array instead for RFC 9421 support.
+            Legacy field for draft-cavage HTTP Signatures (RSA only).
+            Maintained for backward compatibility with existing deployments.
+            The signatory is optional but it MUST contain `keyId` and `publicKeyPem`.
           properties:
             keyId:
               type: string
               description: >
                 unique id of the key in URI format. The hostname set the origin
-                of the 
-                request and MUST be identical to the current discovery endpoint.
-              example: https://my-cloud-storage.org/ocm#signature
+                of the request and MUST be identical to the current discovery endpoint.
+              example: https://cloud.example.org/ocm#signature
             publicKeyPem:
               type: string
               description: |
-                PEM-encoded version of the public key.
+                PEM-encoded RSA public key for draft-cavage signatures.
               example: |
                 -----BEGIN PUBLIC KEY-----
                 MII...QDD
                 -----END PUBLIC KEY-----
+        publicKeys:
+          type: array
+          description: >
+            Array of public keys for RFC 9421 HTTP Message Signatures.
+            Servers advertising the "rfc-http-sig" capability MUST provide this field.
+            Clients SHOULD prefer RFC 9421 signatures when this capability is present.
+          items:
+            type: object
+            required:
+              - keyId
+              - publicKeyPem
+              - algorithm
+            properties:
+              keyId:
+                type: string
+                format: uri
+                description: >
+                  Unique identifier for this key in URI format.
+                  Hostname MUST match the discovery endpoint hostname.
+                example: https://cloud.example.org/ocm#key-1
+              publicKeyPem:
+                type: string
+                description: |
+                  PEM-encoded public key for RFC 9421 signatures.
+                example: |
+                  -----BEGIN PUBLIC KEY-----
+                  MCowBQYDK2VwAyEA...
+                  -----END PUBLIC KEY-----
+              algorithm:
+                type: string
+                description: >
+                  Cryptographic algorithm identifier from the IANA HTTP Signature
+                  Algorithms Registry as defined in RFC 9421 Section 6.2.
+                example: ed25519
         tokenEndPoint:
           type: string
+          format: uri
           description: >
             Optional URL path of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
             If the `exchange-token` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
+
+            **Token Exchange API:**
+            This optional endpoint allows obtaining a (potentially short-lived) bearer token in exchange for a secret.
+
+            **HTTP Request:**
+            - Method: POST
+            - URL: The URL discovered in this field
+            - Content-Type: application/x-www-form-urlencoded
+            - Body: TokenRequest schema (form-encoded, required)
+
+            **HTTP Responses:**
+            - 200: Token issued (application/json with TokenResponse schema)
+            - 400: Token denied (application/json with Error schema)
+
+            See TokenRequest and TokenResponse schemas for the complete data structure.
           example: /index.php/apps/sciencemesh/token
         inviteAcceptDialog:
           type: string
@@ -550,16 +582,19 @@ components:
         expiration:
           type: integer
           description: >
-            The expiration time for the share, in seconds of UTC time since
-            Unix epoch. If omitted, it is assumed that the share does not expire.
+            The expiration time for the share, in seconds of UTC time since Unix
+            epoch. If omitted, it is assumed that the share does not expire. A sender
+            server MAY use the `expiration` to signal that the resource represents
+            a cached copy of a dataset that was made available for an efficient
+            data transfer to the destination server.
         protocol:
           type: object
           description: |
             JSON object with specific options for each protocol.
             The supported protocols are:
-            - `webdav`, to access the data
+            - `webdav`, to access the data via WebDAV
             - `webapp`, to access remote web applications
-            - `datatx`, to transfer the data to the remote endpoint
+            - `ssh`, to access the data via SFTP/SCP
             Other custom protocols might be added in the future.
           required:
             - name
@@ -587,7 +622,25 @@ components:
                 this field may be removed in a future major version of the spec.
             webdav:
               type: object
+              required:
+                - uri
+                - permissions
               properties:
+                accessTypes:
+                  type: array
+                  description: >
+                    The type of access being granted to the remote resource.
+                    If omitted, it defaults to `['remote']`.
+                    - `remote` signals the recipient that the resource is available
+                      for remote access and interactive browsing.
+                    - `datatx` signals the recipient to transfer the resource
+                      from the given URI. The recipient MAY delegate a third-party
+                      service to execute the data transfer on their behalf.
+                  items:
+                    type: string
+                    enum:
+                      - remote
+                      - datatx
                 uri:
                   type: string
                   description: >
@@ -605,13 +658,13 @@ components:
                     To prevent leaking it in logs it MUST NOT appear in any URI.
                 permissions:
                   type: array
+                  description: >
+                    The permissions granted to the sharee.
+                    - `read` allows read-only access including download of a copy.
+                    - `write` allows create, update, and delete rights on the resource.
+                    - `share` allows re-share rights on the resource.
                   items:
                     type: string
-                    description: >
-                      The permissions granted to the sharee.
-                      - `read` allows read-only access including download of a copy.
-                      - `write` allows create, update, and delete rights on the resource.
-                      - `share` allows re-share rights on the resource.
                     enum:
                       - read
                       - write
@@ -621,8 +674,7 @@ components:
                   items:
                     type: string
                     description: >
-                      A list of requirements that the recipient provider MUST
-                      fulfill
+                      A list of requirements that the recipient provider MUST fulfill
                       to access the resource. Requirements are optional, but if it is
                       present it MUST NOT be empty. A recipient provider MUST reject
                       a share whose requirements it does not understand.
@@ -638,6 +690,11 @@ components:
                     enum:
                       - must-use-mfa
                       - must-exchange-token
+                size:
+                  type: integer
+                  description: >
+                    The size of the resource to be transferred, useful especially
+                    in case of `datatx` access type.
             webapp:
               type: object
               properties:
@@ -672,31 +729,30 @@ components:
                     in any URI.  In a multi-protocol share scenario with WebDAV, the
                     access requirements provided in the `webdav` part MUST apply for
                     `webapp` accesses as well.
-            datatx:
+            ssh:
               type: object
               properties:
-                sharedSecret:
+                accessTypes:
+                  type: array
+                  description: >
+                    The type of access being granted to the remote resource.
+                    If omitted, it defaults to `['remote']`.
+                    - `remote` signals the recipient that the resource is available
+                      for remote access, e.g. via sshfs.
+                    - `datatx` signals the recipient to transfer the resource from
+                      the given URI via scp. The recipient MAY delegate a third-party
+                      service to execute the data transfer on their behalf.
+                  items:
+                    type: string
+                    enum:
+                      - remote
+                      - datatx
+                uri:
                   type: string
                   description: >
-                    An optional secret to be used to access the resource, such as
-                    a bearer token.  To prevent leaking it in logs it MUST NOT
-                    appear in any URI.  In a multi-protocol share scenario with WebDAV,
-                    the access requirements provided in the `webdav` part MUST apply
-                    for `datatx` transfers as well.
-                srcUri:
-                  type: string
-                  description: >
-                    An URI to access the resource at the sending server. The URI
-                    SHOULD be relative, such as a key or a UUID, in which case the
-                    prefix exposed by the `/.well-known/ocm` endpoint SHOULD be used
-                    to access the resource, or it MAY be absolute, including a
-                    hostname. Similar considerations as for the `webdav` case apply.
-                size:
-                  type: integer
-                  description: >
-                    The size of the file to be transferred from the sending
-                    server.
-
+                    The full address to be used for ssh or scp access, in the form
+                    `username@host.fqdn:port/resource/path`, where authentication is
+                    expected to take place via public/private key.
           additionalProperties:
             type: object
             description: >
@@ -718,11 +774,10 @@ components:
                 permissions:
                   - read
                   - write
-                requirements:
-                  - none
             multipleProtocols:
               name: multi
               webdav:
+                accessTypes: ['remote', 'datatx']
                 uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 permissions:
@@ -733,10 +788,9 @@ components:
                 uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 viewMode: read
-              datatx:
-                srcUri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-                sharedSecret: hfiuhworzwnur98d3wjiwhr
-                size: 100000
+              ssh:
+                accessType: ['datatx']
+                uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
       required:
