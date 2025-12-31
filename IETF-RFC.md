@@ -1685,18 +1685,31 @@ OCM Providers.
                    |
          +---------+---------+----------------------+
          |                   |                      |
-         v                   v                      v
-+------------------+  +------------------+   +--------------------------+
-| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]            |
-+------------------+  +------------------+   +--------------------------+
-| - name           |  | - enforce-mfa    |   | - allowlist              |
-| - shareTypes[]   |  | - exchange-token |   | - denylist               |
-| - protocols{}    |  | - http-sig       |   | - http-request-signatures|
-+------------------+  | - invites        |   | - invite                 |
-       |              | - notifications  |   | - token-exchange         |
-       |              | - protocol-object|   +--------------------------+
-       |              | - webdav-uri     |
-       |              +------------------+
+         v                   v                      |
++------------------+  +------------------+          |
+| ResourceTypes[]  |  | Capabilities[]   |          |
++------------------+  +------------------+          |
+| - name           |  | - enforce-mfa    |          |
+| - shareTypes[]   |  | - exchange-token |          |
+| - protocols{}    |  | - http-sig       |          |
++------------------+  | - invites        |          |
+       |              | - notifications  |          |
+       |              | - protocol-object|          |
+       |              | - webdav-uri     |          |
+       |              +------------------+          |
+       |                                            |
+       |                           +----------------+
+       |                           |
+       |                           v
+       |              +--------------------------+
+       |              |    Criteria[]            |
+       |              +--------------------------+
+       |              | - allowlist              |
+       |              | - denylist               |
+       |              | - http-request-signatures|
+       |              | - invite                 |
+       |              | - token-exchange         |
+       |              +--------------------------+
        |
        | supports
        v
