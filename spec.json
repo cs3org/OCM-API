@@ -1,0 +1,949 @@
+{
+  "components": {
+    "parameters": {
+      "id": {
+        "description": "Unique ID to identify the share at the consumer side.",
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "page": {
+        "description": "Default parameter to handle paging through collections. However, this parameter is NOT mandatory, as clients should use the HAL navigation links (e.g. `_links.next.href`) to paginate. These links enable the possibility to use vendor specific pagination.\n",
+        "in": "query",
+        "name": "page",
+        "required": false,
+        "schema": {
+          "default": 1,
+          "type": "integer"
+        }
+      }
+    },
+    "schemas": {
+      "400": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Error"
+          },
+          {
+            "properties": {
+              "validationErrors": {
+                "items": {
+                  "properties": {
+                    "message": {
+                      "description": "A validation error message which is understandable for both humans and machines (e.g. no use of special characters) providing more information on the cause of the validation error.\n",
+                      "example": "NOT_FOUND",
+                      "type": "string"
+                    },
+                    "name": {
+                      "example": "shareWith",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            }
+          }
+        ],
+        "type": "object"
+      },
+      "AcceptedInvite": {
+        "properties": {
+          "email": {
+            "description": "Email address of the Invite Receiver.",
+            "example": "richard@gmail.com",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Invite Receiver.",
+            "example": "Richard Feynman",
+            "type": "string"
+          },
+          "recipientProvider": {
+            "description": "FQDN of the receiver OCM service.",
+            "example": "receiver.org",
+            "format": "fqdn",
+            "type": "string"
+          },
+          "token": {
+            "description": "Token received in the invite",
+            "example": "xyz",
+            "type": "string"
+          },
+          "userID": {
+            "description": "Unique ID to identify the Invite Receiver at their OCM Server.",
+            "example": "51dc30ddc473d43a6011e9ebba6ca770",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recipientProvider",
+          "token",
+          "userID",
+          "email",
+          "name"
+        ],
+        "type": "object"
+      },
+      "AcceptedInviteResponse": {
+        "properties": {
+          "email": {
+            "description": "Email ID of the Invite Sender.",
+            "example": "john@sender.org",
+            "type": "string"
+          },
+          "name": {
+            "description": "Name of the Invite Sender.",
+            "example": "John Doe",
+            "type": "string"
+          },
+          "userID": {
+            "description": "Unique ID to identify the Invite Sender at their OCM Server.",
+            "example": 9302,
+            "type": "string"
+          }
+        },
+        "required": [
+          "userID",
+          "email",
+          "name"
+        ],
+        "type": "object"
+      },
+      "Discovery": {
+        "properties": {
+          "apiVersion": {
+            "description": "The OCM API version this endpoint supports",
+            "example": "1.2.2",
+            "type": "string"
+          },
+          "capabilities": {
+            "description": "The optional capabilities exposed at this endpoint according to the present specifications.\n",
+            "example": [
+              "webdav-uri",
+              "protocol-object",
+              "http-sig"
+            ],
+            "items": {
+              "enum": [
+                "enforce-mfa",
+                "exchange-token",
+                "http-sig",
+                "invites",
+                "invite-wayf",
+                "notifications",
+                "protocol-object",
+                "webdav-uri"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "criteria": {
+            "description": "The criteria for accepting a Share Creation Notification.\nAs all Receiving Servers should require the use of TLS in API calls,\nit is not necessary to expose that as a criterium.\n",
+            "example": [
+              "allowlist",
+              "invite"
+            ],
+            "items": {
+              "enum": [
+                "http-request-signatures",
+                "token-exchange",
+                "denylist",
+                "allowlist",
+                "invite"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "enabled": {
+            "description": "Whether the OCM service is enabled at this endpoint",
+            "type": "boolean"
+          },
+          "endPoint": {
+            "description": "The URI of the OCM API available at this endpoint",
+            "example": "https://cloud.example.org/ocm",
+            "type": "string"
+          },
+          "inviteAcceptDialog": {
+            "description": "Optional URL path of a web page where a user can accept an invite, when query parameters `\"token\"` and `\"providerDomain\"` are provided. Implementations that offer the `invites` capability SHOULD provide this URL as well in order to enhance the UX of the Invite Flow. If for example `\"/index.php/apps/sciencemesh/accept\"` is specified here then a Where-Are-You-From page could redirect the end-user to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.\n",
+            "example": "/index.php/apps/sciencemesh/accept",
+            "type": "string"
+          },
+          "provider": {
+            "description": "A friendly branding name of this endpoint",
+            "example": "MyCloudStorage",
+            "type": "string"
+          },
+          "publicKey": {
+            "deprecated": true,
+            "description": "DEPRECATED: Use publicKeys array instead for RFC 9421 support. Legacy field for draft-cavage HTTP Signatures (RSA only). Maintained for backward compatibility with existing deployments. The signatory is optional but it MUST contain `keyId` and `publicKeyPem`.\n",
+            "properties": {
+              "keyId": {
+                "description": "unique id of the key in URI format. The hostname set the origin of the request and MUST be identical to the current discovery endpoint.\n",
+                "example": "https://cloud.example.org/ocm#signature",
+                "type": "string"
+              },
+              "publicKeyPem": {
+                "description": "PEM-encoded RSA public key for draft-cavage signatures.\n",
+                "example": "-----BEGIN PUBLIC KEY-----\nMII...QDD\n-----END PUBLIC KEY-----\n",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "publicKeys": {
+            "description": "Array of public keys for RFC 9421 HTTP Message Signatures. Servers advertising the \"http-sig\" capability MUST provide this field. Clients SHOULD prefer RFC 9421 signatures when this capability is present.\n",
+            "items": {
+              "properties": {
+                "algorithm": {
+                  "description": "Cryptographic algorithm identifier from the IANA HTTP Signature Algorithms Registry as defined in RFC 9421 Section 6.2.\n",
+                  "example": "ed25519",
+                  "type": "string"
+                },
+                "keyId": {
+                  "description": "Unique identifier for this key in URI format. Hostname MUST match the discovery endpoint hostname.\n",
+                  "example": "https://cloud.example.org/ocm#key-1",
+                  "format": "uri",
+                  "type": "string"
+                },
+                "publicKeyPem": {
+                  "description": "PEM-encoded public key for RFC 9421 signatures.\n",
+                  "example": "-----BEGIN PUBLIC KEY-----\nMCowBQYDK2VwAyEA...\n-----END PUBLIC KEY-----\n",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "keyId",
+                "publicKeyPem",
+                "algorithm"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "resourceTypes": {
+            "description": "A list of all supported resource types with their access protocols.\nEach resource type is identified by its `name`: the list MUST NOT\ncontain more than one resource type object per given `name`.\n",
+            "items": {
+              "properties": {
+                "name": {
+                  "description": "A supported resource type (file, calendar, contact, ...). Implementations MUST offer support for at least one resource type, where `file` is the commonly supported one. Each resource type is identified by its `name`: the list MUST NOT contain more than one resource type object per given `name`\n",
+                  "example": "file",
+                  "type": "string"
+                },
+                "protocols": {
+                  "additionalProperties": {
+                    "description": "Any additional protocol supported for this resource type MAY be advertised here, where the value MAY correspond to a top-level URI to be used for that protocol.\n",
+                    "type": "string"
+                  },
+                  "description": "The supported protocols to access shared resources at this endpoint. Implementations MUST support at least `webdav` for `file` resources, any other combination of resources and protocols is optional.\n",
+                  "example": {
+                    "talk": "/apps/spreed/api/",
+                    "webapp": "/apps/ocm/",
+                    "webdav": "/remote/dav/ocm/"
+                  },
+                  "properties": {
+                    "ssh": {
+                      "description": "The top-level address in the form `host:port` of an endpoint that supports ssh and scp with a public/private key based authentication.\n",
+                      "type": "string"
+                    },
+                    "webapp": {
+                      "description": "The top-level path for web apps at this endpoint. In order to access a remote web app, implementations SHOULD use this path as a prefix (see sharing examples).\n",
+                      "type": "string"
+                    },
+                    "webdav": {
+                      "description": "The top-level WebDAV path at this endpoint. In order to access a remote shared resource, implementations SHOULD use this path as a prefix (see sharing examples).\n",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "shareTypes": {
+                  "description": "The supported recipient share types.\nMUST contain `\"user\"` at a minimum, plus optionally\n`\"group\"` and `\"federation\"`.\n",
+                  "example": [
+                    "user"
+                  ],
+                  "items": {
+                    "enum": [
+                      "user",
+                      "group",
+                      "federation"
+                    ],
+                    "type": "string"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "tokenEndPoint": {
+            "description": "Optional URL of the Token Exchange endpoint to obtain bearer tokens in exchange for codes. If the `exchange-token` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.\n**Token Exchange API:** This optional endpoint allows obtaining a (potentially short-lived) bearer token in exchange for a secret.\n**HTTP Request:** - Method: POST - URL: The URL discovered in this field - Content-Type: application/x-www-form-urlencoded - Body: TokenRequest schema (form-encoded, required)\n**HTTP Responses:** - 200: Token issued (application/json with TokenResponse schema) - 400: Token denied (application/json with Error schema)\nSee TokenRequest and TokenResponse schemas for the complete data structure.\n",
+            "example": "https://cloud.example.org/ocm/token",
+            "format": "uri",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "apiVersion",
+          "endPoint",
+          "resourceTypes"
+        ],
+        "type": "object"
+      },
+      "Error": {
+        "properties": {
+          "message": {
+            "description": "An error message which is understandable for both humans and machines (e.g. no use of special characters) providing more information on the cause of the error.\n",
+            "example": "RESOURCE_NOT_FOUND",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "type": "object"
+      },
+      "NewNotification": {
+        "example": {
+          "shareWasAccepted": {
+            "notification": {
+              "message": "Recipient accepted the share",
+              "sharedSecret": "hfiuhworzwnur98d3wjiwhr"
+            },
+            "notificationType": "SHARE_ACCEPTED",
+            "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
+            "resourceType": "file"
+          },
+          "userWasRemoved": {
+            "notificationType": "USER_REMOVED",
+            "providerId": "51dc30ddc473d43a6011e9ebba6ca770",
+            "resourceType": "user"
+          }
+        },
+        "properties": {
+          "notification": {
+            "description": "Optional additional parameters, depending on the notification\nand the resource type.\n",
+            "type": "object"
+          },
+          "notificationType": {
+            "description": "A notification type that is understandable for both humans and\nmachines (e.g. no use of special characters) providing more\ninformation on the cause of the error.\nValues that MAY be used by implementations are:\n`SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,\n`SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`,\n`USER_REMOVED`.\n",
+            "type": "string"
+          },
+          "providerId": {
+            "description": "Identifier of the shared resource. If the resourceType is `file`,\nthen see `NewShare/providerId` for the required information.\nIf the resourceType is `user`, then this is the user identifier\npreviously sent via `/invite-accepted`.\n",
+            "type": "string"
+          },
+          "resourceType": {
+            "description": "Resource type (file, folder, user, calendar, contact, ...)\n",
+            "type": "string"
+          }
+        },
+        "required": [
+          "notificationType",
+          "resourceType",
+          "providerId"
+        ],
+        "type": "object"
+      },
+      "NewShare": {
+        "properties": {
+          "description": {
+            "description": "Optional description of the resource (file or folder).",
+            "example": "This is the Open API Specification file (in YAML format) of the Open\nCloud Mesh API.\n",
+            "type": "string"
+          },
+          "expiration": {
+            "description": "The expiration time for the share, in seconds of UTC time since Unix epoch. If omitted, it is assumed that the share does not expire. A sender server MAY use the `expiration` to signal that the resource represents a cached copy of a dataset that was made available for an efficient data transfer to the destination server.\n",
+            "type": "integer"
+          },
+          "name": {
+            "description": "Name of the resource (file or folder).",
+            "example": "resource.txt",
+            "type": "string"
+          },
+          "owner": {
+            "description": "OCM Address of the user who owns the resource.\n",
+            "example": "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl",
+            "type": "string"
+          },
+          "ownerDisplayName": {
+            "description": "Display name of the owner of the resource\n",
+            "example": "Dimitri",
+            "type": "string"
+          },
+          "protocol": {
+            "additionalProperties": {
+              "description": "Any optional additional protocols supported for this resource MAY be provided here, along with their custom payload. Appropriate capabilities SHOULD be advertised in order for a sender to ensure the recipient can parse such customized payloads.\n",
+              "type": "object"
+            },
+            "description": "JSON object with specific options for each protocol.\nThe supported protocols are:\n- `webdav`, to access the data via WebDAV\n- `webapp`, to access remote web applications\n- `ssh`, to access the data via SFTP/SCP\nOther custom protocols might be added in the future.\n",
+            "example": {
+              "multipleProtocols": {
+                "name": "multi",
+                "ssh": {
+                  "accessTypes": [
+                    "datatx"
+                  ],
+                  "uri": "extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01"
+                },
+                "webapp": {
+                  "sharedSecret": "hfiuhworzwnur98d3wjiwhr",
+                  "uri": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
+                  "viewMode": "read"
+                },
+                "webdav": {
+                  "accessTypes": [
+                    "remote",
+                    "datatx"
+                  ],
+                  "permissions": [
+                    "read"
+                  ],
+                  "requirements": [
+                    "mfa-enforced"
+                  ],
+                  "sharedSecret": "hfiuhworzwnur98d3wjiwhr",
+                  "uri": "7c084226-d9a1-11e6-bf26-cec0c932ce01"
+                }
+              },
+              "singleProtocolLegacy": {
+                "name": "webdav",
+                "options": {
+                  "permissions": "some permissions scheme",
+                  "sharedSecret": "hfiuhworzwnur98d3wjiwhr"
+                }
+              },
+              "singleProtocolNew": {
+                "name": "multi",
+                "webdav": {
+                  "permissions": [
+                    "read",
+                    "write"
+                  ],
+                  "sharedSecret": "hfiuhworzwnur98d3wjiwhr",
+                  "uri": "7c084226-d9a1-11e6-bf26-cec0c932ce01"
+                }
+              }
+            },
+            "properties": {
+              "name": {
+                "description": "The name of the protocol. Default: `multi`. If `multi` is given, one or more protocol endpoints are expected to be defined according to the optional properties specified below. Otherwise, at least `webdav` is expected to be supported, and its options MAY be given in the opaque `options` payload for compatibility with v1.0 implementations (see examples). Note though that this format is deprecated. Warning: client implementers should be aware that v1.1 servers MAY support both `webdav` and `multi`, but v1.0 servers MAY only support `webdav`. This field may be removed in a future major version of the spec.\n",
+                "type": "string"
+              },
+              "options": {
+                "description": "This property is now deprecated. Implementations are encouraged to transition to the new optional properties defined below, such that this field may be removed in a future major version of the spec.\n",
+                "type": "object"
+              },
+              "ssh": {
+                "properties": {
+                  "accessTypes": {
+                    "description": "The type of access being granted to the remote resource. If omitted, it defaults to `['remote']`. - `remote` signals the recipient that the resource is available\n  for remote access, e.g. via sshfs.\n- `datatx` signals the recipient to transfer the resource from\n  the given URI via scp. The recipient MAY delegate a third-party\n  service to execute the data transfer on their behalf.\n",
+                    "items": {
+                      "enum": [
+                        "remote",
+                        "datatx"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "uri": {
+                    "description": "The full address to be used for ssh or scp access, in the form `username@host.fqdn:port/resource/path`, where authentication is expected to take place via public/private key.\n",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "webapp": {
+                "properties": {
+                  "sharedSecret": {
+                    "description": "An optional secret to be used to access the remote web app, such as a bearer token.  To prevent leaking it in logs it MUST NOT appear in any URI.  In a multi-protocol share scenario with WebDAV, the access requirements provided in the `webdav` part MUST apply for `webapp` accesses as well.\n",
+                    "type": "string"
+                  },
+                  "uri": {
+                    "description": "An URI to a client-browsable view of the remote resource, such that users may use a web application available at the sender site. The URI SHOULD be relative, such as a key or a UUID, in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST be used to access the resource, or it MAY be absolute, including a hostname. Similar considerations as for the `webdav` case apply here. In all cases, for a `folder` resource, the composed URI acts as the root path, such that other files located within SHOULD be accessible by appending their relative path to that URI.\n",
+                    "type": "string"
+                  },
+                  "viewMode": {
+                    "description": "The permissions granted to the sharee.\n- `view` allows access to the web app in view-only mode.\n- `read` allows read and download access via the web app.\n- `write` allows full editing rights via the web app.\n",
+                    "enum": [
+                      "view",
+                      "read",
+                      "write"
+                    ],
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "webdav": {
+                "properties": {
+                  "accessTypes": {
+                    "description": "The type of access being granted to the remote resource. If omitted, it defaults to `['remote']`. - `remote` signals the recipient that the resource is available\n  for remote access and interactive browsing.\n- `datatx` signals the recipient to transfer the resource\n  from the given URI. The recipient MAY delegate a third-party\n  service to execute the data transfer on their behalf.\n",
+                    "items": {
+                      "enum": [
+                        "remote",
+                        "datatx"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "permissions": {
+                    "description": "The permissions granted to the sharee. - `read` allows read-only access including download of a copy. - `write` allows create, update, and delete rights on the resource. - `share` allows re-share rights on the resource.\n",
+                    "items": {
+                      "enum": [
+                        "read",
+                        "write",
+                        "share"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "requirements": {
+                    "items": {
+                      "description": "A list of requirements that the recipient provider MUST fulfill to access the resource. Requirements are optional, but if it is present it MUST NOT be empty. A recipient provider MUST reject a share whose requirements it does not understand. The following requirements are currently supported: - `must-use-mfa` requires the user accessing the resource to be\n  MFA-authenticated. This requirement MAY be used if the\n  recipient provider exposes the `enforce-mfa` capability.\n- `must-exchange-token` requires the recipient to exchange the given\n  `sharedSecret` via a signed HTTPS request to tokenEndPoint at the\n  Sending Server, in order to get a short-lived token to be used\n  for subsequent access [RFC6749]. This requirement MAY be used if\n  the recipient provider exposes the `exchange-token` capability.\n",
+                      "enum": [
+                        "must-use-mfa",
+                        "must-exchange-token"
+                      ],
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "sharedSecret": {
+                    "description": "A secret to be used to access the resource, such as a bearer token. To prevent leaking it in logs it MUST NOT appear in any URI.\n",
+                    "type": "string"
+                  },
+                  "size": {
+                    "description": "The size of the resource to be transferred, useful especially in case of `datatx` access type.\n",
+                    "type": "integer"
+                  },
+                  "uri": {
+                    "description": "An URI to access the remote resource. The URI SHOULD be relative, such as a key or a UUID, in which case the prefix exposed by the `/.well-known/ocm` endpoint MUST be used to access the resource, or it MAY be absolute, including a hostname. The latter is deprecated. In all cases, for a `folder` resource, the composed URI acts as the root path, such that other files located within it SHOULD be accessible by appending their relative path to that URI.\n",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "uri",
+                  "permissions"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "providerId": {
+            "description": "Opaque value to identify the Shared Resource at the provider side. This MUST be unique per Resource and per share, such that multiple shares of a given Resource are guaranteed to get different values.\n",
+            "example": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
+            "type": "string"
+          },
+          "resourceType": {
+            "description": "Resource type (file, folder, calendar, contact, ...)\n",
+            "example": "file",
+            "type": "string"
+          },
+          "sender": {
+            "description": "OCM Address of the user that wants to share the\nresource.\n",
+            "example": "527bd5b5d689e2c32ae974c6229ff785@apiwise.nl",
+            "type": "string"
+          },
+          "senderDisplayName": {
+            "description": "Display name of the user that wants to share the resource\n",
+            "example": "John Doe",
+            "type": "string"
+          },
+          "shareType": {
+            "description": "Recipient share type\n",
+            "enum": [
+              "user",
+              "group",
+              "federation"
+            ],
+            "example": "user",
+            "type": "string"
+          },
+          "shareWith": {
+            "description": "OCM Address of the user, group or federation the provider wants to share the resource with. This MUST be known in advance, either via a previous Invitation or through other means.\n",
+            "example": "51dc30ddc473d43a6011e9ebba6ca770@geant.org",
+            "type": "string"
+          }
+        },
+        "required": [
+          "shareWith",
+          "name",
+          "providerId",
+          "owner",
+          "sender",
+          "shareType",
+          "resourceType",
+          "protocol"
+        ],
+        "type": "object"
+      },
+      "TokenRequest": {
+        "properties": {
+          "client_id": {
+            "description": "FQDN of the Receiving Server.",
+            "example": "receiver.org",
+            "format": "fqdn",
+            "type": "string"
+          },
+          "code": {
+            "description": "Secret received in the Share Creation Notification",
+            "example": "xyz",
+            "type": "string"
+          },
+          "grant_type": {
+            "description": "Must be set to 'authorization_code'",
+            "enum": [
+              "authorization_code"
+            ],
+            "example": "authorization_code",
+            "type": "string"
+          },
+          "redirect_uri": {
+            "description": "Optional parameter that MUST be ignored by the server.\n",
+            "example": "https://receiver.org/ocm/callback",
+            "type": "string"
+          }
+        },
+        "required": [
+          "grant_type",
+          "client_id",
+          "code"
+        ],
+        "type": "object"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "description": "The bearer token to be used to access the protocol-specific API(s)",
+            "example": "asdfgh",
+            "type": "string"
+          },
+          "expires_in": {
+            "description": "Number of seconds before this access_token will need to be refreshed.",
+            "example": 300,
+            "type": "number"
+          },
+          "token_type": {
+            "description": "Must be set to 'Bearer'",
+            "example": "Bearer",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Open Cloud Mesh OpenAPI Specification. The semantic of the Protocol Specification is detailed in the [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md) document.\n",
+    "title": "Open Cloud Mesh API",
+    "version": "1.2.2",
+    "x-logo": {
+      "url": "logo.png"
+    }
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/.well-known/ocm": {
+      "get": {
+        "description": "Following [RFC8615], this endpoint returns the properties and capabilities offered by an OCM Server. This endpoint MUST be served at the OCM Server's root FQDN, e.g. as in `https://cloud.example.org/.well-known/ocm`. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery) for more details.\n",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discovery"
+                }
+              }
+            },
+            "description": "The API endpoint, version, public key, and capabilities of this OCM Server"
+          }
+        },
+        "summary": "Discovery endpoint"
+      }
+    },
+    "/invite-accepted": {
+      "post": {
+        "description": "This optional endpoint is used to inform the Sender that an Invitation was accepted. See [Invite flow](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-flow) for more details.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptedInvite"
+              }
+            }
+          },
+          "description": "The JSON object to notify the OCM provider that an invite has been accepted.",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptedInviteResponse"
+                }
+              }
+            },
+            "description": "Invitation Acceptance Request successful (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The Invitation Token is invalid or does not exist (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invite Receiver OCM Server is not trusted to accept this Invite (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Invitation already accepted (see [Invite Acceptance Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))"
+          }
+        },
+        "summary": "Invitation Acceptance endpoint"
+      }
+    },
+    "/notifications": {
+      "post": {
+        "description": "This optional endpoint is used to inform the other party about a change that concerns a previously known entity, such as a Share or a trusted User. See [Share Acceptance Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-acceptance-notification) for more details.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewNotification"
+              }
+            }
+          },
+          "description": "The JSON object with a new notification",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Receiver succesfully received the notification. The response body MAY contain a JSON object with some resonse data, depending on the actual notification.\n"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            },
+            "description": "Bad request due to invalid parameters, e.g. when `type` is invalid\nor missing.\n"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Client cannot be authenticated as a trusted service."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Trusted service is not authorized to create notifications."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The receiver doesn't support notifications, the resource type is not\nsupported.\n"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The receiver is temporary unavailable (e.g. due to planned\nmaintenance).\n",
+            "headers": {
+              "Retry-After": {
+                "description": "Indication for the client when the service could be requested\nagain in HTTP Date format as used by the Internet Message Format\n[RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number\nof seconds (e.g. 3000 if you the service is expected to be\navailable again within 50 minutes).\n",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Share Acceptance Notification endpoint"
+      }
+    },
+    "/ocm-provider": {
+      "get": {
+        "description": "This endpoint is a replica of `/.well-known/ocm`, and MUST be served at the OCM Server's root FQDN as well to ensure backwards compatibility. OCM Servers MUST support both.\n",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Discovery"
+                }
+              }
+            },
+            "description": "See `/.well-known/ocm`."
+          }
+        },
+        "summary": "Legacy discovery endpoint"
+      }
+    },
+    "/shares": {
+      "post": {
+        "description": "This endpoint is used by a Sending Server to notify a Receiving Server that a new Share has been created. See [Share Creation Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-creation-notification) for more details.\n",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewShare"
+              }
+            }
+          },
+          "description": "The JSON object to create a new share at the consumer side.",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "recipientDisplayName": {
+                      "description": "Display name of the recipient\n",
+                      "example": "John Doe",
+                      "type": "string"
+                    },
+                    "recipientPublicKeys": {
+                      "description": "The public key(s) of the recipient. This value MUST be provided in case the Share Creation Notification includes the `ssh` protocol.\n",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Consumer successfully received the share. The response might contain the display name of the recipient of the share for general user experience improvement.\n"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/400"
+                }
+              }
+            },
+            "description": "Bad request due to invalid parameters, e.g. when `shareWith` is not found or required properties are missing.\n"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Sender cannot be authenticated as a trusted service."
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "Sender is not authorized to create shares."
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The Receiver doesn't support incoming external shares, the share type or the resource type is not supported."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            },
+            "description": "The Receiver is temporary unavailable (e.g. due to planned maintenance).",
+            "headers": {
+              "Retry-After": {
+                "description": "Indication for the client when the service could be requested again in HTTP Date format as used by the Internet Message Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number of seconds (e.g. 3000 if you the service is expected to be available again within 50 minutes).\n",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Share Creation Notification endpoint"
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "https://{discovery_fqdn}",
+      "variables": {
+        "discovery_fqdn": {
+          "default": "cloud.example.org"
+        }
+      }
+    }
+  ]
+}

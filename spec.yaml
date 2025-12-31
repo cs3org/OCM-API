@@ -448,7 +448,7 @@ components:
           type: array
           description: >
             Array of public keys for RFC 9421 HTTP Message Signatures.
-            Servers advertising the "rfc-http-sig" capability MUST provide this field.
+            Servers advertising the "http-sig" capability MUST provide this field.
             Clients SHOULD prefer RFC 9421 signatures when this capability is present.
           items:
             type: object
@@ -482,7 +482,7 @@ components:
           type: string
           format: uri
           description: >
-            Optional URL path of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
+            Optional URL of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
             If the `exchange-token` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
 
             **Token Exchange API:**
@@ -499,7 +499,7 @@ components:
             - 400: Token denied (application/json with Error schema)
 
             See TokenRequest and TokenResponse schemas for the complete data structure.
-          example: /index.php/apps/sciencemesh/token
+          example: https://cloud.example.org/ocm/token
         inviteAcceptDialog:
           type: string
           description: >
@@ -789,7 +789,7 @@ components:
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 viewMode: read
               ssh:
-                accessType: ['datatx']
+                accessTypes: ['datatx']
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object

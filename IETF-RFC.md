@@ -1677,7 +1677,8 @@ OCM Providers.
             | - inviteAcceptDialog  |
             | - provider            |
             | - publicKey           |
-            | - tokenEndpoint       |
+            | - publicKeys[]        |
+            | - tokenEndPoint       |
             +-----------------------+
                    |
                    | exposes
@@ -1685,15 +1686,18 @@ OCM Providers.
          +---------+---------+----------------------+
          |                   |                      |
          v                   v                      v
-+------------------+  +------------------+   +------------------+
-| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]    |
-+------------------+  +------------------+   +------------------+
-| - name           |  | - enforce-mfa    |   | - allowlist      |
-| - shareTypes[]   |  | - exchange-token |   | - denylist       |
-| - protocols{}    |  | - invite-wayf    |   | - http-signatures|
-+------------------+  | - invites        |   | - invite         |
-       |              | - webdav-uri     |   | - token-exchange |
-       |              +------------------+   +------------------+
++------------------+  +------------------+   +--------------------------+
+| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]            |
++------------------+  +------------------+   +--------------------------+
+| - name           |  | - enforce-mfa    |   | - allowlist              |
+| - shareTypes[]   |  | - exchange-token |   | - denylist               |
+| - protocols{}    |  | - http-sig       |   | - http-request-signatures|
++------------------+  | - invites        |   | - invite                 |
+       |              | - notifications  |   | - token-exchange         |
+       |              | - protocol-object|   +--------------------------+
+       |              | - webdav-uri     |
+       |              +------------------+
+       |
        | supports
        v
 +------------------+
