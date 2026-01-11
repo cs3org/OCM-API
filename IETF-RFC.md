@@ -1261,6 +1261,71 @@ registry (using the template from [RFC5785]):
    Specification document(s): the present Draft, once in RFC form
    Related information: N/A
 
+## JSContact Types Registry
+
+The following entry is to be registered in the "JSContact Types"
+registry (using the template from [RFC9553]):
+   Type Name: ocmAddress
+   Intended Usage: common
+   Since Version: 1.0
+   Until Version: N/A
+   Change Controller: IETF
+   Reference or Description:
+
+   An object representing an OCM address.  The object contains:
+
+     - "address" (String, required): The OCM federated address in format
+       "user@provider" where provider is the FQDN of an OCM-capable
+       server.
+     - "trusted" (Boolean, optional): Whether shares from this address
+       are automatically accepted. Default: false.
+     - "source" (String, optional): How this address was established.
+       See "JSContact Enum Values" registry for allowed values.
+     - "label" (String, optional): Human-readable label for this
+       address.
+
+## JSContact Properties Registry
+
+The following entry is to be registered in the "JSContact Properties"
+registry (using the template from [RFC9553]):
+   Property Name: ietf.org:ocmAddresses
+   Property Type: String[ocmAddress]
+   Property Context: Card
+   Intended Usage: common
+   Since Version: 1.0
+   Until Version: N/A
+   Change Controller: IETF
+   Reference or Description:
+
+   A map of OCM addresses for a contact. The keys are arbitrary
+   identifiers (e.g., "primary", "work") and the values are ocmAddress
+   objects as defined in the JSContact Types Registry.
+
+## JSContact Enum Values Registry
+
+The following entries are to be registered in the "JSContact Enum
+Values" registry (using the template from [RFC9553]).
+   Property Name: ietf.org:ocmAddresses/source
+   Context: Card
+   Since Version: 1.0
+   Until Version: N/A
+   Change Controller: IETF
+   Reference or Description:
+
+   Values indicating how an OCM address was established.
+
+   Initial Contents:
+   +==============+==========================================+
+   | Enum Value   | Reference/Description                    |
+   +==============+==========================================+
+   | invite       | Address established via OCM invite flow  |
+   |--------------|------------------------------------------|
+   | share        | Address established by receiving a share |
+   |--------------|------------------------------------------|
+   | direct entry | Address added directly by the user       |
+   |--------------|------------------------------------------|
+
+
 # Security Considerations
 
 ## Trust
@@ -1309,28 +1374,32 @@ transmitted over unsecured channels.
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
 March 1997.
 
-[RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
-Authoring and Versioning](https://datatracker.ietf.org/html/rfc4918/)",
-June 2007.
-
-[RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
-Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
-
-[RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
-Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
-
 [RFC3986] Berners-Lee, T., Fielding, R. and Masinter, L.
 "[Uniform Resource Identifier (URI): Generic Syntax
 ](https://datatracker.ietf.org/doc/html/rfc3986)", January 2005
 
+[RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
+Authoring and Versioning](https://datatracker.ietf.org/html/rfc4918/)",
+June 2007.
+
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
+
+[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
+(JWS)](https://datatracker.ietf.org/doc/html/rfc7515), May 2015."
+
+[RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
+Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
-[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
-(JWS)](https://datatracker.ietf.org/doc/html/rfc7515), May 2015."
+[RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
+Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
+
+[RFC9553] Stepanek, R., Loffredo, M., "[JSContact: A JSON
+Representation of Contact Data](
+https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 
 
 # Appendix A: Multi-factor Authentication
