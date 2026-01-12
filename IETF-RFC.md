@@ -1120,7 +1120,7 @@ protocol required for access.  The procedure is as follows:
 3.2. If it includes `must-use-mfa`, the Receiving Server MUST ensure
      that the Receiving Party has been authenticated with MFA, or prompt
      the consumer in order to elevate their session, if applicable.
-5. The `protocol.webdav.uri` property MUST now be inspected: if it's a
+4. The `protocol.webdav.uri` property MUST now be inspected: if it's a
    complete URI, the receiver MUST make a HTTP PROPFIND request against
    it to access the Remote Resource, otherwise it is to be taken as an
    identifier `<id>`, in which case the receiver MUST make a HTTP
@@ -1129,7 +1129,7 @@ protocol required for access.  The procedure is as follows:
    an `Authorization: bearer` header with either the short-lived bearer
    token obtained in step 3.1., if applicable, or the
    `protocol.webdav.sharedSecret` value.
-6. Otherwise, if `protocol.name` is `webdav` the receiver SHOULD inspect
+5. Otherwise, if `protocol.name` is `webdav` the receiver SHOULD inspect
    the `protocol.options` property: if `protocol.options.sharedSecret`
    is defined, then the receiver SHOULD make a HTTP PROPFIND request to
    `https://<sharedSecret>:@<sender-host><sender-ocm-path>`.  Note that
