@@ -425,7 +425,8 @@ components:
           type: object
           deprecated: true
           description: >
-            DEPRECATED: Use publicKeys array instead for RFC 9421 support.
+            DEPRECATED: Use public keys from /.well-known/jwks.json
+            instead for RFC 9421 support.
             Legacy field for draft-cavage HTTP Signatures (RSA only).
             Maintained for backward compatibility with existing deployments.
             The signatory is optional but it MUST contain `keyId` and `publicKeyPem`.
@@ -444,40 +445,6 @@ components:
                 -----BEGIN PUBLIC KEY-----
                 MII...QDD
                 -----END PUBLIC KEY-----
-        publicKeys:
-          type: array
-          description: >
-            Array of public keys for RFC 9421 HTTP Message Signatures.
-            Servers advertising the "rfc-http-sig" capability MUST provide this field.
-            Clients SHOULD prefer RFC 9421 signatures when this capability is present.
-          items:
-            type: object
-            required:
-              - keyId
-              - publicKeyPem
-              - algorithm
-            properties:
-              keyId:
-                type: string
-                format: uri
-                description: >
-                  Unique identifier for this key in URI format.
-                  Hostname MUST match the discovery endpoint hostname.
-                example: https://cloud.example.org/ocm#key-1
-              publicKeyPem:
-                type: string
-                description: |
-                  PEM-encoded public key for RFC 9421 signatures.
-                example: |
-                  -----BEGIN PUBLIC KEY-----
-                  MCowBQYDK2VwAyEA...
-                  -----END PUBLIC KEY-----
-              algorithm:
-                type: string
-                description: >
-                  Cryptographic algorithm identifier from the IANA HTTP Signature
-                  Algorithms Registry as defined in RFC 9421 Section 6.2.
-                example: ed25519
         tokenEndPoint:
           type: string
           format: uri
