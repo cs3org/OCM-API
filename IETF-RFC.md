@@ -729,7 +729,8 @@ contain the following information about its OCM API:
   for a short-lived bearer token.
   _ `"http-sig"` - to indicate that this OCM Server supports
   [RFC9421] HTTP Message Signatures and advertises public keys in the
-  `publicKeys` array for signature verification.
+  format specified by [RFC7515] at the `/.well-known/jwks.json`
+  endpoint for signature verification.
   _ `"invites"` - to indicate the server would support acting as an
   Invite Sender or Invite Receiver OCM Server.  This might be useful
   for suggesting to a user that existing contacts might be upgraded
@@ -762,8 +763,8 @@ contain the following information about its OCM API:
   address \* `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-* OPTIONAL: publicKey (object) - DEPRECATED: Use publicKeys array
-  instead for RFC 9421 support.
+* OPTIONAL: publicKey (object) - DEPRECATED: Use public keys at
+  `/.well-known/jwks.json` instead for RFC 9421 support.
   Legacy field for draft-cavage HTTP Signatures (RSA only).
   Maintained for backward compatibility with existing deployments.
   The signatory is optional, but if present, it MUST contain
@@ -777,22 +778,6 @@ contain the following information about its OCM API:
     draft-cavage signatures.
     Example:
     "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"
-* OPTIONAL: publicKeys (array of objects) - Array of public keys for
-  [RFC9421] HTTP Message Signatures.
-  Servers advertising the "http-sig" capability MUST provide this
-  field. Clients SHOULD prefer [RFC9421] signatures when this capability
-  is present. Each object in the array MUST contain:
-  - REQUIRED keyId (string) - Unique identifier for this key in URI
-    format. Hostname MUST match the discovery endpoint hostname.
-    Example: https://cloud.example.org/ocm#key-1
-  - REQUIRED publicKeyPem (string) - PEM-encoded public key for
-    [RFC9421] signatures.
-    Example:
-    "----BEGIN PUBLIC KEY----\nMCowBQYDK...\n----END PUBLIC KEY----\n"
-  - REQUIRED algorithm (string) - Cryptographic algorithm identifier
-    from the IANA HTTP Signature Algorithms Registry as defined in
-    [RFC9421] Section 6.2.
-    Example: "ed25519"
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
