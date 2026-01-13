@@ -763,21 +763,8 @@ contain the following information about its OCM API:
   address \* `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-* OPTIONAL: publicKey (object) - DEPRECATED: Use public keys at
+* DEPRECATED: publicKey (object) - Use public keys at
   `/.well-known/jwks.json` instead for RFC 9421 support.
-  Legacy field for draft-cavage HTTP Signatures (RSA only).
-  Maintained for backward compatibility with existing deployments.
-  The signatory is optional, but if present, it MUST contain
-  two string fields, `keyId` and `publicKeyPem`.
-  properties:
-  - REQUIRED keyId (string) unique id of the key in URI format.  The
-    hostname set the origin of the request and MUST be
-    identical to the current discovery endpoint.
-    Example: https://cloud.example.org/ocm#signature
-  - REQUIRED publicKeyPem (string) - PEM-encoded RSA public key for
-    draft-cavage signatures.
-    Example:
-    "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
