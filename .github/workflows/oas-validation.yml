@@ -18,3 +18,9 @@ jobs:
         with:
           files: spec.yaml
 
+      - name: Install openapi-spec-validator
+        run: pipx install openapi-spec-validator
+
+      - name: Validate OpenAPI using spec-validator
+        run: openapi-spec-validator spec.yaml
+
