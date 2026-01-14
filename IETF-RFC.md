@@ -1154,8 +1154,9 @@ No user interaction or redirect is involved. [RFC6749]
 
 To obtain an access token, the Receiving Server MUST send an HTTP POST
 request to the Sending Server’s {tokenEndPoint} as discovered in the
-OCM provider metadata, following section 4.4.2 of [RFC6749].  Here
-follows an example of such POST request:
+OCM provider metadata, following section 4.4.2 of [RFC6749].  The
+request payload MUST be in `x-www-form-urlencoded` form, as shown
+in the following example:
 
 ```
 POST {tokenEndPoint} HTTP/1.1
