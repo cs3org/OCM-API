@@ -729,7 +729,7 @@ contain the following information about its OCM API:
   for a short-lived bearer token.
   _ `"http-sig"` - to indicate that this OCM Server supports
   [RFC9421] HTTP Message Signatures and advertises public keys in the
-  format specified by [RFC7515] at the `/.well-known/jwks.json`
+  format specified by [RFC7517] at the `/.well-known/jwks.json`
   endpoint for signature verification.
   _ `"invites"` - to indicate the server would support acting as an
   Invite Sender or Invite Receiver OCM Server.  This might be useful
@@ -1363,7 +1363,14 @@ June 2007.
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
 
 [RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
-(JWS)](https://datatracker.ietf.org/doc/html/rfc7515), May 2015."
+(JWS)](https://datatracker.ietf.org/doc/html/rfc7515)", May 2015.
+
+[RFC7517] Jones, M., "[JSON Web Key (JWK)](
+https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
+
+[RFC8032] Josefsson, S., Liusvaara, I., "[Edwards-Curve Digital
+Signature Algorithm (EdDSA)](
+https://datatracker.ietf.org/doc/html/rfc8032)", January 2017.
 
 [RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
 Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
@@ -1402,126 +1409,95 @@ out of scope for this specification: a mechanism similar to the
 [ScienceMesh](https://sciencemesh.io) integration for the
 [Invite](#invite-flow) capability may be envisaged.
 
-# Appendix B: Request Signing
+# Appendix B: JWKS and HTTP Signature Examples
 
-A request is signed by adding the signature in the headers.  The sender
-also needs to expose the public key used to generate the signature.  The
-receiver can then validate the signature and therefore the origin of
-the request.
-To help debugging, it is RECOMMENDED to also add all properties used in
-the signature as headers, even if they can easily be re-generated from
-the payload.
+## JWKS Endpoint
 
-Note: Signed requests prove the identity of the sender but do not
-encrypt nor affect its payload.
+An OCM Server that advertises the `http-sig` capability MUST expose its
+public keys at `/.well-known/jwks.json` in the format specified by
+[RFC7517].  Here is an example response from
+`https://sender.example.org/.well-known/jwks.json`:
 
-Here is an example of headers needed to sign a request.
+```json
+{
+  "keys": [
+    {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "kid": "sender.example.org#key1",
+      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+    }
+  ]
+}
+```
+
+## Signing a Request (Sender)
+
+Given a Share Creation Notification request:
 
 ```
-  {
-    "@request-target": "post /path",
-    "content-length": 380,
-    "date": "Mon, 08 Jul 2024 14:16:20 GMT",
-    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4...",
-    "host": "hostname.of.the.recipient",
-    "Signature": "keyId=\"https://author.hostname/key\",algorithm=
-      \"rsa-sha256\",headers=\"content-length date digest host\",
-      signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+POST /ocm/shares HTTP/1.1
+Host: receiver.example.org
+Date: Fri, 16 Jan 2026 13:37:00 GMT
+Content-Type: application/json
+Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
+
+{
+  "shareWith": "marie@receiver.example.org",
+  "name": "spec.yaml",
+  "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
+  "owner": "einstein@sender.example.org",
+  "sender": "einstein@sender.example.org",
+  "ownerDisplayName": "Albert Einstein",
+  "senderDisplayName": "Albert Einstein",
+  "shareType": "user",
+  "resourceType": "file",
+  "protocol": {
+    "name": "multi",
+    "webdav": {
+      "uri": "spec.yaml",
+      "sharedSecret": "hfiuhworzwnur98d3wjiwhr",
+      "permissions": ["read", "write"]
+    }
   }
-```
-
-* '@request-target' (optional) contains the reached endpoint and
-  the used method,
-* 'content-length' is the total length of the payload of the
-  request,
-* 'date' is the date and time when the request has been
-  sent,
-* 'content-digest' is a checksum of the payload of the
-  request,
-* 'host' is the hostname of the recipient of the request (remote when
-  signing outgoing request, local on incoming request),
-* 'Signature' contains the signature generated using the private key
-  and details on its generation:
-  - 'keyId' is a unique id, formatted as an url; hostname is used to
-    retrieve the public key via custom discovery
-  - 'algorithm' specify the algorithm used to generate signature
-  - 'headers' specify the properties used when generating the
-    signature
-  - 'signature' the signature of an array containing the properties
-    listed in 'headers'.  Some properties like content-length, date,
-    content-digest, and host are mandatory to protect against
-    authenticity override.
-
-## How to generate the Signature for outgoing request
-
-After properties are set in the headers, the Signature is generated and
-added to the list.
-
-This is a pseudo-code example for generating the `Signature` header for
-outgoing requests:
-
-```
-headers = {
-  'content-length': length_of(payload),
-  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
-  'date': current_gmt_datetime(),
-  'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
-        utf8_encode(payload))),
-  'host': 'recipient-fqdn',
 }
-
-signed = ssl_sign(concatenate_with_newlines(headers),
-    private_key, 'sha256')
-signature = {
-    'keyId': 'sender.fqdn',  # The sending server's FQDN
-    'algorithm': 'rsa-sha256',
-    'headers': 'content-length date content-digest host',
-    'signature': signed,
-}
-
-headers['Signature'] = format_signature(signature)
 ```
 
-## How to confirm Signature on incoming request
-
-The first step would be to confirm the validity of each
-properties:
-
-* `content-length` and `content-digest` can be regenerated and compared
-  from the payload of the request,
-* a maximum TTL MUST be applied to `date` and current
-  timestamp,
-* regarding data contained in the `Signature`
-  header:
-  - using `keyId` to get the public key from remote
-    signatory,
-  - `headers` is used to generate the clear version of the
-    signature and MUST contain at least `content-length`, `date`,
-    `content-digest` and `host`,
-  - `signature` is the encrypted version of the
-    signature.
-
-Here is an example of how to verify the signature using the headers,
-the signature and the public key:
+The signature base is constructed according to [RFC9421]:
 
 ```
-clear = {
-    'content-length': length_of(payload),
-    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',
-    'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
-          utf8_encode(payload))),  # Recompute digest for verification
-    'host': 'sender-fqdn',
-}
-
-signed = headers['Signature']
-verification_result = ssl_verify(concatenate_with_newlines(clear),
-                                 signed, public_key, 'sha256')
-
-if not verification_result then
-    raise InvalidSignatureException
+"@method": POST
+"@target-uri": https://receiver.example.org/ocm/shares
+"content-digest": sha-256=:<digest-value>=:
+"@signature-params": ("@method" "@target-uri" "content-digest")\
+  ;created=<timestamp>;keyid="sender.example.org#key1";alg="ed25519"
 ```
 
-## Validating the payload
+Sign this base using for example Ed25519 ([RFC8032]) to produce the
+signature, then add headers:
+
+```
+Signature-Input: sig1=("@method" "@target-uri" "content-digest")\
+  ;created=<timestamp>;keyid="sender.example.org#key1";alg="ed25519"
+Signature: sig1=:<signature-value>=:
+```
+
+## Verifying a Signature (Receiver)
+
+To verify an incoming signed request:
+
+1. Extract the provider domain from the `sender` field in the
+   request body
+2. Fetch the public key from
+   `https://<provider-domain>/.well-known/jwks.json`
+3. Extract `keyid` from `Signature-Input` header and find the key
+   matching the `kid` value in the [RFC7517] response
+4. Reconstruct the signature base from the request using the
+   components listed in `Signature-Input` as specified in [RFC9421]
+5. Verify the signature using the appropriate algorithm
+   (e.g., Ed25519 [RFC8032])
+
+## Validating the Payload
 
 Following the validation of the signature, the host SHOULD also confirm
 the validity of the payload, that is ensuring that the actions implied
@@ -1908,7 +1884,6 @@ to model a few key properties.
 * __owner__: Reference to the User who owns the Resource
 * __resourceID__: Unique identifier of the Resource
 * __type__: Type of Resource (file, folder, calendar, etc.)
-
 
 
 # Acknowledgements
