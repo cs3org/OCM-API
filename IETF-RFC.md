@@ -760,7 +760,8 @@ contain the following information about its OCM API:
   _ `"denylist"` - some servers MAY be blocked based on their IP
   address
   _ `"allowlist"` - unknown servers MAY be blocked based on their IP
-  address \* `"invite"` - an invite MUST have been exchanged between the
+  address
+  _ `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
 * DEPRECATED: publicKey (object) - Use public keys at
@@ -1132,7 +1133,8 @@ To obtain an access token, the Receiving Server MUST send an HTTP POST
 request to the Sending Server’s {tokenEndPoint} as discovered in the
 OCM provider metadata, following section 4.4.2 of [RFC6749].  The
 request payload MUST be in `x-www-form-urlencoded` form, as shown
-in the following example:
+in the following example (with line breaks in the Signature headers
+for display purposes only):
 
 ```
 POST {tokenEndPoint} HTTP/1.1
@@ -1142,11 +1144,12 @@ Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
 Signature-Input:
-    sig1=("@method" "@target-uri" "content-digest" "date"); \
-    created=1730815200; keyid="receiver.example.org#2025"; \
-    alg="rsa-sha256"
-Signature: sig1=:
-    bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP2rN3qD4tR5hC=:
+  sig1=("@method" "@target-uri" "content-digest" "date");
+  created=1730815200;
+  keyid="receiver.example.org#key1";
+  alg="rsa-sha256"
+Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
+  2rN3qD4tR5hC=:
 
 grant_type=authorization_code&
 client_id=receiver.example.org&
@@ -1463,22 +1466,27 @@ Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
 }
 ```
 
-The signature base is constructed according to [RFC9421]:
+The signature base is constructed according to [RFC9421] (with line
+breaks in @signature-params for display purposes only):
 
 ```
 "@method": POST
 "@target-uri": https://receiver.example.org/ocm/shares
 "content-digest": sha-256=:<digest-value>=:
-"@signature-params": ("@method" "@target-uri" "content-digest")\
-  ;created=<timestamp>;keyid="sender.example.org#key1";alg="ed25519"
+"@signature-params": ("@method" "@target-uri" "content-digest");
+    created=<timestamp>;
+    keyid="sender.example.org#key1";
+    alg="ed25519"
 ```
 
 Sign this base using for example Ed25519 ([RFC8032]) to produce the
-signature, then add headers:
+signature, then add headers (line breaks for display purposes only):
 
 ```
-Signature-Input: sig1=("@method" "@target-uri" "content-digest")\
-  ;created=<timestamp>;keyid="sender.example.org#key1";alg="ed25519"
+Signature-Input: sig1=("@method" "@target-uri" "content-digest");
+  created=<timestamp>;
+  keyid="sender.example.org#key1";
+  alg="ed25519"
 Signature: sig1=:<signature-value>=:
 ```
 
