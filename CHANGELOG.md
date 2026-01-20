@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.3.0] - 2026-01-20 - Micke Nordin <kano@sunet.se>
+
+* First edition of the draft after IETF Working Group adoption.
+* Introduced functions, roles, and object models to the specification.
+* Added support for SSH as a share access method.
+* Introduced `accessType` property in shares and removed the datatx
+  "protocol" in favor of a cleaner access model.
+* Improved resource access description with token exchange, and
+  specified request payload format for the `/token` endpoint.
+* Added RFC 9421 HTTP Message Signatures support via `http-sig`
+  capability and RFC 7515 (JWS) compliant JWKS and prescribed use of
+  JWS for the Directory Service.
+* Updated and homogenized capabilities across the specification.
+* Added JSContact extension to IANA Considerations.
+* Changed example domain to use cloud.example.org per RFC 2606.
+
 ## [1.2.2] - 2025-10-21 - Giuseppe Lo Presti <lopresti@cern.ch>
 
 * Further improvements and clarifications in the spec, prior to
