@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-ietf-ocm-open-cloud-mesh-01
+docname: draft-ietf-ocm-open-cloud-mesh-02
 category: std
 
 ipr: trust200902
