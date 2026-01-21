@@ -1894,6 +1894,32 @@ to model a few key properties.
 * __type__: Type of Resource (file, folder, calendar, etc.)
 
 
+# Changes
+
+This section collects the changes with respect to the previous
+version in the IETF datatracker.  It is meant to ease the review
+process and it shall be removed when going to RFC last call.
+The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 02
+* Added the _Changes_ section
+
+## Version 01
+
+* Introduced functions, roles, and object models to the specification.
+* Added support for SSH as a share access method.
+* Introduced `accessType` property in shares and removed the datatx
+  "protocol" in favor of a cleaner access model.
+* Improved resource access description with token exchange, and
+  specified request payload format for the `/token` endpoint.
+* Added RFC 9421 HTTP Message Signatures support via `http-sig`
+  capability and RFC 7515 (JWS) compliant JWKS and prescribed use of
+  JWS for the Directory Service.
+* Updated and homogenized capabilities across the specification.
+* Added JSContact extension to IANA Considerations.
+* Changed example domain to use cloud.example.org per RFC 2606.
+
+
 # Acknowledgements
 
 Our deepest thanks and appreciation go to the people who started the
