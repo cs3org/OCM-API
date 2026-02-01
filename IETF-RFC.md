@@ -689,18 +689,18 @@ contain the following information about its OCM API:
     `"federation"`.
     Example: `["user"]`
   - protocols (object) - The supported protocols for accessing Shared
-    Resources of this type.
-    Implementations that offer `file` Resources MUST
-    support at least `webdav`,
-    any other combination of Resources and protocols is
-    optional.  Example:
-    ```json
+    Resources of this type.  Implementations that offer `file`
+    Resources MUST support at least `webdav`, any other combination
+    of Resources and protocols is optional.  Example:
+
+    ```
             {
               "webdav": "/remote/dav/ocm/",
               "webapp": "/app/ocm/",
               "talk": "/apps/spreed/api/"
             }
     ```
+    {: type="json"}
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
       endpoint.  In order to access a Remote Resource, implementations
@@ -1136,7 +1136,7 @@ request payload MUST be in `x-www-form-urlencoded` form, as shown
 in the following example (with line breaks in the Signature headers
 for display purposes only):
 
-```
+<sourcecode type="http">
 POST {tokenEndPoint} HTTP/1.1
 Host: cloud.example.org
 Date: Wed, 05 Nov 2025 14:00:00 GMT
@@ -1154,7 +1154,7 @@ Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
 grant_type=authorization_code&
 client_id=receiver.example.org&
 code=my_secret_code
-```
+</sourcecode>
 
 The request MUST be signed using an HTTP Message Signature
 [RFC9421].  The `client_id` identifies the Receiving Server and MUST be
@@ -1177,6 +1177,7 @@ containing the issued token:
   "expires_in": 300
 }
 ```
+{: type="json"}
 
 The `access_token` is an opaque bearer credential with no internal
 structure visible to the Receiving Server.  The token authorizes the
@@ -1192,9 +1193,11 @@ then be used in the same manner.
 If the request is invalid, the Sending Server MUST return an HTTP 400
 response with a JSON object containing an OAuth 2.0 error code
 [RFC6749]:
+
 ```
 { "error": "invalid_request" }
 ```
+{: type="json"}
 
 Permitted error codes are `invalid_request`, `invalid_client`,
 `invalid_grant`, `unauthorized_client` and `unsupported_grant_type`.
@@ -1421,7 +1424,7 @@ public keys at `/.well-known/jwks.json` in the format specified by
 [RFC7517].  Here is an example response from
 `https://sender.example.org/.well-known/jwks.json`:
 
-```json
+```
 {
   "keys": [
     {
@@ -1433,12 +1436,13 @@ public keys at `/.well-known/jwks.json` in the format specified by
   ]
 }
 ```
+{: type="json"}
 
 ## Signing a Request (Sender)
 
 Given a Share Creation Notification request:
 
-```
+<sourcecode type="http">
 POST /ocm/shares HTTP/1.1
 Host: receiver.example.org
 Date: Fri, 16 Jan 2026 13:37:00 GMT
@@ -1464,31 +1468,31 @@ Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
     }
   }
 }
-```
+</sourcecode>
 
 The signature base is constructed according to [RFC9421] (with line
 breaks in @signature-params for display purposes only):
 
-```
+<sourcecode type="http">
 "@method": POST
 "@target-uri": https://receiver.example.org/ocm/shares
-"content-digest": sha-256=:<digest-value>=:
+"content-digest": sha-256=:[digest-value]=:
 "@signature-params": ("@method" "@target-uri" "content-digest");
-    created=<timestamp>;
+    created=[timestamp];
     keyid="sender.example.org#key1";
     alg="ed25519"
-```
+</sourcecode>
 
 Sign this base using for example Ed25519 ([RFC8032]) to produce the
 signature, then add headers (line breaks for display purposes only):
 
-```
+<sourcecode type="http">
 Signature-Input: sig1=("@method" "@target-uri" "content-digest");
-  created=<timestamp>;
+  created=[timestamp];
   keyid="sender.example.org#key1";
   alg="ed25519"
-Signature: sig1=:<signature-value>=:
-```
+Signature: sig1=:[signature-value]=:
+</sourcecode>
 
 ## Verifying a Signature (Receiver)
 
@@ -1540,7 +1544,7 @@ adhere to the following format:
     for the OCM Server
 Example:
 
-```json
+```
 {
   "payload": {
     "federation": "The ScienceMesh Directory",
@@ -1563,7 +1567,7 @@ Example:
   "signature": "..."
 }
 ```
-
+{: type="json"}
 
 
 # Appendix D: Object models
@@ -1589,7 +1593,7 @@ flow or direct entry.  It provides a convenient way for users to
 organize and access their federated contacts, and MAY allow users to
 generate _Invites_.
 
-```
+~~~ artwork
 +-----------------+
 |  Address Book   |
 |                 |
@@ -1603,7 +1607,8 @@ generate _Invites_.
 +-----------------+  +----------------+
 |    Contact      |  |    Invites     |
 +-----------------+  +----------------+
-```
+~~~
+
 ### Properties
 
 * __owner__: Reference to the User who owns this address book
@@ -1622,7 +1627,7 @@ created through the Invite process or via direct entry.  A Contact MAY
 of course contain much more detailed information about the referenced
 user such as if it was added via _Invites_ or direct entry.
 
-```
+~~~ artwork
 +-----------------+
 |    Contact      |
 +-----------------+
@@ -1638,7 +1643,8 @@ user such as if it was added via _Invites_ or direct entry.
 +-----------------+
 |  Address Book   |
 +-----------------+
-```
+~~~
+
 ### Properties
 
 * __addedDate__: Timestamp of when contact was added
@@ -1657,7 +1663,7 @@ The Invite entity represents the bidirectional trust establishment
 mechanism in OCM.  It facilitates secure contact exchange between users
 on different OCM Servers.
 
-```
+~~~ artwork
 +-----------------+
 |     Invite      |
 +-----------------+
@@ -1673,7 +1679,8 @@ on different OCM Servers.
 |   Address Book  |
 +-----------------+
 
-```
+~~~
+
 ### Properties
 
 * __acceptedTime__: Timestamp of invite acceptance (if accepted)
@@ -1696,7 +1703,7 @@ implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
 OCM Providers.
 
-```
+~~~ artwork
             +-----------------------+
             |      Provider         |
             |    (OCM Server)       |
@@ -1734,7 +1741,7 @@ OCM Providers.
 | - webdav         |
 | - ...            |
 +------------------+
-```
+~~~
 
 ### Properties
 
@@ -1753,7 +1760,7 @@ The Share entity represents a policy granting access to a _Resource_
 from a Sending Party to a Receiving Party.
 
 
-```
+~~~ artwork
 +-----------------+                      +------------------+
 |  Sending Party  |                      | Receiving Party  |
 +-----------------+                      +------------------+
@@ -1781,7 +1788,7 @@ from a Sending Party to a Receiving Party.
 +-----------------+
 |    Resource     |
 +-----------------+
-```
+~~~
 
 ### Properties
 
@@ -1815,15 +1822,15 @@ from a Sending Party to a Receiving Party.
 The User entity represents the party in OCM who can send and receive
 Shares and Invites and manage Contacts, and interact with Resources.
 
-```
-                     +-----------------------+
-                     |        User           |
-                     +-----------------------+
-                     | - email               |
-                     | - name                |
-                     | - ocmAddress          |
-                     | - uid                 |
-                     +-----------------------+
+~~~ artwork
+                +-----------------------+
+                |        User           |
+                +-----------------------+
+                | - email               |
+                | - name                |
+                | - ocmAddress          |
+                | - uid                 |
+                +-----------------------+
                             |
                   +---------+---------+
                   |                   |
@@ -1843,7 +1850,7 @@ Shares and Invites and manage Contacts, and interact with Resources.
          +------------------+
          | - sent[]         |
          +------------------+
-```
+~~~
 
 ### Properties
 
@@ -1867,7 +1874,7 @@ Receiving Party through the Sending Server's API.  In general a Resource
 is a much more complex entity, but for the purpose of OCM we only need
 to model a few key properties.
 
-```
+~~~ artwork
 +-----------------+
 |    Resource     |
 +-----------------+
@@ -1884,7 +1891,7 @@ to model a few key properties.
 +------------------+
 |     Share        |
 +------------------+
-```
+~~~
 
 ### Properties
 
