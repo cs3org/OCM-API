@@ -721,25 +721,25 @@ contain the following information about its OCM API:
   capability.
   Example: `["exchange-token", "webdav-uri"]`.  The array MAY
   include one or more of the following items:
-  _ `"enforce-mfa"` - to indicate that this OCM Server can apply a
+  - `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
-  _ `"exchange-token"` - to indicate that this OCM Server exposes a
+  - `"exchange-token"` - to indicate that this OCM Server exposes a
   [RFC6749]-compliant endpoint, which allows to exchange a secret
   received in the protocol properties of a Share Creation Notification
   for a short-lived bearer token.
-  _ `"http-sig"` - to indicate that this OCM Server supports
+  - `"http-sig"` - to indicate that this OCM Server supports
   [RFC9421] HTTP Message Signatures and advertises public keys in the
   format specified by [RFC7517] at the `/.well-known/jwks.json`
   endpoint for signature verification.
-  _ `"invites"` - to indicate the server would support acting as an
+  - `"invites"` - to indicate the server would support acting as an
   Invite Sender or Invite Receiver OCM Server.  This might be useful
   for suggesting to a user that existing contacts might be upgraded
   to the more secure (and possibly required) invite flow.
-  _ `"notifications"` - to indicate that this OCM Server handles
+  - `"notifications"` - to indicate that this OCM Server handles
   notifications to exchange updates on shares and invites.
-  _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
+  - `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
   Page to facilitate the Invite flow.
-  _ `"webdav-uri"` - to indicate that this OCM Server can append a
+  - `"webdav-uri"` - to indicate that this OCM Server can append a
   relative URI to the path listed for WebDAV [RFC4918] in the
   appropriate `resourceTypes` entry `"protocol-object"` - to
   indicate that this OCM Server can receive a Share Creation
@@ -752,16 +752,16 @@ contain the following information about its OCM API:
   calls, it is not necessary to expose that as a criterium.
   Example: `["http-request-signatures"]`.  The array MAY include
   for instance:
-  _ `"http-request-signatures"` - to indicate that API requests
+  - `"http-request-signatures"` - to indicate that API requests
   without http signatures will be rejected.
-  _ `"token-exchange"` - to indicate that API requests without
+  - `"token-exchange"` - to indicate that API requests without
   token exchange will be rejected (see the [Code Flow](#code-flow)
   section).
-  _ `"denylist"` - some servers MAY be blocked based on their IP
+  - `"denylist"` - some servers MAY be blocked based on their IP
   address
-  _ `"allowlist"` - unknown servers MAY be blocked based on their IP
+  - `"allowlist"` - unknown servers MAY be blocked based on their IP
   address
-  _ `"invite"` - an invite MUST have been exchanged between the
+  - `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
 * DEPRECATED: publicKey (object) - Use public keys at
