@@ -693,13 +693,13 @@ contain the following information about its OCM API:
     Resources MUST support at least `webdav`, any other combination
     of Resources and protocols is optional.  Example:
 
-    ```
+    ~~~
             {
               "webdav": "/remote/dav/ocm/",
               "webapp": "/app/ocm/",
               "talk": "/apps/spreed/api/"
             }
-    ```
+    ~~~
     {: type="json"}
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
@@ -1170,13 +1170,13 @@ If the request is valid and the code is accepted, the Sending Server
 MUST respond with HTTP 200 OK and a OAuth-compliant JSON object
 containing the issued token:
 
-```
+~~~
 {
   "access_token": "8f3d3f26-f1e6-4b47-9e3e-9af6c0d4ad8b",
   "token_type": "Bearer",
   "expires_in": 300
 }
-```
+~~~
 {: type="json"}
 
 The `access_token` is an opaque bearer credential with no internal
@@ -1194,9 +1194,9 @@ If the request is invalid, the Sending Server MUST return an HTTP 400
 response with a JSON object containing an OAuth 2.0 error code
 [RFC6749]:
 
-```
+~~~
 { "error": "invalid_request" }
-```
+~~~
 {: type="json"}
 
 Permitted error codes are `invalid_request`, `invalid_client`,
@@ -1424,7 +1424,7 @@ public keys at `/.well-known/jwks.json` in the format specified by
 [RFC7517].  Here is an example response from
 `https://sender.example.org/.well-known/jwks.json`:
 
-```
+~~~
 {
   "keys": [
     {
@@ -1435,7 +1435,7 @@ public keys at `/.well-known/jwks.json` in the format specified by
     }
   ]
 }
-```
+~~~
 {: type="json"}
 
 ## Signing a Request (Sender)
@@ -1544,7 +1544,7 @@ adhere to the following format:
     for the OCM Server
 Example:
 
-```
+~~~
 {
   "payload": {
     "federation": "The ScienceMesh Directory",
@@ -1566,7 +1566,7 @@ Example:
   "protected": {"alg": "RS256"},
   "signature": "..."
 }
-```
+~~~
 {: type="json"}
 
 
