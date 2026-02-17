@@ -1593,7 +1593,7 @@ flow or direct entry.  It provides a convenient way for users to
 organize and access their federated contacts, and MAY allow users to
 generate _Invites_.
 
-~~~ artwork
+~~~
 +-----------------+
 |  Address Book   |
 |                 |
@@ -1627,7 +1627,7 @@ created through the Invite process or via direct entry.  A Contact MAY
 of course contain much more detailed information about the referenced
 user such as if it was added via _Invites_ or direct entry.
 
-~~~ artwork
+~~~
 +-----------------+
 |    Contact      |
 +-----------------+
@@ -1663,7 +1663,7 @@ The Invite entity represents the bidirectional trust establishment
 mechanism in OCM.  It facilitates secure contact exchange between users
 on different OCM Servers.
 
-~~~ artwork
+~~~
 +-----------------+
 |     Invite      |
 +-----------------+
@@ -1703,7 +1703,7 @@ implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
 OCM Providers.
 
-~~~ artwork
+~~~
             +-----------------------+
             |      Provider         |
             |    (OCM Server)       |
@@ -1760,7 +1760,7 @@ The Share entity represents a policy granting access to a _Resource_
 from a Sending Party to a Receiving Party.
 
 
-~~~ artwork
+~~~
 +-----------------+                      +------------------+
 |  Sending Party  |                      | Receiving Party  |
 +-----------------+                      +------------------+
@@ -1822,7 +1822,7 @@ from a Sending Party to a Receiving Party.
 The User entity represents the party in OCM who can send and receive
 Shares and Invites and manage Contacts, and interact with Resources.
 
-~~~ artwork
+~~~
                 +-----------------------+
                 |        User           |
                 +-----------------------+
@@ -1874,7 +1874,7 @@ Receiving Party through the Sending Server's API.  In general a Resource
 is a much more complex entity, but for the purpose of OCM we only need
 to model a few key properties.
 
-~~~ artwork
+~~~
 +-----------------+
 |    Resource     |
 +-----------------+
