@@ -1703,8 +1703,11 @@ implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
 OCM Providers.
 
-The following diagram summarizes the Provider structure. For the
-authoritative property list, see the Properties section below.
+The following diagram is illustrative and non-exhaustive. The single
+source of truth for Provider properties is the OCM API Discovery Fields
+section; for the box contents below, see the Properties subsection and
+the normative capability, criteria, and resource type definitions in
+that section.
 
 ~~~
             +-----------------------+
@@ -1732,10 +1735,11 @@ authoritative property list, see the Properties section below.
 | - name           |  | - enforce-mfa    |          |
 | - shareTypes[]   |  | - exchange-token |          |
 | - protocols{}    |  | - http-sig       |          |
-+------------------+  | - invites        |          |
-       |              | - notifications  |          |
+| - ...            |  | - invites        |          |
++------------------+  | - notifications  |          |
        |              | - protocol-object|          |
        |              | - webdav-uri     |          |
+       |              | - ...            |          |
        |              +------------------+          |
        |                                            |
        |                           +----------------+
@@ -1749,6 +1753,7 @@ authoritative property list, see the Properties section below.
        |              | - http-request-signatures|
        |              | - invite                 |
        |              | - token-exchange         |
+       |              | - ...                    |
        |              +--------------------------+
        |
        | supports
