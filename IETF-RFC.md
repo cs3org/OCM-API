@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-ietf-ocm-open-cloud-mesh-00
+docname: draft-ietf-ocm-open-cloud-mesh-03
 category: std
 
 ipr: trust200902
@@ -667,7 +667,7 @@ contain the following information about its OCM API:
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at
   this endpoint
 * REQUIRED: apiVersion (string) - The OCM API version this endpoint
-  supports.  Example: `"1.2.2"`
+  supports.  Example: `"1.3.0"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at
   this endpoint.  Example: `"https://cloud.example.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
@@ -689,18 +689,18 @@ contain the following information about its OCM API:
     `"federation"`.
     Example: `["user"]`
   - protocols (object) - The supported protocols for accessing Shared
-    Resources of this type.
-    Implementations that offer `file` Resources MUST
-    support at least `webdav`,
-    any other combination of Resources and protocols is
-    optional.  Example:
-    ```json
+    Resources of this type.  Implementations that offer `file`
+    Resources MUST support at least `webdav`, any other combination
+    of Resources and protocols is optional.  Example:
+
+    ~~~
             {
               "webdav": "/remote/dav/ocm/",
               "webapp": "/app/ocm/",
               "talk": "/apps/spreed/api/"
             }
-    ```
+    ~~~
+    {: type="json"}
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
       endpoint.  In order to access a Remote Resource, implementations
@@ -721,24 +721,25 @@ contain the following information about its OCM API:
   capability.
   Example: `["exchange-token", "webdav-uri"]`.  The array MAY
   include one or more of the following items:
-  _ `"enforce-mfa"` - to indicate that this OCM Server can apply a
+  - `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
-  _ `"exchange-token"` - to indicate that this OCM Server exposes a
+  - `"exchange-token"` - to indicate that this OCM Server exposes a
   [RFC6749]-compliant endpoint, which allows to exchange a secret
   received in the protocol properties of a Share Creation Notification
   for a short-lived bearer token.
-  _ `"http-sig"` - to indicate that this OCM Server supports
-  [RFC9421] HTTP Message Signatures and advertises public keys in
-  `.well-known/jwks.json` for signature verification.
-  _ `"invites"` - to indicate the server would support acting as an
+  - `"http-sig"` - to indicate that this OCM Server supports
+  [RFC9421] HTTP Message Signatures and advertises public keys in the
+  format specified by [RFC7517] at the `/.well-known/jwks.json`
+  endpoint for signature verification.
+  - `"invites"` - to indicate the server would support acting as an
   Invite Sender or Invite Receiver OCM Server.  This might be useful
   for suggesting to a user that existing contacts might be upgraded
   to the more secure (and possibly required) invite flow.
-  _ `"notifications"` - to indicate that this OCM Server handles
+  - `"notifications"` - to indicate that this OCM Server handles
   notifications to exchange updates on shares and invites.
-  _ `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
+  - `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
   Page to facilitate the Invite flow.
-  _ `"webdav-uri"` - to indicate that this OCM Server can append a
+  - `"webdav-uri"` - to indicate that this OCM Server can append a
   relative URI to the path listed for WebDAV [RFC4918] in the
   appropriate `resourceTypes` entry `"protocol-object"` - to
   indicate that this OCM Server can receive a Share Creation
@@ -751,32 +752,20 @@ contain the following information about its OCM API:
   calls, it is not necessary to expose that as a criterium.
   Example: `["http-request-signatures"]`.  The array MAY include
   for instance:
-  _ `"http-request-signatures"` - to indicate that API requests
+  - `"http-request-signatures"` - to indicate that API requests
   without http signatures will be rejected.
-  _ `"token-exchange"` - to indicate that API requests without
+  - `"token-exchange"` - to indicate that API requests without
   token exchange will be rejected (see the [Code Flow](#code-flow)
   section).
-  _ `"denylist"` - some servers MAY be blocked based on their IP
+  - `"denylist"` - some servers MAY be blocked based on their IP
   address
-  _ `"allowlist"` - unknown servers MAY be blocked based on their IP
-  address \* `"invite"` - an invite MUST have been exchanged between the
+  - `"allowlist"` - unknown servers MAY be blocked based on their IP
+  address
+  - `"invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-* OPTIONAL: publicKey (object) - DEPRECATED: Use .well-known/jwks.json
-  for public keys instead.
-  Legacy field for draft-cavage HTTP Signatures (RSA only).
-  Maintained for backward compatibility with existing deployments.
-  The signatory is optional, but if present, it MUST contain
-  two string fields, `keyId` and `publicKeyPem`.
-  properties:
-  - REQUIRED keyId (string) unique id of the key in URI format.  The
-    hostname set the origin of the request and MUST be
-    identical to the current discovery endpoint.
-    Example: https://cloud.example.org/ocm#signature
-  - REQUIRED publicKeyPem (string) - PEM-encoded RSA public key for
-    draft-cavage signatures.
-    Example:
-    "----BEGIN PUBLIC KEY----\n...\n----END PUBLIC KEY----\n"
+* DEPRECATED: publicKey (object) - Use public keys at
+  `/.well-known/jwks.json` instead for RFC 9421 support.
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
@@ -1094,9 +1083,13 @@ protocol required for access.  The procedure is as follows:
 3.1. If it includes `must-exchange-token`, the receiver MUST make a
      signed POST request to the path in the Sending Server’s
      {tokenEndPoint}, to exchange the `protocol.webdav.sharedSecret`
-     token for a short-lived bearer token, and then use that bearer
+     token for a short-lived bearer token, and only use that bearer
      token to access the Resource (See the [Code Flow](#code-flow)
-     section).
+     section).  If the `must-exchange-token` requirement is not present
+     and the Discovery endpoint inspected at step 1. exposes the
+     `token-exchange` capability, the receiver MAY attempt to perform
+     the token exchange as above, but it MUST fall back to the following
+     steps should the process fail.
 3.2. If it includes `must-use-mfa`, the Receiving Server MUST ensure
      that the Receiving Party has been authenticated with MFA, or prompt
      the consumer in order to elevate their session, if applicable.
@@ -1138,10 +1131,12 @@ No user interaction or redirect is involved. [RFC6749]
 
 To obtain an access token, the Receiving Server MUST send an HTTP POST
 request to the Sending Server’s {tokenEndPoint} as discovered in the
-OCM provider metadata, following section 4.4.2 of [RFC6749].  Here
-follows an example of such POST request:
+OCM provider metadata, following section 4.4.2 of [RFC6749].  The
+request payload MUST be in `x-www-form-urlencoded` form, as shown
+in the following example (with line breaks in the Signature headers
+for display purposes only):
 
-```
+<sourcecode type="http">
 POST {tokenEndPoint} HTTP/1.1
 Host: cloud.example.org
 Date: Wed, 05 Nov 2025 14:00:00 GMT
@@ -1149,16 +1144,17 @@ Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
 Signature-Input:
-    sig1=("@method" "@target-uri" "content-digest" "date"); \
-    created=1730815200; keyid="receiver.example.org#2025"; \
-    alg="rsa-sha256"
-Signature: sig1=:
-    bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP2rN3qD4tR5hC=:
+  sig1=("@method" "@target-uri" "content-digest" "date");
+  created=1730815200;
+  keyid="receiver.example.org#key1";
+  alg="rsa-sha256"
+Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
+  2rN3qD4tR5hC=:
 
 grant_type=authorization_code&
 client_id=receiver.example.org&
 code=my_secret_code
-```
+</sourcecode>
 
 The request MUST be signed using an HTTP Message Signature
 [RFC9421].  The `client_id` identifies the Receiving Server and MUST be
@@ -1174,13 +1170,14 @@ If the request is valid and the code is accepted, the Sending Server
 MUST respond with HTTP 200 OK and a OAuth-compliant JSON object
 containing the issued token:
 
-```
+~~~
 {
   "access_token": "8f3d3f26-f1e6-4b47-9e3e-9af6c0d4ad8b",
   "token_type": "Bearer",
   "expires_in": 300
 }
-```
+~~~
+{: type="json"}
 
 The `access_token` is an opaque bearer credential with no internal
 structure visible to the Receiving Server.  The token authorizes the
@@ -1196,9 +1193,11 @@ then be used in the same manner.
 If the request is invalid, the Sending Server MUST return an HTTP 400
 response with a JSON object containing an OAuth 2.0 error code
 [RFC6749]:
-```
+
+~~~
 { "error": "invalid_request" }
-```
+~~~
+{: type="json"}
 
 Permitted error codes are `invalid_request`, `invalid_client`,
 `invalid_grant`, `unauthorized_client` and `unsupported_grant_type`.
@@ -1244,6 +1243,71 @@ registry (using the template from [RFC5785]):
    Change controller: IETF
    Specification document(s): the present Draft, once in RFC form
    Related information: N/A
+
+## JSContact Types Registry
+
+The following entry is to be registered in the "JSContact Types"
+registry (using the template from [RFC9553]):
+   Type Name: ocmAddress
+   Intended Usage: common
+   Since Version: 1.0
+   Until Version: N/A
+   Change Controller: IETF
+   Reference or Description:
+
+   An object representing an OCM address.  The object contains:
+
+     - "address" (String, required): The OCM federated address in format
+       "user@provider" where provider is the FQDN of an OCM-capable
+       server.
+     - "trusted" (Boolean, optional): Whether shares from this address
+       are automatically accepted. Default: false.
+     - "source" (String, optional): How this address was established.
+       See "JSContact Enum Values" registry for allowed values.
+     - "label" (String, optional): Human-readable label for this
+       address.
+
+## JSContact Properties Registry
+
+The following entry is to be registered in the "JSContact Properties"
+registry (using the template from [RFC9553]):
+   Property Name: ietf.org:ocmAddresses
+   Property Type: String[ocmAddress]
+   Property Context: Card
+   Intended Usage: common
+   Since Version: 1.0
+   Until Version: N/A
+   Change Controller: IETF
+   Reference or Description:
+
+   A map of OCM addresses for a contact. The keys are arbitrary
+   identifiers (e.g., "primary", "work") and the values are ocmAddress
+   objects as defined in the JSContact Types Registry.
+
+## JSContact Enum Values Registry
+
+The following entries are to be registered in the "JSContact Enum
+Values" registry (using the template from [RFC9553]).
+   Property Name: ietf.org:ocmAddresses/source
+   Context: Card
+   Since Version: 1.0
+   Until Version: N/A
+   Change Controller: IETF
+   Reference or Description:
+
+   Values indicating how an OCM address was established.
+
+   Initial Contents:
+   +==============+==========================================+
+   | Enum Value   | Reference/Description                    |
+   +==============+==========================================+
+   | invite       | Address established via OCM invite flow  |
+   |--------------|------------------------------------------|
+   | share        | Address established by receiving a share |
+   |--------------|------------------------------------------|
+   | direct entry | Address added directly by the user       |
+   |--------------|------------------------------------------|
+
 
 # Security Considerations
 
@@ -1293,28 +1357,39 @@ transmitted over unsecured channels.
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
 March 1997.
 
-[RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
-Authoring and Versioning](https://datatracker.ietf.org/html/rfc4918/)",
-June 2007.
-
-[RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
-Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
-
-[RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
-Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
-
 [RFC3986] Berners-Lee, T., Fielding, R. and Masinter, L.
 "[Uniform Resource Identifier (URI): Generic Syntax
 ](https://datatracker.ietf.org/doc/html/rfc3986)", January 2005
 
+[RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
+Authoring and Versioning](https://datatracker.ietf.org/html/rfc4918/)",
+June 2007.
+
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
+
+[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
+(JWS)](https://datatracker.ietf.org/doc/html/rfc7515)", May 2015.
+
+[RFC7517] Jones, M., "[JSON Web Key (JWK)](
+https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
+
+[RFC8032] Josefsson, S., Liusvaara, I., "[Edwards-Curve Digital
+Signature Algorithm (EdDSA)](
+https://datatracker.ietf.org/doc/html/rfc8032)", January 2017.
+
+[RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
+Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
-[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
-(JWS)](https://datatracker.ietf.org/doc/html/rfc7515), May 2015."
+[RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
+Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
+
+[RFC9553] Stepanek, R., Loffredo, M., "[JSContact: A JSON
+Representation of Contact Data](
+https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 
 
 # Appendix A: Multi-factor Authentication
@@ -1340,126 +1415,101 @@ out of scope for this specification: a mechanism similar to the
 [ScienceMesh](https://sciencemesh.io) integration for the
 [Invite](#invite-flow) capability may be envisaged.
 
-# Appendix B: Request Signing
+# Appendix B: JWKS and HTTP Signature Examples
 
-A request is signed by adding the signature in the headers.  The sender
-also needs to expose the public key used to generate the signature.  The
-receiver can then validate the signature and therefore the origin of
-the request.
-To help debugging, it is RECOMMENDED to also add all properties used in
-the signature as headers, even if they can easily be re-generated from
-the payload.
+## JWKS Endpoint
 
-Note: Signed requests prove the identity of the sender but do not
-encrypt nor affect its payload.
+An OCM Server that advertises the `http-sig` capability MUST expose its
+public keys at `/.well-known/jwks.json` in the format specified by
+[RFC7517].  Here is an example response from
+`https://sender.example.org/.well-known/jwks.json`:
 
-Here is an example of headers needed to sign a request.
+~~~
+{
+  "keys": [
+    {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "kid": "sender.example.org#key1",
+      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+    }
+  ]
+}
+~~~
+{: type="json"}
 
-```
-  {
-    "@request-target": "post /path",
-    "content-length": 380,
-    "date": "Mon, 08 Jul 2024 14:16:20 GMT",
-    "content-digest": "SHA-256=U7gNVUQiixe5BRbp4...",
-    "host": "hostname.of.the.recipient",
-    "Signature": "keyId=\"https://author.hostname/key\",algorithm=
-      \"rsa-sha256\",headers=\"content-length date digest host\",
-      signature=\"DzN12OCS1rsA[...]o0VmxjQooRo6HHabg==\""
+## Signing a Request (Sender)
+
+Given a Share Creation Notification request:
+
+<sourcecode type="http">
+POST /ocm/shares HTTP/1.1
+Host: receiver.example.org
+Date: Fri, 16 Jan 2026 13:37:00 GMT
+Content-Type: application/json
+Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
+
+{
+  "shareWith": "marie@receiver.example.org",
+  "name": "spec.yaml",
+  "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
+  "owner": "einstein@sender.example.org",
+  "sender": "einstein@sender.example.org",
+  "ownerDisplayName": "Albert Einstein",
+  "senderDisplayName": "Albert Einstein",
+  "shareType": "user",
+  "resourceType": "file",
+  "protocol": {
+    "name": "multi",
+    "webdav": {
+      "uri": "spec.yaml",
+      "sharedSecret": "hfiuhworzwnur98d3wjiwhr",
+      "permissions": ["read", "write"]
+    }
   }
-```
-
-* '@request-target' (optional) contains the reached endpoint and
-  the used method,
-* 'content-length' is the total length of the payload of the
-  request,
-* 'date' is the date and time when the request has been
-  sent,
-* 'content-digest' is a checksum of the payload of the
-  request,
-* 'host' is the hostname of the recipient of the request (remote when
-  signing outgoing request, local on incoming request),
-* 'Signature' contains the signature generated using the private key
-  and details on its generation:
-  - 'keyId' is a unique id, formatted as an url; hostname is used to
-    retrieve the public key via custom discovery
-  - 'algorithm' specify the algorithm used to generate signature
-  - 'headers' specify the properties used when generating the
-    signature
-  - 'signature' the signature of an array containing the properties
-    listed in 'headers'.  Some properties like content-length, date,
-    content-digest, and host are mandatory to protect against
-    authenticity override.
-
-## How to generate the Signature for outgoing request
-
-After properties are set in the headers, the Signature is generated and
-added to the list.
-
-This is a pseudo-code example for generating the `Signature` header for
-outgoing requests:
-
-```
-headers = {
-  'content-length': length_of(payload),
-  # Use a function to get the current GMT date as 'D, d M Y H:i:s T'
-  'date': current_gmt_datetime(),
-  'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
-        utf8_encode(payload))),
-  'host': 'recipient-fqdn',
 }
+</sourcecode>
 
-signed = ssl_sign(concatenate_with_newlines(headers),
-    private_key, 'sha256')
-signature = {
-    'keyId': 'sender.fqdn',  # The sending server's FQDN
-    'algorithm': 'rsa-sha256',
-    'headers': 'content-length date content-digest host',
-    'signature': signed,
-}
+The signature base is constructed according to [RFC9421] (with line
+breaks in @signature-params for display purposes only):
 
-headers['Signature'] = format_signature(signature)
-```
+<sourcecode type="http">
+"@method": POST
+"@target-uri": https://receiver.example.org/ocm/shares
+"content-digest": sha-256=:[digest-value]=:
+"@signature-params": ("@method" "@target-uri" "content-digest");
+    created=[timestamp];
+    keyid="sender.example.org#key1";
+    alg="ed25519"
+</sourcecode>
 
-## How to confirm Signature on incoming request
+Sign this base using for example Ed25519 ([RFC8032]) to produce the
+signature, then add headers (line breaks for display purposes only):
 
-The first step would be to confirm the validity of each
-properties:
+<sourcecode type="http">
+Signature-Input: sig1=("@method" "@target-uri" "content-digest");
+  created=[timestamp];
+  keyid="sender.example.org#key1";
+  alg="ed25519"
+Signature: sig1=:[signature-value]=:
+</sourcecode>
 
-* `content-length` and `content-digest` can be regenerated and compared
-  from the payload of the request,
-* a maximum TTL MUST be applied to `date` and current
-  timestamp,
-* regarding data contained in the `Signature`
-  header:
-  - using `keyId` to get the public key from remote
-    signatory,
-  - `headers` is used to generate the clear version of the
-    signature and MUST contain at least `content-length`, `date`,
-    `content-digest` and `host`,
-  - `signature` is the encrypted version of the
-    signature.
+## Verifying a Signature (Receiver)
 
-Here is an example of how to verify the signature using the headers,
-the signature and the public key:
+To verify an incoming signed request:
 
-```
-clear = {
-    'content-length': length_of(payload),
-    'date': 'Mon, 08 Jul 2024 14:16:20 GMT',
-    'content-digest': 'SHA-256=' + base64_encode(hash('sha256',
-          utf8_encode(payload))),  # Recompute digest for verification
-    'host': 'sender-fqdn',
-}
+1. Extract the provider domain from the `sender` field in the
+   request body
+2. Fetch the public key from
+   `https://<provider-domain>/.well-known/jwks.json`
+3. Extract `keyid` from `Signature-Input` header and find the key
+   matching the `kid` value in the [RFC7517] response
+4. Reconstruct the signature base from the request using the
+   components listed in `Signature-Input` as specified in [RFC9421]
+5. Verify the signature using the appropriate algorithm
+   (e.g., Ed25519 [RFC8032])
 
-signed = headers['Signature']
-verification_result = ssl_verify(concatenate_with_newlines(clear),
-                                 signed, public_key, 'sha256')
-
-if not verification_result then
-    raise InvalidSignatureException
-```
-
-## Validating the payload
+## Validating the Payload
 
 Following the validation of the signature, the host SHOULD also confirm
 the validity of the payload, that is ensuring that the actions implied
@@ -1494,7 +1544,7 @@ adhere to the following format:
     for the OCM Server
 Example:
 
-```json
+~~~
 {
   "payload": {
     "federation": "The ScienceMesh Directory",
@@ -1516,8 +1566,8 @@ Example:
   "protected": {"alg": "RS256"},
   "signature": "..."
 }
-```
-
+~~~
+{: type="json"}
 
 
 # Appendix D: Object models
@@ -1543,7 +1593,7 @@ flow or direct entry.  It provides a convenient way for users to
 organize and access their federated contacts, and MAY allow users to
 generate _Invites_.
 
-```
+~~~
 +-----------------+
 |  Address Book   |
 |                 |
@@ -1557,7 +1607,8 @@ generate _Invites_.
 +-----------------+  +----------------+
 |    Contact      |  |    Invites     |
 +-----------------+  +----------------+
-```
+~~~
+
 ### Properties
 
 * __owner__: Reference to the User who owns this address book
@@ -1576,7 +1627,7 @@ created through the Invite process or via direct entry.  A Contact MAY
 of course contain much more detailed information about the referenced
 user such as if it was added via _Invites_ or direct entry.
 
-```
+~~~
 +-----------------+
 |    Contact      |
 +-----------------+
@@ -1592,7 +1643,8 @@ user such as if it was added via _Invites_ or direct entry.
 +-----------------+
 |  Address Book   |
 +-----------------+
-```
+~~~
+
 ### Properties
 
 * __addedDate__: Timestamp of when contact was added
@@ -1611,7 +1663,7 @@ The Invite entity represents the bidirectional trust establishment
 mechanism in OCM.  It facilitates secure contact exchange between users
 on different OCM Servers.
 
-```
+~~~
 +-----------------+
 |     Invite      |
 +-----------------+
@@ -1627,7 +1679,8 @@ on different OCM Servers.
 |   Address Book  |
 +-----------------+
 
-```
+~~~
+
 ### Properties
 
 * __acceptedTime__: Timestamp of invite acceptance (if accepted)
@@ -1653,7 +1706,7 @@ OCM Providers.
 The following diagram summarizes the Provider structure. For the
 authoritative property list, see the Properties section below.
 
-```
+~~~
             +-----------------------+
             |      Provider         |
             |    (OCM Server)       |
@@ -1708,7 +1761,7 @@ authoritative property list, see the Properties section below.
 | - webdav         |
 | - ...            |
 +------------------+
-```
+~~~
 
 ### Properties
 
@@ -1727,7 +1780,7 @@ The Share entity represents a policy granting access to a _Resource_
 from a Sending Party to a Receiving Party.
 
 
-```
+~~~
 +-----------------+                      +------------------+
 |  Sending Party  |                      | Receiving Party  |
 +-----------------+                      +------------------+
@@ -1755,7 +1808,7 @@ from a Sending Party to a Receiving Party.
 +-----------------+
 |    Resource     |
 +-----------------+
-```
+~~~
 
 ### Properties
 
@@ -1789,15 +1842,15 @@ from a Sending Party to a Receiving Party.
 The User entity represents the party in OCM who can send and receive
 Shares and Invites and manage Contacts, and interact with Resources.
 
-```
-                     +-----------------------+
-                     |        User           |
-                     +-----------------------+
-                     | - email               |
-                     | - name                |
-                     | - ocmAddress          |
-                     | - uid                 |
-                     +-----------------------+
+~~~
+                +-----------------------+
+                |        User           |
+                +-----------------------+
+                | - email               |
+                | - name                |
+                | - ocmAddress          |
+                | - uid                 |
+                +-----------------------+
                             |
                   +---------+---------+
                   |                   |
@@ -1817,7 +1870,7 @@ Shares and Invites and manage Contacts, and interact with Resources.
          +------------------+
          | - sent[]         |
          +------------------+
-```
+~~~
 
 ### Properties
 
@@ -1841,7 +1894,7 @@ Receiving Party through the Sending Server's API.  In general a Resource
 is a much more complex entity, but for the purpose of OCM we only need
 to model a few key properties.
 
-```
+~~~
 +-----------------+
 |    Resource     |
 +-----------------+
@@ -1858,7 +1911,7 @@ to model a few key properties.
 +------------------+
 |     Share        |
 +------------------+
-```
+~~~
 
 ### Properties
 
@@ -1867,6 +1920,34 @@ to model a few key properties.
 * __resourceID__: Unique identifier of the Resource
 * __type__: Type of Resource (file, folder, calendar, etc.)
 
+
+# Changes
+
+This section collects the changes with respect to the previous
+version in the IETF datatracker.  It is meant to ease the review
+process and it shall be removed when going to RFC last call.
+The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 03
+* Fixed formatting of artworks, code blocks and bullet lists.
+
+## Version 02
+* Added the _Changes_ section.
+
+## Version 01
+
+* Introduced functions, roles, and object models to the specification.
+* Added support for SSH as a share access method.
+* Introduced `accessType` property in shares and removed the datatx
+  "protocol" in favor of a cleaner access model.
+* Improved resource access description with token exchange, and
+  specified request payload format for the `/token` endpoint.
+* Added RFC 9421 HTTP Message Signatures support via `http-sig`
+  capability and RFC 7515 (JWS) compliant JWKS and prescribed use of
+  JWS for the Directory Service.
+* Updated and homogenized capabilities across the specification.
+* Added JSContact extension to IANA Considerations.
+* Changed example domain to use cloud.example.org per RFC 2606.
 
 
 # Acknowledgements

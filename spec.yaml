@@ -5,7 +5,7 @@ info:
     Open Cloud Mesh OpenAPI Specification.
     The semantic of the Protocol Specification is detailed in the
     [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md) document.
-  version: 1.2.2
+  version: 1.3.0
   x-logo:
     url: logo.png
 servers:
@@ -308,7 +308,7 @@ components:
         apiVersion:
           type: string
           description: The OCM API version this endpoint supports
-          example: 1.2.2
+          example: 1.3.0
         endPoint:
           type: string
           description: The URI of the OCM API available at this endpoint
@@ -425,7 +425,8 @@ components:
           type: object
           deprecated: true
           description: >
-            DEPRECATED: Use .well-known/jwks.json for public keys instead.
+            DEPRECATED: Use public keys from /.well-known/jwks.json
+            instead for RFC 9421 support.
             Legacy field for draft-cavage HTTP Signatures (RSA only).
             Maintained for backward compatibility with existing deployments.
             The signatory is optional but it MUST contain `keyId` and `publicKeyPem`.
