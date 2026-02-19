@@ -15,7 +15,7 @@ author:
     name: Giuseppe Lo Presti
     organization: CERN
     email: giuseppe.lopresti@cern.ch
-    uri: http://cern.ch/lopresti
+    uri: https://cern.ch/lopresti
 
   - ins: M.B. de Jong
     name: Michiel de Jong
@@ -701,6 +701,7 @@ contain the following information about its OCM API:
             }
     ~~~
     {: type="json"}
+
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
       endpoint.  In order to access a Remote Resource, implementations
@@ -886,9 +887,10 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 * Protocol details for `webdav` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
-    `['remote']`.  A subset of: - `remote` signals the recipient that
-    the resource is available for remote access and interactive
-    browsing.  - `datatx` signals the recipient that the resource is
+    `['remote']`.  A subset of:
+    - `remote` signals the recipient that the resource is available
+    for remote access and interactive browsing.
+    - `datatx` signals the recipient that the resource is
     available for data transfer.  If no expiration is given, the share
     is suitable e.g. for sync use-cases, whereas if an expiration date
     is set, the above clause MAY apply and the recipient SHOULD notify
@@ -905,17 +907,17 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     a bearer token.  To prevent leaking it in logs it
     MUST NOT appear in any URI.
   - OPTIONAL permissions (array of strings) -
-    The permissions granted to the sharee.  A subset
-    of: - `read` allows read-only access including
-    download of a copy.  - `write` allows create, update, and delete
-    rights on the Resource.  - `share` allows re-share rights on the
-    Resource.
+    The permissions granted to the sharee.  A subset of:
+    - `read` allows read-only access including download of a copy.
+    - `write` allows create, update, and delete rights on the Resource.
+    - `share` allows re-share rights on the Resource.
   - OPTIONAL requirements (array of strings) -
     The requirements that the sharee MUST fulfill to
-    access the Resource.  A subset of: - `must-use-mfa` requires the
-    consumer to be MFA-authenticated.  This MAY be used if the
-    recipient provider exposes the `enforce-mfa`
-    capability.  - `must-exchange-token` requires the recipient to
+    access the Resource.  A subset of:
+    - `must-use-mfa` requires the consumer to be MFA-authenticated.
+    This MAY be used if the recipient provider exposes the
+    `enforce-mfa` capability.
+    - `must-exchange-token` requires the recipient to
     exchange the given `sharedSecret` via a signed HTTPS request
     to the Sending Server's {tokenEndPoint} [RFC6749].
     This MAY be used if the recipient provider exposes the
@@ -932,17 +934,18 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     the `/.well-known/ocm` endpoint MUST be used.
     Absolute URIs are deprecated.
   - REQUIRED viewMode (string)
-    The permissions granted to the sharee.  A subset of: - `view`
-    allows access to the web app in view-only mode.  - `read` allows
-    read and download access via the web app.  - `write` allows full
-    editing rights via the web app.
+    The permissions granted to the sharee.  A subset of:
+    - `view` allows access to the web app in view-only mode.
+    - `read` allows read and download access via the web app.
+    - `write` allows full editing rights via the web app.
   - OPTIONAL sharedSecret (string)
     An optional secret to be used to access the remote
     web app, for example in the form of a bearer token.
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
-    `['remote']`.  A subset of: - `remote` signals the recipient that
+    `['remote']`.  A subset of:
+    - `remote` signals the recipient that
     the resource is available for remote access, e.g. via sshfs.
     - `datatx` signals the recipient to transfer the resource
     from the given URI via scp.  The recipient MAY delegate a
@@ -1298,6 +1301,8 @@ Values" registry (using the template from [RFC9553]).
    Values indicating how an OCM address was established.
 
    Initial Contents:
+
+~~~
    +==============+==========================================+
    | Enum Value   | Reference/Description                    |
    +==============+==========================================+
@@ -1307,7 +1312,7 @@ Values" registry (using the template from [RFC9553]).
    |--------------|------------------------------------------|
    | direct entry | Address added directly by the user       |
    |--------------|------------------------------------------|
-
+~~~
 
 # Security Considerations
 
@@ -1346,8 +1351,6 @@ All `{tokenEndPoint}` requests MUST be transmitted over HTTPS and
 signed using HTTP Signatures.  Bearer tokens MUST be treated as
 confidential and never logged, persisted beyond their lifetime, or
 transmitted over unsecured channels.
-
-
 
 # References
 
