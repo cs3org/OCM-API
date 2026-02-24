@@ -742,11 +742,11 @@ contain the following information about its OCM API:
   Page to facilitate the Invite flow.
   - `"webdav-uri"` - to indicate that this OCM Server can append a
   relative URI to the path listed for WebDAV [RFC4918] in the
-  appropriate `resourceTypes` entry `"protocol-object"` - to
-  indicate that this OCM Server can receive a Share Creation
-  Notification whose `protocol` object contains one property per
-  supported protocol instead of containing the standard `name` and
-  `options` properties.
+  appropriate `resourceTypes` entry
+  - `"protocol-object"` - to indicate that this OCM Server can
+  receive a Share Creation Notification whose `protocol` object
+  contains one property per supported protocol instead of containing
+  the standard `name` and `options` properties.
 * OPTIONAL: criteria (array of string) - The criteria for accepting a
   Share Creation Notification.
   As all Receiving Servers SHOULD require the use of TLS in API
