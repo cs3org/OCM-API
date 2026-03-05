@@ -1706,6 +1706,12 @@ implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
 OCM Providers.
 
+The following diagram is illustrative and non-exhaustive. The single
+source of truth for Provider properties is the OCM API Discovery Fields
+section; for the box contents below, see the Properties subsection and
+the normative capability, criteria, and resource type definitions in
+that section.
+
 ~~~
             +-----------------------+
             |      Provider         |
@@ -1717,23 +1723,42 @@ OCM Providers.
             | - inviteAcceptDialog  |
             | - provider            |
             | - publicKey           |
-            | - tokenEndpoint       |
+            | - tokenEndPoint       |
+            | - ...                 |
             +-----------------------+
                    |
                    | exposes
                    |
          +---------+---------+----------------------+
          |                   |                      |
-         v                   v                      v
-+------------------+  +------------------+   +------------------+
-| ResourceTypes[]  |  | Capabilities[]   |   |    Criteria[]    |
-+------------------+  +------------------+   +------------------+
-| - name           |  | - enforce-mfa    |   | - allowlist      |
-| - shareTypes[]   |  | - exchange-token |   | - denylist       |
-| - protocols{}    |  | - invite-wayf    |   | - http-signatures|
-+------------------+  | - invites        |   | - invite         |
-       |              | - webdav-uri     |   | - token-exchange |
-       |              +------------------+   +------------------+
+         v                   v                      |
++------------------+  +------------------+          |
+| ResourceTypes[]  |  | Capabilities[]   |          |
++------------------+  +------------------+          |
+| - name           |  | - enforce-mfa    |          |
+| - shareTypes[]   |  | - exchange-token |          |
+| - protocols{}    |  | - http-sig       |          |
+| - ...            |  | - invites        |          |
++------------------+  | - notifications  |          |
+       |              | - protocol-object|          |
+       |              | - webdav-uri     |          |
+       |              | - ...            |          |
+       |              +------------------+          |
+       |                                            |
+       |                           +----------------+
+       |                           |
+       |                           v
+       |              +--------------------------+
+       |              |    Criteria[]            |
+       |              +--------------------------+
+       |              | - allowlist              |
+       |              | - denylist               |
+       |              | - http-request-signatures|
+       |              | - invite                 |
+       |              | - token-exchange         |
+       |              | - ...                    |
+       |              +--------------------------+
+       |
        | supports
        v
 +------------------+

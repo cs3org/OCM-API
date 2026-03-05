@@ -10,7 +10,7 @@
       "type": "string"
     },
     "endPoint": {
-      "type": "string", 
+      "type": "string",
       "format": "uri"
     },
     "provider": {
@@ -35,7 +35,7 @@
       }
     },
     "publicKey": {
-      "$ref": "#/$defs/publicKey" 
+      "$ref": "#/$defs/publicKey"
     },
     "inviteAcceptDialog": {
       "type": "string",
@@ -47,9 +47,9 @@
     }
   },
   "required": [
-    "enabled", 
-    "apiVersion", 
-    "endPoint", 
+    "enabled",
+    "apiVersion",
+    "endPoint",
     "resourceTypes"
   ],
   "$defs": {
@@ -94,8 +94,7 @@
           "type": "string"
         }
       },
-      "required": ["keyId", "publicKeyPem" ]
-
+      "required": ["keyId", "publicKeyPem"]
     }
   }
 }
