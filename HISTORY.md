@@ -14,13 +14,13 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 ### The EU-funded [CS3MESH4EOSC project](https://cs3mesh4eosc.eu)
 * In January 2020, a consortium of NRENs and independent actors of the [CS3 community](https://www.cs3community.org), led by [CERN](https://home.cern), kick-started the CS3MESH4EOSC project.
-* [Technical Workshop](https://indico.cern.ch/event/928998) held in June 2020: **the `1.0.0` release of the OCM API was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#100---2020-07-01---bjoern-schiessle-bjoernschiessleorg)**. On the occasion, the OCM repository was migrated to the [cs3org](https://github.com/cs3org) GitHub Organization. The standard was already implemented by ownCloud, Nextcloud and Seafile, and used in production to federate multiple instances.
+* [Technical Workshop](https://indico.cern.ch/event/928998) held in June 2020: **the `1.0.0` version of the OCM API was officially [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#100---2020-07-01---bjoern-schiessle-bjoernschiessleorg)**. On the occasion, the OCM repository was migrated to the [cs3org](https://github.com/cs3org) GitHub Organization. The standard was already implemented by ownCloud, Nextcloud and Seafile, and used in production to federate multiple instances.
 * [Paper presented at CHEP 2021](https://www.epj-conferences.org/articles/epjconf/abs/2021/05/epjconf_chep2021_02041/epjconf_chep2021_02041.html) about the emerging ScienceMesh federation.
 * [Automated tests](https://github.com/pondersource/dev-stock?tab=readme-ov-file#open-cloud-mesh-test-suite-) initiated and hosted by PonderSource.
 * [OCM Workshop held at CS3 2021](https://indico.cern.ch/event/970232/sessions/372052/#20210127).
 * OCM Interoperability Session held at the [CS3 2022](https://indico.cern.ch/event/1075584/timetable/#20220124.detailed).
 * Several OCM-related talks are given at [CS3 2023](https://indico.cern.ch/event/1210538/timetable/#all.detailed).
-* In May 2023, a **revised version of the API was [released](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#110---2023-05-15---giuseppe-lo-presti-lopresticernch)**, which included much of the development effort driven by the CS3MESH4EOSC project.
+* In May 2023, an extended **version 1.1 of the API was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#110---2023-05-15---giuseppe-lo-presti-lopresticernch)**, which included much of the development effort driven by the CS3MESH4EOSC project.
 * In June 2023, members of the CS3MESH4EOSC project presented at the [EGI 2023 conference](https://whova.com/web/M8zkrnLo5DUwlnug54VINPkHTdssyl49PHa20jCW2Qg%3D/Agenda/), demonstrating the [ScienceMesh](https://sciencemesh.io) and its OCM-based federation capabilities with live demos.
 
 
@@ -29,7 +29,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * In October 2023 a [W3C Community Group](https://www.w3.org/community/ocm) was launched.
 * A Campfire and Panel session about OCM took place at [CS3 2024](https://indico.cern.ch/event/1332413/timetable/#20240312.detailed), held back at CERN on its 10th anniversary. Subsequently, the CS3 community initiated thematic SIGs, including an OCM SIG.
 * The OCM Test Suite was revamped, and the specification underwent a major rewrite in order to improve clarity and adopt the IETF Internet-Draft format.
-* [Technical Workshop](https://indico.cern.ch/event/1451374/) held in November 2024: **a new version was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#120---2024-11-20---michiel-b-de-jong-michielpondersourcecom) and the Internet-Draft document was presented**.
+* [Technical Workshop](https://indico.cern.ch/event/1451374/) held in November 2024: **version 1.2 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#120---2024-11-20---michiel-b-de-jong-michielpondersourcecom) and the Internet-Draft document was presented**.
 * Presentation at [FOSDEM 25](https://ftp.fau.de/fosdem/2025/h1308/fosdem-2025-5094-open-cloud-mesh.av1.webm).
 * In March 2025, the team was invited to present the Internet-Draft document at the IETF Meeting 122. The presentation was postponed to the next meeting, as it clashed with the CS3 2025 event.
 * At [CS3 2025](https://indico.cern.ch/event/1467643/timetable/#20250319.detailed) the OCM CS3 SIG held a session to report on its activity.
@@ -50,3 +50,4 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * Presentations and demonstrations about the OCM-based EOSC Federation of Cloud Storage Systems at the [EOSC Symposium 2025](https://indico.cern.ch/event/1543880/timetable).
 * First [IETF WG interim meeting](https://datatracker.ietf.org/doc/agenda-interim-2025-ocm-01-ocm-01) held in November 2025 ([recording](https://www.youtube.com/watch?v=I9c6sFM2NZ8)): the draft is officially adopted by the WG.
 * The 16th [SIG-CISS Meet-up on Federated Storage and Storage Infrastructure](https://events.geant.org/event/1939) (recording [part 1](https://drive.google.com/file/d/1KZGcD6Pb8C-ZAn2twm0XtyevzEu2Qp_V/view) and [part 2](https://drive.google.com/file/d/1THSRtgrznOaxWGL6tXLezQE67u2Xs77A/view)) featured a number of presentations about storage federations and OCM, including an OCM 10th anniversary presentation. 
+* At the [CS3 2026](https://indico.cern.ch/event/1560960/timetable/#20260318.detailed) event, the CS3 SIG reported on the activity and on the latest **version 1.3**, recently [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#130---2026-01-20---micke-nordin-kanosunetse), as well as on the WG plans.
