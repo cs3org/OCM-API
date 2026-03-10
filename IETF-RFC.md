@@ -1936,6 +1936,11 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
+## Version 04
+* Clarified that the diagrams in Appendix D are illustrative and
+  not normative.
+* Minor formatting fixes.
+
 ## Version 03
 * Fixed formatting of artworks, code blocks and bullet lists.
 
