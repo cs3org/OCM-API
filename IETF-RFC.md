@@ -1352,6 +1352,14 @@ signed using HTTP Signatures.  Bearer tokens MUST be treated as
 confidential and never logged, persisted beyond their lifetime, or
 transmitted over unsecured channels.
 
+# Copying conditions
+
+The author(s) agree to grant third parties the irrevocable right to
+copy, use and distribute the work, with or without modification, in
+any medium, without royalty, provided that, unless separate permission
+is granted, redistributed modified works do not contain misleading
+author, version, name of work, or endorsement information.
+
 # References
 
 ## Normative References
