@@ -36,23 +36,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Discovery"
-  /ocm-provider:
-    servers:
-      - url: https://cloud.example.org
-        description: The OCM Server's root FQDN.
-    get:
-      summary: Legacy discovery endpoint
-      description: >
-        This endpoint is a replica of `/.well-known/ocm`, and MUST be served
-        at the OCM Server's root FQDN as well to ensure backwards compatibility.
-        OCM Servers MUST support both.
-      responses:
-        "200":
-          description: See `/.well-known/ocm`.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Discovery"
   /shares:
     post:
       summary: Share Creation Notification endpoint

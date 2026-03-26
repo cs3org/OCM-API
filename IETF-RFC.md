@@ -649,15 +649,11 @@ from it (the part after the last `@` sign).
 Step 2: The Discovering Server SHOULD attempt OCM API Discovery via a
 HTTP GET request to `https://<fqdn>/.well-known/ocm`.
 Step 3: If that results in a valid HTTP response with a valid JSON
-response body within reasonable time, go to step 7.
-Step 4: If not, try a HTTP GET with `https://<fqdn>/ocm-provider` as
-the URL instead.
-Step 5: If that results in a valid HTTP response with a valid JSON
-response body within reasonable time, go to step 7.
-Step 6: If not, fail.  Implementations MAY fallback to HTTP instead
-of HTTPS in testing setups and retry steps 2-5, in particular when
+response body within reasonable time, go to step 5.
+Step 4: If not, fail.  Implementations MAY fallback to HTTP instead
+of HTTPS in testing setups and retry steps 2-3, in particular when
 an optional port is given in the address.
-Step 7: The JSON response body is the data that was discovered.
+Step 5: The JSON response body is the data that was discovered.
 
 ## Fields
 
