@@ -1973,12 +1973,15 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Added JSContact extension to IANA Considerations.
 * Changed example domain to use cloud.example.org per RFC 2606.
 
-# Appendix D: Resource Discovery Service
+# Appendix E: Resource Discovery Service
 
 An OCM Server MAY publicly advertise available resources.
 This is done via the `resourceAdvertismentUri`. It is
-expected to expose, via anonymous HTTP GET, a JSON document
-with the following format:
+expected to expose, via anonymous HTTPS GET, a signed JWS
+document [RFC7515], where the signing key MUST be made
+available via the `/.well-known/jwks.json` of the
+advertising server and the payload MUST adhere to the
+following format:
 
   * REQUIRED: `server` - a human-readable name for the
     Servers providing the Resource Discovery Service
@@ -2000,7 +2003,7 @@ with the following format:
    "server": "OCM Server 1",
    "resources": [
      {
-       "publicUrl": "https://ocm-server-1.fqdn/s/1234567890abcdef",
+       "publicUrl": "https://cloud.example.org/s/1234567890abcdef",
        "displayName": "Public Dataset 1",
        "id": "1234567890abcdef",
        "rocrate": {
@@ -2022,7 +2025,7 @@ with the following format:
              "name": "A RO-Crate embedded in OCM"
            },
            {
-             "@id": "https://ocm-server-1.fqdn/s/1234567890abcdef",
+             "@id": "https://cloud.example.org/s/1234567890abcdef",
              "@type": "File",
              "name": "Public data file"
            }

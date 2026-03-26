@@ -311,7 +311,7 @@ components:
         resourceadvertismenturi:
           type: string
           description: the uri of the ocm resources advertised at this endpoint
-          example: https://my-cloud-storage.org/ocm/resources
+          example: https://cloud.example.org/ocm/resources
         resourceTypes:
           type: array
           description: |
