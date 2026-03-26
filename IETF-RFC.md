@@ -1232,6 +1232,147 @@ knowing if the Sending Party understood and processed the reshare
 request or not.  In all cases, the Receiving Server MUST NOT reshare
 a Resource without an explicit grant from the Sending Server.
 
+# Journaling
+
+OCM messages can be lost during outages or network failures.
+Journaling provides a mechanism for Receiving Servers to detect missing
+messages and recover state by replaying missed messages from the
+Sending Server's journal.
+
+A Sending Server that supports journaling maintains a sequential
+journal of all OCM messages sent to each Receiving Server. Journal
+entries are scoped per (sender, receiver, message type) tuple, where
+message type is one of `share`, `notification`, or `invite-accepted`.
+
+Following [RFC6648], the `OCM-Journal-Id` header is used without the
+`X-` prefix convention for application-specific parameters.
+
+## OCM-Journal-Id Header
+
+A Sending Server that exposes the `journaling` capability MUST include
+an `OCM-Journal-Id` header in all outgoing OCM messages (Share
+Creation Notifications, Share Acceptance Notifications, and Invitation
+Acceptance requests). The value is a positive integer representing the
+monotonically increasing sequence number for this message within the
+(sender, receiver, message type) tuple.
+
+A Receiving Server MUST NOT reject a message solely because it lacks
+an `OCM-Journal-Id` header. When a Receiving Server observes an
+`OCM-Journal-Id` header for the first time from a given Sending Server,
+and the value is not 1, the Receiving Server SHOULD request a full
+journal replay to synchronize state.
+
+## Journal Scoping
+
+Each journal is scoped per (sender, receiver, message type) tuple.
+This means a Sending Server maintains separate sequences for shares,
+notifications, and invitation acceptances sent to each Receiving Server.
+
+Both Sending and Receiving Servers need to track journal IDs:
+
+* The Sending Server tracks outgoing journal IDs to assign sequential
+  numbers and serve replay requests.
+* The Receiving Server tracks incoming journal IDs per Sending Server
+  to detect gaps and trigger replays when needed.
+
+## Populating Outgoing IDs
+
+A Sending Server that implements journaling SHOULD:
+
+1. Maintain a sequential ID for each outgoing message, per
+   (receiver, message type) pair.
+2. For each Receiving Server, find all outgoing messages of a given
+   type and order by timestamp.
+3. Assign a sequential ID to each entry, scoped to the individual
+   journal for that (receiver, message type) pair, for outgoing
+   messages only.
+4. When sending the next message, include the next sequential ID in
+   the `OCM-Journal-Id` header.
+
+## Populating Incoming IDs
+
+A Receiving Server MUST NOT require the presence of a sequential ID
+in an incoming message. However, when a Receiving Server first
+observes an `OCM-Journal-Id` header from a Sending Server and the
+value is not 1, the Receiving Server SHOULD request all messages of
+that type from journal ID 1 up to the observed ID.
+
+The Receiving Server SHOULD verify that all locally stored shares or
+invitations from that Sending Server can be correlated with an
+incoming journal ID. If the Receiving Server finds an orphan object
+in its local database (one that cannot be tagged with a corresponding
+incoming journal ID), it SHOULD be removed, as the Sending Server
+does not consider it a valid entry.
+
+## Compaction
+
+A Sending Server MAY compact its journal by replacing entries that
+have been effectively cancelled with `noop` entries. This preserves
+sequence continuity while reflecting the current effective state.
+
+For example, given the following journal:
+
+    1. Share resource α with person X
+    2. Share resource β with person Y
+    3. Unshare resource α with person X
+    4. Share resource γ with person X
+
+After compaction, the journal replay would return:
+
+    1. NOOP
+    2. Share resource β with person Y
+    3. NOOP
+    4. Share resource γ with person X
+
+Entries 1 and 3 are replaced with noops because the share of resource
+α was effectively cancelled by the subsequent unshare.
+
+## Noop Message
+
+A `noop` is a minimal OCM message type represented as an empty JSON
+object `{}`. It is used exclusively in journal replay responses to
+represent compacted entries. The `noop` message type preserves sequence
+continuity: Receiving Servers can verify that no journal IDs are missing
+while understanding that the compacted entries have no effect.
+
+## Journal Replay
+
+To replay missed messages, the Receiving Server SHOULD make an HTTP
+GET request
+
+* to the `/journal` path in the Sending Server's OCM API
+* with the `since` query parameter set to the last known journal ID
+  (use 0 to request the full compacted journal)
+* with the `messageType` query parameter set to the type of journal
+  to query (`share`, `notification`, or `invite-accepted`)
+* using TLS
+* using httpsig [RFC9421]
+
+HTTP Request Signatures [RFC9421] are REQUIRED for journal replay.
+Servers that do not support the `http-sig` capability MUST NOT expose
+the journal replay endpoint.
+
+The Sending Server identifies the caller via the HTTP signature and
+serves the appropriate journal entries for the (sender, caller,
+messageType) tuple.
+
+### Response
+
+The response is a JSON object containing an `entries` array. Each
+entry is a JSON object with the following fields:
+
+* REQUIRED journalId (integer)
+  The sequence number for this entry.
+* REQUIRED message (object)
+  The OCM message body. The message type is determined by the
+  `messageType` query parameter. For `share` journals this is a Share
+  Creation Notification object; for `notification` journals a Share
+  Acceptance Notification object; for `invite-accepted` journals an
+  Invitation Acceptance object. Compacted entries are represented as
+  an empty object `{}` (noop).
+
+Entries MUST be ordered by journalId in ascending order.
+
 # IANA Considerations
 
 ## Well-Known URI for the Discovery
@@ -1348,6 +1489,14 @@ signed using HTTP Signatures.  Bearer tokens MUST be treated as
 confidential and never logged, persisted beyond their lifetime, or
 transmitted over unsecured channels.
 
+## Journaling
+
+The journal replay endpoint MUST only be accessible via HTTP Request
+using signatures [RFC9421].  Servers that do not support the `http-sig`
+capability MUST NOT expose the journal replay endpoint.  Journal
+responses may contain sensitive information about shared resources
+and MUST be served only to authenticated and authorized callers.
+
 # Copying conditions
 
 The author(s) agree to grant third parties the irrevocable right to
@@ -1368,12 +1517,17 @@ March 1997.
 "[Uniform Resource Identifier (URI): Generic Syntax
 ](https://datatracker.ietf.org/doc/html/rfc3986)", January 2005
 
-[RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
-Authoring and Versioning](https://datatracker.ietf.org/html/rfc4918/)",
+[RFC4918] Dusseault, L. M. "[HTTP Extensions for Web
+Distributed Authoring and Versioning](
+https://datatracker.ietf.org/doc/html/rfc4918/)",
 June 2007.
 
+[RFC6648] Saint-Andre, P., Crocker, D. and Overell, M.,
+"[Deprecating the "X-" Prefix and Similar Constructs in Application
+Protocols](https://datatracker.ietf.org/doc/html/rfc6648)", June 2012.
+
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
-https://datatracker.ietf.org/html/rfc6749)", October 2012.
+https://datatracker.ietf.org/doc/html/rfc6749)", October 2012.
 
 [RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
 (JWS)](https://datatracker.ietf.org/doc/html/rfc7515)", May 2015.
@@ -1386,7 +1540,7 @@ Signature Algorithm (EdDSA)](
 https://datatracker.ietf.org/doc/html/rfc8032)", January 2017.
 
 [RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
-Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
+Key Words](https://datatracker.ietf.org/doc/html/rfc8174)", May 2017.
 
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019

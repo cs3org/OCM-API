@@ -43,6 +43,8 @@ paths:
         This endpoint is used by a Sending Server to notify a Receiving Server that
         a new Share has been created. See [Share Creation Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-creation-notification)
         for more details.
+      parameters:
+        - $ref: "#/components/parameters/journalId"
       requestBody:
         content:
           application/json:
@@ -125,6 +127,8 @@ paths:
         that concerns a previously known entity, such as a Share or a trusted User.
         See [Share Acceptance Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-acceptance-notification)
         for more details.
+      parameters:
+        - $ref: "#/components/parameters/journalId"
       requestBody:
         content:
           application/json:
@@ -191,6 +195,8 @@ paths:
         This optional endpoint is used to inform the Sender that an Invitation was accepted.
         See [Invite flow](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-flow)
         for more details.
+      parameters:
+        - $ref: "#/components/parameters/journalId"
       requestBody:
         content:
           application/json:
@@ -230,6 +236,84 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /journal:
+    get:
+      summary: Journal Replay endpoint
+      description: >
+        This optional endpoint allows a Receiving Server to request OCM messages
+        it may have missed from a Sending Server. The Sending Server maintains a
+        sequential journal of all OCM messages sent to each Receiving Server,
+        scoped per (sender, receiver, message type) tuple. Journal IDs are
+        monotonically increasing integers assigned to each outgoing message.
+
+
+        Servers that expose the `journaling` capability MUST support this
+        endpoint. This endpoint MUST require HTTP Request Signatures [RFC9421]
+        for authentication. Servers that do not support the `http-sig` capability
+        MUST NOT expose this endpoint.
+
+
+        The Sending Server identifies the caller via the HTTP signature and
+        serves the appropriate journal entries for the (sender, caller, messageType)
+        tuple.
+
+
+        The journal MAY be compacted: when a sequence of messages effectively
+        cancels out (e.g. a share followed by an unshare of the same resource),
+        the Sending Server MAY replace them with `noop` entries. This preserves
+        sequence continuity while reflecting the current effective state.
+      parameters:
+        - name: since
+          in: query
+          required: true
+          description: >
+            Return journal entries with a journalId strictly greater than
+            this value. Use 0 to request the full (possibly compacted) journal.
+          schema:
+            type: integer
+            minimum: 0
+        - name: messageType
+          in: query
+          required: true
+          description: >
+            The type of OCM message journal to query. Each message type
+            maintains a separate journal per (sender, receiver) pair.
+          schema:
+            type: string
+            enum:
+              - share
+              - notification
+              - invite-accepted
+      responses:
+        "200":
+          description: >
+            Successfully retrieved journal entries. The entries MUST be ordered
+            by journalId in ascending order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - entries
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/JournalEntry"
+        "403":
+          description: >
+            Caller cannot be authenticated via HTTP Request Signatures or
+            is not authorized to access this journal.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "501":
+          description: This server does not support journaling.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
   parameters:
     id:
@@ -239,6 +323,19 @@ components:
       required: true
       schema:
         type: string
+    journalId:
+      name: OCM-Journal-Id
+      in: header
+      required: false
+      description: >
+        Sequential journal identifier for this message, scoped per
+        (sender, receiver, message type) tuple. Servers that expose the
+        `journaling` capability MUST include this header in all outgoing
+        OCM messages. Receiving Servers that do not support journaling
+        MAY ignore this header.
+      schema:
+        type: integer
+        minimum: 1
     page:
       name: page
       in: query
@@ -388,6 +485,7 @@ components:
               - http-sig
               - invites
               - invite-wayf
+              - journaling
               - notifications
               - protocol-object
               - webdav-uri
@@ -884,3 +982,35 @@ components:
           type: number
           description: Number of seconds before this access_token will need to be refreshed.
           example: 300
+    JournalEntry:
+      type: object
+      required:
+        - journalId
+        - message
+      properties:
+        journalId:
+          type: integer
+          minimum: 1
+          description: >
+            Monotonically increasing sequence number scoped per
+            (sender, receiver, message type) tuple. Journal IDs MUST be
+            strictly increasing but need not be contiguous.
+          example: 42
+        message:
+          description: >
+            The OCM message body. The message type is determined by the
+            `messageType` query parameter used to request the journal.
+            Compacted entries are represented as Noop (empty object `{}`).
+          oneOf:
+            - $ref: "#/components/schemas/NewShare"
+            - $ref: "#/components/schemas/NewNotification"
+            - $ref: "#/components/schemas/AcceptedInvite"
+            - $ref: "#/components/schemas/Noop"
+    Noop:
+      type: object
+      description: >
+        A no-operation message representing a compacted journal entry.
+        When a sequence of messages effectively cancels out (e.g. a share
+        followed by an unshare of the same resource), the Sending Server
+        MAY replace them with noop entries to preserve journal sequence
+        continuity.

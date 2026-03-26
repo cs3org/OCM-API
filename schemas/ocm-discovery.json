@@ -22,7 +22,7 @@
     },
     "capabilities": {
       "type": "array",
-      "description": "Capabilities values of 'exchange-token', 'webdav-uri', 'protocol-object', 'invites', 'invite-wayf' defined in draft",
+      "description": "Capabilities values of 'exchange-token', 'webdav-uri', 'protocol-object', 'invites', 'invite-wayf', 'journaling' defined in draft",
       "items": {
         "type": "string"
       }
