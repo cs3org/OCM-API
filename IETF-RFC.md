@@ -1225,6 +1225,62 @@ response with a JSON object containing an OAuth 2.0 error code
 Permitted error codes are `invalid_request`, `invalid_client`,
 `invalid_grant`, `unauthorized_client` and `unsupported_grant_type`.
 
+##  Decision Table
+
+The following scenarios summarize the directional contract for code flow.
+Scenarios 1-2 concern strict shares and depend on the Receiving
+Server's capabilities.  Scenarios 3-4 concern non-strict shares and
+depend on the Sending Server's capabilities.
+
+1.  If the Sending Server includes `must-exchange-token` in
+    `protocol.webdav.requirements` and the Receiving Server exposes the
+    `exchange-token` capability, strict token exchange is required
+    before the Resource is accessed.
+2.  If the Sending Server includes `must-exchange-token` and the
+    Receiving Server does not expose the `exchange-token` capability,
+    the Sending Server SHOULD NOT include that requirement, because the
+    Receiving Server may be unable to complete the exchange.
+3.  If the Sending Server omits `must-exchange-token` and exposes the
+    `exchange-token` capability with a `tokenEndPoint`, the Receiving
+    Server MAY attempt the token exchange described in step 3.1 of
+    [Resource Access](#resource-access) and MUST fall back to legacy
+    shared-secret access if that exchange fails.
+4.  If the Sending Server omits `must-exchange-token` and does not
+    expose the `exchange-token` capability, only legacy shared-secret
+    access is available.
+
+The following examples illustrate these outcomes end to end:
+
+1.  Strict required code flow: Provider A acts as Sending Server and
+    exposes the `exchange-token` capability with a `tokenEndPoint`.
+    Provider B acts as Receiving Server and advertises both
+    `exchange-token` and `token-exchange`.  After discovering B's
+    `token-exchange` criteria, A MUST include `must-exchange-token` in
+    `protocol.webdav.requirements`.  B MUST exchange the
+    `sharedSecret` at A's `tokenEndPoint` and then use only the bearer
+    token to access the Resource.
+2.  Optional exchange with fallback: Provider A acts as Sending Server
+    and exposes the `exchange-token` capability with a `tokenEndPoint`.
+    Provider B does not advertise `token-exchange`, so A sends a share
+    without `must-exchange-token`.  When B later accesses the Resource,
+    it MAY attempt the token exchange at A's `tokenEndPoint`, but if
+    that exchange fails it MUST fall back to the legacy
+    `sharedSecret`.
+3.  Legacy share to a code-flow-capable peer: Provider A does not
+    expose the `exchange-token` capability.  Provider B does expose
+    `exchange-token`, so B is capable of honoring strict inbound shares
+    from other peers.  Because A does not advertise a `tokenEndPoint`,
+    A can only send a legacy share and B can only use legacy
+    shared-secret access for that share.
+4.  Asymmetric role behavior: Provider A exposes `exchange-token` and
+    `token-exchange`, so it can require code flow for inbound shares
+    when it acts as Receiving Server.  When A later acts as Sending
+    Server toward Provider B, and B does not advertise
+    `token-exchange`, A MAY omit `must-exchange-token`.  B may then
+    attempt token exchange against A's `tokenEndPoint` or fall back to
+    legacy access.  A therefore accepts strict inbound shares while
+    still choosing a legacy-compatible outbound share.
+
 # Share Deletion
 
 A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"`
