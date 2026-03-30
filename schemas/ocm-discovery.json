@@ -22,14 +22,14 @@
     },
     "capabilities": {
       "type": "array",
-      "description": "Capabilities values of 'exchange-token', 'webdav-uri', 'protocol-object', 'invites', 'invite-wayf' defined in draft",
+      "description": "Capability values of 'enforce-mfa', 'exchange-token', 'http-sig', 'invites', 'invite-wayf', 'notifications', 'protocol-object', and 'webdav-uri' are defined in the draft",
       "items": {
         "type": "string"
       }
     },
     "criteria": {
       "type": "array",
-      "description": "Criteria values of 'http-request-signatures', 'token-exchange', 'denlyist' and 'allowlist' are defined in draft",
+      "description": "Criteria values of 'http-request-signatures', 'token-exchange', 'denylist', 'allowlist', and 'invite' are defined in the draft",
       "items": {
         "type": "string"
       }
@@ -43,7 +43,8 @@
     },
     "tokenEndPoint": {
       "type": "string",
-      "format": "uri"
+      "format": "uri",
+      "description": "URL of the token endpoint hosted by the Sending Server."
     }
   },
   "required": [
