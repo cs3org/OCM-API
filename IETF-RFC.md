@@ -795,6 +795,21 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 * using TLS
 * using httpsig [RFC9421]
 
+Before constructing the notification, the Sending Server MUST query
+the Receiving Server's OCM API Discovery endpoint.  If the Receiving
+Server advertises `token-exchange` in its `criteria` and the Sending
+Server exposes the `exchange-token` capability with a `tokenEndPoint`,
+the Sending Server MUST include `must-exchange-token` in
+`protocol.webdav.requirements` and MUST NOT fall back to legacy
+shared-secret access.  If the Receiving Server advertises
+`token-exchange` but the Sending Server does not expose the
+`exchange-token` capability or does not have a `tokenEndPoint`, the
+Sending Server MUST NOT create the share, as the Receiving Server
+would reject any notification that lacks the code-flow requirement.
+If the Receiving Server does not advertise `token-exchange` in its
+`criteria`, the Sending Server MAY still include `must-exchange-token`
+voluntarily.
+
 ## Fields
 
 * REQUIRED shareWith (string)
@@ -923,8 +938,10 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
     - `must-exchange-token` requires the recipient to
     exchange the given `sharedSecret` via a signed HTTPS request
     to the Sending Server's {tokenEndPoint} [RFC6749].
-    This MAY be used if the recipient provider exposes the
-    `exchange-token` capability.
+    This MAY be used if the Sending Server exposes the
+    `exchange-token` capability and `tokenEndPoint`, and MUST be
+    included when the Receiving Server advertises `token-exchange`
+    in criteria.
   - OPTIONAL size (integer)
     The size of the resource to be transferred, useful
     especially in case of `datatx` access type.
@@ -1092,9 +1109,9 @@ protocol required for access.  The procedure is as follows:
      token for a short-lived bearer token, and only use that bearer
      token to access the Resource (See the [Code Flow](#code-flow)
      section).  If the `must-exchange-token` requirement is not present
-     and the Discovery endpoint inspected at step 1. exposes the
-     `token-exchange` capability, the receiver MAY attempt to perform
-     the token exchange as above, but it MUST fall back to the following
+     and the discovery inspected at step 1 exposes the `exchange-token`
+     capability with a `tokenEndPoint`, the receiver MAY attempt the
+     token exchange as above, but it MUST fall back to the following
      steps should the process fail.
 3.2. If it includes `must-use-mfa`, the Receiving Server MUST ensure
      that the Receiving Party has been authenticated with MFA, or prompt
