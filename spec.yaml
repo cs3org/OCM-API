@@ -440,15 +440,22 @@ components:
           type: string
           format: uri
           description: >
-            Optional URL of the Token Exchange endpoint to obtain bearer tokens in exchange for codes.
-            If the `exchange-token` capability is exposed, the tokenEndPoint MUST be advertised in the discovery response.
+            Optional URL of the Token Exchange endpoint hosted by the
+            provider when acting as Sending Server. The Receiving Server
+            POSTs here to obtain bearer tokens in exchange for
+            authorization codes (shared secrets). If the `exchange-token`
+            capability is exposed, the tokenEndPoint MUST be advertised
+            in the discovery response.
 
             **Token Exchange API:**
-            This optional endpoint allows obtaining a (potentially short-lived) bearer token in exchange for a secret.
+            This optional endpoint allows the Receiving Server to obtain
+            a (potentially short-lived) bearer token in exchange for an
+            authorization code (shared secret).
 
             **HTTP Request:**
             - Method: POST
-            - URL: The URL discovered in this field
+            - URL: The URL hosted by the Sending Server and discovered in
+              this field
             - Content-Type: application/x-www-form-urlencoded
             - Body: TokenRequest schema (form-encoded, required)
 

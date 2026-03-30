@@ -720,10 +720,11 @@ contain the following information about its OCM API:
   include one or more of the following items:
   - `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
-  - `"exchange-token"` - to indicate that this OCM Server exposes a
-  [RFC6749]-compliant endpoint, which allows to exchange a secret
-  received in the protocol properties of a Share Creation Notification
-  for a short-lived bearer token.
+  - `"exchange-token"` - to indicate that this OCM Server supports the
+  OCM code flow via an [RFC6749]-compliant token endpoint.  When this
+  OCM Server acts as Sending Server, it hosts `tokenEndPoint`.  When it
+  acts as Receiving Server, it can honor inbound shares that require
+  token exchange.
   - `"http-sig"` - to indicate that this OCM Server supports
   [RFC9421] HTTP Message Signatures and advertises public keys in the
   format specified by [RFC7517] at the `/.well-known/jwks.json`
@@ -751,9 +752,13 @@ contain the following information about its OCM API:
   for instance:
   - `"http-request-signatures"` - to indicate that API requests
   without http signatures will be rejected.
-  - `"token-exchange"` - to indicate that API requests without
-  token exchange will be rejected (see the [Code Flow](#code-flow)
-  section).
+  - `"token-exchange"` - to indicate that when this OCM Server acts
+  as Receiving Server, it requires the code flow for all inbound
+  shares.  Shares that do not include `must-exchange-token` in
+  their `protocol.webdav.requirements` will be rejected.  An
+  OCM Server advertising this criterium MUST also expose the
+  `exchange-token` capability.  See the [Code Flow](#code-flow)
+  section.
   - `"denylist"` - some servers MAY be blocked based on their IP
   address
   - `"allowlist"` - unknown servers MAY be blocked based on their IP
@@ -771,8 +776,10 @@ contain the following information about its OCM API:
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
   Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
   accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
-* OPTIONAL: tokenEndPoint (string) - URL of the token endpoint where the
-  Sending Server can exchange a secret for a short-lived bearer token.
+* OPTIONAL: tokenEndPoint (string) - URL of the token endpoint hosted by
+  this OCM Server.  When this OCM Server acts as Sending Server, the
+  Receiving Server POSTs here to exchange a `sharedSecret` for a
+  short-lived bearer token.
   Implementations that offer the `"exchange-token"` capability MUST
   provide this URL as well.
   Example: `"https://cloud.example.org/ocm/token"`.
