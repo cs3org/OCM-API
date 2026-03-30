@@ -10,8 +10,8 @@ flowchart TD
     F --> G["Do not fall back to legacy access for that share"]
     D -- "No" --> H["Do not create the share"]
 
-    C -- "No" --> I{"Sender still wants strict code flow"}
-    I -- "Yes" --> J["Include must-exchange-token voluntarily"]
+    C -- "No" --> I{"What is the sender policy for this share"}
+    I -- "Strict" --> J["Include must-exchange-token voluntarily"]
     J --> F
-    I -- "No" --> K["Create legacy compatible share"]
+    I -- "Legacy" --> K["Send legacy share without must-exchange-token"]
 ```
