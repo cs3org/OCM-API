@@ -1227,10 +1227,11 @@ Permitted error codes are `invalid_request`, `invalid_client`,
 
 ##  Decision Table
 
-The following scenarios summarize the directional contract for code flow.
-Scenarios 1-2 concern strict shares and depend on the Receiving
-Server's capabilities.  Scenarios 3-4 concern non-strict shares and
-depend on the Sending Server's capabilities.
+The directional contract depends first on whether the share is strict.
+For strict shares, the Receiving Server's advertised behavior determines
+whether the Sending Server can require code flow.  For non-strict
+shares, the Sending Server's advertised behavior determines whether
+token exchange is available in addition to legacy access.
 
 1.  If the Sending Server includes `must-exchange-token` in
     `protocol.webdav.requirements` and the Receiving Server exposes the
@@ -1242,14 +1243,13 @@ depend on the Sending Server's capabilities.
     Receiving Server may be unable to complete the exchange.
 3.  If the Sending Server omits `must-exchange-token` and exposes the
     `exchange-token` capability with a `tokenEndPoint`, the Receiving
-    Server MAY attempt the token exchange described in step 3.1 of
-    [Resource Access](#resource-access) and MUST fall back to legacy
+    Server MAY attempt token exchange first and MUST fall back to legacy
     shared-secret access if that exchange fails.
 4.  If the Sending Server omits `must-exchange-token` and does not
     expose the `exchange-token` capability, only legacy shared-secret
     access is available.
 
-The following examples illustrate these outcomes end to end:
+The following examples illustrate typical end-to-end outcomes:
 
 1.  Strict required code flow: Provider A acts as Sending Server and
     exposes the `exchange-token` capability with a `tokenEndPoint`.
