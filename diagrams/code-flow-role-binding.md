@@ -1,26 +1,23 @@
 ```mermaid
-flowchart LR
-    subgraph A["Terms used by the spec"]
-        A1["exchange-token in discovery"]
-        A2["token-exchange in criteria"]
-        A3["must-exchange-token on the share"]
-        A4["tokenEndPoint in discovery"]
-    end
+flowchart TD
+    ET["exchange-token in discovery"]
+    TX["token-exchange in criteria"]
+    EP["tokenEndPoint in discovery"]
+    MS["must-exchange-token on the share"]
 
-    subgraph B["Reading this clarification proposes"]
-        B1["Provider supports the code flow"]
-        B2["As Sending Server, it hosts tokenEndPoint"]
-        B3["As Receiving Server, it can honor strict inbound shares"]
-        B4["Receiver side policy for inbound shares"]
-        B5["Per share strict contract"]
-        B6["Hosted by sender and called by receiver"]
-    end
+    ET --> P["One provider-level code-flow capability"]
+    P --> S["Sending Server role"]
+    P --> R["Receiving Server role"]
 
-    A1 --> B1
-    B1 --> B2
-    B1 --> B3
-    A2 --> B4
-    A3 --> B5
-    A4 --> B6
-    B4 --> B5
+    S --> S1["Hosts tokenEndPoint"]
+    EP --> S1
+
+    R --> R1["Can honor inbound strict shares"]
+    R --> R2["Receiver policy for inbound shares"]
+    TX --> R2
+    R2 --> R3["If advertised, inbound shares must include must-exchange-token"]
+    R3 --> MS
+
+    MS --> M1["Strict share contract"]
+    M1 --> M2["Receiver must exchange sharedSecret before access"]
 ```
