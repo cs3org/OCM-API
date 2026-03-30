@@ -651,7 +651,9 @@ components:
                         `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
                         Sending Server, in order to get a short-lived token to be used
                         for subsequent access [RFC6749]. This requirement MAY be used if
-                        the recipient provider exposes the `exchange-token` capability.
+                        the Sending Server exposes the `exchange-token` capability and
+                        `tokenEndPoint`, and MUST be included when the Receiving Server
+                        advertises `token-exchange` in criteria.
                     enum:
                       - must-use-mfa
                       - must-exchange-token
