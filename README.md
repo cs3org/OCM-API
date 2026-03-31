@@ -8,6 +8,7 @@
 This repository contains the text of the [Open Cloud Mesh IETF Draft](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
 
 The documents are available as follows:
+
 * **Latest official version, 1.3.0**: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.3.0&repo=OCM-API&user=cs3org)
 * Development branch: [RFC-formatted Draft](IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
 
@@ -23,11 +24,17 @@ The Open Cloud Mesh API specification is an open source, community-driven projec
 
 If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md) and the [IETF Note Well](https://www.ietf.org/about/note-well/).
 
+## Working Material
+
+Current working material for the `/notifications` endpoint lives under
+[`work/notifications/`](work/notifications/README.md).
+
 ## History and Changelog
 
 The history of the Open Cloud Mesh project is [available here](HISTORY.md), including links to external material.
 
 Previously released versions ([changelog](CHANGELOG.md)):
+
 * Version 1.2.0: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.2.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.0&repo=OCM-API&user=cs3org)
 * Version 1.1.0: [README](https://github.com/cs3org/OCM-API/blob/v1.1.0/README.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org)
 * Version 1.0.0: [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org)
