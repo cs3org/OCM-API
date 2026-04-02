@@ -2083,4 +2083,25 @@ Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse,
 Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
 Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
 
+Work on this document has been partially funded by [NLnet][nlnet]
+through the [NGI0 Core Fund][nlnet-core], with financial support from
+the European Commission's [Next Generation Internet][ngi] programme
+under grant agreement No. [101092990][cordis-ocm].  Additional support
+for Open Cloud Mesh in 2025 and 2026 has been provided by the
+[Sovereign Tech Agency (STA)][sta].
+
+See also the [NLnet OCM project page][nlnet-ocm], the
+[NLnet funding page][nlnet-funding], the [STA OCM technology
+page][sta-ocm], and the [Sovereign Tech Fund page][sta-fund].
+
+[nlnet]: https://www.nlnet.nl/
+[nlnet-core]: https://www.nlnet.nl/core
+[nlnet-funding]: https://www.nlnet.nl/funding.html
+[ngi]: https://ngi.eu/
+[cordis-ocm]: https://cordis.europa.eu/project/id/101092990
+[nlnet-ocm]: https://www.nlnet.nl/project/OpenCloudMesh
+[sta]: https://www.sovereign.tech/
+[sta-ocm]: https://www.sovereign.tech/tech/open-cloud-mesh
+[sta-fund]: https://www.sovereign.tech/programs/fund
+
 --- back
