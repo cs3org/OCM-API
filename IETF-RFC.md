@@ -2083,23 +2083,28 @@ Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse,
 Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
 Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
 
-Work on this document has been partially funded by [NLnet][nlnet]
-through the [NGI0 Core Fund][nlnet-core], with financial support from
-the European Commission's [Next Generation Internet][ngi] programme
-under grant agreement No. [101092990][cordis-ocm].  Additional support
-for Open Cloud Mesh in 2025 and 2026 has been provided by the
-[Sovereign Tech Agency (STA)][sta].
+Work on this document has been partially funded over the years by
+multiple projects and funding agencies:
+- The CS3MESH4EOSC project "Interactive and agile/responsive sharing
+mesh of storage, data and applications for EOSC", has received funding
+from the European Union’s Horizon 2020 research and innovation programme
+under Grant Agreement no. [863353][cs3mesh].
+- [NLnet][nlnet] through the [NGI0 Core Fund][nlnet-core], with
+financial support from the European Commission's [Next Generation Internet][ngi]
+programme under grant agreement No. [101092990][cordis-ocm].
+- The EOSC Data Commons project "Services for inter- and cross-
+disciplinary data discovery, access, sharing and reuse in the EOSC
+Federation", funded by the European Union Grant Agreement no. [101188179][eoscdc].
+- [Sovereign Tech Agency][sta] through the [Tech Fund][sta-fund], with
+a specific [project][sta-ocm].
 
-See also the [NLnet OCM project page][nlnet-ocm], the
-[NLnet funding page][nlnet-funding], the [STA OCM technology
-page][sta-ocm], and the [Sovereign Tech Fund page][sta-fund].
-
+[cs3mesh]: https://cs3mesh4eosc.eu/
 [nlnet]: https://www.nlnet.nl/
 [nlnet-core]: https://www.nlnet.nl/core
-[nlnet-funding]: https://www.nlnet.nl/funding.html
 [ngi]: https://ngi.eu/
 [cordis-ocm]: https://cordis.europa.eu/project/id/101092990
 [nlnet-ocm]: https://www.nlnet.nl/project/OpenCloudMesh
+[eoscdc]: https://www.eosc-data-commons.eu/
 [sta]: https://www.sovereign.tech/
 [sta-ocm]: https://www.sovereign.tech/tech/open-cloud-mesh
 [sta-fund]: https://www.sovereign.tech/programs/fund
