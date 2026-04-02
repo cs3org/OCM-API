@@ -2083,4 +2083,36 @@ Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse,
 Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
 Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
 
+Work on this document has been partially funded over the years by
+multiple projects and funding agencies:
+
+- The [CS3MESH4EOSC][cs3mesh] project "Interactive and agile/responsive
+sharing mesh of storage, data and applications for EOSC", whose key
+result was [Science Mesh][sciencemesh], received funding from the
+European Union's Horizon 2020 research and innovation programme under
+Grant Agreement no. [863353][cordis-cs3mesh].
+- [NLnet][nlnet] through the [NGI0 Core Fund][nlnet-core], with
+financial support from the European Commission's
+[Next Generation Internet][ngi] programme under grant agreement
+No. [101092990][cordis-ocm].
+- The [EOSC Data Commons][eoscdc] project "Services for inter- and
+cross-disciplinary data discovery, access, sharing and reuse in the
+EOSC Federation", received funding from the European Union under Grant
+Agreement no. [101188179][cordis-eoscdc].
+- [Sovereign Tech Agency][sta] through the [Tech Fund][sta-fund], with
+a specific [project][sta-ocm].
+
+[cs3mesh]: https://cs3mesh4eosc.eu/
+[sciencemesh]: https://cs3mesh4eosc.eu/science-mesh
+[nlnet]: https://www.nlnet.nl/
+[nlnet-core]: https://www.nlnet.nl/core
+[ngi]: https://ngi.eu/
+[cordis-cs3mesh]: https://cordis.europa.eu/project/id/863353
+[cordis-ocm]: https://cordis.europa.eu/project/id/101092990
+[eoscdc]: https://www.eosc-data-commons.eu/
+[cordis-eoscdc]: https://cordis.europa.eu/project/id/101188179
+[sta]: https://www.sovereign.tech/
+[sta-ocm]: https://www.sovereign.tech/tech/open-cloud-mesh
+[sta-fund]: https://www.sovereign.tech/programs/fund
+
 --- back
