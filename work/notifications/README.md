@@ -1,18 +1,11 @@
-# Notifications Work Area
+# Notifications work area
 
-This directory holds the public research notes for the `/notifications`
-endpoint in relation to issue `#350`.
+Research for `/notifications` and issue `#350`.
 
-The protocol source of truth lives in:
+Normative spec: `IETF-RFC.md`, `spec.yaml`. This directory is implementation notes and cross-stack notes under `research/`.
 
-- `IETF-RFC.md`
-- `spec.yaml`
-
-This place keeps only the research layer:
-
-- `research/` for implementation notes and cross-platform
-  observations
-
-Current documents:
+Contents:
 
 - `research/README.md`
+- `research/matrix-notification-types.md` (types + pinned code links)
+- `research/examples/` (wire JSON in fenced blocks, `metadata.md`, `discrepancies.md`)
