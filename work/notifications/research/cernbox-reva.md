@@ -2,7 +2,7 @@
 
 Inspected repo: `https://github.com/cs3org/reva`
 Inspected source commit:
-[`62d31b988cf0f864fafd033e1b939ea7f05ba398`](https://github.com/cs3org/reva/tree/62d31b988cf0f864fafd033e1b939ea7f05ba398)
+[`38515cdf789457bf0696a4c022c6652133bd0ad0`](https://github.com/cs3org/reva/tree/38515cdf789457bf0696a4c022c6652133bd0ad0)
 
 In this inspection, this repo is mainly relevant for the gap between route
 presence and notification behavior.
@@ -24,19 +24,21 @@ depend on."
 ## Notification Types And Code Paths
 
 - The inbound `/ocm/notifications` handler lives in
-  [`notifications.go`](https://github.com/cs3org/reva/blob/62d31b988cf0f864fafd033e1b939ea7f05ba398/internal/http/services/opencloudmesh/ocmd/notifications.go).
+  [`notifications.go`](https://github.com/cs3org/reva/blob/38515cdf789457bf0696a4c022c6652133bd0ad0/internal/http/services/opencloudmesh/ocmd/notifications.go).
 - In this checkout, that file does not decode typed notification requests. It
-  reads the raw JSON body, logs it, and returns `201 Created`.
+  reads the raw JSON body only for `application/json`, logs what it got, and
+  returns `201 Created`.
 - The code comments in
-  [`notifications.go`](https://github.com/cs3org/reva/blob/62d31b988cf0f864fafd033e1b939ea7f05ba398/internal/http/services/opencloudmesh/ocmd/notifications.go)
+  [`notifications.go`](https://github.com/cs3org/reva/blob/38515cdf789457bf0696a4c022c6652133bd0ad0/internal/http/services/opencloudmesh/ocmd/notifications.go)
   mention `SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,
   `SHARE_UNSHARED`, `RESHARE_UNDO`, and `RESHARE_CHANGE_PERMISSION`, but in
   this pass those values were examples only. They were not decoded or acted on.
 - Outgoing notification sending is still not wired because
-  [`client.go`](https://github.com/cs3org/reva/blob/62d31b988cf0f864fafd033e1b939ea7f05ba398/internal/http/services/opencloudmesh/ocmd/client.go)
+  [`client.go`](https://github.com/cs3org/reva/blob/38515cdf789457bf0696a4c022c6652133bd0ad0/internal/http/services/opencloudmesh/ocmd/client.go)
   still has `NewNotification()` unimplemented.
-- The route is marked as unprotected ingress in
-  [`routes.go`](https://github.com/cs3org/reva/blob/62d31b988cf0f864fafd033e1b939ea7f05ba398/internal/http/services/opencloudmesh/ocmd/routes.go).
+- The route is registered in
+  [`ocm.go`](https://github.com/cs3org/reva/blob/38515cdf789457bf0696a4c022c6652133bd0ad0/internal/http/services/opencloudmesh/ocmd/ocm.go)
+  and `/notifications` is still listed in `Unprotected()`.
 
 ## What This Shows
 
