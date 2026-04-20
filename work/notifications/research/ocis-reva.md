@@ -1,5 +1,13 @@
 # oCIS And reva Research
 
+I inspected owncloud/ocis and owncloud/reva at the commits below. This note
+covers the oCIS side: how the OCM service is wired in, what the
+`/ocm/notifications` handler checks, and what the outbound client sends. The
+raw JSON samples are in `research/examples/reva-ocm-notifications.md`, with
+cs3org/reva permalinks at the same commit as in this repo. That file follows the
+cs3org URLs so the links stay consistent with the rest of the examples folder.
+If you need to compare trees across forks, see [`examples/metadata.md`](examples/metadata.md).
+
 Inspected repos:
 
 - `https://github.com/owncloud/ocis`
@@ -31,8 +39,11 @@ The binding model is also different. Instead of leaning on
 it expects `providerId`, `grantee`, and, for permission changes, `protocol`.
 This is one visible cross-server difference in the current inspection.
 
-The naming split is real too. ownCloud / reva uses `SHARE_CHANGE_PERMISSION`,
-while Nextcloud still exposes `RESHARE_CHANGE_PERMISSION`.
+There is also a naming split: ownCloud / reva uses `SHARE_CHANGE_PERMISSION`,
+while Nextcloud still exposes `RESHARE_CHANGE_PERMISSION`. The MAY list in
+[`spec.yaml`](https://github.com/cs3org/OCM-API/blob/2de5068e0b4755794b54670655d625bbd78615fc/spec.yaml#L768-L777)
+at the OCM-API pin in `research/examples/metadata.md` uses the `RESHARE_*`
+spelling.
 
 ## Notification Types And Code Paths
 
