@@ -2,7 +2,7 @@
 
 Inspected repo: `https://github.com/nextcloud/server.git`
 Inspected source commit:
-[`f8cc0adefb0703bc5d816b328f2c1d97a40f7e04`](https://github.com/nextcloud/server/tree/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04)
+[`f5faddaf31ebabd6f722e7b29f35d1f28c947259`](https://github.com/nextcloud/server/tree/f5faddaf31ebabd6f722e7b29f35d1f28c947259)
 
 In this inspection, Nextcloud server has a real file-oriented notification
 path.
@@ -14,10 +14,11 @@ It accepts known notification types, binds them to existing local share state,
 and applies side effects. This gives one clear example of receiver behavior in
 deployed code.
 
-For file notifications, `notification.sharedSecret` is the main binding input.
-When signatures are available, the server also ties the request back to the
-expected remote identity. In other words, Nextcloud already behaves as if
-transport authentication and object binding are related but still separate.
+For file notifications, `providerId` and `notification.sharedSecret` are both
+part of the binding story. The server looks up the share by id and then checks
+the shared secret; when signatures are available, it also ties the request back
+to the expected remote identity. In other words, Nextcloud already behaves as
+if transport authentication and object binding are related but still separate.
 
 The implementation also shows that success bodies can matter. In particular,
 `REQUEST_RESHARE` can return response data instead of behaving like a generic
@@ -32,14 +33,14 @@ small file-share patch.
 
 - `SHARE_ACCEPTED` and `SHARE_DECLINED` are sent when a remote share is
   accepted or declined through
-  [`External/Manager.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/files_sharing/lib/External/Manager.php).
+  [`External/Manager.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/files_sharing/lib/External/Manager.php).
 - `REQUEST_RESHARE`, `SHARE_UNSHARED`, and `RESHARE_UNDO` are sent from
-  [`Notifications.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/federatedfilesharing/lib/Notifications.php).
+  [`Notifications.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/federatedfilesharing/lib/Notifications.php).
 - Initial federated file delivery does not use `/notifications`. It still goes
   through `/shares` from
-  [`Notifications.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/federatedfilesharing/lib/Notifications.php).
+  [`Notifications.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/federatedfilesharing/lib/Notifications.php).
 - The main file receiver lives in
-  [`CloudFederationProviderFiles.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php).
+  [`CloudFederationProviderFiles.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php).
   In this pass it receives `SHARE_ACCEPTED`, `SHARE_DECLINED`,
   `SHARE_UNSHARED`, `REQUEST_RESHARE`, `RESHARE_UNDO`, and
   `RESHARE_CHANGE_PERMISSION`.
@@ -47,21 +48,21 @@ small file-share patch.
   state, `SHARE_UNSHARED` removes an external share if one is found,
   `REQUEST_RESHARE` can return `token` and `providerId`, and `RESHARE_UNDO`
   undoes an earlier reshare. See
-  [`CloudFederationProviderFiles.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php).
+  [`CloudFederationProviderFiles.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php).
 - `RESHARE_CHANGE_PERMISSION` is present in the receive surface, but the same
   provider currently throws `HintException("Updating reshares not allowed")`,
   so this type is not working as a real OCM permission-update path here. See
-  [`CloudFederationProviderFiles.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php).
+  [`CloudFederationProviderFiles.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/federatedfilesharing/lib/OCM/CloudFederationProviderFiles.php).
 - `SYNC_CALENDAR` is sent from
-  [`CalendarFederationNotifier.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/dav/lib/CalDAV/Federation/CalendarFederationNotifier.php)
+  [`CalendarFederationNotifier.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/dav/lib/CalDAV/Federation/CalendarFederationNotifier.php)
   and received by
-  [`CalendarFederationProvider.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/dav/lib/CalDAV/Federation/CalendarFederationProvider.php).
+  [`CalendarFederationProvider.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/dav/lib/CalDAV/Federation/CalendarFederationProvider.php).
   Unknown calendar notification types return an empty result there.
 - The canonical `/ocm/notifications` controller is
-  [`cloud_federation_api/lib/Controller/RequestHandlerController.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php).
+  [`cloud_federation_api/lib/Controller/RequestHandlerController.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/cloud_federation_api/lib/Controller/RequestHandlerController.php).
 - The older OCS controller still used by some accept, decline, and unshare
   flows is
-  [`federatedfilesharing/lib/Controller/RequestHandlerController.php`](https://github.com/nextcloud/server/blob/f8cc0adefb0703bc5d816b328f2c1d97a40f7e04/apps/federatedfilesharing/lib/Controller/RequestHandlerController.php).
+  [`federatedfilesharing/lib/Controller/RequestHandlerController.php`](https://github.com/nextcloud/server/blob/f5faddaf31ebabd6f722e7b29f35d1f28c947259/apps/federatedfilesharing/lib/Controller/RequestHandlerController.php).
 
 ## Limits
 
