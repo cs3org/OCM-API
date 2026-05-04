@@ -1170,7 +1170,7 @@ Signature-Input:
   sig1=("@method" "@target-uri" "content-digest" "date");
   created=1730815200;
   keyid="receiver.example.org#key1";
-  alg="rsa-sha256"
+  alg="ed25519"
 Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
   2rN3qD4tR5hC=:
 
@@ -1650,7 +1650,7 @@ Example:
       }
     ]
   },
-  "protected": {"alg": "RS256"},
+  "protected": {"alg": "ES256"},
   "signature": "..."
 }
 ~~~
