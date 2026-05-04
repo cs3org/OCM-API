@@ -1563,8 +1563,11 @@ breaks in @signature-params for display purposes only):
 <sourcecode type="http">
 "@method": POST
 "@target-uri": https://receiver.example.org/ocm/shares
-"content-digest": sha-256=:[digest-value]=:
-"@signature-params": ("@method" "@target-uri" "content-digest");
+"content-digest": sha-256=:[digest-value]:
+"content-length": [body-length]
+"date": [date]
+"@signature-params": ("@method" "@target-uri" "content-digest"
+    "content-length" "date");
     created=[timestamp];
     keyid="sender.example.org#key1";
     alg="ed25519"
@@ -1575,12 +1578,36 @@ signature, using the `ocm` label, and then add headers (line breaks
 for display purposes only):
 
 <sourcecode type="http">
-Signature-Input: ocm=("@method" "@target-uri" "content-digest");
+Content-Digest: sha-256=:[digest-value]:
+Content-Length: [body-length]
+Date: [date]
+Signature-Input: ocm=("@method" "@target-uri" "content-digest"
+    "content-length" "date");
   created=[timestamp];
   keyid="sender.example.org#key1";
   alg="ed25519"
 Signature: ocm=:[signature-value]=:
 </sourcecode>
+
+A signed request MUST cover at least the following Signature-Input
+components:
+
+  - "@method"             - HTTP method
+  - "@target-uri"         - full request URI (scheme, authority,
+                            path, query)
+  - "content-digest"      - RFC 9530 digest of the body
+  - "content-length"      - bound message size
+  - "date"                - bound clock time
+
+The Signature-Input parameters MUST include `created`. Verifiers MUST
+reject signatures that omit any of the above components or the `created`
+parameter, and MUST reject signatures whose `created` value is more than
+a small implementation-defined skew tolerance in the future, or older
+than the verifier's freshness window.
+
+A `Content-Digest` header value carrying multiple algorithms MUST have
+every recognised digest match the body; a single match alongside a
+recognised mismatch MUST be treated as an integrity failure.
 
 A request signed in the context of OCM MUST include one and only one,
 signature with the label `ocm` in its Signature and Signature-Input
