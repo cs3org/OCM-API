@@ -1317,7 +1317,7 @@ a Resource without an explicit grant from the Sending Server.
 ## Well-Known URI for the Discovery
 
 The following value is to be registered in the "Well-Known URIs"
-registry (using the template from [RFC5785]):
+registry (using the template from [RFC8615]):
    URI suffix: ocm
    Change controller: IETF
    Specification document(s): the present Draft, once in RFC form
@@ -1474,6 +1474,9 @@ Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 
+[RFC9530] Polli, R., Marwood, D., "[Digest Fields](
+https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
+
 [RFC9553] Stepanek, R., Loffredo, M., "[JSContact: A JSON
 Representation of Contact Data](
 https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
@@ -1595,7 +1598,7 @@ components:
   - "@method"             - HTTP method
   - "@target-uri"         - full request URI (scheme, authority,
                             path, query)
-  - "content-digest"      - RFC 9530 digest of the body
+  - "content-digest"      - [RFC9530] digest of the body
   - "content-length"      - bound message size
   - "date"                - bound clock time
 
