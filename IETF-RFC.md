@@ -1167,11 +1167,11 @@ Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
 Signature-Input:
-  sig1=("@method" "@target-uri" "content-digest" "date");
+  ocm=("@method" "@target-uri" "content-digest" "date");
   created=1730815200;
   keyid="receiver.example.org#key1";
   alg="ed25519"
-Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
+Signature: ocm=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
   2rN3qD4tR5hC=:
 
 grant_type=authorization_code&
@@ -1571,21 +1571,34 @@ breaks in @signature-params for display purposes only):
 </sourcecode>
 
 Sign this base using for example Ed25519 ([RFC8032]) to produce the
-signature, then add headers (line breaks for display purposes only):
+signature, using the `ocm` label, and then add headers (line breaks
+for display purposes only):
 
 <sourcecode type="http">
-Signature-Input: sig1=("@method" "@target-uri" "content-digest");
+Signature-Input: ocm=("@method" "@target-uri" "content-digest");
   created=[timestamp];
   keyid="sender.example.org#key1";
   alg="ed25519"
-Signature: sig1=:[signature-value]=:
+Signature: ocm=:[signature-value]=:
 </sourcecode>
 
-NOTE: A symmetric signing algorithm MUST NOT be used to sign the
+A request signed in the context of OCM MUST include one and only one,
+signature with the label `ocm` in its Signature and Signature-Input
+headers.
+
+A symmetric signing algorithm MUST NOT be used to sign the
 request, as the Receiving Server would not be able to verify the
 signature without having access to the shared secret in advance.
 
 ## Verifying a Signature (Receiver)
+
+Verifiers MUST locate the ocm-labeled entry and verify only that one,
+if multiple `ocm` signatures are present, the entire message MUST be
+rejected. Verifiers MUST reject requests for which no ocm-labeled entry
+is present. Other labels MAY coexist (e.g. proxy-attached signatures)
+but verifiers MUST NOT process them as part of OCM signature
+processing.
+
 
 To verify an incoming signed request:
 
@@ -1593,11 +1606,13 @@ To verify an incoming signed request:
    request body
 2. Fetch the public key from
    `https://<provider-domain>/.well-known/jwks.json`
-3. Extract `keyid` from `Signature-Input` header and find the key
+3. Locate the unique signature with the label `ocm` in the
+   `Signature-Input` header
+4. Extract `keyid` from `Signature-Input` header and find the key
    matching the `kid` value in the [RFC7517] response
-4. Reconstruct the signature base from the request using the
+5. Reconstruct the signature base from the request using the
    components listed in `Signature-Input` as specified in [RFC9421]
-5. Verify the signature using the appropriate algorithm
+6. Verify the signature using the appropriate algorithm
    (e.g., Ed25519 [RFC8032])
 
 ## Validating the Payload
