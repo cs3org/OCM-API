@@ -1581,6 +1581,10 @@ Signature-Input: sig1=("@method" "@target-uri" "content-digest");
 Signature: sig1=:[signature-value]=:
 </sourcecode>
 
+NOTE: A symmetric signing algorithm MUST NOT be used to sign the
+request, as the Receiving Server would not be able to verify the
+signature without having access to the shared secret in advance.
+
 ## Verifying a Signature (Receiver)
 
 To verify an incoming signed request:
