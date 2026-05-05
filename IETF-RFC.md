@@ -1340,7 +1340,7 @@ registry (using the template from [RFC9553]):
        "user@provider" where provider is the FQDN of an OCM-capable
        server.
      - "trusted" (Boolean, optional): Whether shares from this address
-       are automatically accepted. Default: false.
+       are automatically accepted.  Default: false.
      - "source" (String, optional): How this address was established.
        See "JSContact Enum Values" registry for allowed values.
      - "label" (String, optional): Human-readable label for this
@@ -1359,7 +1359,7 @@ registry (using the template from [RFC9553]):
    Change Controller: IETF
    Reference or Description:
 
-   A map of OCM addresses for a contact. The keys are arbitrary
+   A map of OCM addresses for a contact.  The keys are arbitrary
    identifiers (e.g., "primary", "work") and the values are ocmAddress
    objects as defined in the JSContact Types Registry.
 
@@ -1612,7 +1612,7 @@ A `Content-Digest` header value carrying multiple algorithms MUST have
 every recognised digest match the body; a single match alongside a
 recognised mismatch MUST be treated as an integrity failure.
 
-A request signed in the context of OCM MUST include one and only one,
+A request signed in the context of OCM MUST include one and only one
 signature with the label `ocm` in its Signature and Signature-Input
 headers.
 
@@ -1622,10 +1622,10 @@ signature without having access to the shared secret in advance.
 
 ## Verifying a Signature (Receiver)
 
-Verifiers MUST locate the ocm-labeled entry and verify only that one,
-if multiple `ocm` signatures are present, the entire message MUST be
-rejected. Verifiers MUST reject requests for which no ocm-labeled entry
-is present. Other labels MAY coexist (e.g. proxy-attached signatures)
+Verifiers MUST locate the ocm-labeled entry and verify only that one.
+If multiple `ocm` signatures are present, the entire message MUST be
+rejected.  Verifiers MUST reject requests for which no ocm-labeled entry
+is present.  Other labels MAY coexist (e.g. proxy-attached signatures)
 but verifiers MUST NOT process them as part of OCM signature
 processing.
 
@@ -1839,7 +1839,7 @@ implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
 OCM Providers.
 
-The following diagram is illustrative and non-exhaustive. The single
+The following diagram is illustrative and non-exhaustive.  The single
 source of truth for Provider properties is the OCM API Discovery Fields
 section; for the box contents below, see the Properties subsection and
 the normative capability, criteria, and resource type definitions in
