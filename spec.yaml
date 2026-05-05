@@ -54,9 +54,9 @@ paths:
         "201":
           description: >
             Consumer successfully received request.
-        "400":
+        "404":
           description: >
-            Bad request due to invalid parameters, e.g. when `shareId` is missing.
+            Bad request due to invalid parameters, e.g. when `share` is missing.
           content:
             application/json:
               schema:
@@ -905,7 +905,7 @@ components:
       required:
         - sender
         - shareWith
-        - shareId
+        - share
       properties:
         sender:
           type: string
@@ -919,10 +919,10 @@ components:
             OCM Address of the user, group or federation that
             wants to receive a share of the resource.
           example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-        shareId:
+        share:
           type: string
           description: A unique identifier for the resource.
-          example: 1234567890abcdef
+          example: 1234567890abcdef or https://ocm.example.org/files/spec.yaml
     TokenRequest:
       type: object
       required:
