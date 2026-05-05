@@ -1167,11 +1167,11 @@ Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
 Signature-Input:
-  sig1=("@method" "@target-uri" "content-digest" "date");
+  ocm=("@method" "@target-uri" "content-digest" "date");
   created=1730815200;
   keyid="receiver.example.org#key1";
-  alg="rsa-sha256"
-Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
+  alg="ed25519"
+Signature: ocm=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
   2rN3qD4tR5hC=:
 
 grant_type=authorization_code&
@@ -1317,7 +1317,7 @@ a Resource without an explicit grant from the Sending Server.
 ## Well-Known URI for the Discovery
 
 The following value is to be registered in the "Well-Known URIs"
-registry (using the template from [RFC5785]):
+registry (using the template from [RFC8615]):
    URI suffix: ocm
    Change controller: IETF
    Specification document(s): the present Draft, once in RFC form
@@ -1340,7 +1340,7 @@ registry (using the template from [RFC9553]):
        "user@provider" where provider is the FQDN of an OCM-capable
        server.
      - "trusted" (Boolean, optional): Whether shares from this address
-       are automatically accepted. Default: false.
+       are automatically accepted.  Default: false.
      - "source" (String, optional): How this address was established.
        See "JSContact Enum Values" registry for allowed values.
      - "label" (String, optional): Human-readable label for this
@@ -1359,7 +1359,7 @@ registry (using the template from [RFC9553]):
    Change Controller: IETF
    Reference or Description:
 
-   A map of OCM addresses for a contact. The keys are arbitrary
+   A map of OCM addresses for a contact.  The keys are arbitrary
    identifiers (e.g., "primary", "work") and the values are ocmAddress
    objects as defined in the JSContact Types Registry.
 
@@ -1474,6 +1474,9 @@ Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 
+[RFC9530] Polli, R., Marwood, D., "[Digest Fields](
+https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
+
 [RFC9553] Stepanek, R., Loffredo, M., "[JSContact: A JSON
 Representation of Contact Data](
 https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
@@ -1563,25 +1566,69 @@ breaks in @signature-params for display purposes only):
 <sourcecode type="http">
 "@method": POST
 "@target-uri": https://receiver.example.org/ocm/shares
-"content-digest": sha-256=:[digest-value]=:
-"@signature-params": ("@method" "@target-uri" "content-digest");
+"content-digest": sha-256=:[digest-value]:
+"content-length": [body-length]
+"date": [date]
+"@signature-params": ("@method" "@target-uri" "content-digest"
+    "content-length" "date");
     created=[timestamp];
     keyid="sender.example.org#key1";
     alg="ed25519"
 </sourcecode>
 
 Sign this base using for example Ed25519 ([RFC8032]) to produce the
-signature, then add headers (line breaks for display purposes only):
+signature, using the `ocm` label, and then add headers (line breaks
+for display purposes only):
 
 <sourcecode type="http">
-Signature-Input: sig1=("@method" "@target-uri" "content-digest");
+Content-Digest: sha-256=:[digest-value]:
+Content-Length: [body-length]
+Date: [date]
+Signature-Input: ocm=("@method" "@target-uri" "content-digest"
+    "content-length" "date");
   created=[timestamp];
   keyid="sender.example.org#key1";
   alg="ed25519"
-Signature: sig1=:[signature-value]=:
+Signature: ocm=:[signature-value]=:
 </sourcecode>
 
+A signed request MUST cover at least the following Signature-Input
+components:
+
+  - "@method"             - HTTP method
+  - "@target-uri"         - full request URI (scheme, authority,
+                            path, query)
+  - "content-digest"      - [RFC9530] digest of the body
+  - "content-length"      - bound message size
+  - "date"                - bound clock time
+
+The Signature-Input parameters MUST include `created`.  Verifiers MUST
+reject signatures that omit any of the above components or the `created`
+parameter, and MUST reject signatures whose `created` value is more than
+a small implementation-defined skew tolerance in the future, or older
+than the verifier's freshness window.
+
+A `Content-Digest` header value carrying multiple algorithms MUST have
+every recognised digest match the body; a single match alongside a
+recognised mismatch MUST be treated as an integrity failure.
+
+A request signed in the context of OCM MUST include one and only one
+signature with the label `ocm` in its Signature and Signature-Input
+headers.
+
+A symmetric signing algorithm MUST NOT be used to sign the
+request, as the Receiving Server would not be able to verify the
+signature without having access to the shared secret in advance.
+
 ## Verifying a Signature (Receiver)
+
+Verifiers MUST locate the ocm-labeled entry and verify only that one.
+If multiple `ocm` signatures are present, the entire message MUST be
+rejected.  Verifiers MUST reject requests for which no ocm-labeled entry
+is present.  Other labels MAY coexist (e.g. proxy-attached signatures)
+but verifiers MUST NOT process them as part of OCM signature
+processing.
+
 
 To verify an incoming signed request:
 
@@ -1589,11 +1636,13 @@ To verify an incoming signed request:
    request body
 2. Fetch the public key from
    `https://<provider-domain>/.well-known/jwks.json`
-3. Extract `keyid` from `Signature-Input` header and find the key
+3. Locate the unique signature with the label `ocm` in the
+   `Signature-Input` header
+4. Extract `keyid` from `Signature-Input` header and find the key
    matching the `kid` value in the [RFC7517] response
-4. Reconstruct the signature base from the request using the
+5. Reconstruct the signature base from the request using the
    components listed in `Signature-Input` as specified in [RFC9421]
-5. Verify the signature using the appropriate algorithm
+6. Verify the signature using the appropriate algorithm
    (e.g., Ed25519 [RFC8032])
 
 ## Validating the Payload
@@ -1650,7 +1699,7 @@ Example:
       }
     ]
   },
-  "protected": {"alg": "RS256"},
+  "protected": {"alg": "ES256"},
   "signature": "..."
 }
 ~~~
@@ -1790,7 +1839,7 @@ implementor might find it useful to have a Provider object model to
 store the discovered information about federation peers or other remote
 OCM Providers.
 
-The following diagram is illustrative and non-exhaustive. The single
+The following diagram is illustrative and non-exhaustive.  The single
 source of truth for Provider properties is the OCM API Discovery Fields
 section; for the box contents below, see the Properties subsection and
 the normative capability, criteria, and resource type definitions in
