@@ -1602,7 +1602,7 @@ components:
   - "content-length"      - bound message size
   - "date"                - bound clock time
 
-The Signature-Input parameters MUST include `created`. Verifiers MUST
+The Signature-Input parameters MUST include `created`.  Verifiers MUST
 reject signatures that omit any of the above components or the `created`
 parameter, and MUST reject signatures whose `created` value is more than
 a small implementation-defined skew tolerance in the future, or older
