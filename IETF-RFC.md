@@ -1037,9 +1037,9 @@ been shared, the Receiving Party MAY make an HTTP POST request
   OCM Address of the user, group or federation that wants to
   receive a share of the resource.
   Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
-* REQUIRED shareId (string)
+* REQUIRED share (string)
   A unique identifier for the resource.
-  Example: 1234567890abcdef
+  Example: 1234567890abcdef or https://ocm.example.org/files/spec.yaml
 
 After receiving a request for a Share, the Sending Party MAY
 send a Share Creation Notification to the Receiving Party
