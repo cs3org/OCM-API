@@ -1716,11 +1716,11 @@ Example:
     "federation": "The ScienceMesh Directory",
     "servers": [
       {
-        "url": "https://ocm-server.example-1.org",
+        "url": "https://ocm-server.example.org",
         "displayName": "OCM Server 1"
       },
       {
-        "url": "https://ocm-server.example-2.org:4443",
+        "url": "https://ocm-server.example.com:4443",
         "displayName": "OCM Server 2"
       },
       {
