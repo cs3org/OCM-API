@@ -54,13 +54,21 @@ paths:
         "201":
           description: >
             Consumer successfully received request.
-        "404":
+        "400":
           description: >
-            Bad request due to invalid parameters, e.g. when `share` is missing.
+            Bad request due to invalid or missing parameters.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/400"
+        "404":
+          description: >
+            The requested `share` is missing, or the requestor does not have
+            rights to access it.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "501":
           description: The server doesn't support requesting shares.
           content:
