@@ -894,11 +894,11 @@ components:
     RequestShare:
       type: object
       required:
-        - sender
+        - owner
         - shareWith
         - share
       properties:
-        sender:
+        owner:
           type: string
           description: >
             OCM Address of the user who will be requested to share

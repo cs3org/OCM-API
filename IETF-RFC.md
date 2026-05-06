@@ -1030,7 +1030,7 @@ been shared, the Receiving Party MAY make an HTTP POST request
 
 ## Fields
 
-* REQUIRED sender (string)
+* REQUIRED owner (string)
   OCM Address of the user who will be requested to share
   the resource.
 * REQUIRED shareWith (string)
