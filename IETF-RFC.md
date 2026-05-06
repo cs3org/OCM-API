@@ -188,7 +188,7 @@ characters.
     separated from the host by the last "@" in the OCM Address.  It is
     possible to have multiple @-signs in a OCM-address, e.g. when an
     email address is the local part of the address like
-    `nomen.nescio@example.org@ocm.example.org`.
+    `nomen.nescio@example.org@cloud.example.org`.
 
     host is an IP literal encapsulated within square brackets, an IPv4
     address in dotted decimal form, or a registered name as described in
@@ -817,7 +817,7 @@ voluntarily.
   wants to share the Resource with.  This MUST be known
   in advance, either via a previous Invitation or through
   other means.
-  Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
+  Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
 * REQUIRED name (string)
   Name of the Resource (file or folder).
   Example: "resource.txt"
@@ -833,11 +833,11 @@ voluntarily.
 * REQUIRED owner (string) -
   OCM Address of the user who owns the
   Resource.
-  Example: "6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl"
+  Example: "6358b71804dfa8ab069cf05ed1b0ed2a@cloud.example.org"
 * REQUIRED sender (string) -
   OCM Address of the user that wants to share
   the Resource.
-  Example: "527bd5b5d689e2c32ae974c6229ff785@apiwise.nl"
+  Example: "527bd5b5d689e2c32ae974c6229ff785@cloud.example.org"
 * OPTIONAL ownerDisplayName (string)
   Display name of the owner of the Resource
   Example: "Dimitri"
@@ -1060,10 +1060,10 @@ been shared, the Receiving Party MAY make an HTTP POST request
 * REQUIRED shareWith (string)
   OCM Address of the user, group or federation that wants to
   receive a share of the resource.
-  Example: "51dc30ddc473d43a6011e9ebba6ca770@geant.org"
+  Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
 * REQUIRED share (string)
   A unique identifier for the resource.
-  Example: 1234567890abcdef or https://ocm.example.org/files/spec.yaml
+  Example: 1234567890abcdef or https://cloud.example.org/files/data.txt
 
 After receiving a request for a Share, the Sending Party MAY
 send a Share Creation Notification to the Receiving Party
@@ -1716,11 +1716,11 @@ Example:
     "federation": "The ScienceMesh Directory",
     "servers": [
       {
-        "url": "https://ocm-server-1.example.org",
+        "url": "https://ocm-server.example-1.org",
         "displayName": "OCM Server 1"
       },
       {
-        "url": "https://ocm-server-2.example.org:4443",
+        "url": "https://ocm-server.example-2.org:4443",
         "displayName": "OCM Server 2"
       },
       {
