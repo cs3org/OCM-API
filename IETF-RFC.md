@@ -1221,25 +1221,50 @@ but they MUST be ignored.
 
 If the request is valid and the code is accepted, the Sending Server
 MUST respond with HTTP 200 OK and a OAuth-compliant JSON object
-containing the issued token:
+containing the issued token (truncated example):
 
 ~~~
 {
-  "access_token": "8f3d3f26-f1e6-4b47-9e3e-9af6c0d4ad8b",
+  "access_token": "eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJFZERTQSIs...",
   "token_type": "Bearer",
   "expires_in": 300
 }
 ~~~
 {: type="json"}
 
-The `access_token` is an opaque bearer credential with no internal
-structure visible to the Receiving Server.  The token authorizes the
-Receiving Server to access the shared resource using the appropriate
-transport protocol (e.g., WebDAV).  The `expires_in` value indicates
-the token lifetime in seconds.  No `refresh_token` is issued, instead
-the same request to the {tokenEndPoint} MUST be repeated before the
-`access_token` has expired, to recieve a new `access_token` that can
-then be used in the same manner.
+The `access_token` MUST be a JWT conforming to the JWT Profile for
+OAuth 2.0 Access Tokens as defined in [RFC9068].  The JOSE header MUST
+include `typ` with the value set to `at+jwt` and MUST include a `kid`
+parameter identifying the Sending Server's OCM signatory key advertised
+in `/.well-known/jwks.json` and MUST NOT use `none` as the `alg`.  The
+JWT MUST be signed with the private key corresponding to the Sending
+Server's OCM signatory key, allowing anyone with access to the
+corresponding public key, including third-party services, to verify the
+token independently.
+
+The JWT Claims Set MUST include the claims required by [RFC9068],
+with the following OCM-specific semantics:
+
+* `iss`: the Sending Server identifier, derived from the scheme and
+  authority of the signatory keyId.
+* `sub`: the share owner on the Sending Server.
+* `aud`: the OCM principal authorized by this token, i.e. the
+  `sharedWith` value of the share.  Per Section 4.1.3 of [RFC7519]
+  the interpretation of audience values is application-specific, and
+  this document defines that interpretation for OCM.
+* `client_id`: as defined in Section 4.3 of [RFC8693], which forwards
+  to Section 2.2 of [RFC6749].  Its value is at the discretion of the
+  Sending Server; receivers MUST NOT assume a particular size or
+  format.
+* `iat`, `exp`, `jti`: as defined in [RFC9068].
+
+The token authorizes the Receiving Server to access the shared
+resource using the appropriate transport protocol (e.g., WebDAV).
+The `expires_in` value indicates the token lifetime in seconds and
+MUST agree with the `exp` claim.  No `refresh_token` is issued,
+instead the same request to the `tokenEndPoint` MUST be repeated
+before the `access_token` has expired, to recieve a new
+`access_token` that can then be used in the same manner.
 
 ##  Error Responses
 
@@ -1491,6 +1516,9 @@ https://datatracker.ietf.org/html/rfc6749)", October 2012.
 [RFC7517] Jones, M., "[JSON Web Key (JWK)](
 https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
 
+[RFC7519] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Token (JWT)
+](https://datatracker.ietf.org/doc/html/rfc7519)", May 2015.
+
 [RFC8032] Josefsson, S., Liusvaara, I., "[Edwards-Curve Digital
 Signature Algorithm (EdDSA)](
 https://datatracker.ietf.org/doc/html/rfc8032)", January 2017.
@@ -1500,6 +1528,14 @@ Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
+
+[RFC8693] Jones, M., Nadalin, A., Campbell, B., Bradley, J. and
+Mortimore, C., "[OAuth 2.0 Token Exchange](
+https://datatracker.ietf.org/doc/html/rfc8693)", January 2020.
+
+[RFC9068] Bertocci, V., "[JSON Web Token (JWT) Profile for OAuth 2.0
+Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068)",
+October 2021.
 
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
