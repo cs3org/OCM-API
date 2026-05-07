@@ -24,10 +24,9 @@ The Open Cloud Mesh API specification is an open source, community-driven projec
 
 If you'd like to contribute, please follow the [Contributing Guidelines](CONTRIBUTING.md) and the [IETF Note Well](https://www.ietf.org/about/note-well/).
 
-## Working Material
+### Working Material
 
-Current working material for the `/notifications` endpoint lives under
-[`work/notifications/`](work/notifications/README.md).
+Current working material and proposals yet to be formalized and included in the specification lives under [`work/`](work/).
 
 ## History and Changelog
 
