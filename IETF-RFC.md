@@ -668,6 +668,9 @@ contain the following information about its OCM API:
   this endpoint.  Example: `"https://cloud.example.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
   endpoint.  Example: `"MyCloudStorage"`
+* OPTIONAL: resourceAdvertismentUri (string) - A URI that,
+  if accessed, will advertise available resources at this
+  endpoint.
 * REQUIRED: resourceTypes (array) - A list of all resource types this
   server supports in both the Sending Server role and the Receiving
   Server role, with their access protocols.  Each item in this list
@@ -1511,6 +1514,10 @@ https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
 Representation of Contact Data](
 https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 
+[ROCRATE] Soiland-Reyes, S. et al., "[RO-Crate
+specification 1.1 - Data Entities](
+https://www.researchobject.org/ro-crate/specification/1.1/data-entities.html)"
+
 
 # Appendix A: Multi-factor Authentication
 
@@ -2125,6 +2132,97 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Added JSContact extension to IANA Considerations.
 * Changed example domain to use cloud.example.org per RFC 2606.
 
+# Appendix E: Resource Discovery Service
+
+An OCM Server MAY publicly advertise available resources.
+This is done via the `resourceAdvertismentUri`. It is
+expected to expose, via anonymous HTTPS GET, a signed JWS
+document [RFC7515], where the signing key MUST be made
+available via the `/.well-known/jwks.json` of the
+advertising server and the payload MUST adhere to the
+following format:
+
+  * REQUIRED: `server` - a human-readable name for the
+    Servers providing the Resource Discovery Service
+  * REQUIRED: `resources` - a JSON array of objects to
+    describe the list of OCM Servers with the following
+    fields:
+    * OPTIONAL: `displayName` - the human-readable name
+      of the OCM Server
+    * OPTIONAL: `publicUrl` - a public URL that can be
+      used for direct download via anonymous HTTP GET
+    * OPTIONAL: `rocrate` - an embedded JSON object
+      following the [ROCRATE] data-entities
+      specification.
+    * REQUIRED: `providerId` - the unique identifier
+      of the resource at the OCM Server
+  Example:
+ ```json
+ {
+   "server": "OCM Server 1",
+   "resources": [
+     {
+       "publicUrl": "https://cloud.example.org/s/1234567890abcdef",
+       "displayName": "Public Dataset 1",
+       "id": "1234567890abcdef",
+       "rocrate": {
+         "@context": "https://w3id.org/ro/crate/1.1/context",
+         "@graph": [
+           {
+             "@id": "ro-crate-metadata.json",
+             "@type": "CreativeWork",
+             "conformsTo": {
+               "@id": "https://w3id.org/ro/crate/1.1"
+             },
+             "about": {
+               "@id": "./"
+             }
+           },
+           {
+             "@id": "./",
+             "@type": "Dataset",
+             "name": "A RO-Crate embedded in OCM"
+           },
+           {
+             "@id": "https://cloud.example.org/s/1234567890abcdef",
+             "@type": "File",
+             "name": "Public data file"
+           }
+         ]
+       }
+     },
+     {
+       "displayName": "Private Data Set 1",
+       "id": "0987654321fedcba",
+       "rocrate": {
+         "@context": "https://w3id.org/ro/crate/1.1/context",
+         "@graph": [
+           {
+             "@id": "ro-crate-metadata.json",
+             "@type": "CreativeWork",
+             "conformsTo": {
+               "@id": "https://w3id.org/ro/crate/1.1"
+             },
+             "about": {
+               "@id": "./"
+             }
+           },
+           {
+             "@id": "./",
+             "@type": "Dataset",
+             "name": "A RO-Crate embedded in OCM"
+           },
+           {
+             "@id": "0987654321fedcba",
+             "@type": "File",
+             "name": "Private data file"
+           }
+         ]
+       }
+     }
+   ]
+ }
+```
 
 # Acknowledgements
 
