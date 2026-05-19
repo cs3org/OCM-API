@@ -748,12 +748,12 @@ contain the following information about its OCM API:
   Share Creation Notification.
   As all Receiving Servers SHOULD require the use of TLS in API
   calls, it is not necessary to expose that as a criterium.
-  Example: `["http-request-signatures"]`.  The array MAY include
+  Example: `["must-use-http-sig"]`.  The array MAY include
   for instance:
-  - `"http-request-signatures"` - to indicate that API requests
+  - `"must-use-http-sig"` - to indicate that API requests
   without http signatures will be rejected.
-  - `"token-exchange"` - to indicate that when this OCM Server acts
-  as Receiving Server, it requires the code flow for all inbound
+  - `"must-exchange-token"` - to indicate that when this OCM Server
+  acts as Receiving Server, it requires the code flow for all inbound
   shares.  Shares that do not include `must-exchange-token` in
   their `protocol.webdav.requirements` will be rejected.  An
   OCM Server advertising this criterium MUST also expose the
@@ -763,7 +763,7 @@ contain the following information about its OCM API:
   address
   - `"allowlist"` - unknown servers MAY be blocked based on their IP
   address
-  - `"invite"` - an invite MUST have been exchanged between the
+  - `"must-invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
 * DEPRECATED: publicKey (object) - Use public keys at
@@ -797,16 +797,16 @@ To create a Share, the Sending Server SHOULD make a HTTP POST request
 
 Before constructing the notification, the Sending Server MUST query
 the Receiving Server's OCM API Discovery endpoint.  If the Receiving
-Server advertises `token-exchange` in its `criteria` and the Sending
-Server exposes the `exchange-token` capability with a `tokenEndPoint`,
-the Sending Server MUST include `must-exchange-token` in
-`protocol.webdav.requirements` and MUST NOT fall back to legacy
+Server advertises `must-exchange-token` in its `criteria` and the
+Sending Server exposes the `exchange-token` capability with a
+`tokenEndPoint`, the Sending Server MUST include `must-exchange-token`
+in `protocol.webdav.requirements` and MUST NOT fall back to legacy
 shared-secret access.  If the Receiving Server advertises
-`token-exchange` but the Sending Server does not expose the
+`must-exchange-token` but the Sending Server does not expose the
 `exchange-token` capability or does not have a `tokenEndPoint`, the
 Sending Server MUST NOT create the share, as the Receiving Server
 would reject any notification that lacks the code-flow requirement.
-If the Receiving Server does not advertise `token-exchange` in its
+If the Receiving Server does not advertise `must-exchange-token` in its
 `criteria`, the Sending Server MAY still include `must-exchange-token`
 voluntarily.
 
@@ -932,16 +932,16 @@ voluntarily.
   - OPTIONAL requirements (array of strings) -
     The requirements that the sharee MUST fulfill to
     access the Resource.  A subset of:
-    - `must-use-mfa` requires the consumer to be MFA-authenticated.
-    This MAY be used if the recipient provider exposes the
-    `enforce-mfa` capability.
     - `must-exchange-token` requires the recipient to
     exchange the given `sharedSecret` via a signed HTTPS request
     to the Sending Server's {tokenEndPoint} [RFC6749].
     This MAY be used if the Sending Server exposes the
     `exchange-token` capability and `tokenEndPoint`, and MUST be
-    included when the Receiving Server advertises `token-exchange`
+    included when the Receiving Server advertises `must-exchange-token`
     in criteria.
+    - `must-use-mfa` requires the consumer to be MFA-authenticated.
+    This MAY be used if the recipient provider exposes the
+    `enforce-mfa` capability.
   - OPTIONAL size (integer)
     The size of the resource to be transferred, useful
     especially in case of `datatx` access type.
@@ -1284,17 +1284,17 @@ The following examples illustrate typical end-to-end outcomes:
 1.  Strict required code flow: Provider A acts as Sending Server and
     exposes the `exchange-token` capability with a `tokenEndPoint`.
     Provider B acts as Receiving Server and advertises both
-    `exchange-token` and `token-exchange`.  After discovering B's
-    `token-exchange` criteria, A MUST include `must-exchange-token` in
-    `protocol.webdav.requirements`.  B MUST exchange the
+    `exchange-token` and `must-exchange-token`.  After discovering B's
+    `must-exchange-token` criteria, A MUST include `must-exchange-token`
+    in `protocol.webdav.requirements`.  B MUST exchange the
     `sharedSecret` at A's `tokenEndPoint` and then use only the bearer
     token to access the Resource.
 2.  Optional exchange with fallback: Provider A acts as Sending Server
     and exposes the `exchange-token` capability with a `tokenEndPoint`.
-    Provider B does not advertise `token-exchange`, so A sends a share
-    without `must-exchange-token`.  When B later accesses the Resource,
-    it MAY attempt the token exchange at A's `tokenEndPoint`, but if
-    that exchange fails it MUST fall back to the legacy
+    Provider B does not advertise `must-exchange-token`, so A sends a
+    share without `must-exchange-token`.  When B later accesses the
+    Resource, it MAY attempt the token exchange at A's `tokenEndPoint`,
+    but if that exchange fails it MUST fall back to the legacy
     `sharedSecret`.
 3.  Legacy share to a code-flow-capable peer: Provider A does not
     expose the `exchange-token` capability.  Provider B does expose
@@ -1303,10 +1303,10 @@ The following examples illustrate typical end-to-end outcomes:
     A can only send a legacy share and B can only use legacy
     shared-secret access for that share.
 4.  Asymmetric role behavior: Provider A exposes `exchange-token` and
-    `token-exchange`, so it can require code flow for inbound shares
-    when it acts as Receiving Server.  When A later acts as Sending
-    Server toward Provider B, and B does not advertise
-    `token-exchange`, A MAY omit `must-exchange-token`.  B may then
+    `must-exchange-token`, so it can require code flow for inbound
+    shares when it acts as Receiving Server.  When A later acts as
+    Sending Server toward Provider B, and B does not advertise
+    `must-exchange-token`, A MAY omit `must-exchange-token`.  B may then
     attempt token exchange against A's `tokenEndPoint` or fall back to
     legacy access.  A therefore accepts strict inbound shares while
     still choosing a legacy-compatible outbound share.
@@ -1427,7 +1427,7 @@ Values" registry (using the template from [RFC9553]).
 There are several areas that are not covered by this specification.
 Most importantly we do not provide a way of establishing trust between
 servers, even though some features of the protocol rely on trust, such
-as the `mfa-enforced` requirement.
+as the `must-use-mfa` requirement.
 
 Trust needs to be established out of band, but there are some features
 of the protocol that _can_ be used to assist operators in establishing
@@ -1517,10 +1517,10 @@ https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 If a Receiving Server exposes the capability `enforce-mfa`, it
 indicates that it will try and comply with a MFA requirement set on a
 Share.  If the Sending Server trusts the Receiving Server, the Sending
-Server MAY set the requirement `mfa-enforced` on a Share, which the
+Server MAY set the requirement `must-use-mfa` on a Share, which the
 Receiving Server MUST honor.  A compliant Receiving Server that signals
 that it is MFA-capable MUST NOT allow access to a Resource protected
-with the `mfa-enforced` requirement, if the Receiving Party has not
+with the `must-use-mfa` requirement, if the Receiving Party has not
 provided a second factor to establish their identity with greater
 confidence.
 
@@ -1916,9 +1916,9 @@ that section.
        |              +--------------------------+
        |              | - allowlist              |
        |              | - denylist               |
-       |              | - http-request-signatures|
-       |              | - invite                 |
-       |              | - token-exchange         |
+       |              | - must-use-http-sig      |
+       |              | - must-invite            |
+       |              | - must-exchange-token    |
        |              | - ...                    |
        |              +--------------------------+
        |

@@ -5,9 +5,9 @@ flowchart TD
 
     B -- "Yes" --> C["Advertise exchange-token"]
     C --> D{"Does it require code flow for all inbound shares"}
-    D -- "Yes" --> E["Advertise token-exchange in criteria"]
+    D -- "Yes" --> E["Advertise must-exchange-token in criteria"]
     E --> F["Reject inbound shares that omit must-exchange-token"]
-    D -- "No" --> G["Do not advertise token-exchange"]
+    D -- "No" --> G["Do not advertise must-exchange-token"]
     G --> H["Strict inbound shares may still be accepted share by share"]
 
     B -- "No" --> I["Do not advertise exchange-token"]

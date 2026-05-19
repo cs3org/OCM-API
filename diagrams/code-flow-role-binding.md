@@ -1,7 +1,7 @@
 ```mermaid
 flowchart TD
     ET["exchange-token in discovery"]
-    TX["token-exchange in criteria"]
+    TX["must-exchange-token in criteria"]
     EP["tokenEndPoint in discovery"]
     MS["must-exchange-token on the share"]
 

@@ -460,8 +460,8 @@ components:
           items:
             type: string
             enum:
-              - http-request-signatures
-              - token-exchange
+              - must-use-http-sig
+              - must-exchange-token
               - denylist
               - allowlist
               - invite
@@ -709,7 +709,7 @@ components:
                         for subsequent access [RFC6749]. This requirement MAY be used if
                         the Sending Server exposes the `exchange-token` capability and
                         `tokenEndPoint`, and MUST be included when the Receiving Server
-                        advertises `token-exchange` in criteria.
+                        advertises `must-exchange-token` in criteria.
                     enum:
                       - must-use-mfa
                       - must-exchange-token
@@ -806,7 +806,7 @@ components:
                 permissions:
                   - read
                 requirements:
-                  - mfa-enforced
+                  - must-use-mfa
               webapp:
                 uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
