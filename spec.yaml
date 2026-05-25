@@ -409,27 +409,81 @@ components:
                       The top-level WebDAV path at this endpoint. In order to access
                       a remote shared resource, implementations SHOULD use this path
                       as a prefix (see sharing examples).
-                  webapp:
-                    type: string
+                  webdav-receive:
+                    type: object
                     description: >
-                      The top-level path for web apps at this endpoint. In order to
-                      access a remote web app, implementations SHOULD use this path
-                      as a prefix (see sharing examples).
+                      Implementations that support receiving WebDAV shares SHOULD
+                      advertise them here. Note though that older implementations MAY
+                      not support this property.
+                    properties:
+                      uri:
+                        type: string
+                        description: >
+                          This property signals that this endpoint is capable of
+                          receiving `webdav` shares with the given URI format.
+                          The value MUST be either `"absolute"` or `"relative"`.
+                        enum:
+                          - absolute
+                          - relative
+                  webapp:
+                    type: object
+                    description: >
+                      Implementations that support sending WebApp shares MUST advertise
+                      them here, with an empty object as value.
+                  webapp-receive:
+                    type: object
+                    description: >
+                      Implementations that support receiving WebApp shares MUST
+                      advertise them here.
+                    properties:
+                      targets:
+                        type: array
+                        description: >
+                          The target values this endpoint supports as receiver of
+                          a webapp share, similar to the target attributes in an
+                          HTML `<a>` tag.
+                          - "blank" signals that this endpoint supports opening
+                            the URI in a new window or tab.
+                          - "iframe" signals that this endpoint supports opening
+                            the URI in the same browsing context, within an iframe,
+                            and that it can set CORS headers.
+                          - "popup" signals that this endpoint supports opening
+                            the URI in an embedded popup window, and that it can
+                            set CORS headers.
+                        items:
+                          type: string
+                          enum:
+                            - blank
+                            - iframe
+                            - popup
                   ssh:
                     type: string
                     description: >
                       The top-level address in the form `host:port` of an endpoint
                       that supports ssh and scp with a public/private key based
                       authentication.
-                additionalProperties:
-                    type: string
+                  ssh-receive:
+                    type: object
                     description: >
-                      Any additional protocol supported for this resource type MAY
+                      Implementations that support receiving SSH shares MUST
+                      advertise them here, with an empty object as value.
+                additionalProperties:
+                    type: object
+                    description: >
+                      Any additional protocol supported for this resource type SHOULD
                       be advertised here, where the value MAY correspond to a top-level
-                      URI to be used for that protocol.
+                      URI to be used for that protocol, or any other relevant
+                      attribute required for that protocol. Similarly, additional
+                      receiving capabilities for custom protocols SHOULD be advertised.
                 example:
                   webdav: /remote/dav/ocm/
-                  webapp: /apps/ocm/
+                  webdav-receive: {
+                    "uri": "absolute"
+                  }
+                  webapp: {}
+                  webapp-receive: {
+                    "targets": ["blank", "iframe"]
+                  }
                   talk: /apps/spreed/api/
         capabilities:
           type: array
@@ -446,10 +500,9 @@ components:
               - invite-wayf
               - notifications
               - protocol-object
-              - webdav-uri
           example:
-            - webdav-uri
             - protocol-object
+            - invites
             - http-sig
         criteria:
           type: array
@@ -665,12 +718,12 @@ components:
                 uri:
                   type: string
                   description: >
-                    An URI to access the remote resource. The URI SHOULD be relative,
+                    An URI to access the remote resource. The URI MAY be relative,
                     such as a key or a UUID, in which case the prefix exposed by the
                     `/.well-known/ocm` endpoint MUST be used to access the resource, or
-                    it MAY be absolute, including a hostname. The latter is deprecated.
+                    it MAY be absolute, including a hostname.
                     In all cases, for a `folder` resource, the composed URI acts
-                    as the root path, such that other files located within it SHOULD
+                    as the root path, such that other files located within it MUST
                     be accessible by appending their relative path to that URI.
                 sharedSecret:
                   type: string
@@ -726,32 +779,63 @@ components:
                   description: >
                     An URI to a client-browsable view of the remote resource, such that
                     users may use a web application available at the sender site.
-                    The URI SHOULD be relative, such as a key or a UUID, in which case
-                    the prefix exposed by the `/.well-known/ocm` endpoint MUST be used
-                    to access the resource, or it MAY be absolute, including a hostname.
-                    Similar considerations as for the `webdav` case apply here.
-                    In all cases, for a `folder` resource, the composed URI acts
-                    as the root path, such that other files located within SHOULD
-                    be accessible by appending their relative path to that URI.
-                viewMode:
-                  type: string
-                  description: |
+                    The URI MUST be absolute, including a hostname. In case the
+                    underlying resource is a folder, the URI MUST act as a root path,
+                    such that files located within the folder are made accessible in
+                    the web app by appending their relative path to the URI.
+                targets:
+                  type: array
+                  description: >
+                    The target attribute values to be used when opening the URI, such
+                    as in an HTML `<a>` tag.If omitted, it defaults to `["blank"]`.
+                    - "blank" signals the recipient to open the URI in a new window or tab.
+                    - "iframe" signals the recipient to open the URI in the same browsing
+                      context, within an iframe. CORS headers MUST be properly set.
+                    - "popup" signals the recipient to open the URI in an embedded popup
+                      window. CORS headers MUST be properly set.
+                  items:
+                    type: string
+                    enum:
+                      - blank
+                      - iframe
+                      - popup
+                permissions:
+                  type: array
+                  description: >
                     The permissions granted to the sharee.
                     - `view` allows access to the web app in view-only mode.
                     - `read` allows read and download access via the web app.
                     - `write` allows full editing rights via the web app.
-                  enum:
-                    - view
-                    - read
-                    - write
+                    - `share` allows re-share rights on the resource. This only
+                      applies to web apps that provide a mechanism for re-sharing.
+                  items:
+                    type: string
+                    enum:
+                      - view
+                      - read
+                      - write
+                      - share
                 sharedSecret:
                   type: string
                   description: >
-                    An optional secret to be used to access the remote web app, such as
-                    a bearer token.  To prevent leaking it in logs it MUST NOT appear
-                    in any URI.  In a multi-protocol share scenario with WebDAV, the
-                    access requirements provided in the `webdav` part MUST apply for
-                    `webapp` accesses as well.
+                    A secret for accessing the remote web app, such as a bearer token.
+                    To give access to the remote app, the receiver MUST perform a HTTP
+                    POST request to the given URI, with the shared secret in a form field
+                    named `access_token`. To prevent leaking it in logs it MUST NOT appear
+                    in any URI. In a multi-protocol share scenario with WebDAV, the access
+                    requirements provided in the `webdav` part MUST apply for `webapp`
+                    accesses as well.
+                appName:
+                  type: string
+                  description: >
+                    An optional human-friendly name of the web application to be used
+                    in user interfaces when referring to this share.
+                appIcon:
+                  type: string
+                  description: >
+                    An optional URI to an icon representing the web application, to be
+                    used in user interfaces when referring to this share. The URI MUST
+                    be absolute, including a hostname.
             ssh:
               type: object
               properties:
@@ -801,16 +885,21 @@ components:
               name: multi
               webdav:
                 accessTypes: ['remote', 'datatx']
-                uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+                uri: https://cloud.example.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 permissions:
                   - read
                 requirements:
                   - mfa-enforced
               webapp:
-                uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+                uri: https://apps.example.org/codimd/7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
-                viewMode: read
+                targets:
+                  - blank
+                permissions:
+                  - read
+                appName: CodiMD
+                appIcon: https://apps.example.org/assets/codimd-icon.png
               ssh:
                 accessTypes: ['datatx']
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
