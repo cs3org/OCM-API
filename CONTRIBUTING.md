@@ -11,4 +11,4 @@ To contribute to the Internet Draft, please do all edits in `IETF-RFC.md` only. 
 
 To preview the changes of your PR, you can change the repo and branch in the API docs URL.
 For instance to see the proposed changes of https://github.com/cs3org/OCM-API/pull/41, use:
-[https://cs3org.github.io/OCM-API/docs.html?branch=add-endpoint-to-accept-invite&repo=OCM-API&user=LovisaLugnegard](https://cs3org.github.io/OCM-API/docs.html?branch=add-endpoint-to-accept-invite&repo=OCM-API&user=LovisaLugnegard)
+[https://cs3org.github.io/OCM-API/docs.html?repo=OCM-API&branch=add-endpoint-to-accept-invite](https://cs3org.github.io/OCM-API/docs.html?repo=OCM-API&branch=add-endpoint-to-accept-invite)
