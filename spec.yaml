@@ -834,8 +834,9 @@ components:
                   type: string
                   description: >
                     An optional URI to an icon representing the web application, to be
-                    used in user interfaces when referring to this share. The URI MUST
-                    be absolute, including a hostname.
+                    used in user interfaces when referring to this share. An embedded
+                    data URI can be used. Alternatively, if a regular URI is used,
+                    it MUST be absolute, including a hostname.
             ssh:
               type: object
               properties:
@@ -898,8 +899,8 @@ components:
                   - blank
                 permissions:
                   - read
-                appName: CodiMD
-                appIcon: https://apps.example.org/assets/codimd-icon.png
+                appName: HedgeDoc
+                appIcon: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJMAAACSCAMA...
               ssh:
                 accessTypes: ['datatx']
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
