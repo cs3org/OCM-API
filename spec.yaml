@@ -834,8 +834,9 @@ components:
                   type: string
                   description: >
                     An optional URI to an icon representing the web application, to be
-                    used in user interfaces when referring to this share. The URI MUST
-                    be absolute, including a hostname.
+                    used in user interfaces when referring to this share. An embedded
+                    data URI can be used. Alternatively, if a regular URI is used,
+                    it MUST be absolute, including a hostname.
             ssh:
               type: object
               properties:
