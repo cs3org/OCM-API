@@ -692,25 +692,52 @@ contain the following information about its OCM API:
     ~~~
             {
               "webdav": "/remote/dav/ocm/",
-              "webapp": "/app/ocm/",
+              "webdav-receive": { "uri": "absolute" },
+              "webapp": {},
+              "webapp-receive": { "targets": ["blank", "iframe"] },
               "talk": "/apps/spreed/api/"
             }
     ~~~
     {: type="json"}
 
+    The `protocols` object distinguishes a server's role for each
+    protocol: a property named after the protocol (e.g. `webdav`,
+    `webapp`, `ssh`) advertises support for acting as a Sending
+    Server, while a property suffixed with `-receive` (e.g.
+    `webdav-receive`, `webapp-receive`, `ssh-receive`) advertises
+    support for acting as a Receiving Server.
+
     Fields:
     - webdav (string) - The top-level WebDAV [RFC4918] path at this
       endpoint.  In order to access a Remote Resource, implementations
       SHOULD use this path as a prefix (see sharing examples).
-    - webapp (string) - The top-level path for web apps at this
-      endpoint.  In order to access a remote web app, implementations
-      SHOULD use this path as a prefix (see sharing examples).
+    - webdav-receive (object) - Advertised by implementations that
+      support receiving WebDAV shares.  It contains a `uri` property
+      whose value MUST be either `"absolute"` or `"relative"`,
+      signalling the URI format this endpoint accepts.  Note that
+      older implementations MAY not support this property.
+    - webapp (object) - Advertised, as an empty object, by
+      implementations that support sending WebApp shares.
+    - webapp-receive (object) - Advertised by implementations that
+      support receiving WebApp shares.  It contains a `targets`
+      array listing the ways this endpoint is able to present a
+      WebApp share to the user.  A subset of:
+      - `blank` - the endpoint can open the URI in a new window or
+        tab.
+      - `redirect` - the endpoint can navigate the browser to the
+        URI, replacing the current page.
+      - `iframe` - the endpoint can embed the URI in an iframe
+        within its own UI, and can set CORS headers.
     - ssh (string) - The top-level address in the form `host:port`
       of an endpoint that supports ssh and scp with a public/private
       key based authentication.
+    - ssh-receive (object) - Advertised, as an empty object, by
+      implementations that support receiving SSH shares.
     - Any additional protocol supported for this Resource type MAY be
       advertised here, where the value MAY correspond to
-      a top-level URI to be used for that protocol.
+      a top-level URI to be used for that protocol.  Similarly,
+      additional receiving capabilities for custom protocols SHOULD
+      be advertised using a `-receive` suffixed property.
 * OPTIONAL: capabilities (array of string) - The optional capabilities
   supported by this OCM Server.
   As implementations MUST accept Share Creation Notifications
@@ -947,20 +974,49 @@ voluntarily.
     especially in case of `datatx` access type.
 * Protocol details for `webapp` MAY contain:
   - REQUIRED uri (string)
-    A URI to a client-browsable view of the Shared
-    Resource, such that users MAY use the web
-    applications available at the site.  The URI SHOULD
-    be relative, in which case the prefix exposed by
-    the `/.well-known/ocm` endpoint MUST be used.
-    Absolute URIs are deprecated.
-  - REQUIRED viewMode (string)
-    The permissions granted to the sharee.  A subset of:
+    A URI to a client-browsable view of the Shared Resource, such
+    that users MAY use a web application available at the Sending
+    Server.  The URI MUST be absolute, including a hostname.  In
+    case the underlying Resource is a folder, the URI MUST act as a
+    root path, such that files located within the folder are made
+    accessible in the web app by appending their relative path to
+    the URI.
+  - REQUIRED targets (array of strings) - How the recipient SHOULD
+    present the URI to the user.  MUST NOT be empty.  A subset of:
+    - `blank` signals the recipient to open the URI in a new window
+      or tab.
+    - `redirect` signals the recipient to navigate the browser to
+      the URI, replacing the current page.
+    - `iframe` signals the recipient to embed the URI in an iframe
+      within its own UI.  CORS headers MUST be properly set.
+    A Sending Server MUST NOT offer a target that the recipient did
+    not advertise in its `webapp-receive` discovery property.
+  - REQUIRED permissions (array of strings) -
+    The permissions granted to the sharee.  MUST NOT be empty.
+    A subset of:
     - `view` allows access to the web app in view-only mode.
     - `read` allows read and download access via the web app.
     - `write` allows full editing rights via the web app.
+    - `share` allows re-share rights on the Resource.  This only
+      applies to web apps that provide a mechanism for re-sharing.
   - OPTIONAL sharedSecret (string)
-    An optional secret to be used to access the remote
-    web app, for example in the form of a bearer token.
+    A secret for accessing the remote web app, such as a bearer
+    token.  To give access to the remote app, the receiver MUST
+    perform an HTTP POST request to the given `uri`, passing the
+    shared secret in a form field named `access_token` (see
+    [Resource Access](#resource-access)).  To prevent leaking it in
+    logs it MUST NOT appear in any URI.  In a multi-protocol Share
+    that also offers WebDAV, the access requirements provided in the
+    `webdav` part (such as `must-exchange-token`) MUST apply to
+    `webapp` accesses as well.
+  - OPTIONAL appName (string)
+    A human-friendly name of the web application, to be used in user
+    interfaces when referring to this Share.
+  - OPTIONAL appIcon (string)
+    A URI to an icon representing the web application, to be used in
+    user interfaces when referring to this Share.  An embedded data
+    URI MAY be used; alternatively, if a regular URI is used, it MUST
+    be absolute, including a hostname.
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
@@ -1163,6 +1219,22 @@ protocol required for access.  The procedure is as follows:
    removed in a future release of the Protocol.  If a secret cannot be
    identified (e.g. because `protocol.options` is undefined), then
    the receiver SHOULD discard the share as invalid.
+6. For the specific case where `protocol.webapp` is available and the
+   receiver wants to use it, the receiver MUST present the web app to
+   the user by opening `protocol.webapp.uri` using one of the targets
+   listed in `protocol.webapp.targets` (defaulting to `blank`), chosen
+   among those the receiver advertises in its `webapp-receive`
+   discovery property.  If a `protocol.webapp.sharedSecret` is present,
+   the receiver MUST NOT place it in the URI; instead it MUST deliver
+   it to the web app via an HTTP POST to `protocol.webapp.uri` with the
+   secret carried in a form field named `access_token`.  This is
+   typically achieved with an auto-submitting HTML form whose `target`
+   attribute selects the chosen presentation (e.g. an iframe name,
+   `_blank`, or `_top`).  When the Share also requires token exchange
+   (see step 3.1, applied via the `webdav` part of a multi-protocol
+   Share), the receiver MUST first exchange the `sharedSecret` at the
+   Sending Server's {tokenEndPoint} and POST the resulting bearer token
+   as the `access_token` value.
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
@@ -1928,8 +2000,11 @@ that section.
 |   Protocols      |
 +------------------+
 | - ssh            |
+| - ssh-receive    |
 | - webapp         |
+| - webapp-receive |
 | - webdav         |
+| - webdav-receive |
 | - ...            |
 +------------------+
 ~~~
