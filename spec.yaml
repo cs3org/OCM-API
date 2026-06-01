@@ -439,23 +439,22 @@ components:
                       targets:
                         type: array
                         description: >
-                          The target values this endpoint supports as receiver of
-                          a webapp share, similar to the target attributes in an
-                          HTML `<a>` tag.
+                          The ways this endpoint is able to present a webapp
+                          share to the user when acting as receiver.
                           - "blank" signals that this endpoint supports opening
                             the URI in a new window or tab.
-                          - "iframe" signals that this endpoint supports opening
-                            the URI in the same browsing context, within an iframe,
+                          - "redirect" signals that this endpoint supports
+                            navigating the browser to the URI, replacing the
+                            current page.
+                          - "iframe" signals that this endpoint supports
+                            embedding the URI in an iframe within its own UI,
                             and that it can set CORS headers.
-                          - "popup" signals that this endpoint supports opening
-                            the URI in an embedded popup window, and that it can
-                            set CORS headers.
                         items:
                           type: string
                           enum:
                             - blank
+                            - redirect
                             - iframe
-                            - popup
                   ssh:
                     type: string
                     description: >
@@ -773,6 +772,10 @@ components:
                     in case of `datatx` access type.
             webapp:
               type: object
+              required:
+                - uri
+                - targets
+                - permissions
               properties:
                 uri:
                   type: string
@@ -786,23 +789,25 @@ components:
                 targets:
                   type: array
                   description: >
-                    The target attribute values to be used when opening the URI, such
-                    as in an HTML `<a>` tag.If omitted, it defaults to `["blank"]`.
+                    How the recipient should present the URI to the user.
+                    This array is REQUIRED and MUST NOT be empty: a webapp
+                    share without a target is invalid.
                     - "blank" signals the recipient to open the URI in a new window or tab.
-                    - "iframe" signals the recipient to open the URI in the same browsing
-                      context, within an iframe. CORS headers MUST be properly set.
-                    - "popup" signals the recipient to open the URI in an embedded popup
-                      window. CORS headers MUST be properly set.
+                    - "redirect" signals the recipient to navigate the browser to the URI,
+                      replacing the current page.
+                    - "iframe" signals the recipient to embed the URI in an iframe within
+                      its own UI. CORS headers MUST be properly set.
                   items:
                     type: string
                     enum:
                       - blank
+                      - redirect
                       - iframe
-                      - popup
                 permissions:
                   type: array
                   description: >
-                    The permissions granted to the sharee.
+                    The permissions granted to the sharee. This array is
+                    REQUIRED and MUST NOT be empty.
                     - `view` allows access to the web app in view-only mode.
                     - `read` allows read and download access via the web app.
                     - `write` allows full editing rights via the web app.
