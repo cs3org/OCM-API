@@ -411,6 +411,8 @@ components:
                       as a prefix (see sharing examples).
                   webdav-receive:
                     type: object
+                    required:
+                      - uri
                     description: >
                       Implementations that support receiving WebDAV shares SHOULD
                       advertise them here. Note though that older implementations MAY
@@ -432,12 +434,15 @@ components:
                       them here, with an empty object as value.
                   webapp-receive:
                     type: object
+                    required:
+                      - targets
                     description: >
                       Implementations that support receiving WebApp shares MUST
                       advertise them here.
                     properties:
                       targets:
                         type: array
+                        minItems: 1
                         description: >
                           The ways this endpoint is able to present a webapp
                           share to the user when acting as receiver.
@@ -448,7 +453,8 @@ components:
                             current page.
                           - "iframe" signals that this endpoint supports
                             embedding the URI in an iframe within its own UI,
-                            and that it can set CORS headers.
+                            when the Sending Server allows framing by this
+                            receiver.
                         items:
                           type: string
                           enum:
@@ -467,7 +473,9 @@ components:
                       Implementations that support receiving SSH shares MUST
                       advertise them here, with an empty object as value.
                 additionalProperties:
-                    type: object
+                    oneOf:
+                      - type: string
+                      - type: object
                     description: >
                       Any additional protocol supported for this resource type SHOULD
                       be advertised here, where the value MAY correspond to a top-level
@@ -788,6 +796,7 @@ components:
                     the web app by appending their relative path to the URI.
                 targets:
                   type: array
+                  minItems: 1
                   description: >
                     How the recipient should present the URI to the user.
                     This array is REQUIRED and MUST NOT be empty: a webapp
@@ -796,7 +805,7 @@ components:
                     - "redirect" signals the recipient to navigate the browser to the URI,
                       replacing the current page.
                     - "iframe" signals the recipient to embed the URI in an iframe within
-                      its own UI. CORS headers MUST be properly set.
+                      its own UI, when the Sending Server allows framing by the recipient.
                   items:
                     type: string
                     enum:
@@ -805,6 +814,7 @@ components:
                       - iframe
                 permissions:
                   type: array
+                  minItems: 1
                   description: >
                     The permissions granted to the sharee. This array is
                     REQUIRED and MUST NOT be empty.
@@ -823,13 +833,15 @@ components:
                 sharedSecret:
                   type: string
                   description: >
-                    A secret for accessing the remote web app, such as a bearer token.
-                    To give access to the remote app, the receiver MUST perform a HTTP
-                    POST request to the given URI, with the shared secret in a form field
-                    named `access_token`. To prevent leaking it in logs it MUST NOT appear
-                    in any URI. In a multi-protocol share scenario with WebDAV, the access
-                    requirements provided in the `webdav` part MUST apply for `webapp`
-                    accesses as well.
+                    A secret for accessing the remote web app. To give access to the
+                    remote app, the receiver MUST first exchange this value at the
+                    Sending Server's `tokenEndPoint` using the Code Flow, then perform
+                    an HTTP POST request to the given URI with the resulting bearer
+                    token in a form field named `access_token`. The shared secret MUST
+                    NOT be exposed to the browser and MUST NOT appear in any URI. In a
+                    multi-protocol share scenario with WebDAV, the access requirements
+                    provided in the `webdav` part MUST apply for `webapp` accesses as
+                    well.
                 appName:
                   type: string
                   description: >
@@ -840,8 +852,11 @@ components:
                   description: >
                     An optional URI to an icon representing the web application, to be
                     used in user interfaces when referring to this share. An embedded
-                    data URI can be used. Alternatively, if a regular URI is used,
-                    it MUST be absolute, including a hostname.
+                    data URI MAY be used if it identifies an image resource.
+                    Alternatively, if a regular URI is used, it MUST be absolute,
+                    including a hostname. Receiving Servers MUST render the icon only
+                    in an inert image context and MAY reject unsupported or unsafe
+                    image types.
             ssh:
               type: object
               properties:
