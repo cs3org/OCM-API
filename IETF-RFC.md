@@ -727,7 +727,8 @@ contain the following information about its OCM API:
       - `redirect` - the endpoint can navigate the browser to the
         URI, replacing the current page.
       - `iframe` - the endpoint can embed the URI in an iframe
-        within its own UI, and can set CORS headers.
+        within its own UI, when the Sending Server allows framing
+        by this receiver.
     - ssh (string) - The top-level address in the form `host:port`
       of an endpoint that supports ssh and scp with a public/private
       key based authentication.
@@ -743,7 +744,7 @@ contain the following information about its OCM API:
   As implementations MUST accept Share Creation Notifications
   to be compliant, it is not necessary to expose that as a
   capability.
-  Example: `["exchange-token", "webdav-uri"]`.  The array MAY
+  Example: `["exchange-token", "protocol-object"]`.  The array MAY
   include one or more of the following items:
   - `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
@@ -764,9 +765,6 @@ contain the following information about its OCM API:
   notifications to exchange updates on shares and invites.
   - `"invite-wayf"` - to indicate that this OCM Server exposes a WAYF
   Page to facilitate the Invite flow.
-  - `"webdav-uri"` - to indicate that this OCM Server can append a
-  relative URI to the path listed for WebDAV [RFC4918] in the
-  appropriate `resourceTypes` entry
   - `"protocol-object"` - to indicate that this OCM Server can
   receive a Share Creation Notification whose `protocol` object
   contains one property per supported protocol instead of containing
@@ -943,10 +941,13 @@ voluntarily.
     cache operations on the Sending Server.  The recipient MAY delegate
     a third-party service to execute the data transfer on their behalf.
   - REQUIRED uri (string)
-    A URI to access the Remote Resource.  The URI
-    SHOULD be relative, in which case the prefix
-    exposed by the `/.well-known/ocm` endpoint MUST
-    be used.  Absolute URIs are deprecated.
+    A URI to access the Remote Resource.  The URI MAY be relative,
+    such as a key or a UUID, in which case the prefix exposed by the
+    `/.well-known/ocm` endpoint MUST be used to access the Resource,
+    or it MAY be absolute, including a hostname.  In all cases, for a
+    `folder` Resource, the composed URI acts as the root path, such
+    that other files located within it MUST be accessible by
+    appending their relative path to that URI.
   - REQUIRED sharedSecret (string)
     A secret to be used to access the Resource, such as
     a bearer token.  To prevent leaking it in logs it
@@ -982,13 +983,15 @@ voluntarily.
     accessible in the web app by appending their relative path to
     the URI.
   - REQUIRED targets (array of strings) - How the recipient SHOULD
-    present the URI to the user.  MUST NOT be empty.  A subset of:
+    present the URI to the user.  The `targets` array MUST NOT be
+    empty.  A subset of:
     - `blank` signals the recipient to open the URI in a new window
       or tab.
     - `redirect` signals the recipient to navigate the browser to
       the URI, replacing the current page.
     - `iframe` signals the recipient to embed the URI in an iframe
-      within its own UI.  CORS headers MUST be properly set.
+      within its own UI, when the Sending Server allows framing by
+      this receiver.
     A Sending Server MUST NOT offer a target that the recipient did
     not advertise in its `webapp-receive` discovery property.
   - REQUIRED permissions (array of strings) -
@@ -1000,23 +1003,26 @@ voluntarily.
     - `share` allows re-share rights on the Resource.  This only
       applies to web apps that provide a mechanism for re-sharing.
   - OPTIONAL sharedSecret (string)
-    A secret for accessing the remote web app, such as a bearer
-    token.  To give access to the remote app, the receiver MUST
-    perform an HTTP POST request to the given `uri`, passing the
-    shared secret in a form field named `access_token` (see
-    [Resource Access](#resource-access)).  To prevent leaking it in
-    logs it MUST NOT appear in any URI.  In a multi-protocol Share
-    that also offers WebDAV, the access requirements provided in the
-    `webdav` part (such as `must-exchange-token`) MUST apply to
-    `webapp` accesses as well.
+    A secret for accessing the remote web app.  To give access to the
+    remote app, the receiver MUST first exchange this value at the
+    Sending Server's {tokenEndPoint} using the Code Flow, then perform
+    an HTTP POST request to the given `uri` with the resulting bearer
+    token in a form field named `access_token` (see
+    [Resource Access](#resource-access)).  The shared secret MUST NOT
+    be exposed to the browser and MUST NOT appear in any URI.  In a
+    multi-protocol Share that also offers WebDAV, the access
+    requirements provided in the `webdav` part (such as
+    `must-exchange-token`) MUST apply to `webapp` accesses as well.
   - OPTIONAL appName (string)
     A human-friendly name of the web application, to be used in user
     interfaces when referring to this Share.
   - OPTIONAL appIcon (string)
     A URI to an icon representing the web application, to be used in
     user interfaces when referring to this Share.  An embedded data
-    URI MAY be used; alternatively, if a regular URI is used, it MUST
-    be absolute, including a hostname.
+    URI MAY be used if it identifies an image resource; alternatively,
+    if a regular URI is used, it MUST be absolute, including a
+    hostname.  Receiving Servers MUST render the icon only in an inert
+    image context and MAY reject unsupported or unsafe image types.
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
@@ -1221,20 +1227,20 @@ protocol required for access.  The procedure is as follows:
    the receiver SHOULD discard the share as invalid.
 6. For the specific case where `protocol.webapp` is available and the
    receiver wants to use it, the receiver MUST present the web app to
-   the user by opening `protocol.webapp.uri` using one of the targets
-   listed in `protocol.webapp.targets` (defaulting to `blank`), chosen
-   among those the receiver advertises in its `webapp-receive`
-   discovery property.  If a `protocol.webapp.sharedSecret` is present,
-   the receiver MUST NOT place it in the URI; instead it MUST deliver
-   it to the web app via an HTTP POST to `protocol.webapp.uri` with the
-   secret carried in a form field named `access_token`.  This is
-   typically achieved with an auto-submitting HTML form whose `target`
-   attribute selects the chosen presentation (e.g. an iframe name,
-   `_blank`, or `_top`).  When the Share also requires token exchange
-   (see step 3.1, applied via the `webdav` part of a multi-protocol
-   Share), the receiver MUST first exchange the `sharedSecret` at the
-   Sending Server's {tokenEndPoint} and POST the resulting bearer token
-   as the `access_token` value.
+   the user by opening `protocol.webapp.uri` using a target selected
+   from the intersection of `protocol.webapp.targets` and the targets
+   advertised in the receiver's `webapp-receive` discovery property.
+   If this intersection is empty, the receiver MUST treat the `webapp`
+   option as unusable for this Share.  If a
+   `protocol.webapp.sharedSecret` is present, the receiver MUST NOT
+   place it in the URI and MUST NOT expose it to the browser.  Instead,
+   the receiver MUST first exchange it at the Sending Server's
+   {tokenEndPoint} using the Code Flow, then deliver the resulting
+   bearer token to the web app via an HTTP POST to
+   `protocol.webapp.uri` with the token carried in a form field named
+   `access_token`.  This is typically achieved with an auto-submitting
+   HTML form whose `target` attribute selects the chosen presentation
+   (e.g. an iframe name, `_blank`, or `_top`).
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
@@ -1976,7 +1982,6 @@ that section.
 | - ...            |  | - invites        |          |
 +------------------+  | - notifications  |          |
        |              | - protocol-object|          |
-       |              | - webdav-uri     |          |
        |              | - ...            |          |
        |              +------------------+          |
        |                                            |

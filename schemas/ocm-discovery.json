@@ -22,7 +22,7 @@
     },
     "capabilities": {
       "type": "array",
-      "description": "Capability values of 'enforce-mfa', 'exchange-token', 'http-sig', 'invites', 'invite-wayf', 'notifications', 'protocol-object', and 'webdav-uri' are defined in the draft",
+      "description": "Capability values of 'enforce-mfa', 'exchange-token', 'http-sig', 'invites', 'invite-wayf', 'notifications', and 'protocol-object' are defined in the draft",
       "items": {
         "type": "string"
       }
@@ -55,6 +55,7 @@
   ],
   "$defs": {
     "resourceType": {
+      "type": "object",
       "properties": {
         "name": {
           "type": "string"
@@ -69,20 +70,53 @@
     "protocols": {
       "type": "object",
       "minProperties": 1,
-      "description": "Additional protocols besides 'webdav', 'webapp' and 'datatx' may be defined.",
+      "description": "Additional protocols besides 'webdav', 'webapp', and 'ssh' may be defined. A property named after the protocol advertises sending support; a property suffixed with '-receive' advertises receiving support.",
       "properties": {
         "webdav": {
           "type": "string",
           "pattern": "^/"
         },
-        "webapp": {
-          "type": "string",
-          "pattern": "^/"
+        "webdav-receive": {
+          "type": "object",
+          "required": ["uri"],
+          "properties": {
+            "uri": { "type": "string", "enum": ["absolute", "relative"] }
+          },
+          "additionalProperties": false
         },
-        "datatx": {
-          "type": "string",
-          "pattern": "^/"
+        "webapp": {
+          "type": "object",
+          "additionalProperties": false
+        },
+        "webapp-receive": {
+          "type": "object",
+          "required": ["targets"],
+          "properties": {
+            "targets": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "enum": ["blank", "redirect", "iframe"]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "ssh": {
+          "type": "string"
+        },
+        "ssh-receive": {
+          "type": "object",
+          "additionalProperties": false
         }
+      },
+      "additionalProperties": {
+        "oneOf": [
+          { "type": "string" },
+          { "type": "object" }
+        ]
       }
     },
     "publicKey": {
