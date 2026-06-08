@@ -1016,13 +1016,11 @@ voluntarily.
   - OPTIONAL appName (string)
     A human-friendly name of the web application, to be used in user
     interfaces when referring to this Share.
-  - OPTIONAL appIcon (string)
-    A URI to an icon representing the web application, to be used in
-    user interfaces when referring to this Share.  An embedded data
-    URI MAY be used if it identifies an image resource; alternatively,
-    if a regular URI is used, it MUST be absolute, including a
-    hostname.  Receiving Servers MUST render the icon only in an inert
-    image context and MAY reject unsupported or unsafe image types.
+  - OPTIONAL mediaType (string)
+    A string that describes the main media type (MIME type) of the
+    share.  This can be media types with vendor tree subtypes, such as
+    `application/vnd.jupyter` for Jupyter Notebooks, or any entries from
+    the IANA Media Type registry. [RFC6838]
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
@@ -1564,6 +1562,10 @@ June 2007.
 
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
+
+[RFC6828] Freed, N., Klensin, J., Hansen, T. "[Media Type
+Specifications and Registration Procedures
+](https://datatracker.ietf.org/html/rfc6828)", January 2013.
 
 [RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
 (JWS)](https://datatracker.ietf.org/doc/html/rfc7515)", May 2015.

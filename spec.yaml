@@ -847,16 +847,13 @@ components:
                   description: >
                     An optional human-friendly name of the web application to be used
                     in user interfaces when referring to this share.
-                appIcon:
+                mediaType:
                   type: string
                   description: >
-                    An optional URI to an icon representing the web application, to be
-                    used in user interfaces when referring to this share. An embedded
-                    data URI MAY be used if it identifies an image resource.
-                    Alternatively, if a regular URI is used, it MUST be absolute,
-                    including a hostname. Receiving Servers MUST render the icon only
-                    in an inert image context and MAY reject unsupported or unsafe
-                    image types.
+                    An optional string that describes the main media (MIME) type of the
+                    share. For example a folder with a Jupyter Notebook should be given
+                    the mediaType `application/vnd.jupyter` to allow the receiving
+                    server to choose an appropriate icon to display for the share.
             ssh:
               type: object
               properties:
