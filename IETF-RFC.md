@@ -1238,9 +1238,11 @@ protocol required for access.  The procedure is as follows:
    {tokenEndPoint} using the Code Flow, then deliver the resulting
    bearer token to the web app via an HTTP POST to
    `protocol.webapp.uri` with the token carried in a form field named
-   `access_token`.  This is typically achieved with an auto-submitting
-   HTML form whose `target` attribute selects the chosen presentation
-   (e.g. an iframe name, `_blank`, or `_top`).
+   `access_token` along with another form field named `redirect_uri`
+   that represents the location where the reciving server can handle
+   refresh of tokens.  This is typically achieved with an
+   auto-submitting HTML form whose `target` attribute selects the
+   chosen presentation (e.g. an iframe name, `_blank`, or `_top`).
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
