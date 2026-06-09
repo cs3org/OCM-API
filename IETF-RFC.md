@@ -1246,7 +1246,7 @@ protocol required for access.  The procedure is as follows:
    `protocol.webapp.uri` with the token carried in a form field named
    `access_token` along with another form field named
    `expired_session_redirect_uri` that represents the location where
-   the reciving server can handle refresh of tokens.  This is typically
+   the receiving server can handle refresh of tokens.  This is typically
    achieved with an auto-submitting HTML form whose `target` attribute
    selects the chosen presentation (e.g. an iframe name, `_blank`, or
    `_top`).
@@ -1255,7 +1255,7 @@ In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
 its relative path to that URL.  In other words, the Sending Server
 SHOULD support requests to URLs such as
-`https://<sender-host><sender-ocm-path>/path/to/resource.txt`. 
+`https://<sender-host><sender-ocm-path>/path/to/resource.txt`.
 
 
 # Code Flow
@@ -1572,9 +1572,9 @@ June 2007.
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
 
-[RFC6828] Freed, N., Klensin, J., Hansen, T. "[Media Type
+[RFC6838] Freed, N., Klensin, J., Hansen, T. "[Media Type
 Specifications and Registration Procedures
-](https://datatracker.ietf.org/html/rfc6828)", January 2013.
+](https://datatracker.ietf.org/html/rfc6838)", January 2013.
 
 [RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
 (JWS)](https://datatracker.ietf.org/doc/html/rfc7515)", May 2015.

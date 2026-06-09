@@ -781,6 +781,7 @@ components:
                 - uri
                 - targets
                 - permissions
+                - requirements
               properties:
                 uri:
                   type: string
@@ -825,6 +826,27 @@ components:
                       - read
                       - write
                       - share
+                requirements:
+                  type: array
+                  minItems: 1
+                  description: >
+                    The requirements that the sharee MUST fulfill to access the
+                    resource. This array is REQUIRED and MUST at least include
+                    `must-exchange-token`. If multiple protocols are present in
+                    the share payload, the requirements for the different
+                    protocols MUST agree.
+                    - `must-use-mfa` requires the user accessing the resource to be
+                      MFA-authenticated. This requirement MAY be used if the
+                      recipient provider exposes the `enforce-mfa` capability.
+                    - `must-exchange-token` requires the recipient to exchange the given
+                      `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
+                      Sending Server, in order to get a short-lived token to be used
+                      for subsequent access [RFC6749].
+                  items:
+                    type: string
+                    enum:
+                      - must-use-mfa
+                      - must-exchange-token
                 sharedSecret:
                   type: string
                   description: >
@@ -832,7 +854,10 @@ components:
                     remote app, the receiver MUST first exchange this value at the
                     Sending Server's `tokenEndPoint` using the Code Flow, then perform
                     an HTTP POST request to the given URI with the resulting bearer
-                    token in a form field named `access_token`. The shared secret MUST
+                    token in a form field named `access_token`, along with another form
+                    field named `expired_session_redirect_uri` that represents the
+                    location where the receiving server can handle refresh of tokens.
+                    The shared secret MUST
                     NOT be exposed to the browser and MUST NOT appear in any URI. In a
                     multi-protocol share scenario with WebDAV, the access requirements
                     provided in the `webdav` part MUST apply for `webapp` accesses as
@@ -908,6 +933,7 @@ components:
                   - read
                 requirements:
                   - must-use-mfa
+                  - must-exchange-token
               webapp:
                 uri: https://apps.example.org/codimd/7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
@@ -915,8 +941,11 @@ components:
                   - blank
                 permissions:
                   - read
+                requirements:
+                  - must-use-mfa
+                  - must-exchange-token
                 appName: CodiMD
-                appIcon: https://apps.example.org/assets/codimd-icon.png
+                appIconHint: text/markdown
               ssh:
                 accessTypes: ['datatx']
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
