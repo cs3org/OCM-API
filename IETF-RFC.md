@@ -723,9 +723,7 @@ contain the following information about its OCM API:
       array listing the ways this endpoint is able to present a
       WebApp share to the user.  A subset of:
       - `blank` - the endpoint can open the URI in a new window or
-        tab.
-      - `redirect` - the endpoint can navigate the browser to the
-        URI, replacing the current page.
+        tab, or do a full page redirect.
       - `iframe` - the endpoint can embed the URI in an iframe
         within its own UI, when the Sending Server allows framing
         by this receiver.
@@ -987,8 +985,6 @@ voluntarily.
     empty.  A subset of:
     - `blank` signals the recipient to open the URI in a new window
       or tab.
-    - `redirect` signals the recipient to navigate the browser to
-      the URI, replacing the current page.
     - `iframe` signals the recipient to embed the URI in an iframe
       within its own UI, when the Sending Server allows framing by
       this receiver.
