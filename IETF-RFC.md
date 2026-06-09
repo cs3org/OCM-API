@@ -998,6 +998,15 @@ voluntarily.
     - `write` allows full editing rights via the web app.
     - `share` allows re-share rights on the Resource.  This only
       applies to web apps that provide a mechanism for re-sharing.
+  - REQUIRED requirements (array of strings) -
+    The requirements that the sharee MUST fulfill to
+    access the Resource.  The requirements MUST at least include
+    `must-exchange-token`.  If multiple protocols are present in the
+    share payload, the requirements for the different protocols MUST
+    agree.  For example, if a webapp share is sent in the same payload
+    as a webdav share, both protocols MUST carry the same
+    requirements, and both requirement arrays MUST include
+    `must-exchange-token`.
   - OPTIONAL sharedSecret (string)
     A secret for accessing the remote web app.  To give access to the
     remote app, the receiver MUST first exchange this value at the
@@ -1012,11 +1021,14 @@ voluntarily.
   - OPTIONAL appName (string)
     A human-friendly name of the web application, to be used in user
     interfaces when referring to this Share.
-  - OPTIONAL mediaType (string)
-    A string that describes the main media type (MIME type) of the
-    share.  This can be media types with vendor tree subtypes, such as
-    `application/vnd.jupyter` for Jupyter Notebooks, or any entries from
-    the IANA Media Type registry. [RFC6838]
+  - OPTIONAL appIconHint (string)
+    A string in the form of a media type (MIME type) that describes the
+    share as a whole, primarily intended as a way for the receiving
+    server to select an appropriate icon for the share. [RFC6838]
+  - OPTIONAL mediaTypes (array of strings)
+    An array of media types (MIME types) the webapp server can handle.
+    This can be any media type entries from the IANA Media Type
+    registry. [RFC6838]
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
@@ -1232,17 +1244,18 @@ protocol required for access.  The procedure is as follows:
    {tokenEndPoint} using the Code Flow, then deliver the resulting
    bearer token to the web app via an HTTP POST to
    `protocol.webapp.uri` with the token carried in a form field named
-   `access_token` along with another form field named `redirect_uri`
-   that represents the location where the reciving server can handle
-   refresh of tokens.  This is typically achieved with an
-   auto-submitting HTML form whose `target` attribute selects the
-   chosen presentation (e.g. an iframe name, `_blank`, or `_top`).
+   `access_token` along with another form field named
+   `expired_session_redirect_uri` that represents the location where
+   the reciving server can handle refresh of tokens.  This is typically
+   achieved with an auto-submitting HTML form whose `target` attribute
+   selects the chosen presentation (e.g. an iframe name, `_blank`, or
+   `_top`).
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
 its relative path to that URL.  In other words, the Sending Server
 SHOULD support requests to URLs such as
-`https://<sender-host><sender-ocm-path>/path/to/resource.txt`.
+`https://<sender-host><sender-ocm-path>/path/to/resource.txt`. 
 
 
 # Code Flow
