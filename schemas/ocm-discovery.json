@@ -98,7 +98,7 @@
               "uniqueItems": true,
               "items": {
                 "type": "string",
-                "enum": ["blank", "redirect", "iframe"]
+                "enum": ["blank", "iframe"]
               }
             }
           },
