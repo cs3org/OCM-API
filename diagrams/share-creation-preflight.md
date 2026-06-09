@@ -2,7 +2,7 @@
 flowchart TD
     A["Sending Server wants to create a share"]
     A --> B["Query Receiving Server discovery"]
-    B --> C{"Receiver advertises token-exchange"}
+    B --> C{"Receiver advertises must-exchange-token"}
 
     C -- "Yes" --> D{"Sender exposes exchange-token and tokenEndPoint"}
     D -- "Yes" --> E["Include must-exchange-token"]
