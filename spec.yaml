@@ -457,7 +457,6 @@ components:
                           type: string
                           enum:
                             - blank
-                            - redirect
                             - iframe
                   ssh:
                     type: string
@@ -799,16 +798,14 @@ components:
                     How the recipient should present the URI to the user.
                     This array is REQUIRED and MUST NOT be empty: a webapp
                     share without a target is invalid.
-                    - "blank" signals the recipient to open the URI in a new window or tab.
-                    - "redirect" signals the recipient to navigate the browser to the URI,
-                      replacing the current page.
+                    - "blank" signals the recipient to open the URI in a new window or
+                    tab, or do a full page redirect.
                     - "iframe" signals the recipient to embed the URI in an iframe within
                       its own UI, when the Sending Server allows framing by the recipient.
                   items:
                     type: string
                     enum:
                       - blank
-                      - redirect
                       - iframe
                 permissions:
                   type: array
@@ -840,18 +837,22 @@ components:
                     multi-protocol share scenario with WebDAV, the access requirements
                     provided in the `webdav` part MUST apply for `webapp` accesses as
                     well.
+                appIconHint:
+                  type: string
+                  description: >
+                    An optional string in the form of a media type (MIME type) that
+                    describes the share as a whole, primarily intended as a way for
+                    the receiving server to select an appropriate icon for the share.
                 appName:
                   type: string
                   description: >
                     An optional human-friendly name of the web application to be used
                     in user interfaces when referring to this share.
-                mediaType:
-                  type: string
+                mediaTypes:
+                  type: array
                   description: >
-                    An optional string that describes the main media (MIME) type of the
-                    share. For example a folder with a Jupyter Notebook should be given
-                    the mediaType `application/vnd.jupyter` to allow the receiving
-                    server to choose an appropriate icon to display for the share.
+                    An optional array that describes the media (MIME) types that the
+                    webapp server can handle.
             ssh:
               type: object
               properties:
