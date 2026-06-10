@@ -2270,9 +2270,9 @@ Andreas Klotz, Matthias Knoll, Christian Kracher, Mario Lassnig,
 Claudius Laumanns, Anthony Leroy, Patrick Maier, Vladislav Makarenko,
 Anna Manou, Rita Meneses, Zheng Meyer-Zhao, Crystal Michelle Chua,
 Yoann Moulin, Daniel Müller, Frederik Müller, Rasmus Munk,
-Michał Orzechowski, Jacek Pawel Kitowski, Iosif Peterfi,
-Alessandro Petraro, Rene Ranger, Angelo Romasanta, David Rousse,
-Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
+Michał Orzechowski, Jacek Pawel Kitowski, Enrique Pérez Arnaud, Iosif
+Peterfi, Alessandro Petraro, Rene Ranger, Angelo Romasanta, David
+Rousse, Carla Sauvanaud, Klaus Scheibenberger, Marcin Sieprawski,
 Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.
 
 Work on this document has been partially funded over the years by
