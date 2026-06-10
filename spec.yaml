@@ -935,6 +935,7 @@ components:
                   - read
                 requirements:
                   - must-use-mfa
+                  - must-exchange-tokem                 
                   - must-exchange-token
               webapp:
                 uri: https://apps.example.org/codimd/7c084226-d9a1-11e6-bf26-cec0c932ce01

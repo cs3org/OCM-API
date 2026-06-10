@@ -1014,10 +1014,7 @@ voluntarily.
     an HTTP POST request to the given `uri` with the resulting bearer
     token in a form field named `access_token` (see
     [Resource Access](#resource-access)).  The shared secret MUST NOT
-    be exposed to the browser and MUST NOT appear in any URI.  In a
-    multi-protocol Share that also offers WebDAV, the access
-    requirements provided in the `webdav` part (such as
-    `must-exchange-token`) MUST apply to `webapp` accesses as well.
+    be exposed to the browser and MUST NOT appear in any URI.
   - OPTIONAL appName (string)
     A human-friendly name of the web application, to be used in user
     interfaces when referring to this Share.
