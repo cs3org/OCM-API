@@ -1007,7 +1007,7 @@ voluntarily.
     as a webdav share, both protocols MUST carry the same
     requirements, and both requirement arrays MUST include
     `must-exchange-token`.
-  - OPTIONAL sharedSecret (string)
+  - REQUIRED sharedSecret (string)
     A secret for accessing the remote web app.  To give access to the
     remote app, the receiver MUST first exchange this value at the
     Sending Server's {tokenEndPoint} using the Code Flow, then perform
@@ -1237,9 +1237,9 @@ protocol required for access.  The procedure is as follows:
    from the intersection of `protocol.webapp.targets` and the targets
    advertised in the receiver's `webapp-receive` discovery property.
    If this intersection is empty, the receiver MUST treat the `webapp`
-   option as unusable for this Share.  If a
-   `protocol.webapp.sharedSecret` is present, the receiver MUST NOT
-   place it in the URI and MUST NOT expose it to the browser.  Instead,
+   option as unusable for this Share.  The receiver MUST NOT place the
+   `protocol.webapp.sharedSecret` in the URI and MUST NOT expose it to
+   the browser.  Instead,
    the receiver MUST first exchange it at the Sending Server's
    {tokenEndPoint} using the Code Flow, then deliver the resulting
    bearer token to the web app via an HTTP POST to

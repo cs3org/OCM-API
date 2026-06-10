@@ -702,6 +702,7 @@ components:
               type: object
               required:
                 - uri
+                - sharedSecret
                 - permissions
               properties:
                 accessTypes:
@@ -779,6 +780,7 @@ components:
               type: object
               required:
                 - uri
+                - sharedSecret
                 - targets
                 - permissions
                 - requirements
