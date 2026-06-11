@@ -826,11 +826,12 @@ Server advertises `must-exchange-token` in its `criteria` and the
 Sending Server exposes the `exchange-token` capability with a
 `tokenEndPoint`, the Sending Server MUST include `must-exchange-token`
 in the requirements of each protocol offered for access and MUST NOT
-fall back to legacy shared-secret access.  If the Receiving Server advertises
-`must-exchange-token` but the Sending Server does not expose the
-`exchange-token` capability or does not have a `tokenEndPoint`, the
-Sending Server MUST NOT create the share, as the Receiving Server
-would reject any notification that lacks the code-flow requirement.
+fall back to legacy shared-secret access.  If the Receiving
+Server advertises `must-exchange-token` but the Sending Server does
+not expose the `exchange-token` capability or does not have a
+`tokenEndPoint`, the Sending Server MUST NOT create the share, 
+as the Receiving Server would reject any notification that lacks 
+the code-flow requirement.
 If the Receiving Server does not advertise `must-exchange-token` in its
 `criteria`, the Sending Server MAY still include `must-exchange-token`
 voluntarily.
@@ -1270,9 +1271,9 @@ protocol required for access.  The procedure is as follows:
    Receiving Server can restart access and obtain a fresh token; it
    MUST NOT place the shared secret or access token in that URI.
    Sending WebApps that do not support session refresh MAY ignore this
-   field.  This is typically achieved with an auto-submitting HTML form whose
-   `target` attribute selects the chosen presentation (e.g. an iframe
-   name, `_blank`, or `_top`).
+   field.  This is typically achieved with an auto-submitting
+   HTML form whose `target` attribute selects the chosen
+   presentation (e.g. an iframe name, `_blank`, or `_top`).
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append
