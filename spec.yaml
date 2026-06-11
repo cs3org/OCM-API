@@ -526,30 +526,6 @@ components:
           example:
             - allowlist
             - must-invite
-        publicKey:
-          type: object
-          deprecated: true
-          description: >
-            DEPRECATED: Use public keys from /.well-known/jwks.json
-            instead for RFC 9421 support.
-            Legacy field for draft-cavage HTTP Signatures (RSA only).
-            Maintained for backward compatibility with existing deployments.
-            The signatory is optional but it MUST contain `keyId` and `publicKeyPem`.
-          properties:
-            keyId:
-              type: string
-              description: >
-                unique id of the key in URI format. The hostname set the origin
-                of the request and MUST be identical to the current discovery endpoint.
-              example: https://cloud.example.org/ocm#signature
-            publicKeyPem:
-              type: string
-              description: |
-                PEM-encoded RSA public key for draft-cavage signatures.
-              example: |
-                -----BEGIN PUBLIC KEY-----
-                MII...QDD
-                -----END PUBLIC KEY-----
         tokenEndPoint:
           type: string
           format: uri

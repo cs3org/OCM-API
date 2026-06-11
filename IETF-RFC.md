@@ -791,8 +791,6 @@ contain the following information about its OCM API:
   - `"must-invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
-* DEPRECATED: publicKey (object) - Use public keys at
-  `/.well-known/jwks.json` instead for RFC 9421 support.
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
@@ -2000,7 +1998,6 @@ that section.
             | - endPoint            |
             | - inviteAcceptDialog  |
             | - provider            |
-            | - publicKey           |
             | - tokenEndPoint       |
             | - ...                 |
             +-----------------------+
@@ -2059,7 +2056,6 @@ that section.
 * __enabled__: Boolean indicating if OCM service is active
 * __endPoint__: Base URI for OCM API endpoints
 * __provider__: Friendly branding name
-* __publicKey__: Optional public key for HTTP signatures
 * __resourceTypes__: Array of supported resource types with protocols
 
 ## Share

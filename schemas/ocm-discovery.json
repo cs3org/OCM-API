@@ -34,9 +34,6 @@
         "type": "string"
       }
     },
-    "publicKey": {
-      "$ref": "#/$defs/publicKey"
-    },
     "inviteAcceptDialog": {
       "type": "string",
       "format": "uri"
@@ -118,18 +115,6 @@
           { "type": "object" }
         ]
       }
-    },
-    "publicKey": {
-      "type": "object",
-      "properties": {
-        "keyId": {
-          "type": "string"
-        },
-        "publicKeyPem": {
-          "type": "string"
-        }
-      },
-      "required": ["keyId", "publicKeyPem"]
     }
   }
 }
