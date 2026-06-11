@@ -722,8 +722,9 @@ contain the following information about its OCM API:
       support receiving WebApp shares.  It contains a `targets`
       array listing the ways this endpoint is able to present a
       WebApp share to the user.  A subset of:
-      - `blank` - the endpoint can open the URI in a new window or
-        tab, or do a full page redirect.
+      - `blank` - the endpoint can open the URI in a top-level
+        browsing context, such as a new window or tab, or a full page
+        navigation in the current window.
       - `iframe` - the endpoint can embed the URI in an iframe
         within its own UI, when the Sending Server allows framing
         by this receiver.
@@ -778,7 +779,8 @@ contain the following information about its OCM API:
   - `"must-exchange-token"` - to indicate that when this OCM Server
   acts as Receiving Server, it requires the code flow for all inbound
   shares.  Shares that do not include `must-exchange-token` in
-  their `protocol.webdav.requirements` will be rejected.  An
+  the requirements of each protocol offered for access will be
+  rejected.  An
   OCM Server advertising this criterium MUST also expose the
   `exchange-token` capability.  See the [Code Flow](#code-flow)
   section.
@@ -823,8 +825,8 @@ the Receiving Server's OCM API Discovery endpoint.  If the Receiving
 Server advertises `must-exchange-token` in its `criteria` and the
 Sending Server exposes the `exchange-token` capability with a
 `tokenEndPoint`, the Sending Server MUST include `must-exchange-token`
-in `protocol.webdav.requirements` and MUST NOT fall back to legacy
-shared-secret access.  If the Receiving Server advertises
+in the requirements of each protocol offered for access and MUST NOT
+fall back to legacy shared-secret access.  If the Receiving Server advertises
 `must-exchange-token` but the Sending Server does not expose the
 `exchange-token` capability or does not have a `tokenEndPoint`, the
 Sending Server MUST NOT create the share, as the Receiving Server
@@ -832,6 +834,13 @@ would reject any notification that lacks the code-flow requirement.
 If the Receiving Server does not advertise `must-exchange-token` in its
 `criteria`, the Sending Server MAY still include `must-exchange-token`
 voluntarily.
+
+When the notification includes `protocol.webapp`, the Sending Server
+MUST expose the `exchange-token` capability and a `tokenEndPoint`,
+because WebApp access requires the Receiving Server to exchange
+`protocol.webapp.sharedSecret` before presenting the WebApp to the
+browser.  If the Sending Server cannot offer this code flow, it MUST NOT
+include `protocol.webapp` in the notification.
 
 ## Fields
 
@@ -983,8 +992,9 @@ voluntarily.
   - REQUIRED targets (array of strings) - How the recipient SHOULD
     present the URI to the user.  The `targets` array MUST NOT be
     empty.  A subset of:
-    - `blank` signals the recipient to open the URI in a new window
-      or tab.
+    - `blank` signals the recipient to open the URI in a top-level
+      browsing context chosen by the receiver, such as a new window or
+      tab, or a full page navigation in the current window.
     - `iframe` signals the recipient to embed the URI in an iframe
       within its own UI, when the Sending Server allows framing by
       this receiver.
@@ -1021,11 +1031,17 @@ voluntarily.
   - OPTIONAL appIconHint (string)
     A string in the form of a media type (MIME type) that describes the
     share as a whole, primarily intended as a way for the receiving
-    server to select an appropriate icon for the share. [RFC6838]
+    server to select an appropriate local icon for the share.  This is
+    display metadata and MUST NOT be interpreted as fetchable or
+    executable content.  It does not need to appear in `mediaTypes`, but
+    SHOULD describe the primary shared resource. [RFC6838]
   - OPTIONAL mediaTypes (array of strings)
     An array of media types (MIME types) the webapp server can handle.
     This can be any media type entries from the IANA Media Type
-    registry. [RFC6838]
+    registry.  The receiver MAY use this as a hint for UI or routing
+    decisions, and MAY ignore values it does not understand.  Unlike
+    `appIconHint`, this describes formats the webapp can open rather
+    than the share-level icon hint. [RFC6838]
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
@@ -1234,19 +1250,29 @@ protocol required for access.  The procedure is as follows:
    from the intersection of `protocol.webapp.targets` and the targets
    advertised in the receiver's `webapp-receive` discovery property.
    If this intersection is empty, the receiver MUST treat the `webapp`
-   option as unusable for this Share.  The receiver MUST NOT place the
+   option as unusable for this Share.  If the selected target is
+   `blank`, the receiver MAY use `_blank` or `_top` according to its
+   local presentation policy.  The receiver MUST inspect
+   `protocol.webapp.requirements`: if it includes `must-use-mfa`, the
+   Receiving Server MUST ensure that the Receiving Party has been
+   authenticated with MFA, or prompt the consumer in order to elevate
+   their session, if applicable.  The receiver MUST NOT place the
    `protocol.webapp.sharedSecret` in the URI and MUST NOT expose it to
-   the browser.  Instead,
-   the receiver MUST first exchange it at the Sending Server's
-   {tokenEndPoint} using the Code Flow, then deliver the resulting
-   bearer token to the web app via an HTTP POST to
+   the browser.  Instead, the receiver MUST first exchange it at the
+   Sending Server's {tokenEndPoint} using the Code Flow, then deliver
+   the resulting bearer token to the web app via an HTTP POST to
    `protocol.webapp.uri` with the token carried in a form field named
    `access_token` along with another form field named
-   `expired_session_redirect_uri` that represents the location where
-   the receiving server can handle refresh of tokens.  This is typically
-   achieved with an auto-submitting HTML form whose `target` attribute
-   selects the chosen presentation (e.g. an iframe name, `_blank`, or
-   `_top`).
+   `expired_session_redirect_uri`.  The
+   `expired_session_redirect_uri` value MUST be an absolute HTTPS URI
+   controlled by the Receiving Server.  The Sending WebApp MAY navigate
+   the browser to this URI when the posted session expires so that the
+   Receiving Server can restart access and obtain a fresh token; it
+   MUST NOT place the shared secret or access token in that URI.
+   Sending WebApps that do not support session refresh MAY ignore this
+   field.  This is typically achieved with an auto-submitting HTML form whose
+   `target` attribute selects the chosen presentation (e.g. an iframe
+   name, `_blank`, or `_top`).
 
 In all cases, in case the Shared Resource is a folder and the Receiving
 Server accesses a Resource within that shared folder, it SHOULD append

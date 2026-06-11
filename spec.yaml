@@ -447,8 +447,9 @@ components:
                           The ways this endpoint is able to present a webapp
                           share to the user when acting as receiver.
                           - "blank" signals that this endpoint supports opening
-                            the URI in a new window or tab, or doing a full page
-                            redirect to the URI.
+                            the URI in a top-level browsing context, such as a
+                            new window or tab, or a full page navigation in the
+                            current window.
                           - "iframe" signals that this endpoint supports
                             embedding the URI in an iframe within its own UI,
                             when the Sending Server allows framing by this
@@ -521,10 +522,10 @@ components:
               - must-exchange-token
               - denylist
               - allowlist
-              - invite
+              - must-invite
           example:
             - allowlist
-            - invite
+            - must-invite
         publicKey:
           type: object
           deprecated: true
@@ -801,8 +802,9 @@ components:
                     How the recipient should present the URI to the user.
                     This array is REQUIRED and MUST NOT be empty: a webapp
                     share without a target is invalid.
-                    - "blank" signals the recipient to open the URI in a new window or
-                    tab, or do a full page redirect.
+                    - "blank" signals the recipient to open the URI in a top-level
+                    browsing context chosen by the receiver, such as a new window or
+                    tab, or a full page navigation in the current window.
                     - "iframe" signals the recipient to embed the URI in an iframe within
                       its own UI, when the Sending Server allows framing by the recipient.
                   items:
@@ -858,18 +860,22 @@ components:
                     an HTTP POST request to the given URI with the resulting bearer
                     token in a form field named `access_token`, along with another form
                     field named `expired_session_redirect_uri` that represents the
-                    location where the receiving server can handle refresh of tokens.
+                    absolute HTTPS URI where the receiving server can restart access
+                    to the web app when the browser session expires. Web apps that
+                    do not support session refresh MAY ignore this field.
                     The shared secret MUST
                     NOT be exposed to the browser and MUST NOT appear in any URI. In a
-                    multi-protocol share scenario with WebDAV, the access requirements
-                    provided in the `webdav` part MUST apply for `webapp` accesses as
-                    well.
+                    multi-protocol share, requirements that affect shared access policy
+                    MUST agree across the offered protocols.
                 appIconHint:
                   type: string
                   description: >
                     An optional string in the form of a media type (MIME type) that
                     describes the share as a whole, primarily intended as a way for
-                    the receiving server to select an appropriate icon for the share.
+                    the receiving server to select an appropriate local icon for the
+                    share. This is display metadata and MUST NOT be interpreted as
+                    fetchable or executable content. It does not need to appear in
+                    `mediaTypes`, but SHOULD describe the primary shared resource.
                 appName:
                   type: string
                   description: >
@@ -879,7 +885,14 @@ components:
                   type: array
                   description: >
                     An optional array that describes the media (MIME) types that the
-                    webapp server can handle.
+                    webapp server can handle. This is a hint for receiver UI and
+                    routing decisions, and receivers MAY ignore values they do not
+                    understand. Unlike `appIconHint`, this describes formats the
+                    webapp can open rather than the share-level icon hint.
+                  minItems: 1
+                  uniqueItems: true
+                  items:
+                    type: string
             ssh:
               type: object
               properties:
@@ -948,6 +961,9 @@ components:
                   - must-exchange-token
                 appName: HedgeDoc
                 appIconHint: text/markdown
+                mediaTypes:
+                  - text/markdown
+                  - text/html
               ssh:
                 accessTypes: ['datatx']
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
