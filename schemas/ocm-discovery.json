@@ -29,7 +29,7 @@
     },
     "criteria": {
       "type": "array",
-      "description": "Criteria values of 'http-request-signatures', 'must-exchange-token', 'denylist', 'allowlist', and 'invite' are defined in the draft",
+      "description": "Criteria values of 'must-use-http-sig', 'must-exchange-token', 'denylist', 'allowlist', and 'must-invite' are defined in the draft",
       "items": {
         "type": "string"
       }
