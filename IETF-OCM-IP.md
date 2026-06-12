@@ -607,8 +607,9 @@ channel, and the following rules apply:
 within its own domain, and stable for the lifetime of the Share.
 * The OCM Server MUST set the `client_id` claim of every access token it
 issues for this Share (via its `tokenEndPoint`) to exactly this value.
-This is compatible with [OCM], which leaves the value of the `client_id`
-claim at the discretion of the Sending Server.
+This constrains a value that the token profile of this document (see
+Token Issuance by the OCM Server) otherwise leaves at the OCM Server's
+discretion.
 * The `clientId` is an identifier, not a credential.  Possession of a
 `clientId` MUST NOT grant any access by itself; all front channel
 authorization derives from the verified access token.  Consequently, the
@@ -748,8 +749,8 @@ false}` and no other members.  For a valid credential the response
 object MUST contain:
 
 * `active` (boolean) - `true`.
-* `iss`, `sub`, `aud` (strings) - with the OCM claim semantics of the
-access token claims (see Token Issuance).
+* `iss`, `sub`, `aud` (strings) - with the claim semantics this document
+defines for access tokens (see Token Issuance by the OCM Server).
 * `exp` (integer) - for a JWT, the token's own `exp`; for a legacy
 `sharedSecret`, the time until which the Protocol Server may rely on
 this response.  The endpoint MUST set a short horizon (on the order of
