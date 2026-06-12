@@ -166,7 +166,7 @@ Protocol Server needs in order to serve a Share.
 OCM Server to the Protocol Server, instructing it to stop serving a
 Share and release any associated resources.
 * __Share Record__ - The Protocol Server's stored representation of a
-provisioned Share, keyed by the pair (sender domain, clientId).
+provisioned Share, keyed by the pair (sender domain, providerId).
 * __Provisioned Integration__ - The integration mode in which the OCM
 Server transfers Share information to the Protocol Server over the back
 channel, before any Resource access takes place.
@@ -181,11 +181,6 @@ Receiving Servers that do not support the Code Flow.
 * __ocm_ip Claim__ - A JWT claim, defined by this document, whose value
 is an object carrying the Share information a Protocol Server needs in
 order to serve a Share in Self-Contained Integration.
-* __clientId__ - An opaque, non-secret string chosen by the OCM Server
-that identifies a Share in the relationship between the OCM Server and
-the Protocol Server.  It links the back channel to the front channel in
-Provisioned Integration: the OCM Server MUST set the `client_id` claim
-of every access token it issues for a provisioned Share to this value.
 * __Front Channel__ - The path through which Resource access requests
 reach the Protocol Server, originating from the Receiving Server or from
 the Receiving Party's user agent, carrying a credential issued by the
@@ -285,7 +280,7 @@ at the Protocol Server.
 6. The Receiving Server exchanges the `sharedSecret` for an access token
    at the OCM Server's `tokenEndPoint`, using the Code Flow of [OCM].
 7. The OCM Server issues a signed JWT access token whose `client_id`
-   claim equals the `clientId` it provisioned in step 2.
+   claim equals the `providerId` of the Share provisioned in step 2.
 8. The Receiving Server (or the Receiving Party's user agent, depending
    on the access protocol) presents the access token to the Protocol
 Server.
@@ -416,8 +411,8 @@ private key leaving the Token Server, and token
 verification by Receiving Servers and Protocol Servers is unchanged.
 * The Token Server learns about Shares through a special case of the
 back channel: a share preparation request, by which the OCM Server sends
-the information needed for issuance (the parties, the `clientId` or the
-`ocm_ip` contents, the expiration) and receives in response a
+the information needed for issuance (the parties, the `providerId` or
+the `ocm_ip` contents, the expiration) and receives in response a
 `sharedSecret` minted by the Token Server.  The OCM Server forwards that
 secret to the Receiving Server in the Share Creation Notification,
 without needing to retain it.  The code presented in the Code Flow is
@@ -464,7 +459,7 @@ serving WebDAV and another serving a web application platform, and MAY
 provision the same Share to more than one of them when the Share offers
 multiple protocols.
 * A Protocol Server MAY be paired with multiple OCM Servers.  Share
-Records are keyed by the pair (sender domain, clientId), so records
+Records are keyed by the pair (sender domain, providerId), so records
 provisioned by different OCM Servers cannot collide and access tokens
 issued by one OCM Server cannot address records provisioned by another.
 In Self-Contained Integration the same isolation holds trivially: a
@@ -565,13 +560,10 @@ Receiving Server (see Lifecycle below),
 ### Fields
 
 The request body is the Share Creation Notification object of [OCM] that
-the OCM Server intends to send to the Receiving Server, with the
-following two transformations applied:
-
-* Every `sharedSecret` field, in every protocol entry, MUST be removed.
-The Protocol Server never receives, stores, or needs any OCM secret.
-* A `clientId` field (string) MUST be added to each protocol entry that
-this Protocol Server is responsible for serving.
+the OCM Server intends to send to the Receiving Server, with one
+transformation applied: every `sharedSecret` field, in every protocol
+entry, MUST be removed.  The Protocol Server never receives, stores, or
+needs any OCM secret.
 
 The fields used by the Protocol Server are thus:
 
@@ -583,14 +575,14 @@ Resource.  Used for identity binding on the front channel.
 * REQUIRED `shareWith` (string) - OCM Address of the Receiving Party.
 Used for identity binding on the front channel.
 * REQUIRED `providerId` (string) - as in [OCM]; opaque identifier of the
-Share at the OCM Server.
+Share at the OCM Server, unique per Share.  It keys the Share Record and
+links the back channel to the front channel (see below).
 * REQUIRED `shareType` (string) - as in [OCM].
 * REQUIRED `resourceType` (string) - as in [OCM].
 * REQUIRED `protocol` (object) - as in [OCM], transformed as described
 above.  The protocol entries carry the protocol-specific information the
 Protocol Server needs to serve the Share (for example the `webdav`
-entry's `uri` and `permissions`, or the `webapp` entry's `viewMode`),
-plus the `clientId`.
+entry's `uri` and `permissions`, or the `webapp` entry's `viewMode`).
 * OPTIONAL `name`, `description`, `ownerDisplayName`,
 `senderDisplayName`, `expiration` - as in [OCM]; informational, except
 `expiration`, which the Protocol Server SHOULD honor (see Lifecycle).
@@ -598,23 +590,24 @@ plus the `clientId`.
 Additional fields from the Share Creation Notification MAY be present
 and MUST be ignored if not understood.
 
-### The clientId
+### The providerId
 
-The `clientId` is the link between the back channel and the front
+The `providerId` is the link between the back channel and the front
 channel, and the following rules apply:
 
-* The OCM Server MUST choose a `clientId` that is unique per Share
-within its own domain, and stable for the lifetime of the Share.
+* [OCM] guarantees that the `providerId` is unique per Share, so the
+pair (sender domain, providerId) identifies exactly one Share Record.
 * The OCM Server MUST set the `client_id` claim of every access token it
-issues for this Share (via its `tokenEndPoint`) to exactly this value.
-This constrains a value that the token profile of this document (see
-Token Issuance by the OCM Server) otherwise leaves at the OCM Server's
-discretion.
-* The `clientId` is an identifier, not a credential.  Possession of a
-`clientId` MUST NOT grant any access by itself; all front channel
-authorization derives from the verified access token.  Consequently, the
-`clientId` does not need to be unguessable, and it MAY appear in URLs
-and logs.
+issues for this Share (via its `tokenEndPoint`) to exactly the
+`providerId`.  This constrains a value that the token profile of this
+document (see Token Issuance by the OCM Server) otherwise leaves at the
+OCM Server's discretion.
+* The `providerId` is an identifier, not a credential: the Receiving
+Server learns it from the Share Creation Notification anyway.
+Possession of a `providerId` MUST NOT grant any access by itself; all
+front channel authorization derives from the verified access token.
+Consequently, the `providerId` does not need to be unguessable, and it
+MAY appear in URLs and logs.
 
 ### Response
 
@@ -648,7 +641,7 @@ never by the Protocol Server.
 Fields in the response `protocol` object that the OCM Server does not
 understand MUST be ignored.
 
-A Share Provisioning Request for a (sender domain, clientId) pair that
+A Share Provisioning Request for a (sender domain, providerId) pair that
 already has a Share Record MUST replace the existing record and respond
 with HTTP status 201.  This makes provisioning idempotent and gives the
 OCM Server a way to update a Share (for example after a permissions
@@ -676,7 +669,8 @@ fields:
 * REQUIRED `sender` (string) - an OCM Address whose domain part
 identifies the paired OCM Server, subject to the same allowlist and
 signature checks as all Integration API requests.
-* REQUIRED `clientId` (string) - the `clientId` of the Share to revoke.
+* REQUIRED `providerId` (string) - the `providerId` of the Share to
+revoke.
 
 On receipt of a valid Share Revocation Request, the Protocol Server MUST
 stop serving the identified Share, MUST delete the Share Record, and
@@ -687,7 +681,7 @@ local sessions derived from its access tokens).
 ### Response
 
 Revocation MUST be idempotent: if no Share Record exists for the given
-(sender domain, clientId), the Protocol Server MUST respond with HTTP
+(sender domain, providerId), the Protocol Server MUST respond with HTTP
 status 200, so that the OCM Server can treat revocation as
 fire-and-forget.  This document defines one OPTIONAL response field:
 
@@ -755,7 +749,7 @@ defines for access tokens (see Token Issuance by the OCM Server).
 `sharedSecret`, the time until which the Protocol Server may rely on
 this response.  The endpoint MUST set a short horizon (on the order of
 minutes), since `exp` also bounds revocation latency.
-* `client_id` (string) - the Share's `clientId`, when the Share is
+* `client_id` (string) - the Share's `providerId`, when the Share is
 provisioned to the calling Protocol Server.
 * `ocm_ip` (object) - the Share information as defined for the `ocm_ip`
 claim, when the Share is not provisioned to the calling Protocol Server.
@@ -811,8 +805,7 @@ Further requirements apply per integration mode.
 
 For a Share in Provisioned Integration:
 
-* The `client_id` claim MUST equal the `clientId` of the Share
-Provisioning Request.
+* The `client_id` claim MUST equal the `providerId` of the Share.
 * The token MUST NOT carry the `ocm_ip` claim.  Mixing the modes for a
 single Share would allow a self-contained token to outlive the
 revocation of the Share Record (see Security Considerations).
@@ -1270,17 +1263,17 @@ Integration examples follow at the end.
 ## Share Provisioning Request
 
 The OCM Server pushes the Share to the Protocol Server before notifying
-the Receiving Server.  Note the absence of any `sharedSecret` and the
-presence of `clientId` (line breaks in the signature headers for display
-purposes only):
+the Receiving Server.  The body is the Share Creation Notification with
+every `sharedSecret` removed (line breaks in the signature headers for
+display purposes only):
 
 ~~~
 POST /services/ocm/shares HTTP/1.1
 Host: hub.example.org
 Date: Wed, 10 Jun 2026 14:00:00 GMT
 Content-Type: application/json
-Content-Digest: sha-256=:48jOXovcVUkbLqxbdJ/Tc6nSEUKGPUjCfWA01eT/HZw=:
-Content-Length: 612
+Content-Digest: sha-256=:hj3LWOIuryd4XbzFhoHa6YMUbhtzMdMT3e9Bxpu2Lm0=:
+Content-Length: 542
 Signature-Input: ocm=("@method" "@target-uri" "content-digest"
 "content-length" "date"); created=1781186400;
 keyid="cloud.example.org#key1"; alg="ed25519"
@@ -1305,8 +1298,7 @@ Signature: ocm=:[signature-value]:
     },
     "webapp": {
       "uri": "https://hub.example.org/services/ocm/open",
-      "viewMode": "write",
-      "clientId": "a3f81b42"
+      "viewMode": "write"
     }
   }
 }
@@ -1314,7 +1306,7 @@ Signature: ocm=:[signature-value]:
 {: type="http"}
 
 The Protocol Server stores the Share Record under (`cloud.example.org`,
-`a3f81b42`) and responds:
+`7c084226-d9a1-11e6-bf26-cec0c932ce01`) and responds:
 
 ~~~
 HTTP/1.1 201 Created
@@ -1351,7 +1343,7 @@ and the Claims Set:
   "iss": "https://cloud.example.org",
   "sub": "alice",
   "aud": "bob@receiver.example.org",
-  "client_id": "a3f81b42",
+  "client_id": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
   "iat": 1781186460,
   "exp": 1781190060,
   "jti": "f3b9c0aa-2f6e-4d57-9d24-6f0a1f6d9b11"
@@ -1374,7 +1366,8 @@ access_token=eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJFZERTQSIs...
 
 The Protocol Server verifies the JWT against
 `https://cloud.example.org/.well-known/jwks.json`, looks up the Share
-Record by (`cloud.example.org`, `a3f81b42`), checks that
+Record by (`cloud.example.org`,
+`7c084226-d9a1-11e6-bf26-cec0c932ce01`), checks that
 `alice@cloud.example.org` equals the stored `owner` and that
 `bob@receiver.example.org` equals the stored `shareWith`, and then
 starts (or resumes) the notebook session for the Share.
@@ -1389,18 +1382,22 @@ POST /services/ocm/revoke HTTP/1.1
 Host: hub.example.org
 Content-Type: application/json
 
-{ "sender": "alice@cloud.example.org", "clientId": "a3f81b42" }
+{
+  "sender": "alice@cloud.example.org",
+  "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01"
+}
 ~~~
 {: type="http"}
 
 ~~~
-HTTP/1.1 200 OK Content-Type: application/json
+HTTP/1.1 200 OK
+Content-Type: application/json
 
 { "status": "revoked" }
 ~~~
 {: type="http"}
 
-A repeated revocation for the same `clientId` returns `{ "status":
+A repeated revocation for the same `providerId` returns `{ "status":
 "gone" }` with HTTP status 200.
 
 ## Self-Contained Integration
@@ -1543,8 +1540,8 @@ JupyterHub developed at SUNET, and builds directly on the Code Flow, JWT
 access token, and HTTP Message Signature work in the Open Cloud Mesh
 specification.  Thanks to the OCM community for the discussions that
 shaped the webapp sharing design this document extends, and in
-particular to Enrique Pérez Arnaud who was invaluable in implementing
-webapp sharing in the first place.
+particular to Enrique Pérez Arnaud and Matthias Kraus who helped shape
+the format of this protocol. 
 
 Work on this document has been funded by [Sovereign Tech Agency][sta]
 through the [Tech Fund][sta-fund], with a specific [project][sta-ocm].
