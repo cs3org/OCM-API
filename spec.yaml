@@ -3,9 +3,8 @@ info:
   title: Open Cloud Mesh API
   description: >
     Open Cloud Mesh OpenAPI Specification.
-    The semantic of the Protocol Specification is detailed in the
-    [IETF-RFC.md](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md)
-    document, published at the [IETF Datatracker](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh).
+    The semantic of the Protocol Specification is detailed in the OCM Internet-Draft document
+    published at the [IETF Datatracker](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh).
   version: 1.3.0
   x-logo:
     url: logo.png
@@ -26,7 +25,7 @@ paths:
       summary: Discovery endpoint
       description: >
         Following [RFC8615], this endpoint returns the properties and
-        capabilities offered by an OCM Server. See [OCM API Discovery](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#ocm-api-discovery)
+        capabilities offered by an OCM Server. See [OCM API Discovery](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#ocm-api-discovery)
         for more details.
       responses:
         "200":
@@ -97,7 +96,7 @@ paths:
       summary: Share Creation Notification endpoint
       description: >
         This endpoint is used by a Sending Server to notify a Receiving Server that
-        a new Share has been created. See [Share Creation Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-creation-notification)
+        a new Share has been created. See [Share Creation Notification](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#share-creation-notification)
         for more details.
       requestBody:
         content:
@@ -179,7 +178,7 @@ paths:
       description: >
         This optional endpoint is used to inform the other party about a change
         that concerns a previously known entity, such as a Share or a trusted User.
-        See [Share Acceptance Notification](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#share-acceptance-notification)
+        See [Share Acceptance Notification](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#share-acceptance-notification)
         for more details.
       requestBody:
         content:
@@ -245,7 +244,7 @@ paths:
       summary: Invitation Acceptance endpoint
       description: >
         This optional endpoint is used to inform the Sender that an Invitation was accepted.
-        See [Invite flow](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-flow)
+        See [Invite flow](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#invite-flow)
         for more details.
       requestBody:
         content:
@@ -258,7 +257,7 @@ paths:
       responses:
         "200":
           description: Invitation Acceptance Request successful (see [Invite Acceptance
-            Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))
+            Response](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#invite-acceptance-response-details))
           content:
             application/json:
               schema:
@@ -266,7 +265,7 @@ paths:
         "400":
           description: The Invitation Token is invalid or does not exist (see [Invite
             Acceptance
-            Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))
+            Response](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#invite-acceptance-response-details))
           content:
             application/json:
               schema:
@@ -274,14 +273,14 @@ paths:
         "403":
           description: Invite Receiver OCM Server is not trusted to accept this Invite
             (see [Invite Acceptance
-            Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))
+            Response](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#invite-acceptance-response-details))
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "409":
           description: Invitation already accepted (see [Invite Acceptance
-            Response](https://github.com/cs3org/OCM-API/blob/develop/IETF-RFC.md#invite-acceptance-response-details))
+            Response](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#invite-acceptance-response-details))
           content:
             application/json:
               schema:
