@@ -10,7 +10,7 @@ This repository contains the text of the [Open Cloud Mesh IETF Draft](https://da
 The documents are available as follows:
 
 * **Latest official version, 1.3.0**: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.3.0&repo=OCM-API&user=cs3org)
-* Development branch: [RFC-formatted Draft](IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
+* Development branch: [Main RFC-formatted Draft](IETF-OCM.md) | [Interoperable Protocol RFC-formatted Draft](IETF-OCM-IP.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.
 
