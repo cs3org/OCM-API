@@ -101,11 +101,15 @@ secrets between the OCM Server and the Protocol Server:
 1. The OCM Server publishes its public keys at the Well-Known [RFC8615]
 path `/.well-known/jwks.json` in JWK format [RFC7517], and signs its
 server-to-server requests using HTTP Message Signatures [RFC9421].
-2. Access tokens issued by the OCM Server's token endpoint are JWTs
-conforming to the JWT Profile for OAuth 2.0 Access Tokens [RFC9068],
-signed with the OCM Server's published key.  Any party, including a
-third-party service, can verify such a token without contacting the OCM
-Server on a per-request basis.
+2. The Code Flow lets the Receiving Server exchange the `sharedSecret`
+for an access token whose format [OCM] leaves entirely at the issuer's
+discretion.
+
+OCM-IP uses that freedom: it requires the OCM Server to issue these
+access tokens as JWTs conforming to the JWT Profile for OAuth 2.0 Access
+Tokens [RFC9068], signed with the OCM Server's published key.  Any
+party, including a third-party service, can then verify such a token
+without contacting the OCM Server on a per-request basis.
 
 OCM-IP defines three integration modes that share a common authorization
 core:
@@ -406,8 +410,9 @@ of this document:
 
 * The Token Server holds its own signing keypair, and the OCM Server
 publishes the public key in its own `/.well-known/jwks.json` under a
-`kid` in its own domain.  The `iss` and `kid` rules of [OCM] are then
-satisfied without any private key leaving the Token Server, and token
+`kid` in its own domain.  The `iss` and `kid` rules of this document
+(see Token Issuance by the OCM Server) are then satisfied without any
+private key leaving the Token Server, and token
 verification by Receiving Servers and Protocol Servers is unchanged.
 * The Token Server learns about Shares through a special case of the
 back channel: a share preparation request, by which the OCM Server sends
@@ -531,7 +536,8 @@ sender domain from the part after the last `@` sign.
 Servers, and reject the request with HTTP status 401 otherwise.
 3. MUST verify the `ocm`-labeled signature against the JWKS of the
 sender domain, following the verification rules of [OCM] (single `ocm`
-label, required covered components, content-digest match, `created`
+label, required covered components, content-digest match [RFC9530],
+`created`
 within a freshness window, `keyid` domain equal to the sender domain),
 and reject the request with HTTP status 401 on any failure.
 
@@ -765,25 +771,42 @@ cached for more than a brief interval.
 
 ## Token Issuance by the OCM Server
 
-Token issuance is entirely governed by [OCM]: the Receiving Server
+Token issuance follows the Code Flow of [OCM]: the Receiving Server
 exchanges the `sharedSecret` from the Share Creation Notification for an
-access token at the OCM Server's `tokenEndPoint` using the Code Flow,
-and the issued `access_token` is a JWT conforming to [RFC9068], signed
-with a key published in the OCM Server's `/.well-known/jwks.json`.
+access token at the OCM Server's `tokenEndPoint`.  [OCM] treats the
+issued `access_token` as an opaque bearer credential and leaves its
+format at the issuer's discretion.  This document profiles that format.
 
-Recall the OCM-specific claim semantics of [OCM], which the Protocol
-Server relies on:
+For every Share in Provisioned or Self-Contained Integration, the
+`access_token` MUST be a JWT conforming to the JWT Profile for OAuth 2.0
+Access Tokens [RFC9068].  The JOSE header MUST include `typ` with the
+value set to `at+jwt` and MUST include a `kid` parameter identifying the
+OCM Server's signatory key advertised in `/.well-known/jwks.json`, and
+MUST NOT use `none` as the `alg`.  The JWT MUST be signed with the
+private key corresponding to that signatory key, allowing anyone with
+access to the corresponding public key, including a Protocol Server, to
+verify the token independently.  The `expires_in` value of the token
+response MUST agree with the `exp` claim.  Receiving Servers are
+unaffected: they continue to treat the token as opaque, per [OCM].
 
-* `iss` - the Sending Server identifier (scheme and authority).
+The JWT Claims Set MUST include the claims required by [RFC9068], with
+the following OCM-specific semantics, on which the Protocol Server
+relies:
+
+* `iss` - the Sending Server identifier, derived from the scheme and
+authority of the signatory keyId.
 * `sub` - the Share owner on the Sending Server.
 * `aud` - the OCM principal authorized by the token, i.e. the
-`shareWith` value of the Share.
-* `client_id` - in Provisioned Integration, the `clientId` of the Share,
-per this document; otherwise at the discretion of the OCM Server, per
-[OCM].
+`shareWith` value of the Share.  Per Section 4.1.3 of [RFC7519] the
+interpretation of audience values is application-specific, and this
+document defines that interpretation.
+* `client_id` - as defined in Section 4.3 of [RFC8693], which forwards
+to Section 2.2 of [RFC6749].  Verifiers MUST NOT assume a particular
+size or format beyond what this document specifies per integration
+mode.
 * `iat`, `exp`, `jti` - as in [RFC9068].
 
-This document adds the following issuance requirements.
+Further requirements apply per integration mode.
 
 For a Share in Provisioned Integration:
 
@@ -845,9 +868,9 @@ MUST authorize it as follows:
 
 1. If the credential parses as a JWT, extract the `iss` claim without
 trusting it; reject the credential if `iss` is missing or is not an
-`https` URL, and continue with step 2.  If it does not parse as a JWT —
+`https` URL, and continue with step 2.  If it does not parse as a JWT,
 or when the Protocol Server prefers introspection over local
-verification — validate the credential through Token Introspection
+verification, validate the credential through Token Introspection
 instead: an `active` response supplies the fields (`iss`, `sub`, `aud`,
 `exp`, `client_id`, `ocm_ip`) used in steps 4 to 6, and steps 2 and 3
 are skipped; an inactive response means the request is rejected.
@@ -1217,6 +1240,9 @@ Access Tokens](https://datatracker.ietf.org/doc/html/rfc9068)", October
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 
+[RFC9530] Polli, R., Marwood, D., "[Digest Fields](
+https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
+
 ## Informative References
 
 [RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
@@ -1226,8 +1252,9 @@ June 2007.
 [RFC6749] Hardt, D. (ed), "[The OAuth 2.0 Authorization Framework](
 https://datatracker.ietf.org/html/rfc6749)", October 2012.
 
-[RFC9530] Polli, R., Marwood, D., "[Digest Fields](
-https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
+[RFC8693] Jones, M., Nadalin, A., Campbell, B., Bradley, J. and
+Mortimore, C., "[OAuth 2.0 Token Exchange](
+https://datatracker.ietf.org/doc/html/rfc8693)", January 2020.
 
 # Appendix A: Examples
 
@@ -1305,8 +1332,18 @@ Server learns).
 ## Access Token
 
 When the Receiving Server performs the Code Flow at
-`https://cloud.example.org/ocm/token`, the issued JWT carries (in
-addition to the header and claims required by [RFC9068]):
+`https://cloud.example.org/ocm/token`, the issued JWT carries the JOSE
+header:
+
+~~~ json
+{
+  "typ": "at+jwt",
+  "alg": "EdDSA",
+  "kid": "cloud.example.org#key1"
+}
+~~~
+
+and the Claims Set:
 
 ~~~ json
 {
