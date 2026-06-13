@@ -54,9 +54,9 @@ individual users across federated servers and with groups on a single
 server.  The specification also defines a `shareType` of `"federation"`
 but does not further specify its semantics.  This document gives
 `"federation"` a concrete definition: a federated group identified by an
-OCM Address such as `research-group@receiver.example.org` whose membership
-spans multiple OCM servers, with group state managed through the MLS
-[RFC9420] epoch mechanism.
+OCM Address such as `research-group@receiver.example.org` whose
+membership spans multiple OCM servers, with group state managed through
+the MLS [RFC9420] epoch mechanism.
 
 In many Enterprise File Sync and Share (EFSS) systems, which constitute
 the vast majority of all OCM Servers, there is a tight coupling between
