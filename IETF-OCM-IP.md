@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh Integration Protocol'
-docname: draft-nordin-ocm-integration-protocol-00
+docname: draft-nordin-ocm-integration-protocol-01
 category: std
 
 ipr: trust200902
