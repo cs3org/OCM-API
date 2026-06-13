@@ -5,12 +5,12 @@
 
 # Open Cloud Mesh Protocol Specification
 
-This repository contains the text of the [Open Cloud Mesh IETF Draft](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
+This repository contains the text of the [Open Cloud Mesh IETF Drafts](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
 
 The documents are available as follows:
 
-* **Latest official version, 1.3.0**: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.3.0&repo=OCM-API&user=cs3org)
-* Development branch: [Main RFC-formatted Draft](IETF-OCM.md) | [Interoperable Protocol RFC-formatted Draft](IETF-OCM-IP.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
+* **Latest official version, 1.3.0**: [RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.3.0&repo=OCM-API&user=cs3org)
+* Development branch: [Main Draft](IETF-OCM.md) | [Interoperable Protocol Draft](IETF-OCM-IP.md) | [MLS Draft](IETF-OCM-MLS.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.
 
