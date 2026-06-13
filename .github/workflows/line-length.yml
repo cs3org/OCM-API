@@ -1,4 +1,4 @@
-name: Validate I-D line length
+name: Validate I-Ds line length
 on:
   push:
     branches:
@@ -11,8 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Validate I-D line length
+      - name: Validate line length
         run: if grep -nhE '.{73,}' IETF-*.md | grep ' '; then echo "Found lines exceeding the limit"; exit -1; else echo "Validation completed successfully"; fi
 
