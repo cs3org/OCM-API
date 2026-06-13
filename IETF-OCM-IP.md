@@ -59,7 +59,10 @@ OCM-IP is a protocol between the Sending OCM Server and its Protocol
 Servers only.  The Receiving Server is not involved in, and does not
 need to be aware of, this protocol: everything it observes is
 indistinguishable from the Sending Server serving the access protocols
-itself.
+itself.  For this reason, an OCM Sending Server MAY adopt a
+different strategy to interoperate with Protocol Servers, including
+e.g. establishing trust via shared keys, without compromising
+compliance with the OCM protocol.
 
 --- middle
 
