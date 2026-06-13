@@ -1863,8 +1863,7 @@ can be useful in this context.
 [OCM] Lo Presti, G., de Jong, M.B., Baghbani, M. and Nordin, M.  "[Open
 Cloud
 Mesh](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/)",
-Work in Progress, Internet-Draft, draft-ietf-ocm-open-cloud-mesh-04,
-March 2026.
+Work in Progress, Internet-Draft.
 
 [RFC2119] Bradner, S.  "[Key words for use in RFCs to Indicate
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
