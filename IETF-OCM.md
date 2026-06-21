@@ -839,7 +839,11 @@ MUST expose the `exchange-token` capability and a `tokenEndPoint`,
 because WebApp access requires the Receiving Server to exchange
 `protocol.webapp.sharedSecret` before presenting the WebApp to the
 browser.  If the Sending Server cannot offer this code flow, it MUST NOT
-include `protocol.webapp` in the notification.
+include `protocol.webapp` in the notification.  A Sending Server MAY
+serve Web apps either from the same hosting infrastructure or from
+external servers in the same organization: to facilitate the integration
+of external servers, the RECOMMENDED reference implementation is
+described at [OCM-IP].
 
 ## Fields
 
@@ -885,8 +889,9 @@ include `protocol.webapp` in the notification.
   Server.
   In the federation case, OCM Servers MAY resolve the actual
   recipients by either querying external AAI systems, or exchanging
-  the groups' metadata between themselves.  Such exchange is out of
-  scope for this version of the this specification.
+  the groups' metadata between themselves.  For the latter, the
+  RECOMMENDED implementation is based on the MLS protocol and it is
+  described in [OCM-MLS].
   Alternatively, the Receiving Server MAY hold the federated groups'
   metadata and act as an OCM proxy, forwarding the OCM requests to
   the actual members of the federation.
@@ -903,9 +908,10 @@ include `protocol.webapp` in the notification.
   available for an efficient data transfer to the destination server.
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
-  The supported protocols are: - `webdav`, to access the data -
-  `webapp`, to access remote web applications - `ssh`, to access
-  the data via a public/private key pair.
+  The supported protocols are:
+  - `webdav`, to access the data via HTTP WebDAV.
+  - `webapp`, to access remote web applications.
+  - `ssh`, to access the data via a public/private key pair.
   Other custom protocols might be added in the future.
   In case a single protocol is offered, there are three ways to
   specify this object:
@@ -1623,6 +1629,18 @@ https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
 [RFC9553] Stepanek, R., Loffredo, M., "[JSContact: A JSON
 Representation of Contact Data](
 https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
+
+## Informative References
+
+[OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open
+Cloud Mesh Integration
+Protocol](https://datatracker.ietf.org/doc/draft-nordin-ocm-integration-protocol/)",
+Work in Progress, Internet-Draft.
+
+[OCM-MLS] Nordin, M., Lo Presti, G., and Baghbani, M. "[Federated
+Groups in Open Cloud Mesh using Messaging Layer
+Security](https://datatracker.ietf.org/doc/draft-nordin-ocm-mls-federated-groups/)",
+Work in Progress, Internet-Draft.
 
 
 # Appendix A: Multi-factor Authentication
