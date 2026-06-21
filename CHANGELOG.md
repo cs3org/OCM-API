@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.4.0] - 2026-06-23 - Giuseppe Lo Presti <lopresti@cern.ch>
+
+* Introduced a `/request-share` endpoint to request a user of an
+  OCM server to share a resource.
+* Refactored the `webapp` protocol to align it to the new security
+  standard, by means of POST requests and the Code Flow.
+* Introduced new `<protocol>-receive` protocols in the Discovery
+  endpoint, to signal the ability to receive an OCM share carrying
+  that protocol.
+* Introduced new Internet-Draft specifications to cover optional
+  parts of the protocol related to webapp integrations and federated
+  groups.
+* Renamed some requirements and criteria to improve consistency.
+* On a Share Creation Notification, made the `sharedSecret`
+  a required parameter for all protocol payloads that specify it.
+* Fixed all example URIs to use `example.org` across the spec.
+* Improved the JWKS-related text and fixed obsoleted references.
+* Removed the already deprecated `/ocm-provider` endpoint and the
+  draft-cavage public key advertisement in the OCM Discovery endpoint
+  as all known implementations have migrated to the recommended
+  alternatives.
+
 ## [1.3.0] - 2026-01-20 - Micke Nordin <kano@sunet.se>
 
 * First edition of the draft after IETF Working Group adoption.
