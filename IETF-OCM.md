@@ -663,7 +663,7 @@ contain the following information about its OCM API:
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at
   this endpoint
 * REQUIRED: apiVersion (string) - The OCM API version this endpoint
-  supports.  Example: `"1.3.0"`
+  supports.  Example: `"1.4.0"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at
   this endpoint.  Example: `"https://cloud.example.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
@@ -2230,6 +2230,27 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
+## Version 05
+* Introduced a `/request-share` endpoint to request a user of an
+  OCM server to share a resource.
+* Refactored the `webapp` protocol to align it to the new security
+  standard, by means of POST requests and the Code Flow.
+* Introduced new `<protocol>-receive` protocols in the Discovery
+  endpoint, to signal the ability to receive an OCM share carrying
+  that protocol.
+* Introduced new Internet-Draft specifications to cover optional
+  parts of the protocol related to webapp integrations and federated
+  groups.
+* Renamed some requirements and criteria to improve consistency.
+* On a Share Creation Notification, made the `sharedSecret`
+  a required parameter for all protocol payloads that specify it.
+* Fixed all example URIs to use `example.org` across the spec.
+* Improved the JWKS-related text and fixed obsoleted references.
+* Removed the already deprecated `/ocm-provider` endpoint and the
+  draft-cavage public key advertisement in the OCM Discovery endpoint
+  as all known implementations have migrated to the recommended
+  alternatives.
+
 ## Version 04
 * Clarified that the diagrams in Appendix D are illustrative and
   not normative.
@@ -2242,7 +2263,6 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Added the _Changes_ section.
 
 ## Version 01
-
 * Introduced functions, roles, and object models to the specification.
 * Added support for SSH as a share access method.
 * Introduced `accessType` property in shares and removed the datatx
