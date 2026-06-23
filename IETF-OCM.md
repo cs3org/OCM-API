@@ -843,7 +843,7 @@ include `protocol.webapp` in the notification.  A Sending Server MAY
 serve Web apps either from the same hosting infrastructure or from
 external servers in the same organization: to facilitate the integration
 of external servers, the RECOMMENDED reference implementation is
-described at [OCM-IP].
+described in [OCM-IP].
 
 ## Fields
 

@@ -9,8 +9,8 @@ This repository contains the text of the [Open Cloud Mesh IETF Drafts](https://d
 
 The documents are available as follows:
 
-* **Latest official version, 1.3.0**: [RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.3.0&repo=OCM-API&user=cs3org)
-* Development branch: [Main Draft](IETF-OCM.md) | [Interoperable Protocol Draft](IETF-OCM-IP.md) | [MLS Draft](IETF-OCM-MLS.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
+* **Latest official version, 1.4.0**: [Main RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.4.0/IETF-OCM.md) | [Integration Protocol RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.4.0/IETF-OCM-IP.md) | [MLS RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.4.0/IETF-OCM-MLS.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.4.0&repo=OCM-API&user=cs3org)
+* Development branch: [Main RFC Draft](IETF-OCM.md) | [Integration Protocol RFC Draft](IETF-OCM-IP.md) | [MLS RFC Draft](IETF-OCM-MLS.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.
 
@@ -34,6 +34,7 @@ The history of the Open Cloud Mesh project is [available here](HISTORY.md), incl
 
 Previously released versions ([changelog](CHANGELOG.md)):
 
-* Version 1.2.0: [RFC-formatted Draft](https://github.com/cs3org/OCM-API/blob/v1.2.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.0&repo=OCM-API&user=cs3org)
+* Version 1.3.0: [RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.3.0&repo=OCM-API&user=cs3org)
+* Version 1.2.0: [RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.2.0/IETF-RFC.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.2.0&repo=OCM-API&user=cs3org)
 * Version 1.1.0: [README](https://github.com/cs3org/OCM-API/blob/v1.1.0/README.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.1.0&repo=OCM-API&user=cs3org)
 * Version 1.0.0: [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.0.0&repo=OCM-API&user=cs3org)
