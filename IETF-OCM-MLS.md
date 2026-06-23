@@ -641,7 +641,7 @@ takeover time T MAY be generous, for example several hours.  Loose time
 synchronisation between servers is sufficient and is already assumed by
 MLS for leaf node lifetimes ([RFC9420] Section 7.2).
 
-## MLS Notification Types
+## MLS Notification Types {#mls-notification-types}
 
 All MLS group lifecycle messages are sent as OCM Notifications to
 `<endPoint>/notifications` using HTTP POST with `Content-Type:
@@ -1832,6 +1832,42 @@ defined in [RFC9420] Section 17.3:
 - Message(s): GC
 - Recommended: N
 - Reference: This document
+
+The following notification types are to be registered in the "OCM
+Notification Types" registry defined in [OCM], within the "Open Cloud
+Mesh (OCM) Parameters" group.  All are group-scoped and therefore omit
+the "providerId" field (see {{mls-notification-types}}):
+
+~~~
+   +===================+=======+========+===============+
+   | Notification Type | Scope | Status | Reference     |
+   +===================+=======+========+===============+
+   | MLS_WELCOME       | Group | active | This document |
+   | MLS_PROPOSAL      | Group | active | This document |
+   | MLS_COMMIT        | Group | active | This document |
+   | MLS_APPLICATION   | Group | active | This document |
+   | MLS_REJOIN        | Group | active | This document |
+   +===================+=======+========+===============+
+~~~
+
+The following share payload tuples are to be registered in the "OCM
+Share Payloads" registry defined in [OCM], within the "Open Cloud Mesh
+(OCM) Parameters" group.  The complete share payload for federated
+shares is specified by this document together with [OCM] (see
+{{share-creation}}):
+
+~~~
+   +===============+============+==========+===============+
+   | Resource Type | Share Type | Protocol | Reference     |
+   +===============+============+==========+===============+
+   | file          | federation | webdav   | This document |
+   | file          | federation | webapp   | This document |
+   | file          | federation | ssh      | This document |
+   | folder        | federation | webdav   | This document |
+   | folder        | federation | webapp   | This document |
+   | folder        | federation | ssh      | This document |
+   +===============+============+==========+===============+
+~~~
 
 # Open Issues
 

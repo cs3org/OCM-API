@@ -834,6 +834,17 @@ If the Receiving Server does not advertise `must-exchange-token` in its
 `criteria`, the Sending Server MAY still include `must-exchange-token`
 voluntarily.
 
+The Sending Server MUST NOT create a share for a combination of
+resource type, share type, and protocol that the Receiving Server does
+not advertise in its Discovery response.  Specifically, for the
+share's `resourceType` and `shareType`, and for each protocol offered
+in the `protocol` object, the Receiving Server's `resourceTypes` array
+MUST contain an entry whose `name` equals the `resourceType`, whose
+`shareTypes` array contains the `shareType`, and whose `protocols`
+object contains that protocol's `-receive` property.  Each such
+combination corresponds to an entry in the "OCM Share Payloads"
+registry (see [IANA Considerations](#iana-considerations)).
+
 When the notification includes `protocol.webapp`, the Sending Server
 MUST expose the `exchange-token` capability and a `tokenEndPoint`,
 because WebApp access requires the Receiving Server to exchange
@@ -895,11 +906,15 @@ described in [OCM-IP].
   Alternatively, the Receiving Server MAY hold the federated groups'
   metadata and act as an OCM proxy, forwarding the OCM requests to
   the actual members of the federation.
+  Registered values are listed in the "OCM Share Types" registry
+  (see [IANA Considerations](#iana-considerations)).
 * REQUIRED resourceType (string)
   Resource type (file, folder, calendar, contact, ...).  If the
   Resource is a folder, implementations SHOULD advertise it as
   `folder` rather than `file`, in order to streamline the processing
   by the Receiving Server.
+  Registered values are listed in the "OCM Resource Types" registry
+  (see [IANA Considerations](#iana-considerations)).
 * OPTIONAL expiration (integer)
   The expiration time for the OCM share, in seconds
   of UTC time since Unix epoch.  If omitted, it is assumed that the
@@ -913,6 +928,10 @@ described in [OCM-IP].
   - `webapp`, to access remote web applications.
   - `ssh`, to access the data via a public/private key pair.
   Other custom protocols might be added in the future.
+  Registered protocol values are listed in the "OCM Protocols"
+  registry, and the valid resource-type/share-type/protocol
+  combinations in the "OCM Share Payloads" registry (see
+  [IANA Considerations](#iana-considerations)).
   In case a single protocol is offered, there are three ways to
   specify this object:
   Option 1: Set the `name` field to the name of the protocol,
@@ -1178,6 +1197,8 @@ Receiving Server MAY make a HTTP POST request
   Notification it MUST be one of:
   - 'SHARE_ACCEPTED'
   - 'SHARE_DECLINED'
+  Registered values are listed in the "OCM Notification Types"
+  registry (see [IANA Considerations](#iana-considerations)).
 * REQUIRED providerId (string) - copied from the Share Creation
   Notification for the Share this notification is about
 * OPTIONAL resourceType (string) - copied from the Share Creation
@@ -1535,6 +1556,164 @@ Values" registry (using the template from [RFC9553]).
    |--------------|------------------------------------------|
 ~~~
 
+## Open Cloud Mesh Parameters Registry Group
+
+IANA is requested to create a new registry group titled "Open Cloud
+Mesh (OCM) Parameters", containing the registries defined in the
+following subsections.  Unless stated otherwise, the registration
+policy for each registry in this group is "Specification Required"
+[RFC8126].  The Designated Expert SHOULD verify that a requested entry
+is documented in a stable, publicly available specification and that it
+does not duplicate an existing entry.
+
+## OCM Resource Types Registry
+
+IANA is requested to create the "OCM Resource Types" registry in the
+"Open Cloud Mesh (OCM) Parameters" group.  This registry records the
+resource type values used both in the "resourceType" field of a
+[Share Creation Notification](#share-creation-notification) and in the
+"name" field of each entry in the "resourceTypes" array advertised by
+the [OCM API Discovery](#ocm-api-discovery) endpoint.
+
+   Registration Policy: Specification Required [RFC8126]
+
+   Initial Contents:
+
+~~~
+   +===============+=====================+===============+
+   | Resource Type | Description         | Reference     |
+   +===============+=====================+===============+
+   | file          | A single file       | This document |
+   | folder        | A folder/collection | This document |
+   +===============+=====================+===============+
+~~~
+
+## OCM Protocols Registry
+
+IANA is requested to create the "OCM Protocols" registry in the "Open
+Cloud Mesh (OCM) Parameters" group.  Each entry records a protocol
+property name that MAY appear in the "protocols" object advertised by
+the [OCM API Discovery](#ocm-api-discovery) endpoint or in the
+"protocol" object of a
+[Share Creation Notification](#share-creation-notification).
+
+A property whose "Role" is "send" (e.g. "webdav") advertises support
+for the Sending Server role in Discovery and is the value used in the
+share "protocol" object.  Its "-receive" suffixed counterpart (e.g.
+"webdav-receive"), whose "Role" is "receive", advertises support for
+the Receiving Server role in Discovery.  Which protocols MAY be used
+for a given resource type and share type is governed by the
+[OCM Share Payloads](#ocm-share-payloads-registry) registry.
+
+   Registration Policy: Specification Required [RFC8126]
+
+   Initial Contents:
+
+~~~
+   +================+=========+===============+
+   | Property       | Role    | Reference     |
+   +================+=========+===============+
+   | webdav         | send    | This document |
+   | webdav-receive | receive | This document |
+   | webapp         | send    | This document |
+   | webapp-receive | receive | This document |
+   | ssh            | send    | This document |
+   | ssh-receive    | receive | This document |
+   +================+=========+===============+
+~~~
+
+## OCM Share Types Registry
+
+IANA is requested to create the "OCM Share Types" registry in the
+"Open Cloud Mesh (OCM) Parameters" group.  Each entry records a share
+type that MAY appear in the "shareTypes" array advertised by the
+[OCM API Discovery](#ocm-api-discovery) endpoint or in the "shareType"
+field of a [Share Creation Notification](#share-creation-notification).
+
+   Registration Policy: Specification Required [RFC8126]
+
+   Initial Contents:
+
+~~~
+   +============+===============+
+   | Share Type | Reference     |
+   +============+===============+
+   | user       | This document |
+   | group      | This document |
+   | federation | This document |
+   +============+===============+
+~~~
+
+## OCM Share Payloads Registry
+
+IANA is requested to create the "OCM Share Payloads" registry in the
+"Open Cloud Mesh (OCM) Parameters" group.  Each entry records a
+combination of resource type, share type, and protocol for which a
+complete share payload is specified, together with a reference to the
+document that specifies that payload.
+
+The values in the "Resource Type", "Share Type", and "Protocol"
+columns MUST already appear in the "OCM Resource Types", "OCM Share
+Types", and "OCM Protocols" registries respectively.  For this
+registry, the Designated Expert MUST verify that the referenced
+specification completely specifies the share payload for the tuple,
+including every required and optional field and the full shape of the
+"protocol" details object.  A Sending Server MUST NOT send a share for
+a tuple that is not advertised by the Receiving Server in Discovery
+(see [Share Creation Notification](#share-creation-notification)).
+
+   Registration Policy: Specification Required [RFC8126]
+
+   Initial Contents:
+
+~~~
+   +===============+============+==========+===============+
+   | Resource Type | Share Type | Protocol | Reference     |
+   +===============+============+==========+===============+
+   | file          | user       | webdav   | This document |
+   | file          | user       | webapp   | This document |
+   | file          | user       | ssh      | This document |
+   | file          | group      | webdav   | This document |
+   | file          | group      | webapp   | This document |
+   | file          | group      | ssh      | This document |
+   | folder        | user       | webdav   | This document |
+   | folder        | user       | webapp   | This document |
+   | folder        | user       | ssh      | This document |
+   | folder        | group      | webdav   | This document |
+   | folder        | group      | webapp   | This document |
+   | folder        | group      | ssh      | This document |
+   +===============+============+==========+===============+
+~~~
+
+## OCM Notification Types Registry
+
+IANA is requested to create the "OCM Notification Types" registry in
+the "Open Cloud Mesh (OCM) Parameters" group.  This registry records
+the values that MAY appear in the "notificationType" field of an OCM
+notification sent to the "/notifications" endpoint (see
+[Share Acceptance Notification](#share-acceptance-notification)).
+
+The "Scope" field indicates whether the notification refers to a Share,
+in which case the "providerId" field is REQUIRED, or to a Group.  The
+"Status" field is one of "active" or "experimental".
+
+   Registration Policy: Specification Required [RFC8126]
+
+   Initial Contents:
+
+~~~
+   +===========================+=======+==============+===============+
+   | Notification Type         | Scope | Status       | Reference     |
+   +===========================+=======+==============+===============+
+   | SHARE_ACCEPTED            | Share | active       | This document |
+   | SHARE_DECLINED            | Share | active       | This document |
+   | SHARE_UNSHARED            | Share | active       | This document |
+   | REQUEST_RESHARE           | Share | experimental | This document |
+   | RESHARE_UNDO              | Share | experimental | This document |
+   | RESHARE_CHANGE_PERMISSION | Share | experimental | This document |
+   +===========================+=======+==============+===============+
+~~~
+
 # Security Considerations
 
 ## Trust
@@ -1613,6 +1792,10 @@ https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
 [RFC8032] Josefsson, S., Liusvaara, I., "[Edwards-Curve Digital
 Signature Algorithm (EdDSA)](
 https://datatracker.ietf.org/doc/html/rfc8032)", January 2017.
+
+[RFC8126] Cotton, M., Leiba, B. and Narten, T. "[Guidelines for
+Writing an IANA Considerations Section in RFCs](
+https://datatracker.ietf.org/doc/html/rfc8126)", June 2017.
 
 [RFC8174] Leiba, B. "[Ambiguity of Uppercase vs Lowercase in RFC 2119
 Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
