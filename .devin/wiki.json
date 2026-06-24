@@ -1,0 +1,135 @@
+{
+  "repo_notes": [
+    {
+      "author": "OCM maintainers",
+      "content": "This is a specification repository for Open Cloud Mesh. Normative sources are IETF-OCM.md for the main working-group draft, IETF-OCM-IP.md for the optional integration protocol companion draft, IETF-OCM-MLS.md for the optional MLS federated-groups companion draft, spec.yaml for the OpenAPI contract, and schemas/ocm-discovery.json for discovery validation. The generated IETF-*.xml files are build artifacts, not source of truth. The develop branch is in-progress; tagged releases and the changelog describe stable snapshots."
+    },
+    {
+      "author": "OCM maintainers",
+      "content": "Preserve RFC 2119 requirement language exactly. Do not weaken or restate MUST, SHOULD, or MAY as softer guidance. Treat work/ and diagrams/ as non-normative supporting material. They may explain design intent, implementation research, or proposals, but they do not define protocol requirements. If older files mention IETF-RFC.md, treat that as legacy naming; the current core draft is IETF-OCM.md. Keep the main draft, companion drafts, and OpenAPI views clearly separated."
+    }
+  ],
+  "pages": [
+    {
+      "title": "Open Cloud Mesh Specification Repository",
+      "purpose": "Provide a high-level map of the repository, including the main drafts, OpenAPI specification, JSON schema, diagrams, work-in-progress material, release history, and contribution workflow.",
+      "parent": null
+    },
+    {
+      "title": "Main OCM Internet-Draft",
+      "purpose": "Document IETF-OCM.md as the primary Open Cloud Mesh working-group draft, including its scope, core roles, terminology, and overall structure.",
+      "parent": "Open Cloud Mesh Specification Repository",
+      "page_notes": [
+        {
+          "author": "OCM maintainers",
+          "content": "Treat this page as normative. Quote or closely track requirement language when summarizing behavior. Do not invent fields, endpoints, or implementation constraints that are not present in IETF-OCM.md."
+        }
+      ]
+    },
+    {
+      "title": "OCM Flows and Discovery",
+      "purpose": "Cover the general flow, contact-establishment paths, and the discovery model from IETF-OCM.md, including /.well-known/ocm, capabilities, criteria, tokenEndPoint, and the receive-protocol advertisements.",
+      "parent": "Main OCM Internet-Draft"
+    },
+    {
+      "title": "Shares, Notifications, and Resource Access",
+      "purpose": "Document share creation, notifications, and resource-access behavior from the main draft, with emphasis on protocol payloads, requirements, permissions, and receiver behavior.",
+      "parent": "Main OCM Internet-Draft"
+    },
+    {
+      "title": "Code Flow and Security",
+      "purpose": "Explain the code-flow model, token exchange, HTTP message signatures, JWKS, MFA-related requirements, and the broader security model described in the main draft.",
+      "parent": "Main OCM Internet-Draft"
+    },
+    {
+      "title": "Request for a Share",
+      "purpose": "Document the /request-share flow introduced in version 1.4.0, including the RequestShare payload, sender and receiver expectations, and how this feature differs from ordinary share creation.",
+      "parent": "Main OCM Internet-Draft"
+    },
+    {
+      "title": "Share Lifecycle",
+      "purpose": "Document share deletion, share updating, and resharing behavior from the main draft, including lifecycle expectations beyond initial share creation.",
+      "parent": "Main OCM Internet-Draft"
+    },
+    {
+      "title": "OpenAPI Specification",
+      "purpose": "Describe spec.yaml as the machine-readable API contract, including the documented endpoints, shared schemas, and how docs.html renders the specification through ReDoc.",
+      "parent": "Open Cloud Mesh Specification Repository",
+      "page_notes": [
+        {
+          "author": "OCM maintainers",
+          "content": "Use this page for wire-format structure and endpoint summaries, but defer behavioral semantics to the IETF drafts. The OpenAPI spec complements the draft; it does not replace the normative prose."
+        }
+      ]
+    },
+    {
+      "title": "JSON Schemas",
+      "purpose": "Document schemas/ocm-discovery.json and explain how it relates to discovery behavior, OpenAPI structures, and the normative discovery section in the main draft.",
+      "parent": "OpenAPI Specification"
+    },
+    {
+      "title": "OCM Integration Protocol",
+      "purpose": "Document IETF-OCM-IP.md as the companion draft for delegating protocol-specific work to external services such as WebDAV, SSH, or web application platforms.",
+      "parent": "Open Cloud Mesh Specification Repository",
+      "page_notes": [
+        {
+          "author": "OCM maintainers",
+          "content": "This is a companion draft, not the core OCM specification. Keep its requirements separate from the main draft unless the main draft explicitly depends on them."
+        }
+      ]
+    },
+    {
+      "title": "OCM MLS Federated Groups",
+      "purpose": "Document IETF-OCM-MLS.md as the companion draft for federated groups based on Messaging Layer Security, including how it extends core OCM sharing concepts.",
+      "parent": "Open Cloud Mesh Specification Repository",
+      "page_notes": [
+        {
+          "author": "OCM maintainers",
+          "content": "This is an optional companion draft. Do not present MLS support as a baseline requirement for all OCM implementations."
+        }
+      ]
+    },
+    {
+      "title": "Illustrative Diagrams",
+      "purpose": "Summarize the diagrams/ directory, including invitation flow, share-creation preflight, receiver discovery policy, resource access paths, and code-flow illustrations.",
+      "parent": "Open Cloud Mesh Specification Repository",
+      "page_notes": [
+        {
+          "author": "OCM maintainers",
+          "content": "These diagrams are explanatory and supplementary. They should help readers understand the protocol, but they must not be treated as additional normative requirements."
+        }
+      ]
+    },
+    {
+      "title": "Working Material",
+      "purpose": "Describe the work/ directory as the staging area for proposals, research, and design notes that have not yet been formalized into the released specification.",
+      "parent": "Open Cloud Mesh Specification Repository",
+      "page_notes": [
+        {
+          "author": "OCM maintainers",
+          "content": "Content under work/ is not normative. Present it as exploratory, provisional, or research-oriented material, even when it discusses realistic interop behavior."
+        }
+      ]
+    },
+    {
+      "title": "Notifications Research",
+      "purpose": "Cover work/notifications/, including cross-stack notes, examples, discrepancies, and implementation research related to the notifications surface.",
+      "parent": "Working Material"
+    },
+    {
+      "title": "Webapp Sharing Proposal",
+      "purpose": "Cover work/webapps/webapp-sharing.md as proposal material that informs the webapp sharing model and its relationship to the released specification.",
+      "parent": "Working Material"
+    },
+    {
+      "title": "CI, IETF Submission, and Releases",
+      "purpose": "Document the GitHub workflows for OpenAPI validation, line-length checks, draft-to-XML generation, and GitHub Pages publishing, including the rule that contributors edit markdown sources rather than generated XML.",
+      "parent": "Open Cloud Mesh Specification Repository"
+    },
+    {
+      "title": "Version History and Changelog",
+      "purpose": "Document the project history, release evolution, and notable protocol changes described in HISTORY.md and CHANGELOG.md, with emphasis on release milestones such as version 1.4.0.",
+      "parent": "Open Cloud Mesh Specification Repository"
+    }
+  ]
+}
