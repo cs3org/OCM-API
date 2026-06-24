@@ -1647,42 +1647,56 @@ field of a [Share Creation Notification](#share-creation-notification).
 ## OCM Share Payloads Registry
 
 IANA is requested to create the "OCM Share Payloads" registry in the
-"Open Cloud Mesh (OCM) Parameters" group.  Each entry records a
-combination of resource type, share type, and protocol for which a
-complete share payload is specified, together with a reference to the
-document that specifies that payload.
+"Open Cloud Mesh (OCM) Parameters" group.  Whereas the "OCM Resource
+Types", "OCM Share Types", and "OCM Protocols" registries record the
+identifiers advertised in Discovery, this registry records the
+wire format of the share payload itself: each entry binds a meaningful
+combination of resource type, share type, and one or more protocols to
+the document that completely specifies the wire format of the
+[Share Creation Notification](#share-creation-notification) for that
+combination.  Two implementations may agree on the Discovery
+identifiers and still fail to interoperate if the fields and structure
+of the payload are left unspecified; this registry is where that wire
+format is pinned down.
 
-The values in the "Resource Type", "Share Type", and "Protocol"
-columns MUST already appear in the "OCM Resource Types", "OCM Share
-Types", and "OCM Protocols" registries respectively.  For this
-registry, the Designated Expert MUST verify that the referenced
-specification completely specifies the share payload for the tuple,
-including every required and optional field and the full shape of the
-"protocol" details object.  A Sending Server MUST NOT send a share for
-a tuple that is not advertised by the Receiving Server in Discovery
-(see [Share Creation Notification](#share-creation-notification)).
+Every value in the "Resource Type", "Share Type", and "Protocols"
+columns MUST already appear in the corresponding "OCM Resource Types",
+"OCM Share Types", or "OCM Protocols" registry.  For each entry,
+the Designated Expert MUST verify that the referenced specification
+completely specifies the wire format of the share payload for the
+combination, including every required and optional field and the full
+shape of the "protocol" details object.
+
+The registered combinations are a constrained subset, not the full
+Cartesian product of those three registries, even though for the
+initial content the subset and the Cartesian product is the same thing.
+However, in other cases that file sharing, a protocol may only be
+meaningful for certain resource types.  A calendar event, for example,
+is usually shared over CalDAV or JMAP, not over ssh.  Other
+specifications MAY register additional combinations, including ones
+that extend an already-registered protocol to a new resource type or
+share type; doing so does not modify that protocol's own registration.
+The federation combinations are registered in this way by [OCM-MLS].
+If someone wants to specify how to share calendar events over ssh in an
+interoperable way, they can do so using this very mechanism.
+
+A Sending Server MUST NOT send a share for a combination that the
+Receiving Server does not advertise in Discovery (see
+[Share Creation Notification](#share-creation-notification)).
 
    Registration Policy: Specification Required [RFC8126]
 
    Initial Contents:
 
 ~~~
-   +===============+============+==========+===============+
-   | Resource Type | Share Type | Protocol | Reference     |
-   +===============+============+==========+===============+
-   | file          | user       | webdav   | This document |
-   | file          | user       | webapp   | This document |
-   | file          | user       | ssh      | This document |
-   | file          | group      | webdav   | This document |
-   | file          | group      | webapp   | This document |
-   | file          | group      | ssh      | This document |
-   | folder        | user       | webdav   | This document |
-   | folder        | user       | webapp   | This document |
-   | folder        | user       | ssh      | This document |
-   | folder        | group      | webdav   | This document |
-   | folder        | group      | webapp   | This document |
-   | folder        | group      | ssh      | This document |
-   +===============+============+==========+===============+
+   +===============+============+=====================+===============+
+   | Resource Type | Share Type | Protocols           | Reference     |
+   +===============+============+=====================+===============+
+   | file          | user       | webdav, webapp, ssh | This document |
+   | file          | group      | webdav, webapp, ssh | This document |
+   | folder        | user       | webdav, webapp, ssh | This document |
+   | folder        | group      | webdav, webapp, ssh | This document |
+   +===============+============+=====================+===============+
 ~~~
 
 ## OCM Notification Types Registry
