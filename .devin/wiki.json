@@ -1,0 +1,16 @@
+{
+  "repo_notes": [
+    {
+      "author": "OCM maintainers",
+      "content": "This is a specification repository for Open Cloud Mesh, not an implementation. Treat these as the normative sources, in priority order: IETF-OCM.md (the main IETF working-group draft), then spec.yaml (the OpenAPI contract) and schemas/ocm-discovery.json (discovery validation). IETF-OCM-IP.md and IETF-OCM-MLS.md are optional companion drafts. The IETF-*.xml files are generated build artifacts, not source of truth; contributors edit the markdown sources only. The develop branch is work in progress, while git tags and CHANGELOG.md describe stable released versions."
+    },
+    {
+      "author": "OCM maintainers",
+      "content": "When documenting protocol behavior, preserve RFC 2119 keywords (MUST, SHOULD, MAY) exactly and do not restate them as softer guidance. Keep the main draft, the OCM-IP and OCM-MLS companion drafts, and the OpenAPI views clearly separated, and do not present companion-draft or webapp-integration features as baseline requirements for every implementation. The OpenAPI spec and its ReDoc rendering describe API shape; defer to IETF-OCM.md for semantics. Material under work/ and diagrams/ is non-normative: it explains design intent, research, and proposals and must not be treated as protocol requirements. If older files mention IETF-RFC.md, that is legacy naming for the current IETF-OCM.md."
+    },
+    {
+      "author": "OCM maintainers",
+      "content": "Give focused coverage to: the discovery endpoint /.well-known/ocm including capabilities, criteria, tokenEndPoint, and the protocol receive advertisements such as webdav-receive, webapp-receive, and ssh-receive; establishing contact and the invite flow; share creation, share acceptance notifications, and resource access; the Code Flow, token exchange, HTTP message signatures, JWKS, and multi-factor authentication; the /request-share flow added in version 1.4.0; the webapp protocol refactor to POST requests and the Code Flow added in 1.4.0; share deletion, updating, and resharing; the Directory Service in Appendix C; and the object models in Appendix D. Note that the legacy /ocm-provider discovery endpoint was removed in 1.4.0 in favor of /.well-known/ocm. For the notifications surface, the work/notifications research and the work/webapps/webapp-sharing.md proposal are background research, not the released specification."
+    }
+  ]
+}

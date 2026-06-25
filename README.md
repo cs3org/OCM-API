@@ -5,12 +5,17 @@
 
 # Open Cloud Mesh Protocol Specification
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/cs3org/OCM-API)
+
 This repository contains the text of the [Open Cloud Mesh IETF Drafts](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/), as well as the equivalent [OpenAPI](https://github.com/OAI/OpenAPI-Specification) (fka Swagger) specification for its API rendered as HTML (by [ReDoc](https://github.com/Redocly/redoc)).
 
 The documents are available as follows:
 
 * **Latest official version, 1.4.0**: [Main RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.4.0/IETF-OCM.md) | [Integration Protocol RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.4.0/IETF-OCM-IP.md) | [MLS RFC Draft](https://github.com/cs3org/OCM-API/blob/v1.4.0/IETF-OCM-MLS.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=v1.4.0&repo=OCM-API&user=cs3org)
 * Development branch: [Main RFC Draft](IETF-OCM.md) | [Integration Protocol RFC Draft](IETF-OCM-IP.md) | [MLS RFC Draft](IETF-OCM-MLS.md) | [API spec](https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)
+
+For a navigable, AI-generated overview of this repository, see
+[DeepWiki](https://deepwiki.com/cs3org/OCM-API).
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.
 
