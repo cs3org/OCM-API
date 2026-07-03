@@ -834,16 +834,19 @@ If the Receiving Server does not advertise `must-exchange-token` in its
 `criteria`, the Sending Server MAY still include `must-exchange-token`
 voluntarily.
 
-The Sending Server MUST NOT create a share for a combination of
+The Sending Server SHOULD NOT create a share for a combination of
 resource type, share type, and protocol that the Receiving Server does
 not advertise in its Discovery response.  Specifically, for the
 share's `resourceType` and `shareType`, and for each protocol offered
 in the `protocol` object, the Receiving Server's `resourceTypes` array
-MUST contain an entry whose `name` equals the `resourceType`, whose
+SHOULD contain an entry whose `name` equals the `resourceType`, whose
 `shareTypes` array contains the `shareType`, and whose `protocols`
 object contains that protocol's `-receive` property.  Each such
 combination corresponds to an entry in the "OCM Share Payloads"
 registry (see [IANA Considerations](#iana-considerations)).
+For backwards compatibility reasons, the Sending Server MAY still send
+a share with the `file, user, webdav` combination if the Receiving
+server does not advertise it, as it MAY be assumed to be supported.
 
 When the notification includes `protocol.webapp`, the Sending Server
 MUST expose the `exchange-token` capability and a `tokenEndPoint`,
@@ -1669,34 +1672,31 @@ shape of the "protocol" details object.
 
 The registered combinations are a constrained subset, not the full
 Cartesian product of those three registries, even though for the
-initial content the subset and the Cartesian product is the same thing.
-However, in other cases that file sharing, a protocol may only be
+initial content the subset and the Cartesian product correspond.
+However, in other cases beyond file sharing, a protocol may only be
 meaningful for certain resource types.  A calendar event, for example,
 is usually shared over CalDAV or JMAP, not over ssh.  Other
 specifications MAY register additional combinations, including ones
 that extend an already-registered protocol to a new resource type or
 share type; doing so does not modify that protocol's own registration.
-The federation combinations are registered in this way by [OCM-MLS].
 If someone wants to specify how to share calendar events over ssh in an
 interoperable way, they can do so using this very mechanism.
-
-A Sending Server MUST NOT send a share for a combination that the
-Receiving Server does not advertise in Discovery (see
-[Share Creation Notification](#share-creation-notification)).
 
    Registration Policy: Specification Required [RFC8126]
 
    Initial Contents:
 
 ~~~
-   +===============+============+=====================+===============+
-   | Resource Type | Share Type | Protocols           | Reference     |
-   +===============+============+=====================+===============+
-   | file          | user       | webdav, webapp, ssh | This document |
-   | file          | group      | webdav, webapp, ssh | This document |
-   | folder        | user       | webdav, webapp, ssh | This document |
-   | folder        | group      | webdav, webapp, ssh | This document |
-   +===============+============+=====================+===============+
+   +===========+============+=====================+===================+
+   | Res. Type | Share Type | Protocols           | Reference         |
+   +===========+============+=====================+===================+
+   | file      | user       | webdav, webapp, ssh | This document     |
+   | file      | group      | webdav, webapp, ssh | This document     |
+   | file      | federation | webdav, webapp, ssh | This doc, OCM-MLS |
+   | folder    | user       | webdav, webapp, ssh | This document     |
+   | folder    | group      | webdav, webapp, ssh | This document     |
+   | folder    | federation | webdav, webapp, ssh | This doc, OCM-MLS |
+   +===========+============+=====================+===================+
 ~~~
 
 ## OCM Notification Types Registry

@@ -1850,23 +1850,6 @@ the "providerId" field (see {{mls-notification-types}}):
    +===================+=======+========+===============+
 ~~~
 
-The following entries are to be registered in the "OCM Share Payloads"
-registry defined in [OCM], within the "Open Cloud Mesh (OCM)
-Parameters" group.  They extend the existing "webdav", "webapp", and
-"ssh" protocols to the "federation" share type; the wire format of the
-share payload for these combinations is completely specified by this
-document together with [OCM] (see {{share-creation}}).  These
-registrations do not modify the protocols' own registrations:
-
-~~~
-   +===============+============+=====================+===============+
-   | Resource Type | Share Type | Protocols           | Reference     |
-   +===============+============+=====================+===============+
-   | file          | federation | webdav, webapp, ssh | This document |
-   | folder        | federation | webdav, webapp, ssh | This document |
-   +===============+============+=====================+===============+
-~~~
-
 # Open Issues
 
 This section collects open design issues and shall be removed before
