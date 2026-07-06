@@ -681,8 +681,9 @@ contain the following information about its OCM API:
     object per given `name`.
   - shareTypes (array of string) -
     The supported recipient share types.  MUST contain
-    `"user"` at a minimum, plus optionally `"group"` and
-    `"federation"`.
+    `"user"` at a minimum, plus optionally `"group"` or any
+    other value registered in the "OCM Share Types" registry
+    (see [IANA Considerations](#iana-considerations)).
     Example: `["user"]`
   - protocols (object) - The supported protocols for accessing Shared
     Resources of this type.  Implementations that offer `file`
@@ -862,10 +863,9 @@ described in [OCM-IP].
 ## Fields
 
 * REQUIRED shareWith (string)
-  OCM Address of the user, group or federation the provider
-  wants to share the Resource with.  This MUST be known
-  in advance, either via a previous Invitation or through
-  other means.
+  OCM Address of the user or group the provider wants to share the
+  Resource with.  This MUST be known in advance, either via a previous
+  Invitation or through other means.
   Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
 * REQUIRED name (string)
   Name of the Resource (file or folder).
@@ -894,23 +894,19 @@ described in [OCM-IP].
   Display name of the user that wants to share the Resource
   Example: "John Doe"
 * REQUIRED shareType (string)
-  SHOULD have a value of "user", "group", or "federation", to
-  indicate that the first part of the `shareWith` OCM Address refers
-  to a Receiving Party who is a single user of the Receiving Server,
-  a group of users at the Receiving Server, or a group of users that
-  spans multiple OCM Servers belonging to a federation as exposed by
-  a Directory Service, including at least one user at the Receiving
-  Server.
-  In the federation case, OCM Servers MAY resolve the actual
-  recipients by either querying external AAI systems, or exchanging
-  the groups' metadata between themselves.  For the latter, the
-  RECOMMENDED implementation is based on the MLS protocol and it is
-  described in [OCM-MLS].
-  Alternatively, the Receiving Server MAY hold the federated groups'
-  metadata and act as an OCM proxy, forwarding the OCM requests to
-  the actual members of the federation.
-  Registered values are listed in the "OCM Share Types" registry
-  (see [IANA Considerations](#iana-considerations)).
+  SHOULD have a value of "user" or "group", to indicate that the first
+  part of the `shareWith` OCM Address refers to a Receiving Party who
+  is a single user of the Receiving Server, or a group of users at the
+  Receiving Server.  Other values MAY be used provided they are
+  registered in the "OCM Share Types" registry (see
+  [IANA Considerations](#iana-considerations)); for example, [OCM-MLS]
+  registers the "federation" share type for a group of users that
+  spans multiple OCM Servers.
+  The Sending Server SHOULD only use a `shareType` that the Receiving
+  Server advertises for the share's `resourceType` in its Discovery
+  response, i.e. one listed in the `shareTypes` array of the matching
+  `resourceTypes` entry (see
+  [Share Creation Notification](#share-creation-notification)).
 * REQUIRED resourceType (string)
   Resource type (file, folder, calendar, contact, ...).  If the
   Resource is a folder, implementations SHOULD advertise it as
@@ -1163,11 +1159,10 @@ been shared, the Receiving Party MAY make an HTTP POST request
 ## Fields
 
 * REQUIRED owner (string)
-  OCM Address of the user who will be requested to share
-  the resource.
+  OCM Address of the user who will be requested to share the resource.
 * REQUIRED shareWith (string)
-  OCM Address of the user, group or federation that wants to
-  receive a share of the resource.
+  OCM Address of the user or group that wants to receive a share of
+  the resource.
   Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
 * REQUIRED share (string)
   A unique identifier for the resource.
@@ -1632,6 +1627,9 @@ IANA is requested to create the "OCM Share Types" registry in the
 type that MAY appear in the "shareTypes" array advertised by the
 [OCM API Discovery](#ocm-api-discovery) endpoint or in the "shareType"
 field of a [Share Creation Notification](#share-creation-notification).
+This document registers only the "user" and "group" share types; other
+specifications MAY register additional share types in this registry.
+The "federation" share type, for example, is registered by [OCM-MLS].
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -1643,7 +1641,6 @@ field of a [Share Creation Notification](#share-creation-notification).
    +============+===============+
    | user       | This document |
    | group      | This document |
-   | federation | This document |
    +============+===============+
 ~~~
 
@@ -1679,6 +1676,7 @@ is usually shared over CalDAV or JMAP, not over ssh.  Other
 specifications MAY register additional combinations, including ones
 that extend an already-registered protocol to a new resource type or
 share type; doing so does not modify that protocol's own registration.
+The federation combinations are registered in this way by [OCM-MLS].
 If someone wants to specify how to share calendar events over ssh in an
 interoperable way, they can do so using this very mechanism.
 
@@ -1687,16 +1685,14 @@ interoperable way, they can do so using this very mechanism.
    Initial Contents:
 
 ~~~
-   +===========+============+=====================+===================+
-   | Res. Type | Share Type | Protocols           | Reference         |
-   +===========+============+=====================+===================+
-   | file      | user       | webdav, webapp, ssh | This document     |
-   | file      | group      | webdav, webapp, ssh | This document     |
-   | file      | federation | webdav, webapp, ssh | This doc, OCM-MLS |
-   | folder    | user       | webdav, webapp, ssh | This document     |
-   | folder    | group      | webdav, webapp, ssh | This document     |
-   | folder    | federation | webdav, webapp, ssh | This doc, OCM-MLS |
-   +===========+============+=====================+===================+
+   +===============+============+=====================+===============+
+   | Resource Type | Share Type | Protocols           | Reference     |
+   +===============+============+=====================+===============+
+   | file          | user       | webdav, webapp, ssh | This document |
+   | file          | group      | webdav, webapp, ssh | This document |
+   | folder        | user       | webdav, webapp, ssh | This document |
+   | folder        | group      | webdav, webapp, ssh | This document |
+   +===============+============+=====================+===============+
 ~~~
 
 ## OCM Notification Types Registry
@@ -2320,7 +2316,7 @@ from a Sending Party to a Receiving Party.
                     must-exchange-token)
 * __resourceType__: Type of resource (file, folder, calendar, etc.)
 * __sender__: OCM Address of the party creating the Share
-* __shareType__: Type of recipient (user, group, federation)
+* __shareType__: Type of recipient (user, group, ...)
 * __shareWith__: OCM Address of the Receiving Party
 * __state__: Current state of the Share (accepted, pending, deleted)
 

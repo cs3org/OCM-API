@@ -51,9 +51,9 @@ capabilities for resources shared with federated groups.
 
 Open Cloud Mesh [OCM] currently supports sharing resources with
 individual users across federated servers and with groups on a single
-server.  [OCM] also defines a `shareType` of `"federation"` but does
-not further specify its semantics.  This document gives `"federation"`
-concrete semantics: a federated group identified by an
+server.  This document defines a new `shareType`, `"federation"`, and
+registers it in the "OCM Share Types" registry defined by [OCM].  A
+`"federation"` share is addressed to a federated group identified by an
 OCM Address such as `research-group@receiver.example.org` whose
 membership spans multiple OCM servers, with group state managed through
 the MLS [RFC9420] epoch mechanism.
@@ -1848,6 +1848,36 @@ the "providerId" field (see {{mls-notification-types}}):
    | MLS_APPLICATION   | Group | active | This document |
    | MLS_REJOIN        | Group | active | This document |
    +===================+=======+========+===============+
+~~~
+
+The following entry is to be registered in the "OCM Share Types"
+registry defined in [OCM], within the "Open Cloud Mesh (OCM)
+Parameters" group.  This document is the registering specification for
+the "federation" share type:
+
+~~~
+   +============+===============+
+   | Share Type | Reference     |
+   +============+===============+
+   | federation | This document |
+   +============+===============+
+~~~
+
+The following entries are to be registered in the "OCM Share Payloads"
+registry defined in [OCM], within the "Open Cloud Mesh (OCM)
+Parameters" group.  They extend the existing "webdav", "webapp", and
+"ssh" protocols to the "federation" share type; the wire format of the
+share payload for these combinations is completely specified by this
+document together with [OCM] (see {{share-creation}}).  These
+registrations do not modify the protocols' own registrations:
+
+~~~
+   +===============+============+=====================+===============+
+   | Resource Type | Share Type | Protocols           | Reference     |
+   +===============+============+=====================+===============+
+   | file          | federation | webdav, webapp, ssh | This document |
+   | folder        | federation | webdav, webapp, ssh | This document |
+   +===============+============+=====================+===============+
 ~~~
 
 # Open Issues
