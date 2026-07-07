@@ -673,8 +673,8 @@ contain the following information about its OCM API:
   Server role, with their access protocols.  Each item in this list
   MUST itself be an object containing the following fields:
   - name (string) - A supported resource type, such as file, calendar,
-    calendar, contact, etc.  Implementations MUST offer support for at
-    least one resource type: `file` is the commonly supported one, and
+    contact, etc.  Implementations MUST offer support for at least one
+    resource type: `file` is the commonly supported one, and
     other values are to be registered in the "OCM Resource Types"
     registry (see [IANA Considerations](#iana-considerations)).
     Each resource type is identified by its `name`: the list MUST NOT
