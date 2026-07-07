@@ -672,13 +672,13 @@ contain the following information about its OCM API:
   server supports in both the Sending Server role and the Receiving
   Server role, with their access protocols.  Each item in this list
   MUST itself be an object containing the following fields:
-  - name (string) - A supported resource type (file, calendar,
-    contact, ...).
-    Implementations MUST offer support for at least one
-    resource type, where `file` is the commonly supported
-    one.  Each resource type is identified by its `name`:
-    the list MUST NOT contain more than one resource type
-    object per given `name`.
+  - name (string) - A supported resource type, such as file, calendar,
+    calendar, contact, etc.  Implementations MUST offer support for at
+    least one resource type: `file` is the commonly supported one, and
+    other values are to be registered in the "OCM Resource Types"
+    registry (see [IANA Considerations](#iana-considerations)).
+    Each resource type is identified by its `name`: the list MUST NOT
+    contain more than one resource type object per given `name`.
   - shareTypes (array of string) -
     The supported recipient share types.  MUST contain
     `"user"` at a minimum, plus optionally `"group"` or any
@@ -734,11 +734,13 @@ contain the following information about its OCM API:
       key based authentication.
     - ssh-receive (object) - Advertised, as an empty object, by
       implementations that support receiving SSH shares.
-    - Any additional protocol supported for this Resource type MAY be
-      advertised here, where the value MAY correspond to
-      a top-level URI to be used for that protocol.  Similarly,
-      additional receiving capabilities for custom protocols SHOULD
-      be advertised using a `-receive` suffixed property.
+    - Any additional protocol supported for this Resource type SHOULD be
+      advertised here, where the value MAY correspond to a top-level
+      URI to be used for that protocol.  Similarly, additional receiving
+      capabilities for custom protocols SHOULD be advertised using a
+      `-receive` suffixed property.  Additional protocols are to be
+      registered in the "OCM Protocols" registry (see
+      [IANA Considerations](#iana-considerations)).
 * OPTIONAL: capabilities (array of string) - The optional capabilities
   supported by this OCM Server.
   As implementations MUST accept Share Creation Notifications
@@ -2316,7 +2318,7 @@ from a Sending Party to a Receiving Party.
                     must-exchange-token)
 * __resourceType__: Type of resource (file, folder, calendar, etc.)
 * __sender__: OCM Address of the party creating the Share
-* __shareType__: Type of recipient (user, group, ...)
+* __shareType__: Type of recipient (user, group, etc.)
 * __shareWith__: OCM Address of the Receiving Party
 * __state__: Current state of the Share (accepted, pending, deleted)
 
