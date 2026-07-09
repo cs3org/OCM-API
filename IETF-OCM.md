@@ -482,7 +482,8 @@ and a `provider`.  There are two recognized formats:
   `provider` is `cloud.example.org`, the combined string is
   `a55a966e-15c1-4cb9-a39d-4e4c54399baf@cloud.example.org`,
   which when base64url-encoded becomes
-  `YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQGNsb3VkLmV4YW1wbGUub3Jn`.
+  `YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQGNsb3VkLmV4YW1wbGUu
+  b3Jn`.
 
   When parsing an invite string, implementors MUST base64url-decode it
   (accepting the string whether or not padding is present), then split
@@ -1784,13 +1785,13 @@ https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 
 ## Informative References
 
-[OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open
-Cloud Mesh Integration
+[OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open Cloud Mesh
+Integration
 Protocol](https://datatracker.ietf.org/doc/draft-nordin-ocm-integration-protocol/)",
 Work in Progress, Internet-Draft.
 
-[OCM-MLS] Nordin, M., Lo Presti, G., and Baghbani, M. "[Federated
-Groups in Open Cloud Mesh using Messaging Layer
+[OCM-MLS] Nordin, M., Lo Presti, G., and Baghbani, M. "[Federated Groups
+in Open Cloud Mesh using Messaging Layer
 Security](https://datatracker.ietf.org/doc/draft-nordin-ocm-mls-federated-groups/)",
 Work in Progress, Internet-Draft.
 
