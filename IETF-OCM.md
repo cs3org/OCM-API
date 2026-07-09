@@ -358,7 +358,7 @@ Share Creation Notification from an unknown Sending Party is received
 
 Whereas the precise syntax of the Invite Message and the Invite
 Acceptance Gesture will differ between implementations, the Invite
-Acceptance Request SHOULD be a HTTP POST request:
+Acceptance Request MUST be a HTTP POST request:
 
 * to the `/invite-accepted` path in the Invite Sender OCM Server's OCM
   API
@@ -431,10 +431,10 @@ A 403 response status means the Invite Receiver OCM Server is not
 trusted to accept this Invite.
 A 409 response status means the Invite was already accepted.
 
-The Invite Sender OCM Server SHOULD verify the HTTP Signature on the
-Invite Acceptance Request and apply its own policies for trusting the
-Invite Receiver OCM Server before processing the Invite Acceptance
-Request and sending the Invite Acceptance Response.
+The Invite Sender OCM Server MUST verify the HTTP Signature on the
+Invite Acceptance Request, and SHOULD apply its own policies for
+trusting the Invite Receiver OCM Server, before processing the Invite
+Acceptance Request and sending the Invite Acceptance Response.
 
 As with the `userID` in the Invite Acceptance Request, the one in the
 Response also doesn't need to be human-memorable, doesn't need to match
@@ -1102,7 +1102,8 @@ notification that this happened.
 # Request for a Share
 
 If the Receiving Party knows of a resource that has not yet
-been shared, the Receiving Party MAY make an HTTP POST request
+been shared, the Receiving Party MAY request that it be shared.
+Such a Request for a Share MUST be an HTTP POST request
 
 * to the `/request-share` path in the Sending Server's OCM API
 * using `application/json` as the `Content-Type` HTTP request
@@ -1123,6 +1124,9 @@ been shared, the Receiving Party MAY make an HTTP POST request
 * REQUIRED share (string)
   A unique identifier for the resource.
   Example: 1234567890abcdef or https://cloud.example.org/files/data.txt
+
+The Sending Server MUST verify the HTTP Signature on the Request for a
+Share before acting on it.
 
 After receiving a request for a Share, the Sending Party MAY
 send a Share Creation Notification to the Receiving Party
