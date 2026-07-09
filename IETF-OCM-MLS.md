@@ -137,6 +137,12 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 [RFC2119] [RFC8174] when, and only when, they appear in all capitals, as
 shown here.
 
+Unless stated otherwise, every base64 encoded value this document,
+including MLS wire-format messages, KeyPackages, `group_id` values, and
+wrapped keys, is encoded using base64url (the URL- and filename-safe
+alphabet defined in [RFC4648], Section 5) with padding omitted.  A
+decoder MUST accept such a value whether or not padding is present.
+
 This document uses terminology from [OCM] and [RFC9420].  Additional
 definitions:
 
@@ -402,8 +408,8 @@ Response:
   "keyPackages": [
     {
       "mediaType": "message/mls",
-      "encoding": "base64",
-      "content": "<base64-encoded MLS KeyPackage>"
+      "encoding": "base64url",
+      "content": "<base64url-encoded MLS KeyPackage>"
     }
   ]
 }
@@ -671,7 +677,7 @@ that requirement: `providerId` is REQUIRED only for notification types
 that refer to a Share, and the MLS notification types omit it.  All
 MLS-specific parameters are carried inside the `notification` object
 that [OCM] provides for type-specific parameters.  The `mlsGroupId`
-field carries the base64-encoded MLS `group_id` as advisory routing
+field carries the base64url-encoded MLS `group_id` as advisory routing
 information, used to dispatch the message to the right group state
 without parsing the MLS message; the authoritative `group_id` is the one
 inside the MLS message itself, and a mismatch between the two MUST be
@@ -704,9 +710,9 @@ added user.
 {
   "notificationType": "MLS_WELCOME",
   "notification": {
-    "mlsGroupId": "<base64 MLS group ID>",
+    "mlsGroupId": "<base64url MLS group ID>",
     "userId": "bob@othercloud.example.org",
-    "content": "<base64 MLS Welcome wire format>"
+    "content": "<base64url MLS Welcome wire format>"
   }
 }
 ~~~
@@ -744,8 +750,8 @@ act on it.
 {
   "notificationType": "MLS_PROPOSAL",
   "notification": {
-    "mlsGroupId": "<base64 MLS group ID>",
-    "content": "<base64 MLS PublicMessage carrying the Proposal>"
+    "mlsGroupId": "<base64url MLS group ID>",
+    "content": "<base64url MLS PublicMessage carrying the Proposal>"
   }
 }
 ~~~
@@ -772,9 +778,9 @@ data, per [RFC9420] Section 15.2.
 {
   "notificationType": "MLS_COMMIT",
   "notification": {
-    "mlsGroupId": "<base64 MLS group ID>",
-    "proposals": ["<base64 MLS PublicMessage carrying a Proposal>"],
-    "content": "<base64 MLS PublicMessage carrying the Commit>"
+    "mlsGroupId": "<base64url MLS group ID>",
+    "proposals": ["<base64url MLS PublicMessage carrying a Proposal>"],
+    "content": "<base64url MLS PublicMessage carrying the Commit>"
   }
 }
 ~~~
@@ -818,8 +824,8 @@ epoch ([RFC9420] Section 15).
 {
   "notificationType": "MLS_APPLICATION",
   "notification": {
-    "mlsGroupId": "<base64 MLS group ID>",
-    "content": "<base64 MLS PrivateMessage wire format>"
+    "mlsGroupId": "<base64url MLS group ID>",
+    "content": "<base64url MLS PrivateMessage wire format>"
   }
 }
 ~~~
@@ -859,13 +865,13 @@ by the KeyPackage endpoint.
 {
   "notificationType": "MLS_REJOIN",
   "notification": {
-    "mlsGroupId": "<base64 MLS group ID>",
+    "mlsGroupId": "<base64url MLS group ID>",
     "keyPackages": [
       {
         "userId": "bob@othercloud.example.org",
         "mediaType": "message/mls",
-        "encoding": "base64",
-        "content": "<base64-encoded MLS KeyPackage>"
+        "encoding": "base64url",
+        "content": "<base64url-encoded MLS KeyPackage>"
       }
     ]
   }
@@ -1169,7 +1175,7 @@ array, and MAY also carry a `credentials` array ({{credential-update}}):
     {
       "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1",
       "groupId": "research-group@receiver.example.org",
-      "wrappedKey": "<base64 nonce || wrapped_file_key || tag>"
+      "wrappedKey": "<base64url nonce || wrapped_file_key || tag>"
     }
   ]
 }
@@ -1915,6 +1921,10 @@ Work in Progress, Internet-Draft.
 [RFC2119] Bradner, S.  "[Key words for use in RFCs to Indicate
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
 March 1997.
+
+[RFC4648] Josefsson, S.  "[The Base16, Base32, and Base64 Data
+Encodings](https://datatracker.ietf.org/doc/html/rfc4648)", October
+2006.
 
 [RFC7517] Jones, M., "[JSON Web Key
 (JWK)](https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
