@@ -760,6 +760,59 @@ contain the following information about its OCM API:
   provide this URL as well.
   Example: `"https://cloud.example.org/ocm/token"`.
 
+# HTTP Message Signatures
+
+A number of OCM API requests are signed "using httpsig [RFC9421]", as
+described in the respective sections.  This section specifies the
+normative requirements for producing and verifying those signatures.
+Appendix B contains a complete example.
+
+Public keys for signature verification are published in the format
+specified by [RFC7517] at the signer's `/.well-known/jwks.json`
+endpoint, if the `http-sig` capability is included in the
+[Discovery](#ocm-api-discovery) response.
+
+## Signing Requirements
+
+A signed request MUST cover at least the following Signature-Input
+components:
+
+* "@method"             - HTTP method
+* "@target-uri"         - full request URI (scheme, authority,
+                          path, query)
+* "content-digest"      - [RFC9530] digest of the body
+* "content-length"      - message size
+* "date"                - timestamp
+
+The Signature-Input parameters MUST include `created`.
+
+A request signed in the context of OCM MUST include one and only one
+signature with the label `ocm` in its Signature and Signature-Input
+headers.
+
+A symmetric signing algorithm MUST NOT be used to sign the request, as
+the Receiving Server would not be able to verify the signature without
+having access to the shared secret in advance.
+
+## Verification Requirements
+
+Verifiers MUST reject signatures that omit any of the components listed
+under Signing Requirements or the `created` parameter, and MUST reject
+signatures whose `created` value is more than a small
+implementation-defined skew tolerance in the future, or older than the
+verifier's freshness window.
+
+A `Content-Digest` header value carrying multiple algorithms MUST have
+every recognised digest match the body; a single match alongside a
+recognised mismatch MUST be treated as an integrity failure.
+
+Verifiers MUST locate the ocm-labeled entry and verify only that one.
+If multiple `ocm` signatures are present, the entire message MUST be
+rejected.  Verifiers MUST reject requests for which no ocm-labeled
+entry is present.  Other labels MAY coexist (e.g. proxy-attached
+signatures) but verifiers MUST NOT process them as part of OCM
+signature processing.
+
 # Share Creation Notification
 
 To create a Share, the Sending Server SHOULD make a HTTP POST request
@@ -1703,7 +1756,9 @@ discovery service.
 
 It is RECOMMENDED to use signed messages, "httpsig" [RFC9421], to
 verify that an OCM server is the server you expect it to be, and SHOULD
-be done unless you have a niche use case.
+be done unless you have a niche use case.  Where signatures are used,
+they MUST follow the requirements in
+[HTTP Message Signatures](#http-message-signatures).
 
 ## Legacy shared secrets
 
@@ -1781,13 +1836,13 @@ https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 
 ## Informative References
 
-[OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open
-Cloud Mesh Integration
+[OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open Cloud Mesh
+Integration
 Protocol](https://datatracker.ietf.org/doc/draft-nordin-ocm-integration-protocol/)",
 Work in Progress, Internet-Draft.
 
-[OCM-MLS] Nordin, M., Lo Presti, G., and Baghbani, M. "[Federated
-Groups in Open Cloud Mesh using Messaging Layer
+[OCM-MLS] Nordin, M., Lo Presti, G., and Baghbani, M. "[Federated Groups
+in Open Cloud Mesh using Messaging Layer
 Security](https://datatracker.ietf.org/doc/draft-nordin-ocm-mls-federated-groups/)",
 Work in Progress, Internet-Draft.
 
@@ -1902,45 +1957,16 @@ Signature-Input: ocm=("@method" "@target-uri" "content-digest"
 Signature: ocm=:[signature-value]=:
 </sourcecode>
 
-A signed request MUST cover at least the following Signature-Input
-components:
-
-  - "@method"             - HTTP method
-  - "@target-uri"         - full request URI (scheme, authority,
-                            path, query)
-  - "content-digest"      - [RFC9530] digest of the body
-  - "content-length"      - bound message size
-  - "date"                - bound clock time
-
-The Signature-Input parameters MUST include `created`.  Verifiers MUST
-reject signatures that omit any of the above components or the `created`
-parameter, and MUST reject signatures whose `created` value is more than
-a small implementation-defined skew tolerance in the future, or older
-than the verifier's freshness window.
-
-A `Content-Digest` header value carrying multiple algorithms MUST have
-every recognised digest match the body; a single match alongside a
-recognised mismatch MUST be treated as an integrity failure.
-
-A request signed in the context of OCM MUST include one and only one
-signature with the label `ocm` in its Signature and Signature-Input
-headers.
-
-A symmetric signing algorithm MUST NOT be used to sign the
-request, as the Receiving Server would not be able to verify the
-signature without having access to the shared secret in advance.
+The covered components, the `created` parameter, the single `ocm`
+label, and the prohibition on symmetric algorithms shown here are
+normative; see [HTTP Message Signatures](#http-message-signatures) for
+the full requirements.
 
 ## Verifying a Signature (Receiver)
 
-Verifiers MUST locate the ocm-labeled entry and verify only that one.
-If multiple `ocm` signatures are present, the entire message MUST be
-rejected.  Verifiers MUST reject requests for which no ocm-labeled entry
-is present.  Other labels MAY coexist (e.g. proxy-attached signatures)
-but verifiers MUST NOT process them as part of OCM signature
-processing.
-
-
-To verify an incoming signed request:
+The normative verification requirements are specified in
+[HTTP Message Signatures](#http-message-signatures).  The following
+illustrates the procedure to verify an incoming signed request:
 
 1. Extract the provider domain from the `sender` field in the
    request body
