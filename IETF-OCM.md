@@ -790,9 +790,15 @@ components:
 
 The Signature-Input parameters MUST include `created`.
 
-A request signed in the context of OCM MUST include one and only one
-signature with the label `ocm` in its Signature and Signature-Input
-headers.
+A request signed in the context of OCM MUST carry the signature
+parameter `tag="ocm"` (see Section 2.3 of [RFC9421]).  Unlike the
+signature label, which is a dictionary key that is not covered by the
+signature and MAY be rewritten in transit, the `tag` parameter is part
+of the signature base and is therefore integrity-protected.
+
+A request MUST include one and only one signature carrying
+`tag="ocm"`.  The signature label MAY be any value; it is not
+significant to OCM processing.
 
 A symmetric signing algorithm MUST NOT be used to sign the request, as
 the Receiving Server would not be able to verify the signature without
@@ -810,10 +816,13 @@ A `Content-Digest` header value carrying multiple algorithms MUST have
 every recognised digest match the body; a single match alongside a
 recognised mismatch MUST be treated as an integrity failure.
 
-Verifiers MUST locate the ocm-labeled entry and verify only that one.
-If multiple `ocm` signatures are present, the entire message MUST be
-rejected.  Verifiers MUST reject requests for which no ocm-labeled
-entry is present.  Other labels MAY coexist (e.g. proxy-attached
+Verifiers MUST identify the OCM signature by its `tag="ocm"`
+parameter, examining the parameters of each member of the
+`Signature-Input` field and disregarding the dictionary labels.
+Verifiers MUST verify only that signature.  If more than one signature
+carries `tag="ocm"`, the entire message MUST be rejected.  Verifiers
+MUST reject requests in which no signature carries `tag="ocm"`.
+Signatures without `tag="ocm"` MAY coexist (e.g. proxy-attached
 signatures) but verifiers MUST NOT process them as part of OCM
 signature processing.
 
@@ -1344,11 +1353,12 @@ Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
 Signature-Input:
-  ocm=("@method" "@target-uri" "content-digest" "date");
+  sig1=("@method" "@target-uri" "content-digest" "date");
   created=1730815200;
   keyid="receiver.example.org#key1";
-  alg="ed25519"
-Signature: ocm=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
+  alg="ed25519";
+  tag="ocm"
+Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
   2rN3qD4tR5hC=:
 
 grant_type=authorization_code&
@@ -1946,27 +1956,31 @@ breaks in @signature-params for display purposes only):
     "content-length" "date");
     created=[timestamp];
     keyid="sender.example.org#key1";
-    alg="ed25519"
+    alg="ed25519";
+    tag="ocm"
 </sourcecode>
 
 Sign this base using for example Ed25519 ([RFC8032]) to produce the
-signature, using the `ocm` label, and then add headers (line breaks
-for display purposes only):
+signature, and then add headers (line breaks for display purposes
+only).  Note that the dictionary label (`sig1` below) is arbitrary; the
+signature is marked as belonging to OCM by its `tag="ocm"` parameter,
+which is part of the signature base above:
 
 <sourcecode type="http">
 Content-Digest: sha-256=:[digest-value]:
 Content-Length: [body-length]
 Date: [date]
-Signature-Input: ocm=("@method" "@target-uri" "content-digest"
+Signature-Input: sig1=("@method" "@target-uri" "content-digest"
     "content-length" "date");
   created=[timestamp];
   keyid="sender.example.org#key1";
-  alg="ed25519"
-Signature: ocm=:[signature-value]=:
+  alg="ed25519";
+  tag="ocm"
+Signature: sig1=:[signature-value]=:
 </sourcecode>
 
 The covered components, the `created` parameter, the single `ocm`
-label, and the prohibition on symmetric algorithms shown here are
+tag, and the prohibition on symmetric algorithms shown here are
 normative; see [HTTP Message Signatures](#http-message-signatures) for
 the full requirements.
 
@@ -1980,8 +1994,9 @@ illustrates the procedure to verify an incoming signed request:
    request body
 2. Fetch the public key from
    `https://<provider-domain>/.well-known/jwks.json`
-3. Locate the unique signature with the label `ocm` in the
-   `Signature-Input` header
+3. Locate the unique signature carrying the `tag="ocm"` parameter in
+   the `Signature-Input` header, disregarding its dictionary label
+   (here `sig1`)
 4. Extract `keyid` from `Signature-Input` header and find the key
    matching the `kid` value in the [RFC7517] response
 5. Reconstruct the signature base from the request using the
