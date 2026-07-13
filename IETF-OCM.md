@@ -782,9 +782,13 @@ components:
                           path, query)
 * "content-digest"      - [RFC9530] digest of the body
 * "content-length"      - message size
-* "date"                - timestamp
 
-The Signature-Input parameters MUST include `created`.
+The Signature-Input parameters MUST include `created`.  Freshness and
+replay protection are anchored on `created` (see Verification
+Requirements).
+
+A signed request SHOULD additionally cover the `date` component when a
+`Date` header is present.
 
 A request signed in the context of OCM MUST carry the signature
 parameter `tag="ocm"` (see Section 2.3 of [RFC9421]).  Unlike the
@@ -802,11 +806,11 @@ having access to the shared secret in advance.
 
 ## Verification Requirements
 
-Verifiers MUST reject signatures that omit any of the components listed
-under Signing Requirements or the `created` parameter, and MUST reject
-signatures whose `created` value is more than a small
-implementation-defined skew tolerance in the future, or older than the
-verifier's freshness window.
+Verifiers MUST reject signatures that omit any of the mandatory
+components listed under Signing Requirements or the `created`
+parameter, and MUST reject signatures whose `created` value is more
+than a small implementation-defined skew tolerance in the future, or
+older than the verifier's freshness window.
 
 A `Content-Digest` header value carrying multiple algorithms MUST have
 every recognised digest match the body; a single match alongside a
