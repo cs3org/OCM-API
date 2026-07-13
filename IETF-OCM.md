@@ -376,7 +376,12 @@ Acceptance Request MUST be a HTTP POST request:
   - REQUIRED: `name` - Human-readable name of the Invite Receiver, as a
     suggestion for display in the Invite Sender's address book
 * using TLS
-* using httpsig [RFC9421]
+
+When HTTP Message Signatures are available, the Invite Acceptance
+Request MUST be signed and verified as described in [HTTP Message
+Signatures](#http-message-signatures).  As the Invite flow establishes
+the trust that later exchanges rely on, implementations SHOULD NOT use
+it unless signing is available.
 
 The Invite Receiver OCM Server SHOULD apply its own policies for
 trusting the Invite Sender OCM Server before making the Invite
@@ -429,10 +434,11 @@ A 403 response status means the Invite Receiver OCM Server is not
 trusted to accept this Invite.
 A 409 response status means the Invite was already accepted.
 
-The Invite Sender OCM Server MUST verify the HTTP Signature on the
-Invite Acceptance Request, and SHOULD apply its own policies for
-trusting the Invite Receiver OCM Server, before processing the Invite
-Acceptance Request and sending the Invite Acceptance Response.
+Before processing the Invite Acceptance Request and sending the Invite
+Acceptance Response, the Invite Sender OCM Server SHOULD apply its own
+policies for trusting the Invite Receiver OCM Server.  Any HTTP
+Signature on the request is verified as described in [HTTP Message
+Signatures](#http-message-signatures).
 
 As with the `userID` in the Invite Acceptance Request, the one in the
 Response also doesn't need to be human-memorable, doesn't need to match
@@ -772,6 +778,33 @@ specified by [RFC7517] at the signer's `/.well-known/jwks.json`
 endpoint, if the `http-sig` capability is included in the
 [Discovery](#ocm-api-discovery) response.
 
+## Applicability
+
+Support for HTTP Message Signatures is negotiated through the
+`http-sig` capability in the [Discovery](#ocm-api-discovery) response.
+The following rules let deployments adopt signing incrementally while
+remaining interoperable:
+
+* A Server that implements HTTP Message Signatures MUST use them when
+  interacting with another Server that advertises the `http-sig`
+  capability.
+* Such a Server MAY nonetheless continue to interact, without signing,
+  with a Server that does not advertise the `http-sig` capability, for
+  backwards compatibility.
+* A Server that implements HTTP Message Signatures MUST verify any
+  signature present on a request it receives, as specified below.
+* A Server MAY accept an unsigned request from a Server that does not
+  advertise the `http-sig` capability; a Server that advertises the
+  `must-use-http-sig` criterion MUST reject unsigned requests.
+* A Server that does not implement HTTP Message Signatures operates
+  without them.
+
+Because the [Invite Acceptance
+Request](#invite-acceptance-request-details) and [Request for a
+Share](#request-for-a-share) establish the trust that later exchanges
+rely on, implementations SHOULD NOT use those features unless HTTP
+Message Signatures are available.
+
 ## Signing Requirements
 
 A signed request MUST cover at least the following Signature-Input
@@ -827,11 +860,13 @@ Verifiers MUST identify the OCM signature by its `tag="ocm"`
 parameter, examining the parameters of each member of the
 `Signature-Input` field and disregarding the dictionary labels.
 Verifiers MUST verify only that signature.  If more than one signature
-carries `tag="ocm"`, the entire message MUST be rejected.  Verifiers
-MUST reject requests in which no signature carries `tag="ocm"`.
-Signatures without `tag="ocm"` MAY coexist (e.g. proxy-attached
-signatures) but verifiers MUST NOT process them as part of OCM
-signature processing.
+carries `tag="ocm"`, the entire message MUST be rejected.  A request
+that carries no signature with `tag="ocm"` is unsigned and is handled
+as described in Applicability (accepted only at the receiver's
+discretion, or rejected when the receiver advertises
+`must-use-http-sig`).  Signatures without `tag="ocm"` MAY coexist (e.g.
+proxy-attached signatures) but verifiers MUST NOT process them as part
+of OCM signature processing.
 
 # Share Creation Notification
 
@@ -1180,7 +1215,13 @@ Such a Request for a Share MUST be an HTTP POST request
 * its request body containing a JSON document representing an
   object with the fields as described below
 * using TLS
-* using httpsig [RFC9421]
+
+When HTTP Message Signatures are available, the Request for a Share
+MUST be signed and verified as described in [HTTP Message
+Signatures](#http-message-signatures).  As requesting access to a
+restricted resource relies on authenticating the requester,
+implementations SHOULD NOT use this feature unless signing is
+available.
 
 ## Fields
 
@@ -1194,8 +1235,9 @@ Such a Request for a Share MUST be an HTTP POST request
   A unique identifier for the resource.
   Example: 1234567890abcdef or https://cloud.example.org/files/data.txt
 
-The Sending Server MUST verify the HTTP Signature on the Request for a
-Share before acting on it.
+Any HTTP Signature on the Request for a Share is verified as described
+in [HTTP Message Signatures](#http-message-signatures) before the
+Sending Server acts on it.
 
 After receiving a request for a Share, the Sending Party MAY
 send a Share Creation Notification to the Receiving Party
