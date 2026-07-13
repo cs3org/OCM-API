@@ -794,6 +794,11 @@ Requirements).
 A signed request SHOULD additionally cover the `date` component when a
 `Date` header is present.
 
+The `content-digest` component binds the request body to the signature,
+protecting it against modification in transit.  Its value MUST use a
+hash algorithm from the IANA "Hash Algorithms for HTTP Digest Fields"
+registry [IANA-DIGEST-ALG]; implementations MUST support `sha-256`.
+
 A request signed in the context of OCM MUST carry the signature
 parameter `tag="ocm"` (see Section 2.3 of [RFC9421]).  Unlike the
 signature label, which is a dictionary key that is not covered by the
@@ -804,9 +809,11 @@ A request MUST include one and only one signature carrying
 `tag="ocm"`.  The signature label MAY be any value; it is not
 significant to OCM processing.
 
-A symmetric signing algorithm MUST NOT be used to sign the request, as
-the Receiving Server would not be able to verify the signature without
-having access to the shared secret in advance.
+The signature MUST use an asymmetric algorithm from the IANA "HTTP
+Signature Algorithms" registry [IANA-SIG-ALG]; `ed25519` [RFC8032] is
+RECOMMENDED.  A symmetric algorithm, such as the HMAC-based
+`hmac-sha256`, MUST NOT be used, as the Receiving Server would not be
+able to verify the signature without prior access to the shared secret.
 
 ## Verification Requirements
 
@@ -1802,6 +1809,12 @@ author, version, name of work, or endorsement information.
 # References
 
 ## Normative References
+
+[IANA-DIGEST-ALG] IANA, "[Hash Algorithms for HTTP Digest Fields](
+https://www.iana.org/assignments/http-digest-hash-alg/http-digest-hash-alg.xhtml)".
+
+[IANA-SIG-ALG] IANA, "[HTTP Signature Algorithms](
+https://www.iana.org/assignments/http-message-signature/http-message-signature.xhtml#signature-algorithms)".
 
 [RFC2119] Bradner, S. "[Key words for use in RFCs to Indicate
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
