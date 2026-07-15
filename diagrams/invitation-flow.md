@@ -31,7 +31,7 @@ sequenceDiagram
     alt
         HTTPA ->> UserB: Send Email with Alice's Server FQDN and Token
     else
-        HTTPA ->> UserA: Raw or Base64 encoded "token@FQDN"
+        HTTPA ->> UserA: Raw or base64url encoded "token@FQDN"
         UserA ->> UserB: Aice passes token to Bob
     end
 
