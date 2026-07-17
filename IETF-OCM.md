@@ -1554,69 +1554,127 @@ a Resource without an explicit grant from the Sending Server.
 
 # IANA Considerations
 
+[RFC Editor: please replace all occurrences of "RFC XXXX" with the
+RFC number assigned to this document and remove this note.]
+
 ## Well-Known URI for the Discovery
 
 The following value is to be registered in the "Well-Known URIs"
 registry (using the template from [RFC8615]):
-   URI suffix: ocm
-   Change controller: IETF
-   Specification document(s): the present Draft, once in RFC form
-   Related information: N/A
+
+URI suffix:
+: ocm
+
+Change controller:
+: IETF
+
+Specification document(s):
+: RFC XXXX (this document)
+
+Status:
+: permanent
+
+Related information:
+: N/A
 
 ## JSContact Types Registry
 
 The following entry is to be registered in the "JSContact Types"
 registry (using the template from [RFC9553]):
-   Type Name: ocmAddress
-   Intended Usage: common
-   Since Version: 1.0
-   Until Version: N/A
-   Change Controller: IETF
-   Reference or Description:
 
-   An object representing an OCM address.  The object contains:
+Type Name:
+: ocmAddress
 
-     - "address" (String, required): The OCM federated address in format
-       "user@provider" where provider is the FQDN of an OCM-capable
-       server.
-     - "trusted" (Boolean, optional): Whether shares from this address
-       are automatically accepted.  Default: false.
-     - "source" (String, optional): How this address was established.
-       See "JSContact Enum Values" registry for allowed values.
-     - "label" (String, optional): Human-readable label for this
-       address.
+Intended Usage:
+: common
+
+Since Version:
+: 1.0
+
+Until Version:
+: N/A
+
+Change Controller:
+: IETF
+
+Reference or Description:
+: An object representing an OCM address.  The object contains:
+
+  - "address" (String, required): The OCM federated address in
+    format "user@provider" where provider is the FQDN of an
+    OCM-capable server.
+  - "trusted" (Boolean, optional): Whether shares from this address
+    are automatically accepted.  Default: false.
+  - "source" (String, optional): How this address was established.
+    See "JSContact Enum Values" registry for allowed values.
+  - "label" (String, optional): Human-readable label for this
+    address.
+
+  See RFC XXXX, [](#jscontact-types-registry).
 
 ## JSContact Properties Registry
 
 The following entry is to be registered in the "JSContact Properties"
 registry (using the template from [RFC9553]):
-   Property Name: ietf.org:ocmAddresses
-   Property Type: String[ocmAddress]
-   Property Context: Card
-   Intended Usage: common
-   Since Version: 1.0
-   Until Version: N/A
-   Change Controller: IETF
-   Reference or Description:
 
-   A map of OCM addresses for a contact.  The keys are arbitrary
-   identifiers (e.g., "primary", "work") and the values are ocmAddress
-   objects as defined in the JSContact Types Registry.
+Property Name:
+: ietf.org:ocmAddresses
+
+Property Type:
+: String[ocmAddress]
+
+Property Context:
+: Card
+
+Intended Usage:
+: common
+
+Since Version:
+: 1.0
+
+Until Version:
+: N/A
+
+Change Controller:
+: IETF
+
+Reference or Description:
+: A map of OCM addresses for a contact.  The keys are arbitrary
+  identifiers (e.g., "primary", "work") and the values are
+  ocmAddress objects as defined in the JSContact Types Registry.
+  See RFC XXXX, [](#jscontact-properties-registry).
 
 ## JSContact Enum Values Registry
 
-The following entries are to be registered in the "JSContact Enum
-Values" registry (using the template from [RFC9553]).
-   Property Name: ietf.org:ocmAddresses/source
-   Context: Card
-   Since Version: 1.0
-   Until Version: N/A
-   Change Controller: IETF
-   Reference or Description:
+The following entry is to be registered in the "JSContact Enum
+Values" registry (using the template from [RFC9553]):
 
-   Values indicating how an OCM address was established.
+Property Name:
+: ietf.org:ocmAddresses/source
 
-   Initial Contents:
+Context:
+: Card
+
+Since Version:
+: 1.0
+
+Until Version:
+: N/A
+
+Change Controller:
+: IETF
+
+Reference or Description:
+: Values indicating how an OCM address was established.  See
+  RFC XXXX, [](#jscontact-enum-values-subregistry).
+
+### JSContact Enum Values Subregistry
+
+IANA will create a subregistry for "ietf.org:ocmAddresses/source"
+(Context: Card) in accordance with [RFC9553], Section 3.7.2.  All
+entries in the initial contents below have a Since Version of 1.0,
+no Until Version, and IETF as the Change Controller.  Initial
+contents:
 
 ~~~
    +==============+==========================================+
@@ -2486,6 +2544,13 @@ This section collects the changes with respect to the previous
 version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 06
+* Addressed the IANA early review: added the Status field to the
+  Well-Known URI registration, added section references to the
+  JSContact registrations, moved the creation of the JSContact enum
+  values subregistry to a dedicated subsection, and reformatted the
+  registration templates so each field renders on its own line.
 
 ## Version 05
 * Introduced a `/request-share` endpoint to request a user of an
