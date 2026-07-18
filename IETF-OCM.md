@@ -2546,6 +2546,15 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 06
+* Introduced IANA Registries for resource types, protocols, share
+  types, and share payloads, and populated them with all relevant
+  values defined in this document.
+* Moved the `federation` share type definition along with the
+  corresponding share payload description to the [OCM-MLS] Draft.
+* Improved the http-sig related text, and promoted it from an
+  appendix to a normative section. In addition, made the use of
+  http-sig a MUST for implementations that offer it as capability.
+* Sorted the Terms and removed duplicates.
 * Addressed the IANA early review: added the Status field to the
   Well-Known URI registration, added section references to the
   JSContact registrations, moved the creation of the JSContact enum

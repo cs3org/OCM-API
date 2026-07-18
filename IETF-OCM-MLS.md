@@ -1909,6 +1909,18 @@ the rejoin procedure ({{rejoin}}) is the fallback when retransmitted
 Commits can no longer be applied. The proposed OCM Journaling mechanism
 can be useful in this context.
 
+# Changes
+
+This section collects the changes with respect to the previous
+version in the IETF datatracker.  It is meant to ease the review
+process and it shall be removed when going to RFC last call.
+The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 01
+* Following the introduction of IANA Registries in Version 06 of [OCM],
+  all registry entries related to the `federation` share type have been
+  introduced in this document.
+
 # References
 
 ## Normative References
