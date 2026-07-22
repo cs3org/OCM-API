@@ -597,6 +597,9 @@ allowlisting.
 When OCM API Discovery can occur in preparation of a Share Creation
 Notification, the Sending Server takes on the 'Discovering Server' role
 and the Receiving Server plays the role of 'Discoverable Server'.
+For a navigation index of discovery fields, capabilities, and related
+informative aids, see [Appendix E: Navigation
+Index](#appendix-e-navigation-index).
 
 ## Process
 
@@ -747,6 +750,10 @@ contain the following information about its OCM API:
   OCM Server advertising this criterium MUST also expose the
   `exchange-token` capability.  See the [Code Flow](#code-flow)
   section.
+  _Informative:_ The string `must-exchange-token` also appears in
+  `protocol.*.requirements[]` on outbound shares.  The binding between
+  receiver `criteria[]` and sender `requirements[]` is defined in
+  [Share Creation Notification](#share-creation-notification).
   - `"denylist"` - some servers MAY be blocked based on their IP
   address
   - `"allowlist"` - unknown servers MAY be blocked based on their IP
@@ -871,6 +878,39 @@ discretion, or rejected when the receiver advertises
 `must-use-http-sig`).  Signatures without `tag="ocm"` MAY coexist (e.g.
 proxy-attached signatures) but verifiers MUST NOT process them as part
 of OCM signature processing.
+
+## Signing Direction Index
+
+_This subsection is informative._  HTTP Message Signatures apply only
+when the peer advertises the `http-sig` capability; a
+`must-use-http-sig` criterion makes signing mandatory for inbound
+traffic.  When signing is
+in play, the signer and verifier roles are:
+
+* **Share Creation Notification** (`POST /shares`) - the Sending
+  Server signs; the Receiving Server verifies.  See
+  [Share Creation Notification](#share-creation-notification),
+  [Decision to Discard](#decision-to-discard), and [HTTP Message
+  Signatures](#http-message-signatures).
+* **Token Request** (`POST {tokenEndPoint}`) - the Receiving Server
+  signs; the Sending Server verifies.  See [Token
+  Request](#token-request), [Token Response](#token-response), and
+  [HTTP Message Signatures](#http-message-signatures).
+* **Invite Acceptance** (`POST /invite-accepted`) - the Invite Receiver
+  signs; the Invite Sender verifies.  See [Invite Flow](#invite-flow)
+  and [HTTP Message Signatures](#http-message-signatures).
+* **Request for a Share** (`POST /request-share`) - the Requesting
+  Server signs; the Requested Server verifies.  See [Request for a
+  Share](#request-for-a-share) and [HTTP Message
+  Signatures](#http-message-signatures).
+* **Share Acceptance Notification** (`POST /notifications`) - the
+  Receiving Server signs; the Sending Server verifies.  See [Share
+  Acceptance Notification](#share-acceptance-notification) and [HTTP
+  Message Signatures](#http-message-signatures).
+* **Sender-initiated Notification** (`POST /notifications`) - the
+  Sending Server SHOULD sign; the Receiving Server verifies.  See
+  [Share Acceptance Notification](#share-acceptance-notification) and
+  [HTTP Message Signatures](#http-message-signatures).
 
 # Share Creation Notification
 
@@ -2385,7 +2425,7 @@ that section.
 
 * __apiVersion__: Version string of supported OCM API
 * __capabilities__: Optional features supported
-* __criteria__: Requirements for accepting Share Creation Notifications
+* __criteria__: Criteria for accepting a Share Creation Notification
 * __enabled__: Boolean indicating if OCM service is active
 * __endPoint__: Base URI for OCM API endpoints
 * __provider__: Friendly branding name
@@ -2538,6 +2578,31 @@ to model a few key properties.
 * __type__: Type of Resource (file, folder, calendar, etc.)
 
 
+# Appendix E: Navigation Index
+
+_This appendix is informative._  It points to normative sections and
+informative aids; it introduces no new rules.
+
+* **Discovery fields** - [OCM API Discovery](#ocm-api-discovery),
+  [Fields](#fields)
+* **Capabilities** - advertised in `capabilities[]`; see [OCM API
+  Discovery](#ocm-api-discovery)
+* **Criteria** - advertised in `criteria[]` as inbound admission gates;
+  see [OCM API Discovery](#ocm-api-discovery)
+* **Per-share requirements** - in `protocol.*.requirements[]`; see
+  [Share Creation Notification](#share-creation-notification)
+* **Per-share protocol shape** - in `protocol.*` fields; see [Share
+  Creation Notification](#share-creation-notification)
+* **Same-string note** - `must-exchange-token` in [OCM API
+  Discovery](#ocm-api-discovery) criteria and in share
+  `protocol.*.requirements[]`
+* **Signing** - [HTTP Message Signatures](#http-message-signatures),
+  [Signing Direction Index](#signing-direction-index)
+* **Object models** - [Appendix D: Object
+  models](#appendix-d-object-models)
+* **Informative diagrams** - in the OCM-API repository under `diagrams/`
+
+
 # Changes
 
 This section collects the changes with respect to the previous
@@ -2546,6 +2611,11 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 06
+* Added informative aids: same-string note for `must-exchange-token`,
+  Appendix D criteria label fix, [Signing Direction
+  Index](#signing-direction-index), [Appendix E: Navigation
+  Index](#appendix-e-navigation-index), and companion diagrams under
+  `diagrams/` in the OCM-API repository.
 * Introduced IANA Registries for resource types, protocols, share
   types, and share payloads, and populated them with all relevant
   values defined in this document.
