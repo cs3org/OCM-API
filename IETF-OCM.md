@@ -719,9 +719,9 @@ contain the following information about its OCM API:
   acts as Receiving Server, it can honor inbound shares that require
   token exchange.
   - `"http-sig"` - to indicate that this OCM Server supports
-  [RFC9421] HTTP Message Signatures and advertises public keys in the
-  format specified by [RFC7517] at the `/.well-known/jwks.json`
-  endpoint for signature verification.
+  [RFC9421] HTTP Message Signatures and advertises the public keys
+  for signature verification, in the format specified by [RFC7517],
+  at the URL given by the `jwksUri` field.
   - `"invites"` - to indicate the server would support acting as an
   Invite Sender or Invite Receiver OCM Server.  This might be useful
   for suggesting to a user that existing contacts might be upgraded
@@ -769,6 +769,13 @@ contain the following information about its OCM API:
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
   Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
   accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
+* OPTIONAL: jwksUri (string) - URL of a JWK Set document [RFC7517]
+  containing the public keys this OCM Server uses for HTTP Message
+  Signatures.  The URL is discovered from this field; it is not a
+  fixed path in the OCM API.
+  Implementations that advertise the `"http-sig"` capability MUST
+  provide this URL as well.
+  Example: `"https://cloud.example.org/ocm/jwks"`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint hosted by
   this OCM Server.  When this OCM Server acts as Sending Server, the
   Receiving Server POSTs here to exchange a `sharedSecret` for a
@@ -784,10 +791,10 @@ described in the respective sections.  This section specifies the
 normative requirements for producing and verifying those signatures.
 Appendix B contains a complete example.
 
-Public keys for signature verification are published in the format
-specified by [RFC7517] at the signer's `/.well-known/jwks.json`
-endpoint, if the `http-sig` capability is included in the
-[Discovery](#ocm-api-discovery) response.
+Public keys for signature verification are published as a JWK Set
+[RFC7517] at the URL advertised in the `jwksUri` field of the
+signer's [Discovery](#ocm-api-discovery) response, when the
+`http-sig` capability is advertised.
 
 ## Applicability
 
@@ -2049,10 +2056,10 @@ out of scope for this specification: a mechanism similar to the
 
 ## JWKS Endpoint
 
-An OCM Server that advertises the `http-sig` capability MUST expose its
-public keys at `/.well-known/jwks.json` in the format specified by
-[RFC7517].  Here is an example response from
-`https://sender.example.org/.well-known/jwks.json`:
+An OCM Server that advertises the `http-sig` capability MUST publish
+its public keys, in the format specified by [RFC7517], at the URL
+advertised in the `jwksUri` field of its Discovery response.  Here is
+an example response from `https://sender.example.org/ocm/jwks`:
 
 ~~~
 {
@@ -2146,16 +2153,18 @@ illustrates the procedure to verify an incoming signed request:
 
 1. Extract the provider domain from the `sender` field in the
    request body
-2. Fetch the public key from
-   `https://<provider-domain>/.well-known/jwks.json`
-3. Locate the unique signature carrying the `tag="ocm"` parameter in
+2. Fetch the Discovery response from
+   `https://<provider-domain>/.well-known/ocm` and read its
+   `jwksUri` field
+3. Fetch the public keys from the URL given by `jwksUri`
+4. Locate the unique signature carrying the `tag="ocm"` parameter in
    the `Signature-Input` header, disregarding its dictionary label
    (here `sig1`)
-4. Extract `keyid` from `Signature-Input` header and find the key
+5. Extract `keyid` from `Signature-Input` header and find the key
    matching the `kid` value in the [RFC7517] response
-5. Reconstruct the signature base from the request using the
+6. Reconstruct the signature base from the request using the
    components listed in `Signature-Input` as specified in [RFC9421]
-6. Verify the signature using the appropriate algorithm
+7. Verify the signature using the appropriate algorithm
    (e.g., Ed25519 [RFC8032])
 
 ## Validating the Payload
@@ -2607,6 +2616,9 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 07
+* Replaced the unregistered `/.well-known/jwks.json` endpoint with a
+  `jwksUri` field in the Discovery response, from which the location
+  of the JWK Set for HTTP Message Signatures is discovered.
 * Added informative aids: same-string note for `must-exchange-token`,
   Appendix D criteria label fix, [Signing Direction
   Index](#signing-direction-index), [Appendix E: Navigation

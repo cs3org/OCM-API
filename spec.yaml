@@ -531,6 +531,17 @@ components:
           example:
             - allowlist
             - must-invite
+        jwksUri:
+          type: string
+          format: uri
+          description: >
+            Optional URL of a JWK Set document [RFC7517] containing the
+            public keys this OCM Server uses for HTTP Message Signatures
+            [RFC9421]. The URL is discovered from this field; it is not a
+            fixed path in the OCM API. If the `http-sig` capability is
+            exposed, the jwksUri MUST be advertised in the discovery
+            response.
+          example: https://cloud.example.org/ocm/jwks
         tokenEndPoint:
           type: string
           format: uri
@@ -916,7 +927,7 @@ components:
             multipleProtocols:
               name: multi
               webdav:
-                accessTypes: ['remote', 'datatx']
+                accessTypes: ["remote", "datatx"]
                 uri: https://cloud.example.org/remote/dav/ocm/7c084226-d9a1-11e6-bf26-cec0c932ce01
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 permissions:
@@ -940,7 +951,7 @@ components:
                   - text/markdown
                   - text/html
               ssh:
-                accessTypes: ['datatx']
+                accessTypes: ["datatx"]
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
