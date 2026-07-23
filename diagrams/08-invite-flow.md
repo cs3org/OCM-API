@@ -21,9 +21,13 @@ sequenceDiagram
     ISS->>ISU: OOB Invite Message<br/>(token + sender FQDN)
     ISU->>IRU: Deliver Invite Message<br/>(out-of-band)
 
-    opt WAYF Page on sender server
-        IRU->>ISS: Navigate WAYF helper<br/>(sender-server helper)
-        ISS->>IRU: Redirect to receiver<br/>accept dialog
+    opt WAYF Page on sender server (link-format invite)
+        IRU->>ISS: Open invite link<br/>sender/wayf?token=...
+        ISS->>IRU: WAYF page: pick receiver<br/>OCM Server (list/free-text)
+        IRU->>ISS: Submit receiver FQDN
+        ISS->>IRS: GET /.well-known/ocm<br/>(discover inviteAcceptDialog)
+        IRS-->>ISS: Discovery document
+        ISS->>IRU: Redirect to receiver<br/>inviteAcceptDialog<br/>?token=...&providerDomain=sender
     end
 
     IRU->>IRS: Invite Acceptance Gesture
@@ -43,6 +47,15 @@ sequenceDiagram
 
 - Steps follow [Invite Flow](../IETF-OCM.md#invite-flow) and
   [Establishing Contact](../IETF-OCM.md#establishing-contact).
+- When the invite uses the link format, the Invite Sender's WAYF page
+  discovers the Invite Receiver OCM Server's `inviteAcceptDialog` via OCM
+  API Discovery (`GET /.well-known/ocm` on the receiver FQDN) and
+  redirects the Invite Receiver there with `token` and `providerDomain`
+  query parameters. The `invite-wayf` capability and `inviteAcceptDialog`
+  field are advertised in discovery; see [Invite
+  format](../IETF-OCM.md#invite-format) and [OCM API
+  Discovery](../IETF-OCM.md#ocm-api-discovery). The WAYF server list MAY
+  be populated from a Directory Service.
 - The Invite Acceptance Request is a signed POST to `/invite-accepted`
   on the Invite Sender OCM Server; see [Invite Acceptance Request
   Details](../IETF-OCM.md#invite-acceptance-request-details).
