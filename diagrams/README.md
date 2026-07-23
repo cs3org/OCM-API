@@ -4,7 +4,16 @@
 
 This folder holds informative Mermaid diagrams for the OCM API spec in
 `../IETF-OCM.md`. They illustrate discovery, share creation, access
-paths, signing, and invites. They add no new normative rules.
+paths, signing, and invites. They add no new normative rules; the
+Internet-Draft is always authoritative.
+
+## Adding a diagram
+
+If you want to add or update a diagram, keep it in sync with the
+normative text and follow the style rules at the end of this file. Each
+diagram file is a standalone Markdown page with a `# Title`, a short
+prose intro, the Mermaid block, and a few bullets citing the
+IETF-OCM.md sections it illustrates.
 
 ## Normative source
 
@@ -19,9 +28,9 @@ Key anchors:
 - [Invite Flow](../IETF-OCM.md#invite-flow)
 - [General Flow](../IETF-OCM.md#general-flow)
 
-## Four-plane framing
+## Four planes
 
-OCM separates four orthogonal planes (see
+OCM separates four planes (see
 [01-planes-overview.md](01-planes-overview.md)):
 
 1. **Discovery** - `capabilities[]`, `criteria[]`, and dual-role
@@ -38,35 +47,35 @@ Only `must-exchange-token` binds from receiver `criteria[]` to sender
 
 ## Reading order
 
-1. [01-planes-overview.md](01-planes-overview.md) - static map of the
-   four planes and dual-role exchange-token capability.
+1. [01-planes-overview.md](01-planes-overview.md) - the four planes and
+   the dual-role exchange-token capability.
 2. [02-discovery-receiver-publish.md](02-discovery-receiver-publish.md)
    - how a receiver builds and publishes its discovery document.
 3. [03-discovery-sender-consume.md](03-discovery-sender-consume.md) -
-   sender preflight: WebApp-first, criteria binding, voluntary strict.
-4. [04-share-lifecycle.md](04-share-lifecycle.md) - compressed
-   end-to-end spine from publish through access and unshare.
+   sender preflight: criteria binding and the voluntary strict mode.
+4. [04-share-lifecycle.md](04-share-lifecycle.md) - end-to-end flow from
+   publish through access and unshare.
 5. [05-access-webdav-paths.md](05-access-webdav-paths.md) - WebDAV token
-   exchange, MFA, bearer vs legacy sharedSecret paths.
+   exchange, MFA, and bearer vs legacy sharedSecret paths.
 6. [06-access-webapp-code-flow.md](06-access-webapp-code-flow.md) -
-   WebApp Code Flow presentation via browser and tokenEndPoint.
-7. [07-signing-directions.md](07-signing-directions.md) -
-   **Cross-cutting reference (read before implementing any signed
-   endpoint)** - who signs and who verifies each OCM API request.
-8. [08-invite-flow.md](08-invite-flow.md) - **Orthogonal: establishing
-   contact** - invite token, acceptance, and allowlisting before shares.
+   WebApp Code Flow presentation via the browser and tokenEndPoint.
+7. [07-signing-directions.md](07-signing-directions.md) - who signs and
+   who verifies each OCM API request; read this before implementing any
+   signed endpoint.
+8. [08-invite-flow.md](08-invite-flow.md) - establishing contact: invite
+   token, acceptance, and allowlisting before shares.
 
 ## Color legend
 
-Flowchart nodes use a fixed palette (Option A, CVD-safe):
+Flowchart nodes use a fixed, CVD-safe palette:
 
 - **Blue (disc)** - discovery documents, reads, and link-out references.
 - **Rose (share)** - share artifacts (`POST /shares`, requirements).
 - **Amber (gate)** - decision gates and enforcement checkpoints.
 - **Green (ok)** - success paths and completed actions.
 - **Red (fail)** - hard failures and discard outcomes.
-- **Light red (term)** - terminal states (declined, revoked,
-  strict fail).
+- **Light red (term)** - terminal states (declined, revoked, strict
+  fail).
 - **Grey (neutral)** - omit paths, legacy fallback, polling.
 - **Cyan (sign)** - HTTP Message Signature application.
 - **Indigo (verify)** - HTTP Message Signature verification.
@@ -75,7 +84,7 @@ Sequence diagrams use transparent `box Label` grouping (no colored
 fills) so they stay readable in both light and dark themes; a `Note`
 labels any highlighted region. Semantic color lives in the flowcharts.
 
-## Style contract
+## Style rules for new diagrams
 
 Every flowchart MUST paste this exact `classDef` block verbatim:
 
@@ -93,17 +102,17 @@ classDef verify fill:#e8eaf6,stroke:#3949ab,color:#1a237e
 
 Additional rules:
 
-- `# Title`; prose intro (<=72 columns); Mermaid body; post-diagram
-  bullets citing IETF-OCM.md sections.
+- Start with `# Title`, then a prose intro (<=72 columns), then the
+  Mermaid body, then post-diagram bullets citing IETF-OCM.md sections.
 - Use `<br/>` in labels, never `\n`.
-- Labels: <=36 characters per line, max 3 lines.
-- Every flowchart node gets exactly one class from the block above.
-- Sequence diagrams: `box Label` (transparent box, no color) for
-  grouping, and `autonumber`. Never use `box rgb(...)`/`box #hex` and
-  never wrap messages in `rect rgb(...)`/`rect rgba(...)`: sequence
-  `box`/`rect` cannot set text color, so any light fill inherits the
-  renderer's dark-theme light text and becomes unreadable in dark mode
-  (the `%%{init}%%` themeVariables override is ignored by some
-  renderers, e.g. the VS Code preview, so it is not a reliable fix).
-  Use a `Note` to label a region instead of a colored rect. Flowcharts
-  do not need this; their `classDef` sets text `color` directly.
+- Keep labels to <=36 characters per line and at most 3 lines.
+- Give every flowchart node exactly one class from the block above.
+- For sequence diagrams, group with `box Label` (transparent, no color)
+  and add `autonumber`. Do not use `box rgb(...)`/`box #hex` and do not
+  wrap messages in `rect rgb(...)`/`rect rgba(...)`: sequence `box` and
+  `rect` cannot set text color, so a light fill inherits the renderer's
+  dark-theme light text and becomes unreadable in dark mode. The
+  `%%{init}%%` themeVariables override is ignored by some renderers (for
+  example the VS Code preview), so it is not a reliable fix. Use a
+  `Note` to label a region instead of a colored rect. Flowcharts do not
+  need this; their `classDef` sets text `color` directly.
