@@ -215,7 +215,8 @@ related concepts from OAuth [RFC6749] and elsewhere:
   membership or prior interactions, SHOULD be recorded in an internal
   registry of trusted servers, that SHOULD be updated over time based
   on new information.  The registry SHOULD include the FQDN of the
-  trusted server and the Public Key used for HTTP Signatures.  It MAY
+  trusted server and the public keys (JWK Set [RFC7517]) used for
+  HTTP Message Signatures.  It MAY
   also include additional metadata such as the inviteAcceptDialog URL
   or supported capabilities.
 * __WAYF Page__ - A Where-Are-You-From page is a discovery service used
@@ -578,8 +579,9 @@ The next step is for the Sending Server to additionally discover:
 * if the Receiving Server supports OCM
 * if so, which version and with which optional functionality
 * at which URL
-* the public key the Receiving Server will use for HTTP Signatures (if
-  any)
+* the public keys the Receiving Server will use for HTTP Message
+  Signatures (if any), published as a JWK Set at the URL given by the
+  `jwksUri` field
 
 The Sending Server MAY first perform denylist and allowlist checks on
 the FQDN.
@@ -1278,16 +1280,18 @@ A 503 response status means that the Receiver is temporary unavailable.
 The Receiving Server MAY discard the notification if any of the
 following hold true:
 
-* the HTTP Signature is missing but the Sending Server does expose a
-  keypair discoverable from the FQDN part of the `sender` field in the
-  request body
+* the HTTP Signature is missing but the Sending Server advertises the
+  `http-sig` capability in the Discovery response obtained from the
+  FQDN part of the `sender` field in the request body
 * the HTTP Signature is missing
-* the HTTP Signature is not valid
-* no keypair is trusted or discoverable from the FQDN part of the
-  `sender` field in the request body
-* the keypair used to generate the HTTP Signature doesn't match the one
-  trusted or discoverable from the FQDN part of the `sender` field
-  in the request body
+* the HTTP Signature is not valid (see [HTTP Message
+  Signatures](#http-message-signatures))
+* no trusted JWK Set can be obtained for the FQDN part of the
+  `sender` field in the request body, via the `jwksUri` field of its
+  Discovery response or otherwise
+* that JWK Set contains no key whose `kid` equals the `keyid`
+  signature parameter (see [HTTP Message
+  Signatures](#http-message-signatures))
 * the Sending Server is denylisted
 * the Sending Server is not allowlisted
 * the Sending Party is not trusted by the Receiving Party (e.g., no
@@ -1507,9 +1511,9 @@ Host: cloud.example.org
 Content-Type: application/x-www-form-urlencoded
 Content-Digest: sha-256=:81kCnlO5UY/mZ8UgpxBWnq18GY3WhzJnDjOTvSvjbhw=:
 Content-Length: 80
-Signature-Input: sig1=("@method" "@target-uri" "content-digest");\
-  created=1730815200;keyid="receiver.example.org#key1";\
-  alg="ed25519";tag="ocm"
+Signature-Input: sig1=("@method" "@target-uri" "content-digest" \
+  "content-length");created=1730815200;\
+  keyid="receiver.example.org#key1";alg="ed25519";tag="ocm"
 Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ\
   1cP2rN3qD4tR5hC=:
 
@@ -2149,7 +2153,8 @@ Given a Share Creation Notification request:
 POST /ocm/shares HTTP/1.1
 Host: receiver.example.org
 Content-Type: application/json
-Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
+Content-Digest: sha-256=:/Uz47cfD1HOdMTIqcWjd84iMLQ4gVJdC7ZFACf1ViqU=:
+Content-Length: 521
 
 {
   "shareWith": "marie@receiver.example.org",
@@ -2225,8 +2230,10 @@ illustrates the procedure to verify an incoming signed request:
    matching the `kid` value in the [RFC7517] response
 6. Reconstruct the signature base from the request using the
    components listed in `Signature-Input` as specified in [RFC9421]
-7. Verify the signature using the appropriate algorithm
-   (e.g., Ed25519 [RFC8032])
+7. Verify the signature using the algorithm derived from the `alg`
+   value of that JWK (e.g., Ed25519 [RFC8032]), as described under
+   Keys and Algorithms in
+   [HTTP Message Signatures](#http-message-signatures)
 
 ## Validating the Payload
 
@@ -2686,6 +2693,12 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Replaced the unregistered `/.well-known/jwks.json` endpoint with a
   `jwksUri` field in the Discovery response, from which the location
   of the JWK Set for HTTP Message Signatures is discovered.
+* The `Date` header is no longer covered by signatures: freshness is
+  anchored on the `created` signature parameter (see Section 7.2.4
+  of [RFC9421]).
+* Updated the signature examples: replaced the legacy `Digest` header
+  with `Content-Digest` [RFC9530] and applied [RFC8792] line
+  wrapping.
 * Added informative aids: same-string note for `must-exchange-token`,
   Appendix D criteria label fix, [Signing Direction
   Index](#signing-direction-index), [Appendix E: Navigation
