@@ -750,7 +750,7 @@ contain the following information about its OCM API:
   OCM Server advertising this criterium MUST also expose the
   `exchange-token` capability.  See the [Code Flow](#code-flow)
   section.
-  _Informative:_ The string `must-exchange-token` also appears in
+  Informative: The string `must-exchange-token` also appears in
   `protocol.*.requirements[]` on outbound shares.  The binding between
   receiver `criteria[]` and sender `requirements[]` is defined in
   [Share Creation Notification](#share-creation-notification).
@@ -881,33 +881,32 @@ of OCM signature processing.
 
 ## Signing Direction Index
 
-_This subsection is informative._  HTTP Message Signatures apply only
+This subsection is informative.  HTTP Message Signatures apply only
 when the peer advertises the `http-sig` capability; a
 `must-use-http-sig` criterion makes signing mandatory for inbound
-traffic.  When signing is
-in play, the signer and verifier roles are:
+traffic.  When signing is in play, the signer and verifier roles are:
 
-* **Share Creation Notification** (`POST /shares`) - the Sending
+* __Share Creation Notification__ (`POST /shares`) - the Sending
   Server signs; the Receiving Server verifies.  See
   [Share Creation Notification](#share-creation-notification),
   [Decision to Discard](#decision-to-discard), and [HTTP Message
   Signatures](#http-message-signatures).
-* **Token Request** (`POST {tokenEndPoint}`) - the Receiving Server
+* __Token Request__ (`POST {tokenEndPoint}`) - the Receiving Server
   signs; the Sending Server verifies.  See [Token
   Request](#token-request), [Token Response](#token-response), and
   [HTTP Message Signatures](#http-message-signatures).
-* **Invite Acceptance** (`POST /invite-accepted`) - the Invite Receiver
+* __Invite Acceptance__ (`POST /invite-accepted`) - the Invite Receiver
   signs; the Invite Sender verifies.  See [Invite Flow](#invite-flow)
   and [HTTP Message Signatures](#http-message-signatures).
-* **Request for a Share** (`POST /request-share`) - the Requesting
+* __Request for a Share__ (`POST /request-share`) - the Requesting
   Server signs; the Requested Server verifies.  See [Request for a
   Share](#request-for-a-share) and [HTTP Message
   Signatures](#http-message-signatures).
-* **Share Acceptance Notification** (`POST /notifications`) - the
+* __Share Acceptance Notification__ (`POST /notifications`) - the
   Receiving Server signs; the Sending Server verifies.  See [Share
   Acceptance Notification](#share-acceptance-notification) and [HTTP
   Message Signatures](#http-message-signatures).
-* **Sender-initiated Notification** (`POST /notifications`) - the
+* __Sender-initiated Notification__ (`POST /notifications`) - the
   Sending Server SHOULD sign; the Receiving Server verifies.  See
   [Share Acceptance Notification](#share-acceptance-notification) and
   [HTTP Message Signatures](#http-message-signatures).
@@ -2580,28 +2579,27 @@ to model a few key properties.
 
 # Appendix E: Navigation Index
 
-_This appendix is informative._  It points to normative sections and
+This appendix is informative.  It points to normative sections and
 informative aids; it introduces no new rules.
 
-* **Discovery fields** - [OCM API Discovery](#ocm-api-discovery),
+* __Discovery fields__ - [OCM API Discovery](#ocm-api-discovery),
   [Fields](#fields)
-* **Capabilities** - advertised in `capabilities[]`; see [OCM API
+* __Capabilities__ - advertised in `capabilities[]`; see [OCM API
   Discovery](#ocm-api-discovery)
-* **Criteria** - advertised in `criteria[]` as inbound admission gates;
+* __Criteria__ - advertised in `criteria[]` as inbound admission gates;
   see [OCM API Discovery](#ocm-api-discovery)
-* **Per-share requirements** - in `protocol.*.requirements[]`; see
+* __Per-share requirements__ - in `protocol.*.requirements[]`; see
   [Share Creation Notification](#share-creation-notification)
-* **Per-share protocol shape** - in `protocol.*` fields; see [Share
+* __Per-share protocol shape__ - in `protocol.*` fields; see [Share
   Creation Notification](#share-creation-notification)
-* **Same-string note** - `must-exchange-token` in [OCM API
+* __Same-string note__ - `must-exchange-token` in [OCM API
   Discovery](#ocm-api-discovery) criteria and in share
   `protocol.*.requirements[]`
-* **Signing** - [HTTP Message Signatures](#http-message-signatures),
+* __Signing__ - [HTTP Message Signatures](#http-message-signatures),
   [Signing Direction Index](#signing-direction-index)
-* **Object models** - [Appendix D: Object
+* __Object models__ - [Appendix D: Object
   models](#appendix-d-object-models)
-* **Informative diagrams** - in the OCM-API repository under `diagrams/`
-
+* __Informative diagrams__ - in the OCM-API repository under `diagrams/`
 
 # Changes
 
@@ -2610,12 +2608,14 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
-## Version 06
+## Version 07
 * Added informative aids: same-string note for `must-exchange-token`,
   Appendix D criteria label fix, [Signing Direction
   Index](#signing-direction-index), [Appendix E: Navigation
   Index](#appendix-e-navigation-index), and companion diagrams under
   `diagrams/` in the OCM-API repository.
+
+## Version 06
 * Introduced IANA Registries for resource types, protocols, share
   types, and share payloads, and populated them with all relevant
   values defined in this document.

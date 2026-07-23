@@ -388,11 +388,14 @@ components:
                 type: array
                 description: |
                   The supported recipient share types.
-                  MUST contain `user` at a minimum, plus optionally `group` or
-                  any other value registered in the "OCM Share Types" registry
-                  (see the IANA Considerations section of the OCM Internet-Draft).
+                  MUST contain `"user"` at a minimum, plus optionally
+                  `"group"` and `"federation"`.
                 items:
                   type: string
+                  enum:
+                    - user
+                    - group
+                    - federation
                 example:
                   - user
               protocols:
@@ -574,12 +577,9 @@ components:
         shareWith:
           type: string
           description: >
-            OCM Address of the user or group the provider wants to share the
-            resource with. This MUST be known in advance, either via a previous
-            Invitation or through other means. Other recipient types MAY be
-            used provided they are registered in the "OCM Share Types"
-            registry (see the IANA Considerations section of the OCM
-            Internet-Draft).
+            OCM Address of the user, group or federation the
+            provider wants to share the resource with. This MUST be known
+            in advance, either via a previous Invitation or through other means.
           example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
         name:
           type: string
@@ -621,10 +621,12 @@ components:
           example: John Doe
         shareType:
           type: string
+          enum:
+            - user
+            - group
+            - federation
           description: |
-            Recipient share type. Other values MAY be used if registered in the
-            "OCM Share Types" registry (see the IANA Considerations section of
-            the OCM Internet-Draft).
+            Recipient share type
           example: user
         resourceType:
           type: string
@@ -1050,8 +1052,8 @@ components:
         shareWith:
           type: string
           description: >
-            OCM Address of the user or group that wants to receive a share
-            of the resource.
+            OCM Address of the user, group or federation that
+            wants to receive a share of the resource.
           example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
         share:
           type: string
