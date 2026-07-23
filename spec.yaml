@@ -379,7 +379,10 @@ components:
                   Implementations MUST offer support for at least one resource type,
                   where `file` is the commonly supported one.
                   Each resource type is identified by its `name`: the list MUST NOT
-                  contain more than one resource type object per given `name`
+                  contain more than one resource type object per given `name`.
+                  Other values are to be registered in the "OCM Resource Types"
+                  registry (see the IANA Considerations section of the OCM
+                  Internet-Draft).
                 example: file
               shareTypes:
                 type: array
@@ -479,6 +482,9 @@ components:
                       URI to be used for that protocol, or any other relevant
                       attribute required for that protocol. Similarly, additional
                       receiving capabilities for custom protocols SHOULD be advertised.
+                      Additional protocols are to be registered in the "OCM Protocols"
+                      registry (see the IANA Considerations section of the OCM
+                      Internet-Draft).
                 example:
                   webdav: /remote/dav/ocm/
                   webdav-receive: {
@@ -530,29 +536,23 @@ components:
           format: uri
           description: >
             Optional URL of the Token Exchange endpoint hosted by the
-            provider when acting as Sending Server. The Receiving Server
-            POSTs here to obtain bearer tokens in exchange for
-            authorization codes (shared secrets). If the `exchange-token`
-            capability is exposed, the tokenEndPoint MUST be advertised
-            in the discovery response.
-
-            **Token Exchange API:**
-            This optional endpoint allows the Receiving Server to obtain
-            a (potentially short-lived) bearer token in exchange for an
-            authorization code (shared secret).
-
-            **HTTP Request:**
-            - Method: POST
-            - URL: The URL hosted by the Sending Server and discovered in
-              this field
-            - Content-Type: application/x-www-form-urlencoded
-            - Body: TokenRequest schema (form-encoded, required)
+            Sending Server. The URL is discovered from this field; it is not
+            a fixed path in the OCM API. The Receiving Server POSTs here to
+            obtain a short-lived bearer token in exchange for an authorization
+            code (the share's `sharedSecret`), following the authorization_code
+            grant of [RFC6749]. If the `exchange-token` capability is exposed,
+            the tokenEndPoint MUST be advertised in the discovery response.
+            The request MUST be signed with an HTTP Message Signature
+            [RFC9421] by the Receiving Server. See TokenRequest and
+            TokenResponse for the request/response contract and the Code Flow
+            section of the OCM Internet-Draft for normative procedure.
 
             **HTTP Responses:**
             - 200: Token issued (application/json with TokenResponse schema)
-            - 400: Token denied (application/json with Error schema)
-
-            See TokenRequest and TokenResponse schemas for the complete data structure.
+            - 400: Token denied (application/json OAuth error object with
+              `{ "error": "<code>" }` where code is one of invalid_request,
+              invalid_client, invalid_grant, unauthorized_client, or
+              unsupported_grant_type)
           example: https://cloud.example.org/ocm/token
         inviteAcceptDialog:
           type: string
@@ -1087,6 +1087,9 @@ components:
           example: https://receiver.org/ocm/callback
     TokenResponse:
       type: object
+      required:
+        - access_token
+        - token_type
       properties:
         access_token:
           type: string
@@ -1095,8 +1098,10 @@ components:
         token_type:
           type: string
           description: Must be set to 'Bearer'
+          enum:
+            - Bearer
           example: Bearer
         expires_in:
-          type: number
+          type: integer
           description: Number of seconds before this access_token will need to be refreshed.
           example: 300
