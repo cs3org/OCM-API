@@ -858,11 +858,49 @@ A request MUST include one and only one signature carrying
 `tag="ocm"`.  The signature label MAY be any value; it is not
 significant to OCM processing.
 
-The signature MUST use an asymmetric algorithm from the IANA "HTTP
-Signature Algorithms" registry [IANA-SIG-ALG]; `ed25519` [RFC8032] is
-RECOMMENDED.  A symmetric algorithm, such as the HMAC-based
-`hmac-sha256`, MUST NOT be used, as the Receiving Server would not be
-able to verify the signature without prior access to the shared secret.
+The signature algorithm is determined by the signing key material;
+see [Keys and Algorithms](#keys-and-algorithms).
+
+## Keys and Algorithms
+
+Each key published in the signer's JWK Set MUST include the `kid`
+and `alg` parameters [RFC7517].  The JWK `alg` value MUST identify
+an asymmetric signature algorithm registered in the IANA "JSON Web
+Signature and Encryption Algorithms" registry [RFC7518], and SHOULD
+be a fully-specified algorithm [RFC9864]; `Ed25519` ([RFC8032],
+[RFC9864]) is RECOMMENDED.
+
+The signature algorithm is derived from the key material rather
+than declared by the message: signers and verifiers MUST determine
+the algorithm from the `alg` parameter of the JWK identified by the
+`keyid` signature parameter, and apply it to the signature base as
+specified in Section 3.3.7 of [RFC9421].
+
+This way, implementations are neither restricted to the algorithms
+listed in the IANA "HTTP Signature Algorithms" registry
+(Section 6.2 of [RFC9421]), nor is an update to this document
+needed as new algorithms, for example post-quantum ones, are
+registered for JOSE: as noted in that section, an application is
+free to use any algorithm provided the signer and verifier can
+agree on it in a secure and deterministic fashion, and the JWK
+`alg` parameter provides that agreement.
+
+The JWS algorithm `none` and symmetric MAC algorithms, such as
+`HS256`, MUST NOT be used: the former provides no protection, while
+the latter would require the verifier to have prior access to a
+shared secret.
+
+The `alg` signature parameter is OPTIONAL: the algorithm is always
+determined by the JWK, as described above.  Note that this
+parameter takes its values from a different registry than the JWK
+`alg` value.  If the parameter is present, the algorithm it names
+in the IANA "HTTP Signature Algorithms" registry [IANA-SIG-ALG]
+MUST denote the same algorithm as the JWK `alg` value, for
+example, `ed25519` for a JWK with `alg` `Ed25519`, and verifiers
+MUST reject the signature otherwise
+(see Section 7 of [RFC9421] on algorithm confusion and substitution
+attacks).  When the JWK algorithm has no counterpart in that
+registry, the `alg` signature parameter MUST be omitted.
 
 ## Verification Requirements
 
@@ -875,6 +913,12 @@ older than the verifier's freshness window.
 A `Content-Digest` header value carrying multiple algorithms MUST have
 every recognised digest match the body; a single match alongside a
 recognised mismatch MUST be treated as an integrity failure.
+
+Verifiers MUST reject a signature if the JWK identified by `keyid`
+does not carry an acceptable `alg` value (see
+[Keys and Algorithms](#keys-and-algorithms)), or if an `alg`
+signature parameter is present and does not correspond to the
+algorithm derived from that JWK.
 
 Verifiers MUST identify the OCM signature by its `tag="ocm"`
 parameter, examining the parameters of each member of the
@@ -1992,6 +2036,9 @@ Specifications and Registration Procedures
 [RFC7517] Jones, M., "[JSON Web Key (JWK)](
 https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
 
+[RFC7518] Jones, M., "[JSON Web Algorithms (JWA)](
+https://datatracker.ietf.org/doc/html/rfc7518)", May 2015.
+
 [RFC8032] Josefsson, S., Liusvaara, I., "[Edwards-Curve Digital
 Signature Algorithm (EdDSA)](
 https://datatracker.ietf.org/doc/html/rfc8032)", January 2017.
@@ -2015,6 +2062,10 @@ https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
 [RFC9553] Stepanek, R., Loffredo, M., "[JSContact: A JSON
 Representation of Contact Data](
 https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
+
+[RFC9864] Jones, M., Steele, O., "[Fully-Specified Algorithms for
+JOSE and COSE](https://datatracker.ietf.org/doc/html/rfc9864)",
+October 2025.
 
 ## Informative References
 
@@ -2067,6 +2118,7 @@ an example response from `https://sender.example.org/ocm/jwks`:
     {
       "kty": "OKP",
       "crv": "Ed25519",
+      "alg": "Ed25519",
       "kid": "sender.example.org#key1",
       "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
     }
@@ -2616,6 +2668,10 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 07
+* The HTTP Message Signature algorithm is now derived from the JWK
+  identified by `keyid`, per Section 3.3.7 of [RFC9421], instead of
+  being restricted to the "HTTP Signature Algorithms" registry; the
+  `alg` signature parameter is optional and checked for consistency.
 * Replaced the unregistered `/.well-known/jwks.json` endpoint with a
   `jwksUri` field in the Discovery response, from which the location
   of the JWK Set for HTTP Message Signatures is discovered.
