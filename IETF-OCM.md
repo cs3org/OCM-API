@@ -1497,27 +1497,24 @@ To obtain an access token, the Receiving Server MUST send an HTTP POST
 request to the Sending Server’s {tokenEndPoint} as discovered in the
 OCM provider metadata, following section 4.4.2 of [RFC6749].  The
 request payload MUST be in `x-www-form-urlencoded` form, as shown
-in the following example (with line breaks in the Signature headers
-for display purposes only):
+in the following example:
 
 <sourcecode type="http">
+NOTE: '\' line wrapping per RFC 8792
+
 POST {tokenEndPoint} HTTP/1.1
 Host: cloud.example.org
 Content-Type: application/x-www-form-urlencoded
 Content-Digest: sha-256=:81kCnlO5UY/mZ8UgpxBWnq18GY3WhzJnDjOTvSvjbhw=:
 Content-Length: 80
-Signature-Input:
-  sig1=("@method" "@target-uri" "content-digest");
-  created=1730815200;
-  keyid="receiver.example.org#key1";
-  alg="ed25519";
-  tag="ocm"
-Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ1cP
-  2rN3qD4tR5hC=:
+Signature-Input: sig1=("@method" "@target-uri" "content-digest");\
+  created=1730815200;keyid="receiver.example.org#key1";\
+  alg="ed25519";tag="ocm"
+Signature: sig1=:bM2sV2a4oM8pWc4Q8r9Zb8bQ7a2vH1kR9xT0yJ3uE4wO5lV6bZ\
+  1cP2rN3qD4tR5hC=:
 
-grant_type=authorization_code&
-client_id=receiver.example.org&
-code=my_secret_code
+grant_type=authorization_code&client_id=receiver.example.org&code=\
+  my_secret_code
 </sourcecode>
 
 The request MUST be signed using an HTTP Message Signature
@@ -2089,6 +2086,10 @@ in Open Cloud Mesh using Messaging Layer
 Security](https://datatracker.ietf.org/doc/draft-nordin-ocm-mls-federated-groups/)",
 Work in Progress, Internet-Draft.
 
+[RFC8792] Watsen, K., Auerswald, E., Farrel, A., Wu, Q., "[Handling
+Long Lines in Content of Internet-Drafts and RFCs](
+https://datatracker.ietf.org/doc/html/rfc8792)", June 2020.
+
 
 # Appendix A: Multi-factor Authentication
 
@@ -2171,37 +2172,34 @@ Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
 }
 </sourcecode>
 
-The signature base is constructed according to [RFC9421] (with line
-breaks in @signature-params for display purposes only):
+The signature base is constructed according to [RFC9421]:
 
 <sourcecode type="http">
+NOTE: '\' line wrapping per RFC 8792
+
 "@method": POST
 "@target-uri": https://receiver.example.org/ocm/shares
 "content-digest": sha-256=:[digest-value]:
 "content-length": [body-length]
-"@signature-params": ("@method" "@target-uri" "content-digest"
-    "content-length");
-    created=[timestamp];
-    keyid="sender.example.org#key1";
-    alg="ed25519";
-    tag="ocm"
+"@signature-params": ("@method" "@target-uri" "content-digest" \
+  "content-length");created=[timestamp];\
+  keyid="sender.example.org#key1";alg="ed25519";tag="ocm"
 </sourcecode>
 
 Sign this base using for example Ed25519 ([RFC8032]) to produce the
-signature, and then add headers (line breaks for display purposes
-only).  Note that the dictionary label (`sig1` below) is arbitrary; the
-signature is marked as belonging to OCM by its `tag="ocm"` parameter,
-which is part of the signature base above:
+signature, and then add headers.  Note that the dictionary label
+(`sig1` below) is arbitrary; the signature is marked as belonging
+to OCM by its `tag="ocm"` parameter, which is part of the signature
+base above:
 
 <sourcecode type="http">
+NOTE: '\' line wrapping per RFC 8792
+
 Content-Digest: sha-256=:[digest-value]:
 Content-Length: [body-length]
-Signature-Input: sig1=("@method" "@target-uri" "content-digest"
-    "content-length");
-  created=[timestamp];
-  keyid="sender.example.org#key1";
-  alg="ed25519";
-  tag="ocm"
+Signature-Input: sig1=("@method" "@target-uri" "content-digest" \
+  "content-length");created=[timestamp];\
+  keyid="sender.example.org#key1";alg="ed25519";tag="ocm"
 Signature: sig1=:[signature-value]=:
 </sourcecode>
 
