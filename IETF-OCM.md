@@ -1504,8 +1504,8 @@ for display purposes only):
 POST {tokenEndPoint} HTTP/1.1
 Host: cloud.example.org
 Content-Type: application/x-www-form-urlencoded
-Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
-Content-Length: 101
+Content-Digest: sha-256=:81kCnlO5UY/mZ8UgpxBWnq18GY3WhzJnDjOTvSvjbhw=:
+Content-Length: 80
 Signature-Input:
   sig1=("@method" "@target-uri" "content-digest");
   created=1730815200;
