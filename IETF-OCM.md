@@ -834,9 +834,11 @@ components:
 * "content-digest"      - [RFC9530] digest of the body
 * "content-length"      - message size
 
-The Signature-Input parameters MUST include `created`.  Freshness and
-replay protection are anchored on `created` (see Verification
-Requirements).
+The Signature-Input parameters MUST include `created` and `keyid`.
+Freshness and replay protection are anchored on `created` (see
+Verification Requirements).  The `keyid` value MUST be equal to the
+`kid` value of the corresponding key in the signer's JWK Set (see
+[Keys and Algorithms](#keys-and-algorithms)).
 
 The `Date` header is deliberately not covered by the signature:
 intermediaries commonly rewrite it, which would make signatures
@@ -905,8 +907,9 @@ registry, the `alg` signature parameter MUST be omitted.
 ## Verification Requirements
 
 Verifiers MUST reject signatures that omit any of the mandatory
-components listed under Signing Requirements or the `created`
-parameter, and MUST reject signatures whose `created` value is more
+components listed under Signing Requirements or the `created` or
+`keyid` parameters, and MUST reject signatures whose `created` value
+is more
 than a small implementation-defined skew tolerance in the future, or
 older than the verifier's freshness window.
 
@@ -914,8 +917,9 @@ A `Content-Digest` header value carrying multiple algorithms MUST have
 every recognised digest match the body; a single match alongside a
 recognised mismatch MUST be treated as an integrity failure.
 
-Verifiers MUST reject a signature if the JWK identified by `keyid`
-does not carry an acceptable `alg` value (see
+Verifiers MUST reject a signature if the signer's JWK Set contains
+no key whose `kid` equals the `keyid` parameter, if the JWK
+identified by `keyid` does not carry an acceptable `alg` value (see
 [Keys and Algorithms](#keys-and-algorithms)), or if an `alg`
 signature parameter is present and does not correspond to the
 algorithm derived from that JWK.
@@ -2668,6 +2672,8 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 07
+* Required the `keyid` signature parameter and that it matches the
+  `kid` of the verification key in the signer's JWK Set.
 * The HTTP Message Signature algorithm is now derived from the JWK
   identified by `keyid`, per Section 3.3.7 of [RFC9421], instead of
   being restricted to the "HTTP Signature Algorithms" registry; the
