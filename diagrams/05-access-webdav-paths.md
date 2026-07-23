@@ -19,9 +19,13 @@ flowchart TD
     POSTS -- "exchange fails" --> NLEG["No legacy fallback<br/>(strict share)"]
     POSTU -- "exchange fails" --> NLEG
     EXW -- "No" --> PEER{"sender advertises<br/>exchange-token?"}
-    PEER -- "Yes" --> ATT["MAY attempt<br/>token exchange"]
-    ATT -- "success" --> BEAR
-    ATT -- "fail -> legacy fallback" --> LEG["sharedSecret WebDAV<br/>(legacy fallback)"]
+    PEER -- "Yes" --> ATT{"http-sig<br/>capability?"}
+    ATT -- "Yes" --> POSTS2["Signed POST<br/>{tokenEndPoint}"]
+    ATT -- "No" --> POSTU2["POST<br/>{tokenEndPoint}"]
+    POSTS2 -- "success" --> BEAR
+    POSTU2 -- "success" --> BEAR
+    POSTS2 -- "fail -> legacy" --> LEG["sharedSecret WebDAV<br/>(legacy fallback)"]
+    POSTU2 -- "fail -> legacy" --> LEG
     PEER -- "No" --> LEG
     BEAR --> URI["Compose WebDAV URI<br/>sender-ocm-path + id"]
     URI --> DONE["Resource access<br/>complete"]
@@ -38,8 +42,8 @@ flowchart TD
 
     class START,INS,URI disc
     class MFA,EXW,SIGN,PEER,ATT gate
-    class MFAY,POSTU,BEAR,DONE ok
-    class POSTS sign
+    class MFAY,POSTU,POSTU2,BEAR,DONE ok
+    class POSTS,POSTS2 sign
     class NLEG fail
     class LEG neutral
 ```

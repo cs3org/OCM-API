@@ -20,7 +20,7 @@ flowchart TD
     N -- "webapp" --> WAPP["webapp access<br/>(see 06-access-<br/>webapp-code-flow)"]
     N -- "webdav" --> EXW{"must-exchange-token<br/>in requirements[]?"}
     EXW -- "Yes" --> MUST["MUST exchange<br/>(strict; no legacy;<br/>see 05-access-webdav-paths)"]
-    EXW -- "No (DT#4 only)" --> Q["sharedSecret access<br/>(legacy fallback)"]
+    EXW -- "No (legacy only)" --> Q["sharedSecret access<br/>(legacy fallback)"]
     EXW -- "No + MAY attempt" --> ATT["MAY attempt exchange<br/>(see 05-access-webdav-paths)"]
     ATT -- "fail -> legacy" --> Q
     MUST --> BEAR["bearer WebDAV access<br/>(see 05-access-webdav-paths)"]
@@ -57,8 +57,8 @@ flowchart TD
   allow/deny lists, invite trust, protocol/resource checks).
 - Share Acceptance Notification is MAY; see [Share Acceptance
   Notification](../IETF-OCM.md#share-acceptance-notification).
-- WebDAV access paths preserve legacy fallback on DT#4-only shares
-  and on failed optional exchange; see
+- WebDAV access paths preserve legacy fallback when the sender does not
+  advertise `exchange-token`, and on failed optional exchange; see
   [05-access-webdav-paths.md](05-access-webdav-paths.md).
 - Post-access updates: `SHARE_UNSHARED` SHOULD be signed; silent revoke
   MAY omit notification. See [General

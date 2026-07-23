@@ -23,9 +23,9 @@ flowchart TD
     CRCHK -- "Yes" --> BIND["MUST include<br/>must-exchange-token<br/>in requirements[]"]
     CRCHK -- "No" --> VOL{"sender policy<br/>for this share?"}
     VOL -- "Legacy" --> OMIT["omit<br/>must-exchange-token"]
-    VOL -- "Strict" --> DT2{"peer exposes<br/>exchange-token?"}
-    DT2 -- "Yes" --> VOLIN["voluntarily include<br/>must-exchange-token"]
-    DT2 -- "No -> omit<br/>must-exchange-token" --> OMIT
+    VOL -- "Strict" --> PEER{"peer exposes<br/>exchange-token?"}
+    PEER -- "Yes" --> VOLIN["voluntarily include<br/>must-exchange-token"]
+    PEER -- "No -> omit<br/>must-exchange-token" --> OMIT
 
     BIND --> SENDCHK{"sender exposes<br/>exchange-token AND<br/>tokenEndPoint?"}
     VOLIN --> SENDCHK
@@ -51,7 +51,7 @@ flowchart TD
     classDef verify fill:#e8eaf6,stroke:#3949ab,color:#1a237e
 
     class START,FETCH,DOC,C,CR,RT disc
-    class WA,WAY,CCHK,CRCHK,VOL,DT2,SENDCHK,RTCHK gate
+    class WA,WAY,CCHK,CRCHK,VOL,PEER,SENDCHK,RTCHK gate
     class BIND,VOLIN,BUILD,SEND share
     class STOP,STOPRT fail
     class WOMIT,OMIT neutral
@@ -64,8 +64,8 @@ flowchart TD
 - `capabilities[]`: what the peer can do; `criteria[]`: what the peer
   demands of inbound shares. See [OCM API
   Discovery](../IETF-OCM.md#ocm-api-discovery).
-- DT#2: on voluntary strict policy, omit `must-exchange-token` when the
-  peer lacks `exchange-token`; do not fail preflight.
+- On voluntary strict policy, omit `must-exchange-token` when the peer
+  lacks `exchange-token`; do not fail preflight.
 - Before including `must-exchange-token` in `requirements[]`, the sender
   itself MUST expose `exchange-token` and `tokenEndPoint`.
 - `resourceTypes[]` is the final preflight gate; `file` + `user` +
