@@ -831,8 +831,10 @@ The Signature-Input parameters MUST include `created`.  Freshness and
 replay protection are anchored on `created` (see Verification
 Requirements).
 
-A signed request SHOULD additionally cover the `date` component when a
-`Date` header is present.
+The `Date` header is deliberately not covered by the signature:
+intermediaries commonly rewrite it, which would make signatures
+fragile, and the `created` signature parameter already conveys the
+message's creation time (see Section 7.2.4 of [RFC9421]).
 
 The `content-digest` component binds the request body to the signature,
 protecting it against modification in transit.  Its value MUST use a
@@ -1440,12 +1442,11 @@ for display purposes only):
 <sourcecode type="http">
 POST {tokenEndPoint} HTTP/1.1
 Host: cloud.example.org
-Date: Wed, 05 Nov 2025 14:00:00 GMT
 Content-Type: application/x-www-form-urlencoded
 Digest: SHA-256=ok6mQ3WZzKc8nb7s/Jt2yY1uK7d2n8Zq7dhl3Q0s1xk=
 Content-Length: 101
 Signature-Input:
-  sig1=("@method" "@target-uri" "content-digest" "date");
+  sig1=("@method" "@target-uri" "content-digest");
   created=1730815200;
   keyid="receiver.example.org#key1";
   alg="ed25519";
@@ -2074,7 +2075,6 @@ Given a Share Creation Notification request:
 <sourcecode type="http">
 POST /ocm/shares HTTP/1.1
 Host: receiver.example.org
-Date: Fri, 16 Jan 2026 13:37:00 GMT
 Content-Type: application/json
 Content-Digest: sha-256=:LkpHyFOVbBDPxc7YbHDOWNzAv88qWuVfLNf4TUf9Uo8=:
 
@@ -2107,9 +2107,8 @@ breaks in @signature-params for display purposes only):
 "@target-uri": https://receiver.example.org/ocm/shares
 "content-digest": sha-256=:[digest-value]:
 "content-length": [body-length]
-"date": [date]
 "@signature-params": ("@method" "@target-uri" "content-digest"
-    "content-length" "date");
+    "content-length");
     created=[timestamp];
     keyid="sender.example.org#key1";
     alg="ed25519";
@@ -2125,9 +2124,8 @@ which is part of the signature base above:
 <sourcecode type="http">
 Content-Digest: sha-256=:[digest-value]:
 Content-Length: [body-length]
-Date: [date]
 Signature-Input: sig1=("@method" "@target-uri" "content-digest"
-    "content-length" "date");
+    "content-length");
   created=[timestamp];
   keyid="sender.example.org#key1";
   alg="ed25519";
