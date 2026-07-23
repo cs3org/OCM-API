@@ -791,10 +791,11 @@ described in the respective sections.  This section specifies the
 normative requirements for producing and verifying those signatures.
 Appendix B contains a complete example.
 
-Public keys for signature verification are published as a JWK Set
-[RFC7517] at the URL advertised in the `jwksUri` field of the
-signer's [Discovery](#ocm-api-discovery) response, when the
-`http-sig` capability is advertised.
+Public keys for signature verification are distributed as follows:
+an OCM Server that advertises the `http-sig` capability MUST
+publish its public keys as a JWK Set [RFC7517] at the URL
+advertised in the `jwksUri` field of its
+[Discovery](#ocm-api-discovery) response.
 
 ## Applicability
 
@@ -935,6 +936,11 @@ discretion, or rejected when the receiver advertises
 `must-use-http-sig`).  Signatures without `tag="ocm"` MAY coexist (e.g.
 proxy-attached signatures) but verifiers MUST NOT process them as part
 of OCM signature processing.
+
+After successful signature verification, the verifier SHOULD confirm
+that the payload is consistent with the signer, i.e. that the
+actions implied by the payload were initiated on behalf of the
+origin of the request.
 
 ## Signing Direction Index
 
@@ -2109,11 +2115,14 @@ out of scope for this specification: a mechanism similar to the
 
 # Appendix B: JWKS and HTTP Signature Examples
 
+This appendix is informative.
+
 ## JWKS Endpoint
 
-An OCM Server that advertises the `http-sig` capability MUST publish
+An OCM Server that advertises the `http-sig` capability publishes
 its public keys, in the format specified by [RFC7517], at the URL
-advertised in the `jwksUri` field of its Discovery response.  Here is
+advertised in the `jwksUri` field of its Discovery response (see
+[HTTP Message Signatures](#http-message-signatures)).  Here is
 an example response from `https://sender.example.org/ocm/jwks`:
 
 ~~~
@@ -2196,10 +2205,8 @@ Signature-Input: sig1=("@method" "@target-uri" "content-digest"
 Signature: sig1=:[signature-value]=:
 </sourcecode>
 
-The covered components, the `created` parameter, the single `ocm`
-tag, and the prohibition on symmetric algorithms shown here are
-normative; see [HTTP Message Signatures](#http-message-signatures) for
-the full requirements.
+See [HTTP Message Signatures](#http-message-signatures) for the
+normative requirements illustrated by this example.
 
 ## Verifying a Signature (Receiver)
 
@@ -2225,10 +2232,10 @@ illustrates the procedure to verify an incoming signed request:
 
 ## Validating the Payload
 
-Following the validation of the signature, the host SHOULD also confirm
-the validity of the payload, that is ensuring that the actions implied
-in the payload actually initiated on behalf of the source of the
-request.
+Following the validation of the signature, the host also confirms
+the validity of the payload, as required under Verification
+Requirements in
+[HTTP Message Signatures](#http-message-signatures).
 
 As an example, if the payload is about initiating a new share, the file
 owner has to be an account from the instance at the origin of the
