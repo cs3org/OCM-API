@@ -771,12 +771,12 @@ contain the following information about its OCM API:
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
   Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
   accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
-* OPTIONAL: jwksUri (string) - URL of a JWK Set document [RFC7517]
-  containing the public keys this OCM Server uses for HTTP Message
-  Signatures.  The URL is discovered from this field; it is not a
-  fixed path in the OCM API.
+* OPTIONAL: jwksUri (string) - https URL of a JWK Set document
+  [RFC7517] containing the public keys this OCM Server uses for HTTP
+  Message Signatures.  The URL is discovered from this field; it is
+  not a fixed path in the OCM API.
   Implementations that advertise the `"http-sig"` capability MUST
-  provide this URL as well.
+  provide this URL as well, and it MUST use https.
   Example: `"https://cloud.example.org/ocm/jwks"`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint hosted by
   this OCM Server.  When this OCM Server acts as Sending Server, the
@@ -837,16 +837,17 @@ components:
 * "content-digest"      - [RFC9530] digest of the body
 * "content-length"      - message size
 
-The Signature-Input parameters MUST include `created` and `keyid`.
+The signature parameters MUST include `created` and `keyid`.
 Freshness and replay protection are anchored on `created` (see
 Verification Requirements).  The `keyid` value MUST be equal to the
 `kid` value of the corresponding key in the signer's JWK Set (see
 [Keys and Algorithms](#keys-and-algorithms)).
 
 The `Date` header is deliberately not covered by the signature:
-intermediaries commonly rewrite it, which would make signatures
-fragile, and the `created` signature parameter already conveys the
-message's creation time (see Section 7.2.4 of [RFC9421]).
+intermediaries sometimes rewrite it (see Section 6.6.1 of [RFC9110]),
+which would make signatures fragile, and the `created` signature
+parameter already conveys the message's creation time (see
+Section 7.2.4 of [RFC9421]).
 
 The `content-digest` component binds the request body to the signature,
 protecting it against modification in transit.  Its value MUST use a
@@ -1280,15 +1281,18 @@ A 503 response status means that the Receiver is temporary unavailable.
 The Receiving Server MAY discard the notification if any of the
 following hold true:
 
-* the HTTP Signature is missing but the Sending Server advertises the
-  `http-sig` capability in the Discovery response obtained from the
-  FQDN part of the `sender` field in the request body
-* the HTTP Signature is missing
-* the HTTP Signature is not valid (see [HTTP Message
+* the HTTP Message Signature is missing but the Sending Server
+  advertises the `http-sig` capability in the Discovery response
+  obtained from the FQDN part of the `sender` field in the request
+  body
+* the Sending Server advertises the `http-sig` capability but its
+  Discovery response carries no `jwksUri`
+* the HTTP Message Signature is missing
+* the HTTP Message Signature is not valid (see [HTTP Message
   Signatures](#http-message-signatures))
 * no trusted JWK Set can be obtained for the FQDN part of the
   `sender` field in the request body, via the `jwksUri` field of its
-  Discovery response or otherwise
+  Discovery response
 * that JWK Set contains no key whose `kid` equals the `keyid`
   signature parameter (see [HTTP Message
   Signatures](#http-message-signatures))
@@ -2064,6 +2068,10 @@ Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.
 [RFC8615] Nottingham, M. "[Well-Known Uniform Resource Identifiers
 (URIs)](https://datatracker.ietf.org/doc/html/rfc8615)", May 2019
 
+[RFC9110] Fielding, R., Nottingham, M. and Reschke, J. "[HTTP
+Semantics](https://datatracker.ietf.org/doc/html/rfc9110)",
+June 2022.
+
 [RFC9421] Backman, A., Richer, J. and Sporny, M. "[HTTP Message
 Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 
@@ -2075,7 +2083,8 @@ Representation of Contact Data](
 https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 
 [RFC9864] Jones, M., Steele, O., "[Fully-Specified Algorithms for
-JOSE and COSE](https://datatracker.ietf.org/doc/html/rfc9864)",
+JSON Object Signing and Encryption (JOSE) and CBOR Object Signing
+and Encryption (COSE)](https://datatracker.ietf.org/doc/html/rfc9864)",
 October 2025.
 
 ## Informative References
@@ -2122,7 +2131,7 @@ out of scope for this specification: a mechanism similar to the
 
 This appendix is informative.
 
-## JWKS Endpoint
+## Published JWK Set
 
 An OCM Server that advertises the `http-sig` capability publishes
 its public keys, in the format specified by [RFC7517], at the URL
@@ -2138,7 +2147,7 @@ an example response from `https://sender.example.org/ocm/jwks`:
       "crv": "Ed25519",
       "alg": "Ed25519",
       "kid": "sender.example.org#key1",
-      "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo"
+      "x": "AzeStPAdQ-vbi6bJVxcQjBPF2I7fDZdfDZ_XZ3J4Azs"
     }
   ]
 }
@@ -2184,10 +2193,10 @@ NOTE: '\' line wrapping per RFC 8792
 
 "@method": POST
 "@target-uri": https://receiver.example.org/ocm/shares
-"content-digest": sha-256=:[digest-value]:
-"content-length": [body-length]
+"content-digest": sha-256=:/Uz47cfD1HOdMTIqcWjd84iMLQ4gVJdC7ZFACf1ViqU=:
+"content-length": 521
 "@signature-params": ("@method" "@target-uri" "content-digest" \
-  "content-length");created=[timestamp];\
+  "content-length");created=1785060500;\
   keyid="sender.example.org#key1";alg="ed25519";tag="ocm"
 </sourcecode>
 
@@ -2200,12 +2209,13 @@ base above:
 <sourcecode type="http">
 NOTE: '\' line wrapping per RFC 8792
 
-Content-Digest: sha-256=:[digest-value]:
-Content-Length: [body-length]
+Content-Digest: sha-256=:/Uz47cfD1HOdMTIqcWjd84iMLQ4gVJdC7ZFACf1ViqU=:
+Content-Length: 521
 Signature-Input: sig1=("@method" "@target-uri" "content-digest" \
-  "content-length");created=[timestamp];\
+  "content-length");created=1785060500;\
   keyid="sender.example.org#key1";alg="ed25519";tag="ocm"
-Signature: sig1=:[signature-value]=:
+Signature: sig1=:Epax4XFqvbrrDzQUAaNl+uECasEKbArgz8AlEkXspvYX2fSkQFlC\
+  kaXImZnYU898C2t0IdmbFhjR8bkN0hZgCg==:
 </sourcecode>
 
 See [HTTP Message Signatures](#http-message-signatures) for the
@@ -2221,7 +2231,9 @@ illustrates the procedure to verify an incoming signed request:
    request body
 2. Fetch the Discovery response from
    `https://<provider-domain>/.well-known/ocm` and read its
-   `jwksUri` field
+   `jwksUri` field.  If the Sending Server advertises the `http-sig`
+   capability but no `jwksUri` is present, the receiver MUST reject
+   the request as non-conformant
 3. Fetch the public keys from the URL given by `jwksUri`
 4. Locate the unique signature carrying the `tag="ocm"` parameter in
    the `Signature-Input` header, disregarding its dictionary label
@@ -2238,7 +2250,7 @@ illustrates the procedure to verify an incoming signed request:
 ## Validating the Payload
 
 Following the validation of the signature, the host also confirms
-the validity of the payload, as required under Verification
+the validity of the payload, as specified under Verification
 Requirements in
 [HTTP Message Signatures](#http-message-signatures).
 
