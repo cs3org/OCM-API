@@ -776,7 +776,9 @@ contain the following information about its OCM API:
   Message Signatures.  The URL is discovered from this field; it is
   not a fixed path in the OCM API.
   Implementations that advertise the `"http-sig"` capability MUST
-  provide this URL as well, and it MUST use https.
+  provide this URL as well, and it MUST use https.  As with the
+  Discovery Process, implementations MAY fallback to HTTP instead of
+  HTTPS in testing setups.
   Example: `"https://cloud.example.org/ocm/jwks"`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint hosted by
   this OCM Server.  When this OCM Server acts as Sending Server, the
@@ -838,8 +840,10 @@ components:
 * "content-length"      - message size
 
 The signature parameters MUST include `created` and `keyid`.
-Freshness and replay protection are anchored on `created` (see
-Verification Requirements).  The `keyid` value MUST be equal to the
+Freshness is anchored on `created` (see Verification Requirements);
+`created` bounds how long a captured signature stays acceptable, but
+does not by itself detect replay within that window (see Section
+7.2.2 of [RFC9421]).  The `keyid` value MUST be equal to the
 `kid` value of the corresponding key in the signer's JWK Set (see
 [Keys and Algorithms](#keys-and-algorithms)).
 
@@ -2000,7 +2004,9 @@ Implementers SHOULD NOT use it and prefer short-lived tokens instead.
 ##  Code Flow
 
 All `{tokenEndPoint}` requests MUST be transmitted over HTTPS and
-signed using HTTP Signatures.  Bearer tokens MUST be treated as
+signed using HTTP Signatures.  As with the Discovery Process,
+implementations MAY fallback to HTTP instead of HTTPS in testing
+setups.  Bearer tokens MUST be treated as
 confidential and never logged, persisted beyond their lifetime, or
 transmitted over unsecured channels.
 
@@ -2232,8 +2238,9 @@ illustrates the procedure to verify an incoming signed request:
 2. Fetch the Discovery response from
    `https://<provider-domain>/.well-known/ocm` and read its
    `jwksUri` field.  If the Sending Server advertises the `http-sig`
-   capability but no `jwksUri` is present, the receiver MUST reject
-   the request as non-conformant
+   capability but no `jwksUri` is present, the receiver can discard
+   the notification, as described in [Decision to
+   Discard](#decision-to-discard)
 3. Fetch the public keys from the URL given by `jwksUri`
 4. Locate the unique signature carrying the `tag="ocm"` parameter in
    the `Signature-Input` header, disregarding its dictionary label
@@ -2708,6 +2715,16 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * The `Date` header is no longer covered by signatures: freshness is
   anchored on the `created` signature parameter (see Section 7.2.4
   of [RFC9421]).
+* Clarified that `created` bounds the lifetime of a captured
+  signature but does not by itself detect replay within that window
+  (see Section 7.2.2 of [RFC9421]).
+* `jwksUri` and `{tokenEndPoint}` transport: https remains mandatory,
+  with the same HTTP fallback allowance for testing setups that the
+  Discovery Process has; dropped the https-only schema pattern from
+  spec.yaml accordingly.
+* Appendix B now defers the missing-`jwksUri` case to [Decision to
+  Discard](#decision-to-discard) instead of stating a stronger
+  requirement in an informative section.
 * Updated the signature examples: replaced the legacy `Digest` header
   with `Content-Digest` [RFC9530] and applied [RFC8792] line
   wrapping.

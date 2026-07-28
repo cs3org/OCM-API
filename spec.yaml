@@ -534,14 +534,14 @@ components:
         jwksUri:
           type: string
           format: uri
-          pattern: "^https://"
           description: >
             Optional URL of a JWK Set document [RFC7517] containing the
             public keys this OCM Server uses for HTTP Message Signatures
             [RFC9421]. The URL is discovered from this field; it is not a
             fixed path in the OCM API. If the `http-sig` capability is
             exposed, the jwksUri MUST be advertised in the discovery
-            response and MUST use https.
+            response and MUST use https, though implementations MAY fall
+            back to HTTP in testing setups.
           example: https://cloud.example.org/ocm/jwks
         tokenEndPoint:
           type: string
