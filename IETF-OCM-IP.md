@@ -101,9 +101,10 @@ access tokens issued by the OCM Server.
 Two properties of [OCM] make this delegation possible without sharing
 secrets between the OCM Server and the Protocol Server:
 
-1. The OCM Server publishes its public keys at the Well-Known [RFC8615]
-path `/.well-known/jwks.json` in JWK format [RFC7517], and signs its
-server-to-server requests using HTTP Message Signatures [RFC9421].
+1. The OCM Server publishes its public keys as a JWK Set [RFC7517] at
+the URL advertised in the `jwksUri` field of its OCM API Discovery
+response, and signs its server-to-server requests using HTTP Message
+Signatures [RFC9421].
 2. The Code Flow lets the Receiving Server exchange the `sharedSecret`
 for an access token whose format [OCM] leaves entirely at the issuer's
 discretion.
@@ -407,8 +408,9 @@ be delegated to a separate Token Server, in the same spirit as the rest
 of this document:
 
 * The Token Server holds its own signing keypair, and the OCM Server
-publishes the public key in its own `/.well-known/jwks.json` under a
-`kid` in its own domain.  The `iss` and `kid` rules of this document
+publishes the public key in its own JWK Set, advertised via the
+`jwksUri` field of its Discovery response, under a `kid` in its own
+domain.  The `iss` and `kid` rules of this document
 (see Token Issuance by the OCM Server) are then satisfied without any
 private key leaving the Token Server, and token
 verification by Receiving Servers and Protocol Servers is unchanged.
@@ -479,8 +481,9 @@ typically by the operators of the two systems, and consists of at least:
 Server is responsible for, which integration mode(s) to use, and, for
 Provisioned Integration, the base URL of the Integration API of the
 Protocol Server (referred to as `{integrationAPI}` below).  For
-Introspected Integration, additionally the domain of the Protocol
-Server, used to verify its introspection requests.
+Introspected Integration, additionally the Protocol Server's JWKS URL
+(referred to as `{protocolServerJwksUri}` below) and domain, used to
+verify its introspection requests.
 * On the Protocol Server: the domain(s) of the paired OCM Server(s) and
 the integration mode(s) permitted for each.  The Protocol Server MUST
 maintain an allowlist of paired OCM Server domains, MUST reject
@@ -493,12 +496,13 @@ the URL of the introspection endpoint (referred to as
 No shared secret is exchanged during pairing.  All trust on the back
 channel derives from HTTP Message Signatures [RFC9421] made with the OCM
 Server's signatory key, verified against the keys the OCM Server
-publishes at `https://<domain>/.well-known/jwks.json` [RFC7517], as
-specified in [OCM].  All trust on the front channel derives from the JWT
-signatures on the access tokens, verified against the same published
-keys.  Trust in introspection requests derives, symmetrically, from HTTP
-Message Signatures made with the Protocol Server's key, published at the
-Protocol Server's own `/.well-known/jwks.json`.
+publishes at the URL advertised in the `jwksUri` field of its OCM API
+Discovery response [RFC7517], as specified in [OCM].  All trust on the
+front channel derives from the JWT signatures on the access tokens,
+verified against the same published keys.  Trust in introspection
+requests derives, symmetrically, from HTTP Message Signatures made with
+the Protocol Server's key, published at the JWKS URL exchanged during
+pairing (see above).
 
 The Protocol Server consequently does not need a signing keypair of its
 own to implement this protocol, unless it uses Introspected Integration,
@@ -524,7 +528,8 @@ label `ocm`, following the same rules as server-to-server requests in
 [OCM]: the signature MUST cover at least `@method`, `@target-uri`,
 `content-digest`, `content-length` and `date`, MUST include the
 `created` parameter, and MUST be made with an asymmetric algorithm using
-a key advertised in the OCM Server's `/.well-known/jwks.json`.
+a key advertised in the OCM Server's JWK Set, located via the `jwksUri`
+field of its Discovery response.
 
 On receipt of an Integration API request, the Protocol Server:
 
@@ -728,8 +733,9 @@ at this OCM Server.
 The request MUST be made over TLS and MUST be signed with an HTTP
 Message Signature [RFC9421] carrying the label `ocm`, with the same
 covered components and `created` rules as Integration API requests.  The
-`keyid` MUST identify a key in the Protocol Server's own JWKS, published
-at `https://<protocol-server-domain>/.well-known/jwks.json` [RFC7517].
+`keyid` MUST identify a key in the Protocol Server's own JWKS,
+published at the JWKS URL exchanged during pairing
+(`{protocolServerJwksUri}`) [RFC7517].
 The introspection endpoint MUST verify that the `keyid` domain belongs
 to a paired Protocol Server and MUST verify the signature against that
 domain's JWKS before evaluating the credential; unauthenticated or
@@ -778,8 +784,9 @@ format at the issuer's discretion.  This document profiles that format.
 For every Share in Provisioned or Self-Contained Integration, the
 `access_token` MUST be a JWT conforming to the JWT Profile for OAuth 2.0
 Access Tokens [RFC9068].  The JOSE header MUST include `typ` with the
-value set to `at+jwt` and MUST include a `kid` parameter identifying the
-OCM Server's signatory key advertised in `/.well-known/jwks.json`, and
+value set to `at+jwt` and MUST include a `kid` parameter identifying
+the OCM Server's signatory key, advertised in the JWK Set located via
+the `jwksUri` field of its Discovery response, and
 MUST NOT use `none` as the `alg`.  The JWT MUST be signed with the
 private key corresponding to that signatory key, allowing anyone with
 access to the corresponding public key, including a Protocol Server, to
@@ -871,9 +878,10 @@ verification, validate the credential through Token Introspection
 instead: an `active` response supplies the fields (`iss`, `sub`, `aud`,
 `exp`, `client_id`, `ocm_ip`) used in steps 4 to 6, and steps 2 and 3
 are skipped; an inactive response means the request is rejected.
-2. Resolve the signing key: fetch (or use a cached copy of) the JWKS at
-`https://<iss-host>/.well-known/jwks.json` and select the key matching
-the token's `kid` header parameter.
+2. Resolve the signing key: fetch (or use a cached copy of) the OCM
+Server's Discovery document at `https://<iss-host>/.well-known/ocm`,
+read its `jwksUri` field, fetch the JWK Set from that URL, and select
+the key matching the token's `kid` header parameter.
 3. Verify the token signature and validity per [RFC9068]: the algorithm
 MUST be an asymmetric algorithm matching the key, MUST NOT be `none`,
 and the `exp` claim MUST be in the future.  The claims `iss`, `sub`,
@@ -1056,7 +1064,8 @@ signatures against the same keys, and introspection requests by HTTP
 Message Signatures against the Protocol Server's published keys.
 * The Protocol Server holds no signing keys for this protocol, with two
 exceptions: a Protocol Server using Introspected Integration holds a
-request-signing key, published at its own `/.well-known/jwks.json`, and
+request-signing key, published at the JWKS URL exchanged during
+pairing, and
 a delegated Token Server (sketched in the note on delegating the token
 endpoint) holds its own token-signing key, whose public part is
 published through the OCM Server's JWKS.
@@ -1367,9 +1376,9 @@ access_token=eyJ0eXAiOiJhdCtqd3QiLCJhbGciOiJFZERTQSIs...
 ~~~
 {: type="http"}
 
-The Protocol Server verifies the JWT against
-`https://cloud.example.org/.well-known/jwks.json`, looks up the Share
-Record by (`cloud.example.org`,
+The Protocol Server verifies the JWT against the JWK Set advertised
+at the `jwksUri` of `https://cloud.example.org/.well-known/ocm`, looks
+up the Share Record by (`cloud.example.org`,
 `7c084226-d9a1-11e6-bf26-cec0c932ce01`), checks that
 `alice@cloud.example.org` equals the stored `owner` and that
 `bob@receiver.example.org` equals the stored `shareWith`, and then
@@ -1453,9 +1462,10 @@ Depth: 1
 ~~~
 {: type="http"}
 
-The gateway verifies the JWT against
-`https://cloud.example.org/.well-known/jwks.json`, finds no Share Record
-for (`cloud.example.org`, `receiver.example.org`), confirms that
+The gateway verifies the JWT against the JWK Set advertised at the
+`jwksUri` of `https://cloud.example.org/.well-known/ocm`, finds no
+Share Record for (`cloud.example.org`, `receiver.example.org`),
+confirms that
 `cloud.example.org` is paired for Self-Contained Integration, and serves
 the PROPFIND read-only, scoped to the `uri` in the `ocm_ip` claim.
 
@@ -1467,8 +1477,8 @@ Carol (`carol@legacy.example.com`).  The Share Creation Notification is
 a legacy [OCM] share: the `webdav` entry points at `dav.example.org` and
 carries a `sharedSecret`, with no `must-exchange-token` requirement.
 `dav.example.org` is paired with `cloud.example.org` for Introspected
-Integration and holds a request-signing key published at
-`https://dav.example.org/.well-known/jwks.json`.
+Integration and holds a request-signing key published at the JWKS URL
+exchanged during pairing (`https://dav.example.org/jwks`).
 
 The Receiving Server presents the secret directly, per the legacy
 resource access flow of [OCM]:
