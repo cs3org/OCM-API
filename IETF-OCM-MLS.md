@@ -75,10 +75,12 @@ should not necessarily be taken to mean the user's file sync client.
 Implementations that do provide a native client application SHOULD
 perform cryptographic operations in the native client on the user's
 devices, rather than on the server, because this provides stronger
-isolation of key material from the server.  In either case the same MLS
-client model applies.
+isolation of key material from the server.  A user participating from
+multiple native devices MUST do so using an MLS Virtual Client as
+specified in [ietf-mls-virtual-clients], with the devices acting as
+Emulator Clients.  In either case the same MLS client model applies.
 
-Each user who is a member of a federated group has their own MLS leaf
+Each user who is a member of a federated group has exactly one MLS leaf
 node, enabling individual users to be added and removed independently.
 The OCM Server can act as the MLS client on behalf of its users.  For
 implementations where the primary interface is a web client, the OCM
@@ -143,8 +145,8 @@ wrapped keys, is encoded using base64url (the URL- and filename-safe
 alphabet defined in [RFC4648], Section 5) with padding omitted.  A
 decoder MUST accept such a value whether or not padding is present.
 
-This document uses terminology from [OCM] and [RFC9420].  Additional
-definitions:
+This document uses terminology from [OCM], [RFC9420] and
+[ietf-mls-virtual-clients].  Additional definitions:
 
 - **Group** - A Receiving Party identified by an OCM Address whose
 identifier resolves to a set of members spanning multiple OCM servers,
@@ -158,6 +160,11 @@ of epochs in which each epoch depends on its predecessor."
 shared cryptographic state with other clients, defined by the
 cryptographic keys it holds.  In this protocol an OCM Server can fulfill
 this role.
+- **Virtual Client** and **Emulator Client** - As defined in
+[ietf-mls-virtual-clients].  When a user participates from multiple
+devices, the user's single leaf in the federated group represents a
+Virtual Client and the devices are its Emulator Clients.  The federated
+group is the Higher-level Group in that document.
 - **Member Server** - An OCM server with one or more users who are
 members of a given Group, acting as MLS client on their behalf.
 - **Group Owner Server** - The server currently arbitrating Commits for
@@ -205,12 +212,15 @@ describes how those roles are fulfilled by OCM.
 The AS role is fulfilled by each user's home OCM server.  Credentials in
 this protocol are MLS basic credentials ([RFC9420] Section 5.3) whose
 identity field is the UTF-8 encoded OCM Address of the user.  Each user
-has their own distinct signing key pair so that individual users can be
-identified and addressed independently within the MLS group, for example
-to add or remove a specific user.  In web-client deployments the key
-pair is generated and held by the OCM Server on the user's behalf.  In
-native client deployments the key pair is held on the user's device and
-the server's role is limited to publishing the user's KeyPackages.
+has their own distinct signing key material so that individual users can
+be identified and addressed independently within the MLS group, for
+example to add or remove a specific user.  In web-client deployments the
+signing key material is generated and held by the OCM Server on the
+user's behalf.  In native client deployments with one device it is held
+on that device.  With multiple devices, signing key material is managed
+as specified for the Virtual Client in
+[ietf-mls-virtual-clients], and the server's role is limited to
+publishing the user's KeyPackages.
 
 A basic credential carries no verifiable binding of its own; the binding
 between a user's OCM Address and their signature key is attested by
@@ -246,6 +256,10 @@ All MLS messages are delivered to the `<endPoint>/notifications`
 endpoint of each recipient server, authenticated with HTTP Signatures
 [RFC9421].
 
+For a Virtual Client, the user's home server MUST deliver messages sent
+to or by the Virtual Client to all of its Emulator Clients, as required
+by [ietf-mls-virtual-clients] Section 5.1.
+
 Commits are constructed and signed by admin clients, but only the Commit
 accepted by the Group Owner Server takes effect; competing Commits for
 the same epoch are discarded by their senders.  Designating a single
@@ -278,11 +292,23 @@ shared group key.  The only MLS application messages used in this
 protocol carry wrapped file keys ({{key-distribution}}) and per-server
 transport credential updates ({{credential-update}}).
 
-- **At least one MLS leaf per user.** Each user who is a member of a
-federated group has at least one MLS leaf node, enabling individual
-users to be added and removed independently.  In web-client deployments
-the OCM Server manages a single leaf node per user on their behalf.  In
-native client deployments each user may have a leaf node per device.
+- **Exactly one MLS leaf per user.** Each user who is a member of a
+federated group has exactly one MLS leaf node, enabling individual users
+to be added and removed independently.  In web-client deployments the
+OCM Server manages that leaf on the user's behalf.  A user participating
+from multiple native devices MUST represent those devices by a single
+Virtual Client leaf, with the devices acting as Emulator Clients in
+accordance with [ietf-mls-virtual-clients].  A leaf per device, the
+Simple Multi-client model defined by that document, MUST NOT be used.
+Adding or removing a device MUST use the emulation-group management
+procedures in [ietf-mls-virtual-clients] Section 6, not an Add or
+Remove in the federated group.
+
+Transitioning from a single device to multiple devices is an
+implementation detail that does not affect the protocol.  A native
+client implementation is however RECOMMENDED to establish an emulation
+group when enrolling the user's first device and represent the user as a
+Virtual Client, even while that device is the only Emulator Client.
 
 - **The OCM Server is a MLS client.** An OCM Server meets the MLS
 definition of a client.  For web-client deployments this means key
@@ -420,7 +446,10 @@ Requests to this endpoint MUST be signed using HTTP Message Signatures
 
 In native client deployments, the user's device generates KeyPackages
 and publishes them to the home server, which exposes them at the same
-endpoint without interpreting them.
+endpoint without interpreting them.  For a user with multiple devices,
+the Emulator Clients MUST create and coordinate the Virtual Client's
+KeyPackages as specified in [ietf-mls-virtual-clients] Section 5.5.1
+before publishing them to the home server.
 
 Each KeyPackage contains an MLS Credential identifying the user by their
 OCM Address, signed by the user's own signing key pair.  Users who
@@ -525,10 +554,8 @@ the admin set while remaining a member: this is a GroupContextExtensions
 proposal only, and the resigning admin's own client MAY commit it.
 Removing an admin's membership is constrained by MLS: a Commit that
 removes its own committer is invalid ([RFC9420] Section 12.2).  A Commit
-that removes some but not all of an admin's leaves MAY be committed by
-one of that admin's remaining clients, but a Commit that removes an
-admin's last leaf is necessarily committed by an admin client of a
-different admin.
+that removes an admin's single leaf is therefore necessarily committed
+by an admin client of a different admin.
 
 ### Group OCM Address and Admin Set {#admin-set}
 
@@ -576,9 +603,8 @@ proposals MUST be explicitly approved by an admin, MUST be committed by
 an admin client, and MUST NOT change `group_ocm_address`.
 
 The admin set and the group membership are coupled: an entry in `admins`
-is only meaningful while that admin has at least one leaf in the ratchet
-tree.  A Commit after whose application an admin would no longer have
-any leaf in the ratchet tree MUST therefore also include a
+is only meaningful while that admin's leaf is in the ratchet tree.  A
+Commit that removes an admin's leaf MUST therefore also include a
 GroupContextExtensions proposal deleting that admin from `admins`, and
 the Group Owner Server and all Member Servers MUST reject a Commit that
 would leave an entry in `admins` with no corresponding leaf in the tree.
@@ -619,27 +645,27 @@ Failover proceeds as follows:
     first admin's leaf is stale.
 2.  Takeover: the home server of the next admin in the admin set MAY
     begin arbitrating Commits.  The first Commit it arbitrates SHOULD
-cover Remove proposals evicting the stale first admin's leaves, together
-with the GroupContextExtensions proposal deleting them from the admin
-set required by {{admin-set}}, constructed by one of its own admin
-clients.  This makes the takeover permanent through the normal
-succession rule.
+    cover a Remove proposal evicting the stale first admin's leaf,
+    together with the GroupContextExtensions proposal deleting that
+    admin from the admin set as required by {{admin-set}}, constructed
+    by one of its own admin clients.  This makes the takeover permanent
+    through the normal succession rule.
 3.  Conflict resolution: if a Member Server receives two different
     Commits for the same epoch from two arbiters, it MUST process the
-one arbitrated by the server of the admin listed earlier in the admin
-set and discard the other.
+    one arbitrated by the server of the admin listed earlier in the
+    admin set and discard the other.
 4.  Hold-back: a Member Server that has observed the trigger conditions
     of step 1 SHOULD retain the previous epoch's group state when
-processing a Commit, so that it can revert and reprocess the winning
-Commit if conflict resolution later discards the one it processed first.
-Retained state MUST be deleted after a bounded time, per [RFC9420]
-Section 14; the security trade-off is discussed in Security
-Considerations.
+    processing a Commit, so that it can revert and reprocess the
+    winning Commit if conflict resolution later discards the one it
+    processed first. Retained state MUST be deleted after a bounded
+    time, per [RFC9420] Section 14; the security trade-off is discussed
+    in Security Considerations.
 5.  Rejoin: a Member Server that processed a discarded Commit and no
     longer holds the state needed to reprocess the winning Commit has
-drifted from the group.  It recovers through the rejoin procedure
-({{rejoin}}).  Wrapped FKs are re-wrapped and redistributed by their
-sending servers in the new epoch as usual ({{fk-rewrap}}).
+    drifted from the group.  It recovers through the rejoin procedure
+    ({{rejoin}}).  Wrapped FKs are re-wrapped and redistributed by
+    their sending servers in the new epoch as usual ({{fk-rewrap}}).
 
 Since an unavailable arbiter only pauses membership changes, while
 sharing, resource access, and FK distribution continue to operate, the
@@ -657,8 +683,8 @@ Proposals and Commits MUST be encoded as PublicMessage objects
 ([RFC9420] Section 6.2), and Application Messages as PrivateMessage
 objects ([RFC9420] Section 6.3).  Handshake messages are sent in the
 clear at the MLS layer because the servers that route and arbitrate them
-are required to track the public group state - the ratchet tree and
-GroupContext - in order to derive membership for share routing, resolve
+are required to track the public group state, i.e the ratchet tree and
+GroupContext, in order to derive membership for share routing, resolve
 shares to local users, and verify that Commits are signed by admin
 clients; in native client deployments those servers do not hold the
 group's secrets.  A recipient that holds the group's secrets MUST verify
@@ -919,25 +945,29 @@ Recovery is mediated by an admin client through the normal Commit path:
 
 1.  The drifted server discards its MLS state for the group and
     generates a fresh KeyPackage for each of its users who are members
-of the group.
+    of the group.  A KeyPackage for a Virtual Client MUST be generated
+    and coordinated as specified in [ietf-mls-virtual-clients]
+    Section 5.5.1.
 2.  It sends an `MLS_REJOIN` notification carrying those KeyPackages to
     the home server of every admin.  The notification is authenticated
-at the OCM layer with HTTP Signatures [RFC9421], the same trust anchor
-that authenticates KeyPackage distribution itself, so a rejoin request
-is exactly as trustworthy as a freshly fetched KeyPackage.
+    at the OCM layer with HTTP Signatures [RFC9421], the same trust
+    anchor that authenticates KeyPackage distribution itself, so a
+    rejoin request is exactly as trustworthy as a freshly fetched
+    KeyPackage.
 3.  An admin client verifies that each KeyPackage's credential carries
     the OCM Address of a leaf currently in the ratchet tree, and that
-the notification was signed by the server named in those OCM Addresses.
-A rejoin MUST NOT admit a user without a leaf in the tree; it can only
-replace existing members.
+    the notification was signed by the server named in those OCM
+    Addresses.  A rejoin MUST NOT admit a user without a leaf in the
+    tree; it can only replace existing members.
 4.  The admin client constructs a single Commit containing, by value, a
     Remove proposal for each stale leaf and an Add proposal for the
-corresponding fresh KeyPackage.  This rejoin pair preserves the OCM
-Address of every affected leaf and grants no new party access, so admin
-clients SHOULD commit it automatically, per the policy in {{admins}}.
+    corresponding fresh KeyPackage.  This rejoin pair preserves the OCM
+    Address of every affected leaf and grants no new party access, so
+    admin clients SHOULD commit it automatically, per the policy in
+    {{admins}}.
 5.  The Commit is arbitrated and broadcast as usual, and the drifted
     server receives one `MLS_WELCOME` per re-added user, restoring clean
-state from the Welcome's `ratchet_tree` extension.
+    state from the Welcome's `ratchet_tree` extension.
 
 A single Commit recovers all of the drifted server's users at once.
 Until the rejoin completes, the drifted server can continue to serve
@@ -1076,7 +1106,8 @@ acts on behalf of a user who is a member of that group:
     whose length is the key length of that algorithm.
 2.  Encrypts the resource with FK using the content AEAD.
     Implementations supporting native client decryption of large files
-SHOULD use a chunked AEAD construction to enable streaming decryption.
+    SHOULD use a chunked AEAD construction to enable streaming
+    decryption.
 3.  Derives the current Group Key from the user's local MLS state.
 4.  Wraps FK using the wrap AEAD:
 
@@ -1110,7 +1141,7 @@ SHOULD use a chunked AEAD construction to enable streaming decryption.
 
 5.  Sends an `MLS_APPLICATION` notification directly to all current
     Member Servers, carrying the wrapped FK keyed by `(resourceId,
-groupId)`.
+    groupId)`.
 
 ## FK Re-wrap on Epoch Change {#fk-rewrap}
 
@@ -1648,6 +1679,14 @@ client deployments provide stronger isolation, as the server does not
 hold key material.  Implementations SHOULD move toward native client
 deployments over time.
 
+**Virtual Clients.** All Emulator Clients of a Virtual Client hold the
+secret state needed to act as that Virtual Client.  Compromise of one
+device therefore compromises the Virtual Client, and the devices must
+fully trust one another.  Implementations MUST follow the onboarding,
+removal, state-transfer, key-deletion, nonce-protection, and ratchet
+coordination requirements and security considerations of
+[ietf-mls-virtual-clients].
+
 **FK rotation vs key-reuse.** FK rotation provides cryptographic access
 revocation on member removal, independent of trust assumptions, and
 SHOULD also be performed periodically or when key compromise is
@@ -1929,6 +1968,11 @@ The complete changelog is updated in the OCM-API GitHub repository.
 Cloud
 Mesh](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/)",
 Work in Progress, Internet-Draft.
+
+[ietf-mls-virtual-clients] Alwen, J., Kohbrok, K., McMillion, B.,
+Mularczyk, M. and Robert, R.  "[MLS Virtual
+Clients](https://datatracker.ietf.org/doc/html/draft-ietf-mls-virtual-clients-01)",
+Work in Progress, Internet-Draft, draft-ietf-mls-virtual-clients-01.
 
 [RFC2119] Bradner, S.  "[Key words for use in RFCs to Indicate
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
