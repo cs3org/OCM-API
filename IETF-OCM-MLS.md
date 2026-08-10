@@ -1670,14 +1670,62 @@ operations occur on the user's device.
 
 # Security Considerations {#security-considerations}
 
-**Trust model.** In web-client deployments, the OCM Server holds the
-Group Key and can decrypt any resource shared with the group on behalf
-of its users.  This is consistent with the standard OCM Server trust
-model, where users trust their server with their data, and with OCM's
-existing approach of abstracting security to the server level.  Native
-client deployments provide stronger isolation, as the server does not
-hold key material.  Implementations SHOULD move toward native client
-deployments over time.
+## Threat Model
+
+This specification inherits the threat model and trust assumptions of
+[OCM], except where this document explicitly provides stronger
+cryptographic protection.  Attackers may control remote OCM Servers,
+group members, Delivery Service functions, network paths, or previously
+valid members that have since been removed.  They may send malformed
+messages, withhold or reorder messages, retain previously obtained key
+material, and attempt to cause inconsistent group state or resource
+exhaustion.
+
+In web-client deployments, an OCM Server acts as an MLS client and holds
+the MLS state, Group Keys, FKs, and plaintext available to its users.
+The server's administrators, users with equivalent access such as root
+access to its host, and operators of storage containing that material
+are therefore trusted.  Such an operator can impersonate users hosted
+by that server, decrypt or alter Resources available to them, manipulate
+local group state, and suppress protocol operations.
+
+Native-client deployments place MLS state, FKs, and plaintext on the
+user's device instead.  For encrypted Resources, the OCM Server and its
+storage are then outside the confidentiality boundary and cannot create
+a valid modification without the relevant key material.  They can still
+delete or withhold ciphertext, replay previously valid ciphertext unless
+the application provides freshness protection, observe metadata, and
+deny service.  The user's home server also remains the Authentication
+Service for its own users and can impersonate those users by
+substituting their credentials or KeyPackages.  The native client device
+and anyone with administrative access to it are trusted with that user's
+key material and plaintext.
+
+Every current group member is an authorized recipient of the group's
+cryptographic material.  MLS cannot prevent a member from retaining or
+disclosing plaintext, Group Keys, or FKs that it legitimately receives.
+A member with write access and the applicable FK can also create a
+cryptographically valid arbitrary payload for a shared Resource.  MLS
+authenticates the member that performed a protocol operation; it does
+not establish that the member or the supplied content is benign.
+
+The distributed Delivery Service is not trusted for confidentiality or
+integrity of MLS-protected data.  A compromised Delivery Service cannot
+derive group secrets or forge valid MLS messages, but it can delay,
+drop, selectively deliver, or partition messages and can observe the
+metadata deliberately exposed by this protocol.  The Group Owner Server
+is additionally trusted for Commit arbitration and availability, but
+not for accepting otherwise invalid Commits or for content
+confidentiality.
+
+This protocol deliberately accepts several deployment-dependent
+trade-offs described below.  Encryption is optional.  Key-reuse mode
+trades cryptographic revocation for operational efficiency and trust in
+former Member Servers.  Temporary retention of previous or forked epoch
+state weakens forward secrecy for a bounded period.  Public handshake
+messages and distribution of the ratchet tree expose group membership
+and membership changes to participating servers.  None of these modes
+provides protection from complete or selective denial of service.
 
 **Virtual Clients.** All Emulator Clients of a Virtual Client hold the
 secret state needed to act as that Virtual Client.  Compromise of one
@@ -1693,10 +1741,10 @@ SHOULD also be performed periodically or when key compromise is
 suspected.  In key-reuse mode the FK is unchanged and the ciphertext is
 not re-encrypted, so revocation is not cryptographic: it relies on
 trusting servers to discard all key material they are no longer entitled
-to - superseded Group Keys, old wrapped FKs, and any cached unwrapped
-FKs - after a Remove Commit.  Key-reuse mode SHOULD only be used within
-formal federations with governance agreements that enforce this
-behaviour.
+to after a Remove Commit.  This includes superseded Group Keys, old
+wrapped FKs, and any cached unwrapped FKs.  Key-reuse mode SHOULD only
+be used within formal federations with governance agreements that
+enforce this behaviour.
 
 **Two access-control layers.** For an encrypted federation share, access
 is controlled at two independent layers: the per-server transport
@@ -1819,15 +1867,20 @@ transport protection (TLS and HTTP Signatures [RFC9421]) prevents
 exposure to outside observers.  Application Messages, which carry key
 material, are always encrypted as PrivateMessage.
 
-**Group membership privacy.** The ratchet tree contains every member's
-OCM Address and is held by every Member Server, so the full membership
-of a group is visible to all servers that have a member in it.  This is
-inherent to the design - servers route shares and notifications using
-exactly this information - but it sets the privacy baseline: federated
-groups are not anonymous, and membership of a group is as visible to the
-participating servers as membership of a shared folder.  The tree is not
-exposed to servers outside the group, and transport protection prevents
-exposure to third parties.
+**Group membership and admin enumeration.** The ratchet tree contains
+the OCM Address of every group member, and the GroupContext contains the
+group's admin set.  This information forms part of the MLS group state
+and its changes are conveyed in public handshake messages.  Every group
+member and every Member Server can therefore enumerate all members and
+admins of the group and observe membership and admin-set changes over
+time.  This is an accepted privacy trade-off inherent to this design:
+servers need the membership information to route shares and
+notifications, resolve federation shares to local users, and enforce
+admin policy.  Federated groups do not provide anonymous membership or
+hidden administrator roles.  The information is not exposed by the
+protocol to servers outside the group, although an authorized member or
+Member Server can disclose it, and transport protection prevents
+exposure to outside observers in transit.
 
 **Admin set integrity.** The admin set and the group's OCM Address are
 carried in the GroupContext ({{admin-set}}), so they are covered by the
@@ -1856,6 +1909,22 @@ requests to make exhaustion attacks impractical.
 signed using HTTP Message Signatures [RFC9421] and SHOULD implement rate
 limiting and other access control methods on the `/mls-key-packages`
 endpoint to avoid user enumeration.
+
+## Underlying Security Specifications
+
+This specification relies on the base Open Cloud Mesh protocol [OCM],
+the Messaging Layer Security protocol [RFC9420], HTTP Message Signatures
+[RFC9421], and JSON Web Keys and JWK Sets [RFC7517].  All security
+considerations in those specifications apply to implementations of this
+protocol.  The security and privacy considerations of the MLS
+architecture [RFC9750] also apply.
+
+Implementations using Virtual Clients additionally need to follow all
+security considerations of [ietf-mls-virtual-clients], as required
+above.  Where this specification uses AEAD algorithms defined for HPKE,
+the applicable algorithm and nonce-management considerations of
+[RFC9180] apply, although this specification does not otherwise use the
+HPKE construction.
 
 # IANA Considerations
 
