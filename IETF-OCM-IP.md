@@ -1045,6 +1045,75 @@ one reason the two modes compose.
 
 # Security Considerations
 
+## Threat Model
+
+This specification inherits the threat model and trust assumptions of
+[OCM].  It additionally assumes that attackers may operate an unpaired
+Protocol Server, compromise a paired OCM Server or Protocol Server,
+steal bearer credentials, submit malformed back-channel or
+front-channel requests, or attempt to exhaust storage, computation, or
+network capacity.
+
+Pairing creates an explicit administrative trust relationship.  A
+paired OCM Server is trusted to provision only authorized Shares, issue
+tokens only for valid grants, provide truthful Share information, and
+stay within agreed resource limits.  A compromised OCM Server can
+impersonate its users, provision arbitrary Shares, mint valid access
+tokens, direct the Protocol Server to expose Resources, and consume
+resources allocated to the pairing.
+
+The Protocol Server is part of the Sending Server's trusted computing
+base for every protocol it serves.  Its administrators, users with
+equivalent access such as root access to its host, and operators of its
+underlying storage are trusted.  A compromised Protocol Server can
+ignore permissions and identity bindings, disclose or alter Resources,
+inject arbitrary content, misuse bearer tokens that reach it, record
+Share metadata, or deny service.  OCM-IP does not protect users from
+such behavior.  Avoiding persistent replication of OCM `sharedSecret`
+values limits credential exposure, but does not make the Protocol Server
+an untrusted content-serving component.
+
+Provisioned and Introspected Integration disclose the full Share
+Creation Notification payload to the Protocol Server with every
+`sharedSecret` removed.  Depending on the Share, this can include the
+sender, owner, Receiving Party, display names, Resource name and
+description, Resource and Share types, protocol endpoints, permissions,
+expiration, and extension metadata.  Provisioned Integration transfers
+this information over the signed back channel before Resource access
+and normally stores it as a Share Record.  Introspected Integration
+transfers it through the additional introspection exchange and permits
+the resulting response to be cached until its stated expiration.
+
+Self-Contained Integration discloses slightly less information.  The
+JWT presented to the Protocol Server contains the `ocm_ip` claim with
+the protocol details, `providerId`, Resource type, and selected optional
+Share metadata, while the enclosing JWT claims identify the issuer,
+owner, and Receiving Party.  The same JWT form is used by Introspected
+Integration, but Self-Contained Integration performs no additional
+introspection request.  The `ocm_ip` contents are visible to the
+Protocol Server and to every other holder of the JWT, including a
+Receiving Party's user agent for applicable protocols.
+
+A delegated Token Server is trusted with token-signing authority and
+with the Share and identity information needed to issue credentials.  A
+compromise of that server permits valid tokens to be minted within the
+scope of its published signing keys.
+
+TLS, HTTP Message Signatures, JWT signatures, and authenticated
+introspection establish which paired component made an assertion and
+protect exchanges in transit.  They do not establish that a trusted
+endpoint is benign or that Resource content is safe.  Bearer tokens
+grant access to their holder until they expire or cease to be accepted
+and therefore need to remain confidential.
+
+The three modes make different availability and revocation trade-offs.
+Provisioned Integration depends on delivery of lifecycle requests.
+Self-Contained Integration cannot revoke an issued token before expiry.
+Introspected Integration depends on availability of the introspection
+endpoint and permits revocation only after cached positive responses
+expire.  No mode prevents a required OCM Server or Protocol Server from
+selectively or completely denying service.
+
 ## No Secret Replication
 
 A central design goal of OCM-IP is that delegating protocol work does
@@ -1180,6 +1249,22 @@ request per uncached front-channel credential; implementations SHOULD
 apply negative caching with a short lifetime so that a flood of invalid
 credentials does not translate into a flood of introspection traffic
 towards the OCM Server.
+
+## Underlying Security Specifications
+
+This specification relies on the base Open Cloud Mesh protocol [OCM],
+HTTP Message Signatures [RFC9421], JSON Web Keys and JWK Sets [RFC7517],
+Digest Fields [RFC9530], JSON Web Tokens [RFC7519], OAuth 2.0 Token
+Introspection [RFC7662], and the JWT Profile for OAuth 2.0 Access Tokens
+[RFC9068].  All security considerations in those specifications apply
+to implementations of OCM-IP.
+
+These specifications need to be considered together.  A signature or
+token is only as trustworthy as the provenance and protection of its
+key, a signed `Content-Digest` provides content integrity only when both
+the signature and digest are validated, and an active introspection
+response grants authority only within the authenticated pairing and
+until its stated expiration.
 
 # IANA Considerations
 
