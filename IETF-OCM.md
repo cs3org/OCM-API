@@ -1972,50 +1972,35 @@ in which case the "providerId" field is REQUIRED, or to a Group.  The
 
 ## Threat Model
 
-OCM protects protocol exchanges between independently operated servers.
-It assumes that an attacker may control a remote user, send malformed or
-deceptive protocol messages, observe or modify traffic where transport
-security is not used, steal bearer credentials, or operate a malicious
-OCM Server.  Implementations are expected to authenticate peers where
-required, enforce local authorization policy, validate protocol inputs,
-and protect credentials.
+The threat model follows the Internet threat model described in
+[RFC3552].  It assumes that the Sending Server and Receiving Server
+participating in an OCM exchange have not been compromised.  Their
+administrative interfaces, host operating systems, private keys,
+credentials, and underlying storage are part of the trusted endpoints.
+Compromise of either endpoint or its trusted infrastructure is outside
+the scope of this specification.
 
-OCM does not protect a user from the administrators of the user's OCM
-Server or from administrators of the infrastructure on which that
-server depends.  Administrative users of an OCM Server, users with
-equivalent access such as root access to its host, and operators able to
-obtain its private keys or bearer credentials are considered trusted.
-Such an operator can impersonate users hosted by that server, create or
-alter Shares and notifications attributed to those users, access
-Resources available to the server, and suppress or modify protocol
-operations.  Preventing such actions is outside the scope of this
-specification.
+An attacker is assumed to have extensive control of the communication
+channel and may observe, block, replay, insert, or modify traffic.  TLS
+and, where used, HTTP Message Signatures provide the protections
+described in this specification against such a network attacker.
 
-Storage used by an OCM Server is also considered trusted.  An operator
-with administrative access to underlying storage can read, replace,
-delete, roll back, or inject Resources and metadata.  For example, such
-an operator can inject an arbitrary file or payload into a shared
-folder.  OCM does not provide end-to-end encryption or object-level
-integrity protection against the Sending Server, the Receiving Server,
-or their storage operators.  Deployments requiring those properties
-need an additional end-to-end protection mechanism.
+An attacker may operate an OCM Server of its own, control a remote user,
+send malformed or deceptive protocol messages, or steal bearer
+credentials.  An attacker-controlled server can make arbitrary
+assertions under its own identity, but must not thereby gain authority
+for users or Resources outside its administrative domain.
+Implementations are expected to authenticate peers where required,
+enforce local authorization policy, validate protocol inputs, and
+protect credentials.
 
 Trust in one OCM Server does not imply trust in every OCM Server.  A
-server is authoritative only for the users and Resources in the
-administrative domain for which it is trusted.  A Receiving Server also
-acts on behalf of its Receiving Parties and receives credentials that
-permit access to their Remote Resources.  Consequently, a compromised
-or malicious Receiving Server can use or disclose access granted to
-those parties.  Operators need to consider this delegation when deciding
-whether to trust or allowlist a peer.
-
-TLS and HTTP Message Signatures protect messages in transit and permit
-attribution to the server controlling the relevant credentials.  They
-do not establish that assertions made by that server are truthful, that
-its administrator is benign, or that supplied content is safe.
-Resource names, descriptions, URIs, metadata, and Resource contents
-received from another server therefore remain untrusted input and need
-to be handled according to local security policy.
+TLS and HTTP Message Signatures permit attribution to the server
+controlling the relevant credentials, but do not establish that its
+assertions are truthful or that supplied content is safe.  Resource
+names, descriptions, URIs, metadata, and Resource contents received from
+another server remain untrusted input and need to be handled according
+to local security policy.
 
 A malicious or unavailable peer can refuse to deliver notifications or
 Resources and can attempt to exhaust network, processing, or storage
@@ -2159,6 +2144,11 @@ and Encryption (COSE)](https://datatracker.ietf.org/doc/html/rfc9864)",
 October 2025.
 
 ## Informative References
+
+[RFC3552] Rescorla, E. and Korver, B.  "[Guidelines for Writing RFC Text
+on Security
+Considerations](https://datatracker.ietf.org/doc/html/rfc3552)", BCP 72,
+July 2003.
 
 [OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open Cloud Mesh
 Integration
