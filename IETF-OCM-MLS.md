@@ -1658,11 +1658,10 @@ groups.
 
 In this transitive model, each home server is trusted to attest only its
 own users, and each admin client is trusted to have performed the
-attestation check at introduction time.  A malicious home server can
-impersonate its own users - it is their Authentication Service - but it
-cannot impersonate users of other servers, since it cannot produce an
-authenticated KeyPackage delivery for an OCM Address whose host part it
-does not serve.
+attestation check at introduction time.  The protocol does not
+independently verify assertions made by a user's home server, because
+that server is the Authentication Service for its users.  Compromise of
+that trusted server is outside the threat model.
 
 Users who require protection of their key material from their own server
 should choose a native client implementation where cryptographic
@@ -1672,51 +1671,53 @@ operations occur on the user's device.
 
 ## Threat Model
 
-This specification inherits the threat model and trust assumptions of
-[OCM], except where this document explicitly provides stronger
-cryptographic protection.  Attackers may control remote OCM Servers,
-group members, Delivery Service functions, network paths, or previously
-valid members that have since been removed.  They may send malformed
-messages, withhold or reorder messages, retain previously obtained key
-material, and attempt to cause inconsistent group state or resource
-exhaustion.
+The threat model follows the Internet threat model described in
+[RFC3552] and inherits the trust assumptions of [OCM].  It assumes that
+the OCM Servers participating in a group, including Member Servers,
+Admin Servers, and the Group Owner Server, have not been compromised and
+correctly enforce the protocol and their local authorization policies.
+Their administrative interfaces, host operating systems, private keys,
+credentials, and underlying storage are part of the trusted endpoints.
+Compromise of an OCM Server or its trusted infrastructure is outside the
+scope of this specification.
 
-In web-client deployments, an OCM Server acts as an MLS client and holds
-the MLS state, Group Keys, FKs, and plaintext available to its users.
-The server's administrators, users with equivalent access such as root
-access to its host, and operators of storage containing that material
-are therefore trusted.  Such an operator can impersonate users hosted
-by that server, decrypt or alter Resources available to them, manipulate
-local group state, and suppress protocol operations.
+An attacker is assumed to have extensive control of the communication
+channel and may observe, block, replay, insert, modify, delay, or
+reorder traffic.  TLS, HTTP Message Signatures, and MLS provide the
+protections described in this specification against such an attacker.
 
-Native-client deployments place MLS state, FKs, and plaintext on the
-user's device instead.  For encrypted Resources, the OCM Server and its
-storage are then outside the confidentiality boundary and cannot create
-a valid modification without the relevant key material.  They can still
-delete or withhold ciphertext, replay previously valid ciphertext unless
-the application provides freshness protection, observe metadata, and
-deny service.  The user's home server also remains the Authentication
-Service for its own users and can impersonate those users by
-substituting their credentials or KeyPackages.  The native client device
-and anyone with administrative access to it are trusted with that user's
-key material and plaintext.
+An attacker may control a remote user, a current or former group member,
+or an OCM Server of its own.  It may send malformed messages, retain key
+material it legitimately obtained while it was a member, disclose
+plaintext or keys available to it, and attempt to cause inconsistent
+group state or resource exhaustion.  An attacker-controlled server can
+make assertions under its own identity, but must not thereby gain
+authority for users outside its administrative domain or admission to a
+group without the required authorization.
+
+The distributed Delivery Service is not trusted to provide availability
+or consistent delivery.  It can delay, drop, reorder, selectively
+deliver, or partition messages and can observe metadata deliberately
+exposed by this protocol.  It cannot derive group secrets or forge valid
+MLS messages.  The Group Owner Server is trusted to arbitrate Commits,
+but its unavailability can stall epoch transitions until failover
+completes.
+
+In web-client deployments, the trusted OCM Server acts as the MLS client
+and holds MLS state, Group Keys, FKs, and plaintext on behalf of its
+users.  Native-client deployments move that cryptographic endpoint to
+the user's device.  Exposure of member key material and subsequent
+recovery are considered according to the forward-secrecy and
+post-compromise-security properties of [RFC9420]; full compromise of an
+OCM Server remains outside scope.
 
 Every current group member is an authorized recipient of the group's
 cryptographic material.  MLS cannot prevent a member from retaining or
 disclosing plaintext, Group Keys, or FKs that it legitimately receives.
 A member with write access and the applicable FK can also create a
 cryptographically valid arbitrary payload for a shared Resource.  MLS
-authenticates the member that performed a protocol operation; it does
-not establish that the member or the supplied content is benign.
-
-The distributed Delivery Service is not trusted for confidentiality or
-integrity of MLS-protected data.  A compromised Delivery Service cannot
-derive group secrets or forge valid MLS messages, but it can delay,
-drop, selectively deliver, or partition messages and can observe the
-metadata deliberately exposed by this protocol.  The Group Owner Server
-is additionally trusted for Commit arbitration and availability, but
-not for accepting otherwise invalid Commits or for content
-confidentiality.
+authenticates the member performing a protocol operation; it does not
+establish that the member or supplied content is benign.
 
 This protocol deliberately accepts several deployment-dependent
 trade-offs described below.  Encryption is optional.  Key-reuse mode
@@ -1724,8 +1725,8 @@ trades cryptographic revocation for operational efficiency and trust in
 former Member Servers.  Temporary retention of previous or forked epoch
 state weakens forward secrecy for a bounded period.  Public handshake
 messages and distribution of the ratchet tree expose group membership
-and membership changes to participating servers.  None of these modes
-provides protection from complete or selective denial of service.
+and membership changes to participating servers.  The protocol does not
+provide protection from complete or selective denial of service.
 
 **Virtual Clients.** All Emulator Clients of a Virtual Client hold the
 secret state needed to act as that Virtual Client.  Compromise of one
@@ -1784,25 +1785,24 @@ unwrapping once the re-wrapped FKs have arrived.
 **Group Key retention window.** Between processing a Commit and
 receiving the re-wrapped FKs for the new epoch ({{fk-rewrap}}), a Member
 Server may retain the previous epoch's Group Key in order to keep
-serving access requests.  This retention slightly weakens forward
-secrecy for the duration of the window: a server compromised during the
-window exposes the previous epoch's Group Key in addition to the current
-one.  The window is bounded by the arrival of the re-wrapped FKs, and
-Member Servers MUST delete the previous Group Key as soon as it is no
-longer needed, or after a bounded time, whichever comes first.
+serving access requests.  This retention extends the lifetime of the
+previous epoch's Group Key and therefore weakens forward secrecy for the
+duration of the window.  The window is bounded by the arrival of the
+re-wrapped FKs, and Member Servers MUST delete the previous Group Key as
+soon as it is no longer needed, or after a bounded time, whichever comes
+first.
 
 **Commit ordering.** The Group Owner Server is the sole arbiter of
 Commits, eliminating conflicting Commits for the same epoch during
-normal operation.  A compromised or unavailable Group Owner Server can
-stall epoch transitions, but it cannot decrypt resource content, and it
-cannot cause the group to accept a Commit constructed by a non-admin
-client, because every Member Server independently verifies the committer
-against the admin set before processing a Commit ({{admins}}).  The role
-passes automatically to the next admin's server when the first admin
-leaves the group ({{admin-set}}), and an unavailable arbiter is
-eventually replaced through failover ({{failover}}), during which
-conflicting Commits can briefly exist and are resolved
-deterministically.
+normal operation.  An unavailable Group Owner Server can stall epoch
+transitions, but the Delivery Service and network attackers cannot cause
+the group to accept a Commit constructed by a non-admin client, because
+every Member Server independently verifies the committer against the
+admin set before processing a Commit ({{admins}}).  The role passes
+automatically to the next admin's server when the first admin leaves the
+group ({{admin-set}}), and an unavailable arbiter is eventually replaced
+through failover ({{failover}}), during which conflicting Commits can
+briefly exist and are resolved deterministically.
 
 **Forked-state retention.** During a detected failover window, Member
 Servers retain the previous epoch's group state so that they can revert
@@ -1813,13 +1813,12 @@ limited to servers that have observed the failover trigger.
 
 **Rejoin.** The rejoin procedure ({{rejoin}}) lets a home server replace
 its own users' leaves with fresh KeyPackages on the strength of its HTTP
-Signature alone, without per-request admin approval.  This grants no new
-capability: the home server is already the trust anchor for its own
-users' KeyPackages and could substitute their keys at any time through
-the ordinary KeyPackage endpoint.  Because admin clients verify that a
-rejoin only replaces leaves whose OCM Addresses name the requesting
-server and that are already present in the ratchet tree, a rejoin can
-never admit a new party.
+Signature alone, without per-request admin approval.  The procedure
+relies on the home server's existing role as the Authentication Service
+for its own users and therefore introduces no additional trust
+assumption.  Because admin clients verify that a rejoin only replaces
+leaves whose OCM Addresses name the requesting server and that are
+already present in the ratchet tree, a rejoin cannot admit a new party.
 
 **Admin liveness and removal latency.** A Remove proposal takes
 cryptographic effect only when an admin client commits it.  Removing
@@ -2070,6 +2069,11 @@ Signatures](https://datatracker.ietf.org/doc/html/rfc9421)", February
 2024.
 
 ## Informative References
+
+[RFC3552] Rescorla, E. and Korver, B.  "[Guidelines for Writing RFC Text
+on Security
+Considerations](https://datatracker.ietf.org/doc/html/rfc3552)", BCP 72,
+July 2003.
 
 [RFC4918] Dusseault, L. M.  "[HTTP Extensions for Web Distributed
 Authoring and

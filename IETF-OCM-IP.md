@@ -98,8 +98,8 @@ Creation Notifications.  The Protocol Server serves the actual Resource
 access protocol, authorizing requests by independently verifying the
 access tokens issued by the OCM Server.
 
-Two properties of [OCM] make this delegation possible without sharing
-secrets between the OCM Server and the Protocol Server:
+Two properties of [OCM] make this delegation possible without
+provisioning the Share's `sharedSecret` to the Protocol Server:
 
 1. The OCM Server publishes its public keys as a JWK Set [RFC7517] at
 the URL advertised in the `jwksUri` field of its OCM API Discovery
@@ -390,12 +390,12 @@ Shares whose protocols are served by a Protocol Server MUST use the Code
 Flow of [OCM] unless the Share uses Introspected Integration: the OCM
 Server MUST include `must-exchange-token` in the requirements of every
 protocol entry that a Protocol Server serves in Provisioned or
-Self-Contained Integration.  Legacy shared-secret access cannot be
-verified by a Protocol Server on its own, because the long-lived secret
-is deliberately never replicated to it; Introspected Integration exists
-precisely to close this gap for Receiving Servers that cannot perform
-the token exchange, at the cost of a per-request callback (see Token
-Introspection and Security Considerations).
+Self-Contained Integration.  A Protocol Server cannot validate a legacy
+`sharedSecret` on its own.  Introspected Integration allows the Protocol
+Server to receive that credential on the front channel and validate it
+through a per-request callback to the OCM Server.  After successful
+introspection, the Protocol Server may also use the credential as
+described in Security Considerations.
 
 ### Note: Delegating the Token Endpoint
 
@@ -570,8 +570,10 @@ Receiving Server (see Lifecycle below),
 The request body is the Share Creation Notification object of [OCM] that
 the OCM Server intends to send to the Receiving Server, with one
 transformation applied: every `sharedSecret` field, in every protocol
-entry, MUST be removed.  The Protocol Server never receives, stores, or
-needs any OCM secret.
+entry, MUST be removed.  The Integration API therefore never transfers a
+`sharedSecret` to the Protocol Server.  Introspected Integration is
+different: a `sharedSecret` may reach the Protocol Server as a
+front-channel credential, independently of provisioning.
 
 The fields used by the Protocol Server are thus:
 
@@ -1047,31 +1049,38 @@ one reason the two modes compose.
 
 ## Threat Model
 
-This specification inherits the threat model and trust assumptions of
-[OCM].  It additionally assumes that attackers may operate an unpaired
-Protocol Server, compromise a paired OCM Server or Protocol Server,
-steal bearer credentials, submit malformed back-channel or
-front-channel requests, or attempt to exhaust storage, computation, or
-network capacity.
+The threat model follows the Internet threat model described in
+[RFC3552] and inherits the trust assumptions of [OCM].  It assumes that
+the Sending and Receiving OCM Servers, paired Protocol Servers, and any
+delegated Token Server have not been compromised and correctly enforce
+the protocol and their local authorization policies.  Their
+administrative interfaces, host operating systems, private keys,
+credentials, and underlying storage are part of the trusted endpoints.
+Compromise of an endpoint or its trusted infrastructure is outside the
+scope of this specification.
+
+An attacker is assumed to have extensive control of the communication
+channel and may observe, block, replay, insert, modify, delay, or
+reorder traffic.  TLS, HTTP Message Signatures, JWT signatures, and
+authenticated introspection provide the protections described in this
+specification against such an attacker.
+
+An attacker may operate an OCM Server or Protocol Server of its own,
+control a remote user, steal a bearer credential, or submit malformed
+back-channel or front-channel requests.  An unpaired server can make
+assertions under its own identity, but must not thereby gain access to a
+pairing, a Share Record, or a Resource.  Implementations are expected to
+verify pairing, authentication, identity binding, permissions, and
+Resource scope independently.
 
 Pairing creates an explicit administrative trust relationship.  A
-paired OCM Server is trusted to provision only authorized Shares, issue
-tokens only for valid grants, provide truthful Share information, and
-stay within agreed resource limits.  A compromised OCM Server can
-impersonate its users, provision arbitrary Shares, mint valid access
-tokens, direct the Protocol Server to expose Resources, and consume
-resources allocated to the pairing.
-
-The Protocol Server is part of the Sending Server's trusted computing
-base for every protocol it serves.  Its administrators, users with
-equivalent access such as root access to its host, and operators of its
-underlying storage are trusted.  A compromised Protocol Server can
-ignore permissions and identity bindings, disclose or alter Resources,
-inject arbitrary content, misuse bearer tokens that reach it, record
-Share metadata, or deny service.  OCM-IP does not protect users from
-such behavior.  Avoiding persistent replication of OCM `sharedSecret`
-values limits credential exposure, but does not make the Protocol Server
-an untrusted content-serving component.
+paired OCM Server is trusted to provision authorized Shares, issue
+tokens for valid grants, and provide truthful Share information.  A
+Protocol Server is part of the Sending Server's trusted computing base
+for every protocol it serves and is trusted to enforce identity
+bindings, permissions, and protocol restrictions.  A delegated Token
+Server is trusted with token-signing authority and with the Share and
+identity information needed to issue credentials.
 
 Provisioned and Introspected Integration disclose the full Share
 Creation Notification payload to the Protocol Server with every
@@ -1082,7 +1091,10 @@ expiration, and extension metadata.  Provisioned Integration transfers
 this information over the signed back channel before Resource access
 and normally stores it as a Share Record.  Introspected Integration
 transfers it through the additional introspection exchange and permits
-the resulting response to be cached until its stated expiration.
+the resulting response to be cached until its stated expiration.  In
+addition to the Share information returned by introspection, the
+Protocol Server receives the presented `sharedSecret` itself and may use
+or retain it as permitted under Secret Handling.
 
 Self-Contained Integration discloses slightly less information.  The
 JWT presented to the Protocol Server contains the `ocm_ip` claim with
@@ -1094,17 +1106,10 @@ introspection request.  The `ocm_ip` contents are visible to the
 Protocol Server and to every other holder of the JWT, including a
 Receiving Party's user agent for applicable protocols.
 
-A delegated Token Server is trusted with token-signing authority and
-with the Share and identity information needed to issue credentials.  A
-compromise of that server permits valid tokens to be minted within the
-scope of its published signing keys.
-
-TLS, HTTP Message Signatures, JWT signatures, and authenticated
-introspection establish which paired component made an assertion and
-protect exchanges in transit.  They do not establish that a trusted
-endpoint is benign or that Resource content is safe.  Bearer tokens
-grant access to their holder until they expire or cease to be accepted
-and therefore need to remain confidential.
+Bearer tokens grant access to their holder until they expire or cease
+to be accepted and therefore need to remain confidential.  The
+cryptographic mechanisms authenticate assertions and protect exchanges
+in transit; they do not establish that Resource content is safe.
 
 The three modes make different availability and revocation trade-offs.
 Provisioned Integration depends on delivery of lifecycle requests.
@@ -1114,19 +1119,33 @@ endpoint and permits revocation only after cached positive responses
 expire.  No mode prevents a required OCM Server or Protocol Server from
 selectively or completely denying service.
 
-## No Secret Replication
+## Secret Handling
 
-A central design goal of OCM-IP is that delegating protocol work does
-not multiply the places where secrets live:
+Provisioned and Self-Contained Integration avoid transferring the
+Share's `sharedSecret` to the Protocol Server.  Introspected Integration
+necessarily exposes the presented credential to the Protocol Server and
+therefore has different secret-handling requirements:
 
-* The `sharedSecret` of a Share is never stored on the Protocol Server:
-it is stripped from the provisioning payload and absent from the
-`ocm_ip` claim.  A compromise of the Protocol Server therefore does not
-leak credentials that could be exchanged for tokens at the OCM Server's
-`tokenEndPoint`.  (In Introspected Integration the Receiving Server does
-present the legacy secret on the front channel; the Protocol Server
-forwards it for introspection but MUST NOT retain it beyond the
-request.)
+* The Integration API strips every `sharedSecret` from the provisioning
+payload, and the `ocm_ip` claim does not contain one.  A Protocol Server
+therefore receives no `sharedSecret` through either of those mechanisms.
+* In Introspected Integration, the Receiving Server may present a legacy
+`sharedSecret` on the front channel.  The Protocol Server MUST
+successfully introspect the credential before relying on it.
+* After successful introspection, the Protocol Server MAY use the
+presented `sharedSecret` to access another protocol entry of the same
+Share when this is necessary to serve the requested protocol.  For
+example, a web application Protocol Server may use it to access a WebDAV
+entry in the same multi-protocol Share, whether that entry is served by
+another Protocol Server or by the OCM Server.
+* Such use MUST remain within the Resource, protocols, permissions, and
+parties identified by the successful introspection response.  The
+credential MUST NOT be used for another Share or retained beyond the
+period during which the introspection response may be relied upon.
+Continued use after that period requires a new successful introspection.
+* A Protocol Server that retains a `sharedSecret` for this purpose MUST
+protect it as a bearer credential.  It MUST NOT place it in URLs or logs
+and MUST delete it when it is no longer needed.
 * No pairing secret exists; the back channel is authenticated by HTTP
 Message Signatures against published keys, the front channel by JWT
 signatures against the same keys, and introspection requests by HTTP
@@ -1148,11 +1167,15 @@ consistent with the Code Flow considerations of [OCM].
 
 Without the Code Flow, the only credential is the long-lived
 `sharedSecret` itself, which the Receiving Server presents directly on
-the front channel.  The Protocol Server cannot verify it on its own: the
-secret is deliberately never replicated to it.  A Protocol Server MUST
-NOT accept any front-channel credential other than a verifiable access
-token or a credential validated through Token Introspection (or, for
-SSH, the public-key mechanism of [OCM]).
+the front channel.  The Protocol Server cannot validate it on its own.
+A Protocol Server MUST NOT accept a front-channel credential other than
+a verifiable access token or a credential validated through Token
+Introspection, except for the SSH public-key mechanism of [OCM].
+
+Successful introspection authorizes the Protocol Server to rely on the
+credential until the `exp` horizon of the introspection response.  This
+includes using the credential for another protocol entry of the same
+Share as described under Secret Handling.
 
 Introspected Integration therefore reintroduces, deliberately and only
 for compatibility, the per-request coupling to the OCM Server that the
@@ -1175,8 +1198,9 @@ content to third parties.  The allowlist is therefore REQUIRED, and an
 empty allowlist means the Integration API rejects all requests.
 
 The Protocol Server SHOULD apply resource limits per paired OCM Server
-(number of Share Records, concurrent sessions, storage) so that a
-misbehaving or compromised OCM Server cannot exhaust it.
+(number of Share Records, concurrent sessions, storage) so that requests
+from one pairing, including excessive requests caused by malfunction or
+an unexpectedly large workload, cannot exhaust it.
 
 Conversely, the OCM Server places trust in the Protocol Server to
 enforce the permissions and identity bindings of this document.
@@ -1335,6 +1359,11 @@ Signatures](https://tools.ietf.org/html/rfc9421)", February 2024.
 https://datatracker.ietf.org/doc/html/rfc9530)", February 2024.
 
 ## Informative References
+
+[RFC3552] Rescorla, E. and Korver, B.  "[Guidelines for Writing RFC Text
+on Security
+Considerations](https://datatracker.ietf.org/doc/html/rfc3552)", BCP 72,
+July 2003.
 
 [RFC4918] Dusseault, L. M. "[HTTP Extensions for Web Distributed
 Authoring and Versioning]( https://datatracker.ietf.org/html/rfc4918/)",
