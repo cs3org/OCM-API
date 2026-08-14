@@ -1,5 +1,11 @@
 # Embedded JSON Resources in Open Cloud Mesh
 
+**Giuseppe Lo Presti**<sup>1</sup>, **Rasmus Oscar Welander**<sup>1</sup>
+
+<sup>1</sup>[CERN](https://home.cern/contact), European Organization for Nuclear Research.</br>
+contact: giuseppe.lopresti@cern.ch
+
+
 ## Abstract
 
 This document specifies the `embedded` protocol for Open Cloud Mesh (OCM). The protocol allows a representation of a Resource to be carried directly in an OCM Share Creation Notification, without requiring the Receiving Server to access the Resource through a remote access protocol or to obtain an access credential.
@@ -283,9 +289,15 @@ The following entries are requested:
 
 These registrations define the wire format of the corresponding Share Creation Notifications in conjunction with [OCM] and this document.
 
-## 10. References
+## 10. Acknowledgements
 
-### 10.1. Normative References
+We thank Oliver Keeble for the initial discussions in the context of the EOSC Data Commons project.
+
+Work on this document has been funded by the EOSC Data Commons project "Services for inter- and cross-disciplinary data discovery, access, sharing and reuse in the EOSC Federation", which received funding from the European Union under Grant Agreement no. [101188179](https://cordis.europa.eu/project/id/101188179)
+
+## 11. References
+
+### 11.1. Normative References
 
 [OCM]
 Lo Presti, G., de Jong, M. B., Baghbani, M., and Nordin, M.,
@@ -295,7 +307,7 @@ Lo Presti, G., de Jong, M. B., Baghbani, M., and Nordin, M.,
 Research Object Crate Community,
 "RO-Crate Metadata Specification".
 
-### 10.2. Informative References
+### 11.2. Informative References
 
 [RFC8126]
 Cotton, M., Leiba, B., and Narten, T.,
