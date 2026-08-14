@@ -293,7 +293,7 @@ These registrations define the wire format of the corresponding Share Creation N
 
 We thank Oliver Keeble for the initial discussions in the context of the EOSC Data Commons project.
 
-Work on this document has been funded by the EOSC Data Commons project "Services for inter- and cross-disciplinary data discovery, access, sharing and reuse in the EOSC Federation", which received funding from the European Union under Grant Agreement no. [101188179](https://cordis.europa.eu/project/id/101188179)
+Work on this document has been funded by the EOSC Data Commons project "Services for inter- and cross-disciplinary data discovery, access, sharing and reuse in the EOSC Federation", which received funding from the European Union under Grant Agreement no. [101188179](https://cordis.europa.eu/project/id/101188179).
 
 ## 11. References
 
@@ -301,15 +301,15 @@ Work on this document has been funded by the EOSC Data Commons project "Services
 
 [OCM]
 Lo Presti, G., de Jong, M. B., Baghbani, M., and Nordin, M.,
-"Open Cloud Mesh", draft-ietf-ocm-open-cloud-mesh.
+"Open Cloud Mesh", [draft-ietf-ocm-open-cloud-mesh](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh).
 
 [RO-CRATE]
 Research Object Crate Community,
-"RO-Crate Metadata Specification".
+"RO-Crate Metadata", [specification](https://www.researchobject.org/ro-crate/specification.html).
 
 ### 11.2. Informative References
 
 [RFC8126]
 Cotton, M., Leiba, B., and Narten, T.,
 "Guidelines for Writing an IANA Considerations Section in RFCs",
-BCP 26, RFC 8126.
+BCP 26, [RFC 8126](https://www.rfc-editor.org/info/rfc8126/).
