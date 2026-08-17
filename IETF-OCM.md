@@ -256,7 +256,6 @@ provide a _WAYF Page_ to facilitate the Invite Flow.  The WAYF page MAY
 be limited to a set of trusted OCM Providers, for instance those in the
 same _Federation_.
 
-
 ### Receiving Server
 
 A Receiving Server is an OCM Provider that receives _Share_ Creation
@@ -1113,7 +1112,7 @@ described in [OCM-IP].
   the protocol.
   Option 3: Set the `name` field to `multi`, and put the
   protocol details in a field carrying the name of the protocol.
-  Option 1 using the `options` field is now deprecated.
+  Option 1 using the `options` field is _deprecated_.
   Implementations are encouraged to transition to the new
   optional properties defined below, such that this field
   may be removed in a future major version of the spec.
@@ -1126,7 +1125,7 @@ described in [OCM-IP].
   supported, and its options MAY be given in the opaque
   `options` payload for compatibility with v1.0
   implementations (see examples).  Note though that this
-  format is deprecated.
+  format is _deprecated_.
   Warning: client implementers should be aware that v1.1+
   servers MAY support both `webdav` and `multi`, but v1.0
   servers MAY only support `webdav`.
@@ -1321,57 +1320,17 @@ They could give the Receiving Party the option to accept or reject the
 share, or add the share automatically and only send an informational
 notification that this happened.
 
-# Request for a Share
 
-If the Receiving Party knows of a resource that has not yet
-been shared, the Receiving Party MAY request that it be shared.
-Such a Request for a Share MUST be an HTTP POST request
+# Notifications
 
-* to the `/request-share` path in the Sending Server's OCM API
-* using `application/json` as the `Content-Type` HTTP request
-  header
-* its request body containing a JSON document representing an
-  object with the fields as described below
-* using TLS
+This optional endpoint is used to inform the other party about a change
+that concerns a previously known entity, such as a Resource or a
+trusted Share type (e.g. a user).
 
-When HTTP Message Signatures are available, the Request for a Share
-MUST be signed and verified as described in [HTTP Message
-Signatures](#http-message-signatures).  As requesting access to a
-restricted resource relies on authenticating the requester,
-implementations SHOULD NOT use this feature unless signing is
-available.
+A Server that intends to send a notification SHOULD make a HTTP POST
+request:
 
-## Fields
-
-* REQUIRED owner (string)
-  OCM Address of the user who will be requested to share the resource.
-* REQUIRED shareWith (string)
-  OCM Address of the user or group that wants to receive a share of
-  the resource.
-  Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
-* REQUIRED share (string)
-  A unique identifier for the resource.
-  Example: 1234567890abcdef or https://cloud.example.org/files/data.txt
-
-Any HTTP Signature on the Request for a Share is verified as described
-in [HTTP Message Signatures](#http-message-signatures) before the
-Sending Server acts on it.
-
-After receiving a request for a Share, the Sending Party MAY
-send a Share Creation Notification to the Receiving Party
-using the OCM address in the shareWith field.
-
-
-# Share Acceptance Notification
-
-In response to a Share Creation Notification, the Receiving Server MAY
-discover the OCM API of the Sending Server, starting from the `<fqdn>`
-part of the `sender` field in the Share Creation Notification.
-
-If the OCM API of the Sending Server is successfully discovered, the
-Receiving Server MAY make a HTTP POST request
-
-* to the `/notifications` path in the Sending Server's OCM API
+* to the `/notifications` path in the Receiving Server's OCM API
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object
   with the fields as described below
@@ -1380,35 +1339,155 @@ Receiving Server MAY make a HTTP POST request
 
 ## Fields
 
-* REQUIRED notificationType (string) - in a Share Acceptance
-  Notification it MUST be one of:
-  - 'SHARE_ACCEPTED'
-  - 'SHARE_DECLINED'
-  Registered values are listed in the "OCM Notification Types"
+* REQUIRED notificationType (string) - it MUST be one of the
+  registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
-* REQUIRED providerId (string) - copied from the Share Creation
-  Notification for the Share this notification is about
-* OPTIONAL resourceType (string) - copied from the Share Creation
-  Notification for the Share this notification is about
+* REQUIRED senderDomain (string) - ...
+* REQUIRED resourceType (string) - ...
+* OPTIONAL providerId (string) - the identifier assigned by the
+  Sending Server to the underlying share, if applicable. This
+  field is _deprecated_ and SHOULD NOT be used.
 * OPTIONAL notification (object) - optional additional parameters,
-  depending on the notification and the resource type
+  depending on the notification and the resource type.
 
-For example, a notification MAY be sent by a recipient to let the
-provider know that the recipient declined a share.  In this case, the
-provider site MAY mark the share as declined for its user(s).
-Similarly, it MAY be sent by a provider to let the recipient know that
-the provider removed a given share, such that the recipient MAY clean
-it up from its database.  A notification MAY also be sent to let a
-recipient know that the provider removed that recipient from the list
-of trusted users, along with any related share.  The recipient MAY
-reciprocally remove that provider from the list of trusted users, along
-with any related share.
+Multiple Notification types are defined for different purposes, and
+additional types MAY be defined by implementers and registered in the
+"OCM Notification Types" IANA Registry.  For each notification type,
+a specific format is defined for the optional notification object.
+In the sections below the base Notification types are detailed along
+with their specific payload.
 
-Notifications from Sending Server to Receiving Server SHOULD use
-httpsig [RFC9421] so the Receiving Server can authenticate the origin
-of the notification.  Receiving Servers SHOULD decline notifications
-from Sending Servers without httpsig as it can't identify where the
-notification is coming from.
+## Share Acceptance and Updating
+
+A notification MAY be sent by a recipient to let the provider know that
+the recipient accepted or declined a share, in response to a Share
+Creation Notification.  Similarly, it MAY be sent by a provider to let
+the recipient know that the provider updated or removed a given share,
+such that the recipient MAY clean it up from its database.  In all such
+cases, the `resourceType` is expected to match the `resourceType` of
+the underlying share (e.g., `file`), and the `notificationType` MUST be
+one of:
+- "SHARE_ACCEPTED", to inform about the acceptance of a share.
+- "SHARE_DECLINED", to inform that a share was not accepted.
+- "SHARE_UNSHARED", to inform the Receiving Server that the share
+  was removed and is not accessible any longer.
+- "SHARE_CHANGE_PERMISSION", to inform the Receiving Server that
+  the permissions of a share were updated.
+Further, the `notification` object MUST include the following fields:
+* OPTIONAL message (string) - an optional human-readable message that
+  describes the event.
+* REQUIRED file (object) - an object containing the details of the
+  event, including:
+  * REQUIRED providerId (string) - the unique identifier assigned
+    by the Sending Server to the underlying share in a previous Share
+    Creation Notification.
+  * OPTIONAL permissions (array of strings) - The permissions granted
+    to the sharee, in case they have changed in the context of a
+    `SHARE_CHANGE_PERMISSION` notification.  The allowed values match
+    the `permissions` values specified in the `webdav` protocol of a
+    [Share Creation Notification](#share-creation-notification).
+
+Note that the Sending Server MAY at any time revoke access to a
+Resource (effectively undoing or deleting the Share) without notifying
+the Receiving Server.
+
+## Resharing and Request to Share
+
+The "REQUEST_RESHARE" notification type MAY be used by the Receiving
+Server to ask the Sending Server to share a given, previously shared
+Resource, with another third Receiving Party.  The Sending Server MAY
+discard this request, e.g. in case the third party is not trusted, or
+the share was originally granted without a `share` permission.  If
+the Sending Server accepts the request, it MUST create a new share to
+the third party: in this case, all necessary exchanges and access
+requests MUST take place between the third party and the Sending
+Server, without further including the Receiving Server in the process.
+
+For a "REQUEST_RESHARE", the `notification` object MUST include the
+following fields:
+* OPTIONAL message (string) - an optional human-readable message that
+  describes the request.
+* REQUIRED file (object) - an object containing the details of the
+  request, including:
+  * REQUIRED providerId (string) - the unique identifier assigned
+    by the Sending Server to the underlying share in a previous Share
+    Creation Notification.
+  * REQUIRED shareWith (string) - the OCM Address of the third party
+    the underlying share should be reshared with.
+  * OPTIONAL permissions (array of strings) - The permissions to be
+    granted to the third party.  The allowed values match the
+    `permissions` values specified in the `webdav` protocol of a
+    [Share Creation Notification](#share-creation-notification).
+
+The Receiving Server SHOULD receive a response whether the reshare
+request was fulfilled or not.  In any case, a Receiving Server MUST
+NOT directly reshare a Resource, even when a `share` permission was
+granted, and MUST always send a `"REQUEST_RESHARE"` Notification
+to the Sending Server.
+
+Similarly, the `"REQUEST_SHARE"` notification type MAY be used by a
+given Recipient OCM Server, to ask a remote OCM Server to share and
+grant access to a Resource, previously made known to the Recipient
+Server out of band.  In this case, the `notification` object MUST
+include the following fields:
+
+* OPTIONAL message (string) - an optional human-readable message that
+  describes the request.
+* REQUIRED file (object) - an object containing the details of the
+  request, including:
+  * REQUIRED owner (string) - OCM Address of the user who will be
+    requested to share the resource.
+  * REQUIRED shareWith (string) - OCM Address of the recipient that
+    wishes to receive a share of the resource.
+    Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
+  * REQUIRED shareId (string) - A unique identifier for the resource.
+    Example: https://cloud.example.org/files/data.txt or
+    1234567890abcdef.
+  * REQUIRED permissions (array of strings) - The permissions to be
+    granted to the requesting party.  The allowed values match the
+    `permissions` values specified in the `webdav` protocol of a
+    [Share Creation Notification](#share-creation-notification).
+
+The remote OCM Server MAY choose to fulfill the request, according
+to its trust policies: in that case, it MUST respond with HTTP 201
+to the caller, and asynchronously ask for permission to the `owner`
+user.  If the owner agrees, it MUST send a
+[Share Creation Notification](#share-creation-notification) including
+the `shareWith` user as recipient, whereas if the owner disagrees,
+it MUST send back a `"SHARE_DECLINED"` notification.  The remote OCM
+Server MAY also decline such request because of its policies, without
+even informing the `owner`: in this case, it MUST respond to the
+`"REQUEST_SHARE"` notification with an appropriate HTTP response type
+such as HTTP 404.
+
+## Recipient Removal
+
+A notification MAY be sent to inform a target OCM Server that a share
+recipient (e.g. a user or group) was removed from the list of trusted
+users, following a previous successful Invitation, or otherwise left
+the system.  That recipient may have been previously known to the
+target server because of existing shares whose shareType matched it.
+The recipient of such notification MAY reciprocally remove that
+recipient from the list of trusted users, along with any related
+shares.
+
+For these cases, a notification payload MUST be formed such that the
+`resourceType` is set to the affected shareType being removed, such as
+`user` or `group`, and the `notificationType` MUST be one of:
+- "USER_REMOVED", to inform about a single user that was removed or
+  marked as not trusted.
+- "GROUP_REMOVED", to inform about a removed group.
+Further, the `notification` object MUST include the following fields:
+* OPTIONAL message (string) - an optional human-readable message that
+  describes the event.
+* REQUIRED user or group (object) - an object containing the details
+  of the recipient to be removed. In case of `user`, it MUST include:
+  * REQUIRED userId (string) - OCM Address of the user to be removed
+    from the target OCM Server.
+  Whereas in case of `group`, it MUST include:
+  * REQUIRED groupId (string) - identifier of the group to be removed
+    from the target OCM Server.
+
 
 # Resource Access
 
@@ -1503,7 +1582,7 @@ through OCM.  The mechanism is aligned with the OAuth 2.0
 server to server interaction between the Sending and Receiving Servers.
 No user interaction or redirect is involved. [RFC6749]
 
-##  Token Request
+## Token Request
 
 To obtain an access token, the Receiving Server MUST send an HTTP POST
 request to the Sending Server’s {tokenEndPoint} as discovered in the
@@ -1537,7 +1616,7 @@ Share Creation Notification.  It is allowed to send the additional
 parameters defined in [RFC6749] for the `authorization_code` grant type,
 but they MUST be ignored.
 
-##  Token Response
+## Token Response
 
 If the request is valid and the code is accepted, the Sending Server
 MUST respond with HTTP 200 OK and a OAuth-compliant JSON object
@@ -1561,7 +1640,7 @@ the same request to the {tokenEndPoint} MUST be repeated before the
 `access_token` has expired, to recieve a new `access_token` that can
 then be used in the same manner.
 
-##  Error Responses
+## Error Responses
 
 If the request is invalid, the Sending Server MUST return an HTTP 400
 response with a JSON object containing an OAuth 2.0 error code
@@ -1631,36 +1710,6 @@ The following examples illustrate typical end-to-end outcomes:
     legacy access.  A therefore accepts strict inbound shares while
     still choosing a legacy-compatible outbound share.
 
-# Share Deletion
-
-A `"SHARE_ACCEPTED"` notification followed by a `"SHARE_UNSHARED"`
-notification is equivalent to a `"SHARE_DECLINED"` notification.
-
-Note that the Sending Server MAY at any time revoke access to a
-Resource (effectively undoing or deleting the Share) without notifying
-the Receiving Server.
-
-# Share Updating
-
-Some implementations have experimented with a
-`"RESHARE_CHANGE_PERMISSION"`notification, but the payload and side
-effects such a notification may have are out of scope of this version
-of this specification.
-The Receiving Party sending such a notification has no way of knowing
-if the Sending Party understood and processed the reshare request
-or not.
-
-# Resharing
-
-The `"REQUEST_RESHARE"` and `"RESHARE_UNDO"` notification types MAY be
-used by the Receiving Server to persuade the Sending Server to share the
-same Resource with another Receiving Party.
-The details of the payload and side effects such a notification may
-have are out of scope of this version of this specification.
-Note that the Receiving Party sending such a notification has no way of
-knowing if the Sending Party understood and processed the reshare
-request or not.  In all cases, the Receiving Server MUST NOT reshare
-a Resource without an explicit grant from the Sending Server.
 
 # IANA Considerations
 
@@ -1945,27 +1994,32 @@ IANA is requested to create the "OCM Notification Types" registry in
 the "Open Cloud Mesh (OCM) Parameters" group.  This registry records
 the values that MAY appear in the "notificationType" field of an OCM
 notification sent to the "/notifications" endpoint (see
-[Share Acceptance Notification](#share-acceptance-notification)).
+[Notifications](#notifications)).
 
-The "Scope" field indicates whether the notification refers to a Share,
-in which case the "providerId" field is REQUIRED, or to a Group.  The
-"Status" field is one of "active" or "experimental".
+The "Scope" field indicates whether the notification refers to a
+Resource, in which case the "providerId" field is REQUIRED in the
+payload, or to a Recipient, i.e. to the shareType in a
+[Share Creation Notification](#share-creation-notification), in which
+case a corresponding identifier such as "userId" is REQUIRED in the
+payload.
 
    Registration Policy: Specification Required [RFC8126]
 
    Initial Contents:
 
 ~~~
-   +===========================+=======+==============+===============+
-   | Notification Type         | Scope | Status       | Reference     |
-   +===========================+=======+==============+===============+
-   | SHARE_ACCEPTED            | Share | active       | This document |
-   | SHARE_DECLINED            | Share | active       | This document |
-   | SHARE_UNSHARED            | Share | active       | This document |
-   | REQUEST_RESHARE           | Share | experimental | This document |
-   | RESHARE_UNDO              | Share | experimental | This document |
-   | RESHARE_CHANGE_PERMISSION | Share | experimental | This document |
-   +===========================+=======+==============+===============+
+   +===========================+===========+===============+
+   | Notification Type         | Scope     | Reference     |
+   +===========================+===========+===============+
+   | SHARE_ACCEPTED            | Resource  | This document |
+   | SHARE_DECLINED            | Resource  | This document |
+   | SHARE_UNSHARED            | Resource  | This document |
+   | SHARE_CHANGE_PERMISSION   | Resource  | This document |
+   | REQUEST_RESHARE           | Resource  | This document |
+   | REQUEST_SHARE             | Resource  | This document |
+   | USER_REMOVED              | Recipient | This document |
+   | GROUP_REMOVED             | Recipient | This document |
+   +===========================+===========+===============+
 ~~~
 
 # Security Considerations
@@ -2788,6 +2842,10 @@ The complete changelog is updated in the OCM-API GitHub repository.
   Index](#signing-direction-index), [Appendix E: Navigation
   Index](#appendix-e-navigation-index), and companion diagrams under
   `diagrams/` in the OCM-API repository.
+* Rehaul of the Notification (formerly "Share Acceptance
+  Notification") endpoint and payload, and adaptation of the IANA
+  registries.  The core notifications have now been fully spelled
+  out, clarifying their scope.
 
 ## Version 06
 * Introduced IANA Registries for resource types, protocols, share
