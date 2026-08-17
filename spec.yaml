@@ -35,62 +35,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Discovery"
-  /request-share:
-    post:
-      summary: Request access to a share
-      description: >
-        This endpoint is used to request access to a share.
-        The request MUST contain the share ID and the OCM address of the party
-        who wants to receive the share.
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/RequestShare"
-        description: The JSON object to request access to a share.
-        required: true
-      responses:
-        "201":
-          description: >
-            Consumer successfully received request.
-        "400":
-          description: >
-            Bad request due to invalid or missing parameters.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/400"
-        "404":
-          description: >
-            The requested `share` is missing, or the requestor does not have
-            rights to access it.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "501":
-          description: The server doesn't support requesting shares.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "503":
-          description: The server is temporary unavailable (e.g. due to planned
-            maintenance).
-          headers:
-            Retry-After:
-              description: >
-                Indication for the client when the service could be requested
-                again in HTTP Date format as used by the Internet Message
-                Format [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the
-                number of seconds (e.g. 3000 if you the service is expected to
-                be available again within 50 minutes).
-              schema:
-                type: string
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /shares:
     post:
       summary: Share Creation Notification endpoint
@@ -174,11 +118,13 @@ paths:
                 $ref: "#/components/schemas/Error"
   /notifications:
     post:
-      summary: Share Acceptance Notification endpoint
+      summary: General Notification endpoint
       description: >
         This optional endpoint is used to inform the other party about a change
-        that concerns a previously known entity, such as a Share or a trusted User.
-        See [Share Acceptance Notification](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#share-acceptance-notification)
+        that concerns a previously known entity, such as a Share or a trusted User,
+        or to request an action to be performed (such as sharing or re-sharing)
+        on a previously known resource.
+        See [Notifications](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#notifications)
         for more details.
       requestBody:
         content:
@@ -191,30 +137,34 @@ paths:
         "201":
           description: >
             Receiver succesfully received the notification. The response body
-            MAY contain
-            a JSON object with some resonse data, depending on the actual notification.
+            MAY contain a JSON object with response data, depending on
+            the actual notification.
         "400":
-          description: |
-            Bad request due to invalid parameters, e.g. when `type` is invalid
-            or missing.
+          description: >
+            Bad request due to invalid parameters, e.g. when `notificationType` is
+            invalid, not known or missing.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/400"
         "401":
-          description: Client cannot be authenticated as a trusted service.
+          description: Requestor cannot be authenticated.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
         "403":
-          description: Trusted service is not authorized to create notifications.
+          description: Requestor is not authorized to send notifications.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+        "404":
+          description: >
+            The notification refers to a missing target (share, user, etc.), or the requestor
+            does not have rights to access it.
         "501":
-          description: |
+          description: >
             The receiver doesn't support notifications, the resource type is not
             supported.
           content:
@@ -222,12 +172,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
         "503":
-          description: |
+          description: >
             The receiver is temporary unavailable (e.g. due to planned
             maintenance).
           headers:
             Retry-After:
-              description: |
+              description: >
                 Indication for the client when the service could be requested
                 again in HTTP Date format as used by the Internet Message Format
                 [RFC5322] (e.g. `Wed, 21 Oct 2015 07:28:00 GMT`) or the number
@@ -675,17 +625,16 @@ components:
                 its options MAY be given in the opaque `options` payload for
                 compatibility with v1.0 implementations (see examples). Note
                 though that this format is deprecated.
-                Warning: client implementers should be aware that v1.1 servers
+                Warning: client implementers should be aware that v1.1+ servers
                 MAY support both `webdav` and `multi`, but v1.0 servers MAY
                 only support `webdav`.
-                This field may be removed in a future major version of the spec.
+                This field may be removed in a future version of the spec.
             options:
               type: object
               description: >
-                This property is now deprecated. Implementations are
-                encouraged to
+                This property is now deprecated. Implementations are encouraged to
                 transition to the new optional properties defined below, such that
-                this field may be removed in a future major version of the spec.
+                this field may be removed in a future version of the spec.
             webdav:
               type: object
               required:
@@ -917,7 +866,7 @@ components:
               options:
                 sharedSecret: hfiuhworzwnur98d3wjiwhr
                 permissions: some permissions scheme
-            singleProtocolNew:
+            singleProtocol:
               name: multi
               webdav:
                 uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
@@ -959,46 +908,86 @@ components:
       required:
         - notificationType
         - resourceType
-        - providerId
+        - senderDomain
+        - notification
       properties:
         notificationType:
           type: string
-          description: |
+          description: >
             A notification type that is understandable for both humans and
-            machines (e.g. no use of special characters) providing more
-            information on the cause of the error.
-            Values that MAY be used by implementations are:
-            `SHARE_ACCEPTED`, `SHARE_DECLINED`, `REQUEST_RESHARE`,
-            `SHARE_UNSHARED`, `RESHARE_UNDO`, `RESHARE_CHANGE_PERMISSION`,
-            `USER_REMOVED`.
+            machines, providing information about an event.
+            Any value registered in the OCM IANA Registry for notification types
+            MAY be used here. Implementers MAY define additional custom types,
+            provided that they are registered in the OCM IANA Registry.
         resourceType:
           type: string
-          description: |
-            Resource type (file, folder, user, calendar, contact, ...)
+          description: >
+            Resource type or share type, according to the OCM IANA Registry
+            for resource types and share types. E.g. file, folder, user, calendar,
+            contact, etc. Implementers MAY define additional custom types, provided
+            that they are registered in the respective OCM IANA Registry.
+        senderDomain:
+          type: string
+          description: >
+            The FQDN of the sending OCM server, in order for the recipient
+            to validate its key material when verifying the HTTP Signature.
         providerId:
           type: string
-          description: |
-            Identifier of the shared resource. If the resourceType is `file`,
-            then see `NewShare/providerId` for the required information.
-            If the resourceType is `user`, then this is the user identifier
-            previously sent via `/invite-accepted`.
+          description: >
+            Optional unique identifier of the underlying resource. This property
+            is now deprecated, in favor of including it in the notification object.
         notification:
           type: object
-          description: |
+          description: >
             Optional additional parameters, depending on the notification
-            and the resource type.
+            and the resource type or share type in question.
+          properties:
+            message:
+              type: string
+              description: >
+                An optional human-readable message that describes the event.
+          additionalProperties:
+            type: object
+            description: >
+              This object MUST be keyed with the resource type or share type of this
+              notification. It contains its payload and it can vary according to the
+              implementers. In case of `file` resources, it MUST contain at least the
+              `providerId` of the underlying resource, and in case of `user`, `group`,
+              or `federation` share types, it MUST contain at least the `userId`,
+              `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
       example:
-        shareWasAccepted:
+        legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
           resourceType: file
           providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
           notification:
             message: Recipient accepted the share
             sharedSecret: hfiuhworzwnur98d3wjiwhr
+        shareWasAccepted:
+          notificationType: SHARE_ACCEPTED
+          resourceType: file
+          senderDomain: sender.org
+          notification:
+            message: Recipient accepted the share
+            file:
+              providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
         userWasRemoved:
           notificationType: USER_REMOVED
           resourceType: user
-          providerId: 51dc30ddc473d43a6011e9ebba6ca770
+          senderDomain: alice.example.org
+          notification:
+            message: User is not a trusted contact any longer
+            user:
+              userId: alice@alice.example.org
+        mlsWelcome:
+          notificationType: MLS_WELCOME
+          resourceType: federation
+          senderDomain: cloud.example.org
+          notification:
+            federation:
+              mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
+              userId: bob@cloud.example.org
+              content: base64 MLS welcome
     AcceptedInvite:
       type: object
       required:

@@ -735,10 +735,14 @@ added user.
 ~~~ json
 {
   "notificationType": "MLS_WELCOME",
+  "senderDomain": "othercloud.example.org",
+  "resourceType": "federation",
   "notification": {
-    "mlsGroupId": "<base64url MLS group ID>",
-    "userId": "bob@othercloud.example.org",
-    "content": "<base64url MLS Welcome wire format>"
+    "federation": {
+      "mlsGroupId": "<base64url MLS group ID>",
+      "userId": "bob@othercloud.example.org",
+      "content": "<base64url MLS Welcome wire format>"
+    }
   }
 }
 ~~~
@@ -775,9 +779,13 @@ act on it.
 ~~~ json
 {
   "notificationType": "MLS_PROPOSAL",
+  "senderDomain": "cloud.example.org",
+  "resourceType": "federation",
   "notification": {
-    "mlsGroupId": "<base64url MLS group ID>",
-    "content": "<base64url MLS PublicMessage carrying the Proposal>"
+    "federation": {
+      "mlsGroupId": "<base64url MLS group ID>",
+      "content": "<base64url MLS PublicMessage carrying the Proposal>"
+    }
   }
 }
 ~~~
@@ -803,10 +811,16 @@ data, per [RFC9420] Section 15.2.
 ~~~ json
 {
   "notificationType": "MLS_COMMIT",
+  "senderDomain": "cloud.example.org",
+  "resourceType": "federation",
   "notification": {
-    "mlsGroupId": "<base64url MLS group ID>",
-    "proposals": ["<base64url MLS PublicMessage carrying a Proposal>"],
-    "content": "<base64url MLS PublicMessage carrying the Commit>"
+    "federation": {
+      "mlsGroupId": "<base64url MLS group ID>",
+      "proposals": [
+        "<base64url MLS PublicMessage carrying a Proposal>"
+      ],
+      "content": "<base64url MLS PublicMessage carrying the Commit>"
+    }
   }
 }
 ~~~
@@ -849,9 +863,13 @@ epoch ([RFC9420] Section 15).
 ~~~ json
 {
   "notificationType": "MLS_APPLICATION",
+  "senderDomain": "cloud.example.org",
+  "resourceType": "federation",
   "notification": {
-    "mlsGroupId": "<base64url MLS group ID>",
-    "content": "<base64url MLS PrivateMessage wire format>"
+    "federation": {
+      "mlsGroupId": "<base64url MLS group ID>",
+      "content": "<base64url MLS PrivateMessage wire format>"
+    }
   }
 }
 ~~~
@@ -890,16 +908,20 @@ by the KeyPackage endpoint.
 ~~~ json
 {
   "notificationType": "MLS_REJOIN",
+  "senderDomain": "othercloud.example.org",
+  "resourceType": "federation",
   "notification": {
-    "mlsGroupId": "<base64url MLS group ID>",
-    "keyPackages": [
-      {
-        "userId": "bob@othercloud.example.org",
-        "mediaType": "message/mls",
-        "encoding": "base64url",
-        "content": "<base64url-encoded MLS KeyPackage>"
-      }
-    ]
+    "federation": {
+      "mlsGroupId": "<base64url MLS group ID>",
+      "keyPackages": [
+        {
+          "userId": "bob@othercloud.example.org",
+          "mediaType": "message/mls",
+          "encoding": "base64url",
+          "content": "<base64url-encoded MLS KeyPackage>"
+        }
+      ]
+    }
   }
 }
 ~~~
@@ -1880,19 +1902,18 @@ defined in [RFC9420] Section 17.3:
 
 The following notification types are to be registered in the "OCM
 Notification Types" registry defined in [OCM], within the "Open Cloud
-Mesh (OCM) Parameters" group.  All are group-scoped and therefore omit
-the "providerId" field (see {{mls-notification-types}}):
+Mesh (OCM) Parameters" group:
 
 ~~~
-   +===================+=======+========+===============+
-   | Notification Type | Scope | Status | Reference     |
-   +===================+=======+========+===============+
-   | MLS_WELCOME       | Group | active | This document |
-   | MLS_PROPOSAL      | Group | active | This document |
-   | MLS_COMMIT        | Group | active | This document |
-   | MLS_APPLICATION   | Group | active | This document |
-   | MLS_REJOIN        | Group | active | This document |
-   +===================+=======+========+===============+
+   +===================+===========+===============+
+   | Notification Type | Scope     | Reference     |
+   +===================+===========+===============+
+   | MLS_WELCOME       | Recipient | This document |
+   | MLS_PROPOSAL      | Recipient | This document |
+   | MLS_COMMIT        | Recipient | This document |
+   | MLS_APPLICATION   | Recipient | This document |
+   | MLS_REJOIN        | Recipient | This document |
+   +===================+===========+===============+
 ~~~
 
 The following entry is to be registered in the "OCM Share Types"
