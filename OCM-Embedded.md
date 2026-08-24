@@ -283,7 +283,7 @@ The following entries are requested:
 +===============+=============+===========+===============+
 | ro-crate      | user        | embedded  | This document |
 | ro-crate      | group       | embedded  | This document |
-| ro-crate      | fedreration | embedded  | This document |
+| ro-crate      | federation  | embedded  | This document |
 +===============+=============+===========+===============+
 ```
 
