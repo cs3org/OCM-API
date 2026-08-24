@@ -1065,7 +1065,7 @@ reorder traffic.  TLS, HTTP Message Signatures, JWT signatures, and
 authenticated introspection provide the protections described in this
 specification against such an attacker.
 
-An attacker may operate an OCM Server or Protocol Server of its own,
+An attacker may operate an OCM Server or Protocol Server of their own,
 control a remote user, steal a bearer credential, or submit malformed
 back-channel or front-channel requests.  An unpaired server can make
 assertions under its own identity, but must not thereby gain access to a

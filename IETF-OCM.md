@@ -1985,13 +1985,13 @@ channel and may observe, block, replay, insert, or modify traffic.  TLS
 and, where used, HTTP Message Signatures provide the protections
 described in this specification against such a network attacker.
 
-An attacker may operate an OCM Server of its own, control a remote user,
-send malformed or deceptive protocol messages, or steal bearer
+An attacker may operate an OCM Server of their own, control a remote
+user, send malformed or deceptive protocol messages, or steal bearer
 credentials.  An attacker-controlled server can make arbitrary
 assertions under its own identity, but must not thereby gain authority
 for users or Resources outside its administrative domain.
 Implementations are expected to authenticate peers where required,
-enforce local authorization policy, validate protocol inputs, and
+enforce local authorization policies, validate protocol inputs, and
 protect credentials.
 
 Trust in one OCM Server does not imply trust in every OCM Server.  A
