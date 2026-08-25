@@ -907,9 +907,7 @@ components:
       type: object
       required:
         - notificationType
-        - resourceType
         - senderDomain
-        - notification
       properties:
         notificationType:
           type: string
@@ -919,18 +917,25 @@ components:
             Any value registered in the OCM IANA Registry for notification types
             MAY be used here. Implementers MAY define additional custom types,
             provided that they are registered in the OCM IANA Registry.
-        resourceType:
-          type: string
-          description: >
-            Resource type or share type, according to the OCM IANA Registry
-            for resource types and share types. E.g. file, folder, user, calendar,
-            contact, etc. Implementers MAY define additional custom types, provided
-            that they are registered in the respective OCM IANA Registry.
         senderDomain:
           type: string
           description: >
             The FQDN of the sending OCM server, in order for the recipient
             to validate its key material when verifying the HTTP Signature.
+        resourceType:
+          type: string
+          description: >
+            Resource type, according to the OCM IANA Registry for resource types.
+            E.g. file, folder, calendar, contact, etc. Implementers MAY define
+            additional custom types, provided that they are registered in the
+            respective OCM IANA Registry.
+        shareType:
+          type: string
+          description: >
+            Share type, according to the OCM IANA Registry for share types.
+            E.g. user, group, federation, etc. Implementers MAY define
+            additional custom types, provided that they are registered in the
+            respective OCM IANA Registry.
         providerId:
           type: string
           description: >
@@ -966,14 +971,15 @@ components:
         shareWasAccepted:
           notificationType: SHARE_ACCEPTED
           resourceType: file
-          senderDomain: sender.org
+          shareType: user
+          senderDomain: sender.example.org
           notification:
             message: Recipient accepted the share
             file:
               providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
         userWasRemoved:
           notificationType: USER_REMOVED
-          resourceType: user
+          shareType: user
           senderDomain: alice.example.org
           notification:
             message: User is not a trusted contact any longer
@@ -981,7 +987,7 @@ components:
               userId: alice@alice.example.org
         mlsWelcome:
           notificationType: MLS_WELCOME
-          resourceType: federation
+          shareType: federation
           senderDomain: cloud.example.org
           notification:
             federation:

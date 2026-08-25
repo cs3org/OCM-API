@@ -1342,20 +1342,27 @@ request:
 * REQUIRED notificationType (string) - it MUST be one of the
   registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
-* REQUIRED senderDomain (string) - ...
-* REQUIRED resourceType (string) - ...
+* REQUIRED senderDomain (string) - the FQDN of the sender.  A Receiving
+  Server SHOULD use this information to verify the HTTP message
+  signature on the request, and it SHOULD also use it to validate the
+  underlying share or resource the notification is about.
+* OPTIONAL resourceType (string) - the type of the resource this
+  notification is about (e.g., `file`).
+* OPTIONAL shareType (string) - the type of recipient this notification
+  is about (e.g., `user`).
 * OPTIONAL providerId (string) - the identifier assigned by the
   Sending Server to the underlying share, if applicable. This
   field is _deprecated_ and SHOULD NOT be used.
 * OPTIONAL notification (object) - optional additional parameters,
   depending on the notification and the resource type.
 
-Multiple Notification types are defined for different purposes, and
-additional types MAY be defined by implementers and registered in the
-"OCM Notification Types" IANA Registry.  For each notification type,
-a specific format is defined for the optional notification object.
-In the sections below the base Notification types are detailed along
-with their specific payload.
+A Notification payload MUST include either the `resourceType` or the
+`shareType`, or both when relevant.  Multiple Notification types are
+defined for different purposes, and additional types MAY be defined
+by implementers and registered in the "OCM Notification Types" IANA
+Registry.  For each notification type, a specific format MAY be defined
+for the optional notification object.  In the sections below, the base
+Notification types are detailed along with their specific payload.
 
 ## Share Acceptance and Updating
 
@@ -1364,9 +1371,10 @@ the recipient accepted or declined a share, in response to a Share
 Creation Notification.  Similarly, it MAY be sent by a provider to let
 the recipient know that the provider updated or removed a given share,
 such that the recipient MAY clean it up from its database.  In all such
-cases, the `resourceType` is expected to match the `resourceType` of
-the underlying share (e.g., `file`), and the `notificationType` MUST be
-one of:
+cases, the `resourceType` MUST match the `resourceType` of the
+underlying share (e.g., `file`), the `shareType` MAY be omitted but if
+present it MUST match the `shareType` of the underlying share, and the
+`notificationType` MUST be one of:
 - "SHARE_ACCEPTED", to inform about the acceptance of a share.
 - "SHARE_DECLINED", to inform that a share was not accepted.
 - "SHARE_UNSHARED", to inform the Receiving Server that the share
@@ -1387,9 +1395,12 @@ Further, the `notification` object MUST include the following fields:
     the `permissions` values specified in the `webdav` protocol of a
     [Share Creation Notification](#share-creation-notification).
 
-Note that the Sending Server MAY at any time revoke access to a
-Resource (effectively undoing or deleting the Share) without notifying
-the Receiving Server.
+The same notifications identically apply to resources of type `folder`.
+For other resources with a different `resourceType` attribute, a
+Sending Server MAY implement the same notifications, provided that
+they get registered in the related IANA Registry.  Note that the
+Sending Server MAY at any time revoke access to a Resource (effectively
+undoing or deleting the Share) without notifying the Receiving Server.
 
 ## Resharing and Request to Share
 
@@ -1403,8 +1414,11 @@ the third party: in this case, all necessary exchanges and access
 requests MUST take place between the third party and the Sending
 Server, without further including the Receiving Server in the process.
 
-For a "REQUEST_RESHARE", the `notification` object MUST include the
-following fields:
+For a "REQUEST_RESHARE" notification, the `resourceType` MUST match the
+`resourceType` of the original share (e.g., `file`, `folder`, ...), the
+`shareType` MAY be omitted but if present it MUST match the `shareType`
+of the original share, and the the `notification` object MUST include
+the following fields:
 * OPTIONAL message (string) - an optional human-readable message that
   describes the request.
 * REQUIRED file (object) - an object containing the details of the
@@ -1428,8 +1442,10 @@ to the Sending Server.
 Similarly, the `"REQUEST_SHARE"` notification type MAY be used by a
 given Recipient OCM Server, to ask a remote OCM Server to share and
 grant access to a Resource, previously made known to the Recipient
-Server out of band.  In this case, the `notification` object MUST
-include the following fields:
+Server out of band.  In this case, the `resourceType` MUST match the
+`resourceType` of the Resource in question (e.g., `file`, `folder`,
+...), the `shareType` MUST be omitted, and the `notification` object
+MUST include the following fields:
 
 * OPTIONAL message (string) - an optional human-readable message that
   describes the request.
@@ -1460,6 +1476,7 @@ even informing the `owner`: in this case, it MUST respond to the
 `"REQUEST_SHARE"` notification with an appropriate HTTP response type
 such as HTTP 404.
 
+
 ## Recipient Removal
 
 A notification MAY be sent to inform a target OCM Server that a share
@@ -1471,9 +1488,10 @@ The recipient of such notification MAY reciprocally remove that
 recipient from the list of trusted users, along with any related
 shares.
 
-For these cases, a notification payload MUST be formed such that the
-`resourceType` is set to the affected shareType being removed, such as
-`user` or `group`, and the `notificationType` MUST be one of:
+For these cases, a notification payload is to be formed such that the
+`resourceType` MUST be omitted, the `shareType` is set to the affected
+shareType being removed, such as `user` or `group`, and the
+`notificationType` MUST be one of:
 - "USER_REMOVED", to inform about a single user that was removed or
   marked as not trusted.
 - "GROUP_REMOVED", to inform about a removed group.

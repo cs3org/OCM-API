@@ -736,7 +736,7 @@ added user.
 {
   "notificationType": "MLS_WELCOME",
   "senderDomain": "othercloud.example.org",
-  "resourceType": "federation",
+  "shareType": "federation",
   "notification": {
     "federation": {
       "mlsGroupId": "<base64url MLS group ID>",
@@ -780,7 +780,7 @@ act on it.
 {
   "notificationType": "MLS_PROPOSAL",
   "senderDomain": "cloud.example.org",
-  "resourceType": "federation",
+  "shareType": "federation",
   "notification": {
     "federation": {
       "mlsGroupId": "<base64url MLS group ID>",
@@ -812,7 +812,7 @@ data, per [RFC9420] Section 15.2.
 {
   "notificationType": "MLS_COMMIT",
   "senderDomain": "cloud.example.org",
-  "resourceType": "federation",
+  "shareType": "federation",
   "notification": {
     "federation": {
       "mlsGroupId": "<base64url MLS group ID>",
@@ -864,7 +864,7 @@ epoch ([RFC9420] Section 15).
 {
   "notificationType": "MLS_APPLICATION",
   "senderDomain": "cloud.example.org",
-  "resourceType": "federation",
+  "shareType": "federation",
   "notification": {
     "federation": {
       "mlsGroupId": "<base64url MLS group ID>",
@@ -909,7 +909,7 @@ by the KeyPackage endpoint.
 {
   "notificationType": "MLS_REJOIN",
   "senderDomain": "othercloud.example.org",
-  "resourceType": "federation",
+  "shareType": "federation",
   "notification": {
     "federation": {
       "mlsGroupId": "<base64url MLS group ID>",
@@ -1574,8 +1574,8 @@ Each notification MAY include the optional `encryption` field:
 ~~~ json
 {
   "shareWith": "research-group@receiver.example.org",
-  "shareType": "federation",
   "resourceType": "file",
+  "shareType": "federation",
   "sender": "alice@cloud.example.org",
   "owner": "alice@cloud.example.org",
   "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
