@@ -1587,19 +1587,22 @@ Each notification MAY include the optional `encryption` field:
   },
   "encryption": {
     "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1"
-    "scheme": "ocm-mls-1",
-    "cipher": "AES-256-GCM",
+    "scheme": "ocm-mls",
+    "ocm-mls": {
+      "cipher": "AES-256-GCM",
+    }
   }
 }
 ~~~
 
 The `encryption` field is OPTIONAL as per [OCM] Share Creation
 Notification specification.  If absent, the resource is unencrypted.
-If present, it MUST carry the encryption-related parameters according
-to the [OCM] specification, where:
+If present, and the symmetric encryption available via OCM-MLS is to
+be used, it MUST carry the encryption-related parameters according to
+the [OCM] specification, where:
 - `resourceId` is the stable resource identifier described in
 {{resource-id}}
-- `scheme` is to be set to `"ocm-mls-1"`
+- `scheme` is to be set to `"ocm-mls"`
 - `cipher` names the content AEAD that the resource is encrypted with
 ({{file-key-wrapping}}), one of the AEAD algorithms defined for HPKE
 ([RFC9180] Section 7.3): `"AES-128-GCM"`, `"AES-256-GCM"`, or
@@ -2011,6 +2014,20 @@ registrations do not modify the protocols' own registrations:
    | folder        | federation | webdav, webapp, ssh | This document |
    +===============+============+=====================+===============+
 ~~~
+
+The following entries are to be registered in the "OCM Encryption
+Schemes" registry defined in [OCM], within the "Open Cloud Mesh (OCM)
+Parameters" group:
+
+~~~
+   +=========+============+===============+
+   | Scheme  | Share Type | Reference     |
+   +=========+============+===============+
+   | ocm-pgp | federation | This document |
+   | ocm-mls | federation | This document |
+   +=========+============+===============+
+~~~
+
 
 # Open Issues
 
