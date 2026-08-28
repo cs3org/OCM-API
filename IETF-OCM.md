@@ -1100,9 +1100,17 @@ described in [OCM-IP].
   - REQUIRED resourceId (string) - a unique identifier of the
     underlying resource.
   - REQUIRED scheme (string) - an identifier of the encryption scheme
-    used to encrypt the resource, such as "ocm-pgp-1".
-  - REQUIRED cipher (string) - the encryption algorithm used to encrypt
-    the resource as in [RFC9180] Section 7.3.
+    used to encrypt the resource, such as "ocm-pgp".  Registered values
+    are listed in the "OCM Encryption Schemes" registry (see
+    [IANA Considerations](#iana-considerations)).
+  - REQUIRED {schemeObject} (object) - an object keyed with the given
+    scheme, containing the details of the encryption used.
+    For the "ocm-gpg" scheme, it MUST contain:
+    - fingerprints (array of strings) - one or more fingerprints of
+      the public keys used to encrypt the resource.
+    For the "ocm-mls" scheme, it MUST contain:
+    - cipher (string) - the encryption algorithm used to encrypt the
+      resource as in [RFC9180] Section 7.3.
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are:
@@ -1886,7 +1894,7 @@ policy for each registry in this group is "Specification Required"
 is documented in a stable, publicly available specification and that it
 does not duplicate an existing entry.
 
-## OCM Resource Types Registry
+### OCM Resource Types Registry
 
 IANA is requested to create the "OCM Resource Types" registry in the
 "Open Cloud Mesh (OCM) Parameters" group.  This registry records the
@@ -1908,7 +1916,7 @@ the [OCM API Discovery](#ocm-api-discovery) endpoint.
    +===============+=====================+===============+
 ~~~
 
-## OCM Protocols Registry
+### OCM Protocols Registry
 
 IANA is requested to create the "OCM Protocols" registry in the "Open
 Cloud Mesh (OCM) Parameters" group.  Each entry records a protocol
@@ -1942,7 +1950,7 @@ for a given resource type and share type is governed by the
    +================+=========+===============+
 ~~~
 
-## OCM Share Types Registry
+### OCM Share Types Registry
 
 IANA is requested to create the "OCM Share Types" registry in the
 "Open Cloud Mesh (OCM) Parameters" group.  Each entry records a share
@@ -1966,7 +1974,7 @@ The "federation" share type, for example, is registered by [OCM-MLS].
    +============+===============+
 ~~~
 
-## OCM Share Payloads Registry
+### OCM Share Payloads Registry
 
 IANA is requested to create the "OCM Share Payloads" registry in the
 "Open Cloud Mesh (OCM) Parameters" group.  Whereas the "OCM Resource
@@ -2017,7 +2025,7 @@ interoperable way, they can do so using this very mechanism.
    +===============+============+=====================+===============+
 ~~~
 
-## OCM Notification Types Registry
+### OCM Notification Types Registry
 
 IANA is requested to create the "OCM Notification Types" registry in
 the "Open Cloud Mesh (OCM) Parameters" group.  This registry records
@@ -2049,6 +2057,26 @@ payload.
    | USER_REMOVED              | Recipient | This document |
    | GROUP_REMOVED             | Recipient | This document |
    +===========================+===========+===============+
+~~~
+
+### OCM Encryption Schemes Registry
+
+IANA is requested to create the "OCM Encryption Schemes" registry in
+the "Open Cloud Mesh (OCM) Parameters" group.  This registry records
+the values that MAY appear in the "encryption.scheme" field of a
+[Share Creation Notification](#share-creation-notification).
+
+   Registration Policy: Specification Required [RFC8126]
+
+   Initial Contents:
+
+~~~
+   +=========+============+===============+
+   | Scheme  | Share Type | Reference     |
+   +=========+============+===============+
+   | ocm-pgp | user       | This document |
+   | ocm-pgp | group      | This document |
+   +=========+============+===============+
 ~~~
 
 # Security Considerations

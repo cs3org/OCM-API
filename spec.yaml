@@ -423,18 +423,18 @@ components:
                       Implementations that support receiving SSH shares MUST
                       advertise them here, with an empty object as value.
                 additionalProperties:
-                    oneOf:
-                      - type: string
-                      - type: object
-                    description: >
-                      Any additional protocol supported for this resource type SHOULD
-                      be advertised here, where the value MAY correspond to a top-level
-                      URI to be used for that protocol, or any other relevant
-                      attribute required for that protocol. Similarly, additional
-                      receiving capabilities for custom protocols SHOULD be advertised.
-                      Additional protocols are to be registered in the "OCM Protocols"
-                      registry (see the IANA Considerations section of the OCM
-                      Internet-Draft).
+                  oneOf:
+                    - type: string
+                    - type: object
+                  description: >
+                    Any additional protocol supported for this resource type SHOULD
+                    be advertised here, where the value MAY correspond to a top-level
+                    URI to be used for that protocol, or any other relevant
+                    attribute required for that protocol. Similarly, additional
+                    receiving capabilities for custom protocols SHOULD be advertised.
+                    Additional protocols are to be registered in the "OCM Protocols"
+                    registry (see the IANA Considerations section of the OCM
+                    Internet-Draft).
                 example:
                   webdav: /remote/dav/ocm/
                   webdav-receive: {
@@ -613,7 +613,6 @@ components:
           required:
             - resourceId
             - scheme
-            - cipher
           properties:
             resourceId:
               type: string
@@ -623,11 +622,25 @@ components:
             scheme:
               type: string
               description: >
-                An identifier of the encryption scheme used to encrypt the resource.
-            cipher:
-              type: string
+                An identifier of the encryption scheme used to encrypt the resource, as
+                defined in the OCM IANA registry for encryption schemes. The value MUST
+                be a registered scheme name, such as 'ocm-pgp' or 'ocm-mls'.
+            additionalProperties:
+              type: object
               description: >
-                The encryption algorithm used to encrypt the resource.
+                This object MUST be keyed with the name of the encryption scheme, and its
+                value MUST be a JSON object with additional properties specific to that
+                scheme. For the 'ocm-pgp' scheme, the object MUST contain a 'fingerprints'
+                array of string, with one or more fingerprints of the public keys used to
+                encrypt the resource. For the 'ocm-mls' scheme, the object MUST contain
+                a 'cipher' string with the identifier of the cipher used to encrypt the
+                resource, such as 'AES-256-GCM'.
+          example:
+            resourceId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+            scheme: ocm-pgp
+            ocm-pgp:
+              fingerprints:
+                - 3F:2A:4B:5C:6D:7E:8F:9A:0B:1C:2D:3E:4F:5A:6B:7C
         protocol:
           type: object
           description: |
