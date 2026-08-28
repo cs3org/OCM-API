@@ -603,6 +603,31 @@ components:
             server MAY use the `expiration` to signal that the resource represents
             a cached copy of a dataset that was made available for an efficient
             data transfer to the destination server.
+        encryption:
+          type: object
+          description: >
+            Optional object with encryption information for the share. If omitted,
+            it is assumed that the resource is not encrypted, whereas for encrypted
+            resources, the key material has to be exchanged out of band, and this
+            object MUST be present.
+          required:
+            - resourceId
+            - scheme
+            - cipher
+          properties:
+            resourceId:
+              type: string
+              description: >
+                The unique identifier of the underlying resource. This MUST be the same
+                for all shares of the same resource.
+            scheme:
+              type: string
+              description: >
+                An identifier of the encryption scheme used to encrypt the resource.
+            cipher:
+              type: string
+              description: >
+                The encryption algorithm used to encrypt the resource.
         protocol:
           type: object
           description: |

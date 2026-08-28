@@ -380,10 +380,7 @@ with `shareWith` carrying the group's OCM Address.  A federation share
 is otherwise a standard OCM share, carrying every field REQUIRED by
 [OCM] including the `protocol` object.  All new server-to-server
 messages use the existing `/notifications` endpoint with new
-`notificationType` values.  A single new field is added to the Share
-Creation Notification: `encryption` (optional, present only for
-encrypted resources), carrying all encryption-related parameters,
-including the `resourceId`.
+`notificationType` values.
 
 # Discovery
 
@@ -1099,14 +1096,14 @@ a given epoch.
 The `resourceId` used in the AEAD associated data MUST be a stable
 identifier for the underlying file, consistent across all groups it is
 shared with.  It identifies the resource, not a particular version of
-it. This ensures that the FK unwrapped by members of any group correctly
-decrypts the same ciphertext.  The `providerId` values in separate share
-notifications, for the same resource, MUST differ, per the `providerId`
-definition in [OCM], but the `resourceId` in the AEAD associated data
-MUST be the same.  This means that the `providerId` MUST NOT be reused
-as `resourceId`.  The sending server is responsible for maintaining this
-stable `resourceId` and MUST send it in the `encryption` object of the
-share payload ({{share-creation}}).
+it or a specific share.  This ensures that the FK unwrapped by members
+of any group correctly decrypts the same ciphertext.  The `providerId`
+values in separate share notifications, for the same resource, MUST
+differ, per the `providerId` definition in [OCM], but the `resourceId`
+in the AEAD associated data MUST be the same.  This means that the
+`providerId` MUST NOT be reused as `resourceId`.  The sending server is
+responsible for maintaining this stable `resourceId` and MUST send it
+in the `encryption` object of the share payload ({{share-creation}}).
 
 ## File Key Wrapping {#file-key-wrapping}
 
@@ -1589,20 +1586,21 @@ Each notification MAY include the optional `encryption` field:
     }
   },
   "encryption": {
+    "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1"
     "scheme": "ocm-mls-1",
     "cipher": "AES-256-GCM",
-    "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1"
   }
 }
 ~~~
 
-The `encryption` field is OPTIONAL.  If absent, the resource is
-unencrypted and the share follows the standard OCM flow without
-modification.  If present, it carries all encryption-related parameters:
-`scheme` identifies the encryption scheme, for which this document
-defines `"ocm-mls-1"`; `resourceId` is the stable resource identifier
-described in {{resource-id}}; and `cipher` (REQUIRED when `encryption`
-is present) names the content AEAD that the resource is encrypted with
+The `encryption` field is OPTIONAL as per [OCM] Share Creation
+Notification specification.  If absent, the resource is unencrypted.
+If present, it MUST carry the encryption-related parameters according
+to the [OCM] specification, where:
+- `resourceId` is the stable resource identifier described in
+{{resource-id}}
+- `scheme` is to be set to `"ocm-mls-1"`
+- `cipher` names the content AEAD that the resource is encrypted with
 ({{file-key-wrapping}}), one of the AEAD algorithms defined for HPKE
 ([RFC9180] Section 7.3): `"AES-128-GCM"`, `"AES-256-GCM"`, or
 `"CHACHA20-POLY1305"`.  The field signals that the FK is distributed via
@@ -1611,7 +1609,7 @@ epoch information is carried in the share notification.  Member Servers
 always hold the current wrapped FK for each `(resourceId, groupId)` pair
 and use their current Group Key to unwrap it at access time.
 
-The Group Owner Server is not involved in the delivery of OCM share
+The Group Owner Server is not involved in the delivery of OCM Share
 notifications.  All other OCM notifications relating to a share, such as
 share updates and share deletions, are likewise sent directly from the
 sending server to each Member Server, referencing the share by its

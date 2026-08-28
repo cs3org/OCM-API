@@ -1092,6 +1092,17 @@ described in [OCM-IP].
   share does not expire.  A sender server MAY use it to signal that
   the resource represents a cached copy of a dataset that was made
   available for an efficient data transfer to the destination server.
+* OPTIONAL encryption (object)
+  Optional JSON object with encryption information for the share.  If
+  omitted, it is assumed that the resource is not encrypted.  For
+  encrypted resources, the actual key material is to be exchanged out
+  of band, and this object MUST include:
+  - REQUIRED resourceId (string) - a unique identifier of the
+    underlying resource.
+  - REQUIRED scheme (string) - an identifier of the encryption scheme
+    used to encrypt the resource, such as "ocm-pgp-1".
+  - REQUIRED cipher (string) - the encryption algorithm used to encrypt
+    the resource as in [RFC9180] Section 7.3.
 * REQUIRED protocol (object)
   JSON object with specific options for each protocol.
   The supported protocols are:
@@ -2214,6 +2225,10 @@ https://datatracker.ietf.org/doc/html/rfc9553), May 2024"
 JSON Object Signing and Encryption (JOSE) and CBOR Object Signing
 and Encryption (COSE)](https://datatracker.ietf.org/doc/html/rfc9864)",
 October 2025.
+
+[RFC9180] Barnes, R., Bhargavan, K., Lipp, B. and Wood, C. A.  "[Hybrid
+Public Key Encryption](https://datatracker.ietf.org/doc/html/rfc9180)",
+February 2022.
 
 ## Informative References
 
