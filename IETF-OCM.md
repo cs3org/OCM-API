@@ -770,14 +770,14 @@ contain the following information about its OCM API:
   `"/index.php/apps/sciencemesh/accept"` is specified here then a WAYF
   Page SHOULD redirect the end-user to `/index.php/apps/sciencemesh/
   accept?token=zi5kooKu3ivohr9a&providerDomain=cloud.example.org`.
-* OPTIONAL: jwksUri (string) - https URL of a JWK Set document
-  [RFC7517] containing the public keys this OCM Server uses for HTTP
-  Message Signatures.  The URL is discovered from this field; it is
-  not a fixed path in the OCM API.
-  Implementations that advertise the `"http-sig"` capability MUST
-  provide this URL as well, and it MUST use https.  As with the
-  Discovery Process, implementations MAY fallback to HTTP instead of
-  HTTPS in testing setups.
+* OPTIONAL: jwksUri (string) - URL of a JWK Set document [RFC7517]
+  containing the public keys this OCM Server uses for HTTP Message
+  Signatures.  The URL MUST use HTTPS and is discovered from this field.
+  It MAY refer to a different host, not necessarily to the same OCM
+  Server; it is not a fixed path in the OCM API.  Implementations that
+  advertise the `"http-sig"` capability MUST provide this URL as well.
+  As with the Discovery Process, implementations MAY fallback to HTTP
+  instead of HTTPS in testing setups.
   Example: `"https://cloud.example.org/ocm/jwks"`.
 * OPTIONAL: tokenEndPoint (string) - URL of the token endpoint hosted by
   this OCM Server.  When this OCM Server acts as Sending Server, the
