@@ -2,7 +2,7 @@
 title: >-
   Federated Groups in Open Cloud Mesh using Messaging Layer Security
 abbrev: "OCM MLS Federated Groups"
-docname: draft-nordin-ocm-mls-federated-groups-01
+docname: draft-nordin-ocm-mls-federated-groups-02
 category: std
 
 ipr: trust200902
