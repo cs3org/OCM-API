@@ -1586,10 +1586,10 @@ Each notification MAY include the optional `encryption` field:
     }
   },
   "encryption": {
-    "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1"
+    "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1",
     "scheme": "ocm-mls",
     "ocm-mls": {
-      "cipher": "AES-256-GCM",
+      "cipher": "AES-256-GCM"
     }
   }
 }
