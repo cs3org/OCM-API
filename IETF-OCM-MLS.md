@@ -391,7 +391,7 @@ its OCM discovery document at `/.well-known/ocm`:
 ~~~ json
 {
   "enabled": true,
-  "apiVersion": "1.4.0",
+  "apiVersion": "1.5.0",
   "endPoint": "https://cloud.example.org/ocm",
   "provider": "Example Cloud",
   "resourceTypes": [
@@ -2058,6 +2058,11 @@ This section collects the changes with respect to the previous
 version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 02
+* Following the introduction of an `encryption` object for Shares in
+  Version 07 of [OCM] and a corresponding IANA Registry, this document
+  has been adapted and corresponding registry entries have been added.
 
 ## Version 01
 * Following the introduction of IANA Registries in Version 06 of [OCM],
