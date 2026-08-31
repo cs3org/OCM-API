@@ -1393,16 +1393,16 @@ the Receiving Server.  The body is the Share Creation Notification with
 every `sharedSecret` removed (line breaks in the signature headers for
 display purposes only):
 
-~~~
+<sourcecode type="http">
 POST /services/ocm/shares HTTP/1.1
 Host: hub.example.org
 Date: Wed, 10 Jun 2026 14:00:00 GMT
 Content-Type: application/json
 Content-Digest: sha-256=:hj3LWOIuryd4XbzFhoHa6YMUbhtzMdMT3e9Bxpu2Lm0=:
 Content-Length: 542
-Signature-Input: ocm=("@method" "@target-uri" "content-digest"
-"content-length" "date"); created=1781186400;
-keyid="cloud.example.org#key1"; alg="ed25519"
+"@signature-params": ("@method" "@target-uri" "content-digest" \
+  "content-length");created=1781186400;\
+  keyid="cloud.example.org#key1";alg="ed25519";tag="ocm"
 Signature: ocm=:[signature-value]:
 
 {
@@ -1428,8 +1428,7 @@ Signature: ocm=:[signature-value]:
     }
   }
 }
-~~~
-{: type="http"}
+</sourcecode>
 
 The Protocol Server stores the Share Record under (`cloud.example.org`,
 `7c084226-d9a1-11e6-bf26-cec0c932ce01`) and responds:
