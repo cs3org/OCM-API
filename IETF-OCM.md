@@ -627,7 +627,7 @@ contain the following information about its OCM API:
 * REQUIRED: enabled (boolean) - Whether the OCM service is enabled at
   this endpoint
 * REQUIRED: apiVersion (string) - The OCM API version this endpoint
-  supports.  Example: `"1.4.0"`
+  supports.  Example: `"1.5.0"`
 * REQUIRED: endPoint (string) - The URI of the OCM API available at
   this endpoint.  Example: `"https://cloud.example.org/ocm"`
 * OPTIONAL: provider (string) - A friendly branding name of this
@@ -2888,9 +2888,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Clarified that `created` bounds the lifetime of a captured
   signature but does not by itself detect replay within that window
   (see Section 7.2.2 of [RFC9421]).
-* `jwksUri` and `{tokenEndPoint}` transport: https remains mandatory,
+* `jwksUri` and `{tokenEndPoint}` transport: HTTPS remains mandatory,
   with the same HTTP fallback allowance for testing setups that the
-  Discovery Process has; dropped the https-only schema pattern from
+  Discovery Process has; dropped the HTTPS-only schema pattern from
   spec.yaml accordingly.
 * Appendix B now defers the missing-`jwksUri` case to [Decision to
   Discard](#decision-to-discard) instead of stating a stronger
@@ -2907,6 +2907,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
   Notification") endpoint and payload, and adaptation of the IANA
   registries.  The core notifications have now been fully spelled
   out, clarifying their scope.
+* Introduced an `encryption` optional object in the Share Creation
+  Notification payload, and defined a corresponding Encryption Schemes
+  OCM IANA Registry.
 
 ## Version 06
 * Introduced IANA Registries for resource types, protocols, share

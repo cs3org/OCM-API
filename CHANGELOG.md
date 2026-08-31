@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.0] - 2026-08-31 - Giuseppe Lo Presti <lopresti@cern.ch>
+
+* Improved usage of HTTP Message Signature, discovery of JWKS keys,
+  and related examples.
+* Refactored the `/notifications` endpoint and the corresponding
+  IANA Registry entries. The `/request-share` endpoint has been
+  absorbed as a new notification, and all accepted notification
+  types have been fully specified.
+* Introduced an optional `encryption` object in the `/shares`
+  payload, and defined related encryption schemes.
+
 ## [1.4.0] - 2026-06-23 - Giuseppe Lo Presti <lopresti@cern.ch>
 
 * Introduced a `/request-share` endpoint to request a user of an

@@ -5,7 +5,7 @@ info:
     Open Cloud Mesh OpenAPI Specification.
     The semantic of the Protocol Specification is detailed in the OCM Internet-Draft document
     published at the [IETF Datatracker](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh).
-  version: 1.4.0
+  version: 1.5.0
   x-logo:
     url: logo.png
 servers:
@@ -304,7 +304,7 @@ components:
         apiVersion:
           type: string
           description: The OCM API version this endpoint supports
-          example: 1.4.0
+          example: 1.5.0
         endPoint:
           type: string
           description: The URI of the OCM API available at this endpoint
