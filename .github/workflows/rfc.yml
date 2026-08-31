@@ -51,6 +51,7 @@ jobs:
         id: convert
         run: |
           for doc in IETF-*.md; do
+            echo ${doc}: >> /tmp/result
             kramdown-rfc ${doc} > ${doc/md/xml} 2>> /tmp/result || true
           done
           cat /tmp/result
