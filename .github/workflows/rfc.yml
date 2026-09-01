@@ -31,8 +31,10 @@ jobs:
           ruby-version: '3.2'
           bundler-cache: false
 
-      - name: Install kramdown-rfc
-        run: gem install --no-document kramdown-rfc
+      - name: Install RFC tools
+        run: |
+          gem install --no-document kramdown-rfc
+          pip install xml2rfc
 
       - name: Bump I-D version for the selected Drafts
         env:
@@ -51,8 +53,11 @@ jobs:
         id: convert
         run: |
           for doc in IETF-*.md; do
-            echo ${doc}: >> /tmp/result
+            echo Converting ${doc} to XML: >> /tmp/result
             kramdown-rfc ${doc} > ${doc/md/xml} 2>> /tmp/result || true
+            echo Validating ${doc/md/xml} for RFC generation: >> /tmp/result
+            xml2rfc ${doc/md/xml} >> /tmp/result
+            rm -rf ${doc/md/txt}
           done
           cat /tmp/result
           echo "result<<EOF" >> $GITHUB_OUTPUT
