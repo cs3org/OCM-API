@@ -822,8 +822,8 @@ remaining interoperable:
   without them.
 
 Because the [Invite Acceptance
-Request](#invite-acceptance-request-details) and [Request for a
-Share](#request-for-a-share) establish the trust that later exchanges
+Request](#invite-acceptance-request-details) and the [Request_Share
+Notification](#notifications) establish the trust that later exchanges
 rely on, implementations SHOULD NOT use those features unless HTTP
 Message Signatures are available.
 
@@ -967,17 +967,13 @@ traffic.  When signing is in play, the signer and verifier roles are:
 * __Invite Acceptance__ (`POST /invite-accepted`) - the Invite Receiver
   signs; the Invite Sender verifies.  See [Invite Flow](#invite-flow)
   and [HTTP Message Signatures](#http-message-signatures).
-* __Request for a Share__ (`POST /request-share`) - the Requesting
-  Server signs; the Requested Server verifies.  See [Request for a
-  Share](#request-for-a-share) and [HTTP Message
-  Signatures](#http-message-signatures).
 * __Share Acceptance Notification__ (`POST /notifications`) - the
-  Receiving Server signs; the Sending Server verifies.  See [Share
-  Acceptance Notification](#share-acceptance-notification) and [HTTP
-  Message Signatures](#http-message-signatures).
+  Receiving Server signs; the Sending Server verifies.  See
+  [Notifications](#notifications) and
+  [HTTP Message Signatures](#http-message-signatures).
 * __Sender-initiated Notification__ (`POST /notifications`) - the
   Sending Server SHOULD sign; the Receiving Server verifies.  See
-  [Share Acceptance Notification](#share-acceptance-notification) and
+  [Notifications](#notifications) and
   [HTTP Message Signatures](#http-message-signatures).
 
 # Share Creation Notification
