@@ -10,6 +10,8 @@
   types have been fully specified.
 * Introduced an optional `encryption` object in the `/shares`
   payload, and defined related encryption schemes.
+* Introduced a section about the threat model in all three
+  Internet-Draft documents.
 
 ## [1.4.0] - 2026-06-23 - Giuseppe Lo Presti <lopresti@cern.ch>
 
