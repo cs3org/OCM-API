@@ -38,7 +38,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * The Internet-Draft document was presented at [IETF 123](https://datatracker.ietf.org/meeting/123/agenda), as part of the [Dispatch session](https://datatracker.ietf.org/meeting/123/session/dispatch) ([recording](https://youtu.be/LJMnsFVR3rU?t=452)). **Version 1.2.1 was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#121---2025-07-17---giuseppe-lo-presti-lopresticernch)** in preparation for that event. Following a successful dispatch, a non-WG [IETF mailing list](https://mailman3.ietf.org/mailman3/lists/ocm.ietf.org) was provided to initiate the standardization process.
 
 
-### The path towards IETF Standardization
+### The path towards IETF standardization
 * The [wiki](https://github.com/cs3org/OCM-API/wiki) is launched to collect minutes of the ongoing meetings.
 * The [W3C Community Group](https://www.w3.org/community/ocm), with 24 participants, was archived in August 2025 as work transitioned to the IETF mailing list.
 * In preparation for the IETF WG, a [charter](https://github.com/ietf-artarea/charters/tree/main/ocm) was submitted to define its mandate.
@@ -60,6 +60,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * In preparation for the [WG meeting at IETF 126](https://datatracker.ietf.org/meeting/126/agenda#agenda-day-2026-07-21), **version 1.4** was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#140---2026-06-23---giuseppe-lo-presti-lopresticernch), which now includes two additional Internet-Drafts.
 * In July 2026 the first in-person [WG meeting](https://datatracker.ietf.org/meeting/126/session/ocm) took place at IETF 126 ([recording](https://youtu.be/63W3Ugt1nMo)).
 * In August 2026, **version 1.5** was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#150---2026-08-31---giuseppe-lo-presti-lopresticernch), marking the end of the funded SovereignTech project. Subsequently, the additional Internet-Drafts were also adopted by the IETF WG.
+* The top-level domain [opencloudmesh.org](https://opencloudmesh.org) was resurrected to point to the CS3 community-hosted front page.
 * Session about federated sharing at the [Nextcloud conference 2026](https://nextcloud.com/conference-2026/#saturday-19), featuring the work done to align most of Nextcloud server to the latest OCM standard.
 
 
