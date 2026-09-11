@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh Integration Protocol'
-docname: draft-nordin-ocm-integration-protocol-01
+docname: draft-ietf-ocm-integration-protocol-00
 category: std
 
 ipr: trust200902
@@ -1655,9 +1655,17 @@ This section collects the changes with respect to the previous version
 in the IETF datatracker.  It is meant to ease the review process and it
 shall be removed when going to RFC last call.
 
-## Version 00
+## Individual Submission Version 00
 
 * Initial version.
+
+## Working Group Version 00
+
+* First Working Group version, adopted by the OCM Working Group.
+
+## Individual Submission Version 01
+
+* Added the threat model.
 
 # Acknowledgements
 

@@ -2,7 +2,7 @@
 title: >-
   Federated Groups in Open Cloud Mesh using Messaging Layer Security
 abbrev: "OCM MLS Federated Groups"
-docname: draft-nordin-ocm-mls-federated-groups-02
+docname: draft-ietf-ocm-mls-federated-groups-00
 category: std
 
 ipr: trust200902
@@ -2059,12 +2059,15 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
-## Version 02
+## Working Group Version 00
+* First Working Group version, adopted by the OCM Working Group.
+
+## Individual Submission Version 02
 * Following the introduction of an `encryption` object for Shares in
   Version 07 of [OCM] and a corresponding IANA Registry, this document
   has been adapted and corresponding registry entries have been added.
 
-## Version 01
+## Individual Submission Version 01
 * Following the introduction of IANA Registries in Version 06 of [OCM],
   all registry entries related to the `federation` share type have been
   introduced in this document.

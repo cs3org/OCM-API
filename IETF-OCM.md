@@ -2263,12 +2263,12 @@ July 2003.
 
 [OCM-IP] Nordin, M., Lo Presti, G., and Baghbani, M. "[Open Cloud Mesh
 Integration
-Protocol](https://datatracker.ietf.org/doc/draft-nordin-ocm-integration-protocol/)",
+Protocol](https://datatracker.ietf.org/doc/draft-ietf-ocm-integration-protocol/)",
 Work in Progress, Internet-Draft.
 
 [OCM-MLS] Nordin, M., Lo Presti, G., and Baghbani, M. "[Federated Groups
 in Open Cloud Mesh using Messaging Layer
-Security](https://datatracker.ietf.org/doc/draft-nordin-ocm-mls-federated-groups/)",
+Security](https://datatracker.ietf.org/doc/draft-ietf-ocm-mls-federated-groups/)",
 Work in Progress, Internet-Draft.
 
 [RFC8792] Watsen, K., Auerswald, E., Farrel, A., Wu, Q., "[Handling
