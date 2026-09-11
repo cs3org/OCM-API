@@ -27,7 +27,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 
 ### [NL-net](https://nlnet.nl) funded efforts
-* In June 2023 a [grant was awarded](https://nlnet.nl/project/OpenCloudMesh) in order to continue the developments and specifically improve the specifications and the testing.
+* In June 2023, a [grant was awarded](https://nlnet.nl/project/OpenCloudMesh) in order to continue the developments and specifically improve the specifications and the testing.
 * In October 2023 a [W3C Community Group](https://www.w3.org/community/ocm) was launched.
 * A Campfire and Panel session about OCM took place at [CS3 2024](https://indico.cern.ch/event/1332413/timetable/#20240312.detailed), held back at CERN on its 10th anniversary. Subsequently, the CS3 community initiated thematic SIGs, including an OCM SIG.
 * The OCM Test Suite was revamped, and the specification underwent a major rewrite in order to improve clarity and adopt the IETF Internet-Draft format.
@@ -48,14 +48,21 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 
 ### [Sovereign Tech Fund](https://www.sovereign.tech) commissioned efforts
-* In October 2025 [funding was awarded](https://www.sovereign.tech/tech/open-cloud-mesh) to implement several missing pieces and introduce automated testing in each vendor's CI pipeline, as well as to support the IETF standardization efforts. This engagement was first made public at the [Open Source at CERN in 2025/2026 event](https://indico.cern.ch/event/1546072), featuring a number of funding agencies including Sovereign Tech, with a [lightning talk](https://indico.cern.ch/event/1546072/contributions/6754920) about CERNBox and OCM.
-* Presentations and demonstrations about the OCM-based EOSC Federation of Cloud Storage Systems at the [EOSC Symposium 2025](https://indico.cern.ch/event/1543880/timetable).
+* In October 2025, [funding was awarded](https://www.sovereign.tech/tech/open-cloud-mesh) to implement several missing pieces and introduce automated testing in each vendor's CI pipeline, as well as to support the IETF standardization efforts. This engagement was first made public at the [Open Source at CERN in 2025/2026 event](https://indico.cern.ch/event/1546072), featuring a number of funding agencies including Sovereign Tech, with a [lightning talk](https://indico.cern.ch/event/1546072/contributions/6754920) about CERNBox and OCM.
+* Presentations and demonstrations about the OCM-based EOSC Federation of cloud storage systems at the [EOSC Symposium 2025](https://indico.cern.ch/event/1543880/timetable).
 * First [IETF WG interim meeting](https://datatracker.ietf.org/meeting/interim-2025-ocm-01/session/ocm) held in November 2025: the draft is officially adopted by the WG.
 * The 16th [SIG-CISS Meet-up on Federated Storage and Storage Infrastructure](https://events.geant.org/event/1939) (recording [part 1](https://drive.google.com/file/d/1KZGcD6Pb8C-ZAn2twm0XtyevzEu2Qp_V/view) and [part 2](https://drive.google.com/file/d/1THSRtgrznOaxWGL6tXLezQE67u2Xs77A/view)) featured a number of presentations about storage federations and OCM, including an OCM 10th anniversary presentation. 
-* In March 2026 three simultaneous events featured the project:
+* In March 2026, three simultaneous events featured the project:
   * A [HotRFC](https://datatracker.ietf.org/meeting/125/materials/slides-125-hotrfc-sessa-open-cloud-mesh-recent-developments-00) presentation ([recording](https://youtu.be/OtOo7Nogisw?t=2797)) followed by informal gatherings at [IETF 125](https://www.ietf.org/meeting/125) with the IETF experts.
   * Panel at the [CS3 2026](https://indico.cern.ch/event/1560960/timetable/#20260318.detailed) event, where the CS3 SIG reported on the activity and on the latest **version 1.3**, recently [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#130---2026-01-20---micke-nordin-kanosunetse), as well as on the WG plans.
   * The [International Symposium on Grids & Clouds (ISGC) 2026](https://indico4.twgrid.org/event/64/timetable/#20260317) hosted a presentation about OCM and the IETF standardization effort.
 * Second [IETF WG interim meeting](https://datatracker.ietf.org/meeting/interim-2026-ocm-01/session/ocm) held in April 2026 to address issues with some parts of the specification and prepare the ground for a WG meeting at [IETF 126](https://www.ietf.org/meeting/126).
 * In preparation for the [WG meeting at IETF 126](https://datatracker.ietf.org/meeting/126/agenda#agenda-day-2026-07-21), **version 1.4** was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#140---2026-06-23---giuseppe-lo-presti-lopresticernch), which now includes two additional Internet-Drafts.
 * In July 2026 the first in-person [WG meeting](https://datatracker.ietf.org/meeting/126/session/ocm) took place at IETF 126 ([recording](https://youtu.be/63W3Ugt1nMo)).
+* In August 2026, **version 1.5** was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#150---2026-08-31---giuseppe-lo-presti-lopresticernch), marking the end of the funded SovereignTech project. Subsequently, the additional Internet-Drafts were also adopted by the IETF WG.
+* Session about federated sharing at the [Nextcloud conference 2026](https://nextcloud.com/conference-2026/#saturday-19), featuring the work done to align most of Nextcloud server to the latest OCM standard.
+
+
+### The [EOSC](https://eosc.eu/eosc-about) era
+* With the launch of new EU-funded projects for the European Open Science Cloud in September 2026, OCM is set to be the backbone of multiple activities. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
+
