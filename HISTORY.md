@@ -65,5 +65,5 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 
 
 ### The [EOSC](https://eosc.eu/eosc-about) era
-* With the launch of new EU-funded projects for the European Open Science Cloud in September 2026, OCM is set to be the backbone of multiple activities. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
+* With the launch of multiple EU-funded projects in September 2026, in the context off the European Open Science Cloud Federation build-up phase, OCM is set to be the backbone of a pan-European infrastructure supporting multiple activities and projects. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
 
