@@ -60,10 +60,10 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * In preparation for the [WG meeting at IETF 126](https://datatracker.ietf.org/meeting/126/agenda#agenda-day-2026-07-21), **version 1.4** was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#140---2026-06-23---giuseppe-lo-presti-lopresticernch), which now includes two additional Internet-Drafts.
 * In July 2026 the first in-person [WG meeting](https://datatracker.ietf.org/meeting/126/session/ocm) took place at IETF 126 ([recording](https://youtu.be/63W3Ugt1nMo)).
 * In August 2026, **version 1.5** was [published](https://github.com/cs3org/OCM-API/blob/develop/CHANGELOG.md#150---2026-08-31---giuseppe-lo-presti-lopresticernch), marking the end of the funded SovereignTech project. Subsequently, the additional Internet-Drafts were also adopted by the IETF WG.
-* The top-level domain [opencloudmesh.org](https://opencloudmesh.org) was resurrected to point to the CS3 community-hosted front page.
+* The top-level domain [opencloudmesh.org](https://opencloudmesh.org) was resurrected to point to the CS3 community-hosted front page, refreshed on the occasion.
 * Session about federated sharing at the [Nextcloud conference 2026](https://nextcloud.com/conference-2026/#saturday-19), featuring the work done to align most of Nextcloud server to the latest OCM standard.
 
 
 ### The [EOSC](https://eosc.eu/eosc-about) era
-* With the launch of multiple EU-funded projects in September 2026, in the context of the European Open Science Cloud Federation build-up phase, OCM is set to be the backbone of a pan-European infrastructure supporting multiple activities and projects. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
+* With the launch of [multiple EU-funded projects](https://cordis.europa.eu/programme/id/HORIZON_HORIZON-INFRA-2025-01-EOSC-01) in September 2026, in the context of the European Open Science Cloud Federation build-up phase, OCM is set to be the backbone of a pan-European infrastructure supporting multiple activities and projects. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
 
