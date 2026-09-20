@@ -516,6 +516,31 @@ components:
               invalid_client, invalid_grant, unauthorized_client, or
               unsupported_grant_type)
           example: https://cloud.example.org/ocm/token
+        directoryEndPoint:
+          type: string
+          format: uri
+          description: >
+            Optional URL of the Directory Endpoint hosted by this OCM Server,
+            where it exposes the Federations it is a member of, along with
+            their membership. The URL is discovered from this field; it is not
+            a fixed path in the OCM API. It MUST use https, though
+            implementations MAY fall back to HTTP in testing setups. The
+            presence of this field is the only signal that an OCM Server
+            offers a Directory Service; no dedicated capability is defined.
+            See the Directory schema for the payload, and the Directory
+            Service section of the OCM Internet-Draft for the normative
+            procedure, including the peer-announced propagation of the
+            membership by means of the `OCM_SERVER_ADDED` and
+            `OCM_SERVER_REMOVED` notifications.
+
+            **HTTP Responses:**
+            - 200: `application/json` with a Directory object, whose
+              `federation` property carries either a single Federation object,
+              when this OCM Server is a member of exactly one Federation, or
+              an array of Federation objects, one per Federation. Consumers
+              MUST accept both forms.
+            - 404: This OCM Server does not expose any Federation.
+          example: https://cloud.example.org/ocm/directory
         inviteAcceptDialog:
           type: string
           description: >
@@ -524,6 +549,100 @@ components:
             If for example `"/index.php/apps/sciencemesh/accept"` is specified here then a Where-Are-You-From page could redirect the end-user
             to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
           example: /index.php/apps/sciencemesh/accept
+    Directory:
+      type: object
+      description: >
+        The Federations an OCM Server is a member of, as exposed at the
+        `directoryEndPoint` advertised in the Discovery response, or by a
+        third-party Directory Service. The `federation` property carries a
+        single Federation object, when the OCM Server is a member of exactly
+        one Federation, or an array of Federation objects, one per
+        Federation: consumers MUST accept both forms.
+
+        The document is not signed: in the peer-announced model the trust
+        rests with the OCM Server administrators, who approve every member of
+        their own federation configuration, whereas in the MLS-based model the
+        authoritative membership is the MLS group state, which is
+        cryptographically verifiable. It MUST be fetched over TLS, and a
+        consumer MUST NOT treat it as an authorisation to interact with the
+        OCM Servers it lists.
+      required:
+        - federation
+      properties:
+        federation:
+          oneOf:
+            - $ref: "#/components/schemas/Federation"
+            - type: array
+              items:
+                $ref: "#/components/schemas/Federation"
+      example:
+        federation:
+          federationId: sciencemesh
+          name: The ScienceMesh Directory
+          servers:
+            - url: https://ocm-server.example.org
+              displayName: OCM Server 1
+            - url: https://ocm-server.example.com:4443
+              displayName: OCM Server 2
+            - url: http://192.168.1.1:8080
+              displayName: OCM Server 3
+    Federation:
+      type: object
+      description: >
+        One Federation of OCM Servers and its membership.
+      required:
+        - federationId
+        - name
+        - servers
+      properties:
+        federationId:
+          type: string
+          pattern: "^[a-z0-9-]+$"
+          description: >
+            A short, stable identifier of the Federation, agreed out of band
+            among its members. Members of the same Federation MUST use the
+            same value, as it is used to correlate the documents published by
+            the different members, and to identify the Federation in an
+            `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED` notification.
+          example: sciencemesh
+        name:
+          type: string
+          description: A human-readable name of the Federation.
+          example: The ScienceMesh Directory
+        mlsGroupId:
+          type: string
+          description: >
+            Optional identifier of the MLS group that manages this Federation,
+            when the cryptographically guaranteed model specified in the
+            OCM-MLS Internet-Draft is in use. In that case the authoritative
+            membership is the MLS group state at the current epoch, and this
+            document is informative.
+          example: 51dc30ddc473d43a6011e9ebba6ca770
+        servers:
+          type: array
+          description: >
+            The OCM Servers that are members of this Federation. The
+            publishing OCM Server SHOULD include itself.
+          items:
+            type: object
+            required:
+              - url
+              - displayName
+            properties:
+              url:
+                type: string
+                format: uri
+                description: >
+                  An absolute URL identifying the OCM Server. It MUST include
+                  a scheme, either `https://` or (for testing purposes)
+                  `http://`, and a host, either a FQDN or an IP address. It
+                  MAY include a non-default port. It MUST NOT include a base
+                  path (e.g. `/ocm`), nor userinfo, query or fragment.
+                example: https://ocm-server.example.org
+              displayName:
+                type: string
+                description: A human-readable name for the OCM Server.
+                example: OCM Server 1
     NewShare:
       type: object
       required:
@@ -998,6 +1117,11 @@ components:
               `providerId` of the underlying resource, and in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
               `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
+              For an `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED` notification, the
+              `federation` object MUST contain the `federationId` of the
+              Federation and the `url` of the OCM Server that the sender's
+              directory for that Federation now contains, respectively no longer
+              contains.
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
@@ -1023,6 +1147,27 @@ components:
             message: User is not a trusted contact any longer
             user:
               userId: alice@alice.example.org
+        ocmServerWasAdded:
+          notificationType: OCM_SERVER_ADDED
+          shareType: federation
+          senderDomain: ocm-server.example.org
+          notification:
+            message: Your OCM Server is now part of our federation
+            federation:
+              federationId: sciencemesh
+              name: The ScienceMesh Directory
+              url: https://cloud.example.org
+              directoryEndPoint: https://ocm-server.example.org/ocm/directory
+        ocmServerWasRemoved:
+          notificationType: OCM_SERVER_REMOVED
+          shareType: federation
+          senderDomain: ocm-server.example.org
+          notification:
+            message: Your OCM Server is no longer part of our federation
+            federation:
+              federationId: sciencemesh
+              name: The ScienceMesh Directory
+              url: https://cloud.example.org
         mlsWelcome:
           notificationType: MLS_WELCOME
           shareType: federation

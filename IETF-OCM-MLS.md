@@ -2,7 +2,7 @@
 title: >-
   Federated Groups in Open Cloud Mesh using Messaging Layer Security
 abbrev: "OCM MLS Federated Groups"
-docname: draft-ietf-ocm-mls-federated-groups-00
+docname: draft-ietf-ocm-mls-federated-groups-01
 category: std
 
 ipr: trust200902
@@ -51,12 +51,20 @@ capabilities for resources shared with federated groups.
 
 Open Cloud Mesh [OCM] currently supports sharing resources with
 individual users across federated servers and with groups on a single
-server.  This document defines a new `shareType`, `"federation"`, and
-registers it in the "OCM Share Types" registry defined by [OCM].  A
-`"federation"` share is addressed to a federated group identified by an
-OCM Address such as `research-group@receiver.example.org` whose
-membership spans multiple OCM servers, with group state managed through
-the MLS [RFC9420] epoch mechanism.
+server.  This document specifies the mechanics of the `"federation"`
+share type, registered in the "OCM Share Types" registry by [OCM], for
+the case where the Receiving Party is a federated group of users: a
+`"federation"` share is then addressed to a group identified by an OCM
+Address such as `research-group@receiver.example.org` whose membership
+spans multiple OCM servers, with group state managed through the MLS
+[RFC9420] epoch mechanism.
+
+This document further specifies how an MLS group can maintain the
+membership of a Federation of OCM Servers itself, which is the
+cryptographically guaranteed Directory Service model of [OCM]
+({{servers-federation-groups}}).  The two uses of MLS share all of
+their machinery and differ only in what a leaf of the group represents:
+a user, or an OCM Server.
 
 In many Enterprise File Sync and Share (EFSS) systems, which constitute
 the vast majority of all OCM Servers, there is a tight coupling between
@@ -199,6 +207,23 @@ circumstances.
 enables adding an MLS client to a group asynchronously.  KeyPackages
 MUST be used only once, except for a designated last resort KeyPackage
 ([RFC9420] Section 16.8).
+- **Federation** - As defined in [OCM]: a group of OCM Servers whose
+administrators have established mutual trust, identified by a
+`federationId` and published at the Directory Endpoint of its members.
+A Federation is a set of servers; it is never a Receiving Party of a
+share.
+- **Servers Federation group** - An MLS group whose members are the OCM
+Servers of a Federation, with exactly one leaf per member server, used
+to maintain that Federation's membership with cryptographic guarantees
+({{servers-federation-groups}}).  Wherever this document says "Group"
+without qualification it means a federated group of users, as defined
+above, and never a Servers Federation group.
+- **Federation Admin Server** - A member of a Servers Federation group
+whose MLS client is entitled to construct Commits for that group: the
+counterpart, for a Servers Federation group, of an Admin.
+- **Federation Owner Server** - The member of a Servers Federation
+group currently arbitrating its Commits: the first Federation Admin
+Server in that group's admin set.
 
 # MLS Roles in OCM
 
@@ -259,6 +284,12 @@ endpoint of each recipient server, authenticated with HTTP Signatures
 For a Virtual Client, the user's home server MUST deliver messages sent
 to or by the Virtual Client to all of its Emulator Clients, as required
 by [ietf-mls-virtual-clients] Section 5.1.
+
+In a Servers Federation group ({{servers-federation-groups}}) the same
+arrangement applies with the member servers themselves in the place of
+the users' home servers: proposals go to every Federation Admin Server,
+the Federation Owner Server arbitrates Commits, and there is no FK
+distribution.
 
 Commits are constructed and signed by admin clients, but only the Commit
 accepted by the Group Owner Server takes effect; competing Commits for
@@ -404,10 +435,17 @@ its OCM discovery document at `/.well-known/ocm`:
 }
 ~~~
 
-No additional discovery fields are introduced.  The notifications
-endpoint is derived as `<endPoint>/notifications` per the base OCM
-specification.  The KeyPackage endpoint is derived as
+No additional discovery fields are introduced by this document.  The
+notifications endpoint is derived as `<endPoint>/notifications` per the
+base OCM specification.  The KeyPackage endpoint is derived as
 `<endPoint>/mls-key-packages`.
+
+A server that participates in a Servers Federation group
+({{servers-federation-groups}}) additionally advertises the
+`directoryEndPoint` field defined in [OCM], and publishes the
+Federation's `mlsGroupId` in the directory document exposed there.
+That field, and not a capability of its own, is what signals that the
+server exposes a Federation membership.
 
 A server that advertises `"federation"` MUST be able to receive OCM
 Notifications, since all MLS lifecycle messages are delivered as
@@ -468,6 +506,43 @@ The `userId` fields defined in this document carry the user's full OCM
 Address, not the bare identifier that [OCM] calls `userID`; the full
 address is required because these messages routinely cross server
 boundaries.
+
+## KeyPackages for OCM Servers {#server-key-packages}
+
+In a Servers Federation group ({{servers-federation-groups}}) the MLS
+client is the OCM Server itself, and its credential identifies the
+server rather than one of its users.  A server that participates in
+such groups MUST expose KeyPackages for its own client at the same
+endpoint, selected by `serverId` instead of `userId`:
+
+~~~
+GET <endPoint>/mls-key-packages?serverId={serverUrl}
+~~~
+
+Response:
+
+~~~ json
+{
+  "serverId": "https://cloud.example.org",
+  "keyPackages": [
+    {
+      "mediaType": "message/mls",
+      "encoding": "base64url",
+      "content": "<base64url-encoded MLS KeyPackage>"
+    }
+  ]
+}
+~~~
+
+The `serverId` value is the absolute URL of the OCM Server in the
+format [OCM] specifies for the `url` field of a directory document, and
+MUST equal the identity carried in the credential of every KeyPackage
+returned.  A server MUST reject a request whose `serverId` does not
+identify itself.  All other rules of this section apply unchanged: the
+request MUST be signed, KeyPackages MUST be one-time use except for a
+designated last resort KeyPackage, and the server MUST remove a
+KeyPackage once delivered.  A request MUST carry exactly one of
+`userId` and `serverId`.
 
 # Group Lifecycle
 
@@ -709,6 +784,20 @@ by their OCM Address: in particular, the `groupId` field of the
 application data carried inside `MLS_APPLICATION` messages
 ({{key-distribution}}, {{credential-update}}) is the group's OCM
 Address, never the MLS `group_id`.
+
+Both kinds of group defined in this document use these notification
+types, with `shareType` set to `"federation"` in either case, and a
+recipient distinguishes them by the contents of the
+`notification.federation` object: for a Servers Federation group
+({{servers-federation-groups}}) the object carries a `federationId`
+field, and a `serverUrl` field wherever the federated-group form
+carries `userId`; for a federated group of users it carries no
+`federationId`.  A recipient MUST reject a notification whose
+`mlsGroupId` and `federationId`, where both are present, do not
+resolve to the same group it knows, and MUST reject one that carries
+both `userId` and `serverUrl`.  `MLS_APPLICATION` is not used for
+Servers Federation groups, as neither File Keys nor per-server
+transport credentials are distributed within them.
 
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
@@ -1618,6 +1707,166 @@ share updates and share deletions, are likewise sent directly from the
 sending server to each Member Server, referencing the share by its
 `providerId` as in base OCM.
 
+# Servers Federation Groups {#servers-federation-groups}
+
+[OCM] defines a Federation as a group of OCM Servers whose
+administrators have established mutual trust, and specifies two models
+for maintaining its membership: a peer-announced model, where each
+member publishes the membership it knows about and propagates changes
+with the
+`OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED` notifications, and a
+cryptographically guaranteed model, which this section specifies.
+
+The model reuses the group machinery of this document with a single
+substitution: the members of the group are the OCM Servers of the
+Federation, not the users of a federated group.  What follows from that
+substitution is stated explicitly below; nothing else changes.
+
+## Relationship to Federated Groups
+
+A Servers Federation group is not a Receiving Party.  No Share is ever
+addressed to it, no `shareWith` names it, and the Encryption Model of
+this document does not apply to it, as there is no shared resource and
+therefore no File Key.  Its only purpose is to answer one question -
+which OCM Servers are currently members of this Federation - with the
+guarantees MLS provides: all members agree on the answer at every
+epoch, and each can verify it without trusting any other member's
+configuration.
+
+The two kinds of group are independent.  A Federation maintained as a
+Servers Federation group MAY host any number of federated groups of
+users among its members, and a federated group of users MAY span
+servers that share no Federation.  Membership in a Servers Federation
+group is not a prerequisite for sending or receiving a share, and a
+server does not become a member of a federated group by virtue of
+being a member of the Federation.
+
+## Group State {#servers-federation-state}
+
+A Servers Federation group is an MLS group in which:
+
+- each member OCM Server has exactly one leaf node, held by the server
+acting as an MLS client on behalf of its administrator.  There are no
+per-user leaves and no Virtual Clients: the administrator is not
+represented in the group, the server is.
+- the credential at each leaf is a basic credential ([RFC9420] Section
+5.3) whose identity field is the UTF-8 encoded absolute URL of the OCM
+Server, in the format [OCM] specifies for the `url` field of a
+directory document.  This is the same string by which the Federation's
+directory identifies that server, so the group membership and the
+published membership are directly comparable.
+- the MLS `group_id` is the value published as `federation.mlsGroupId`
+in the directory document of every member ([OCM]).  As for any group in
+this document, it SHOULD be a fresh random value at creation, as
+recommended by [RFC9420] Section 11.
+- the Federation's identity and its set of Federation Admin Servers are
+carried in a GroupContext extension `ocm_servers_federation` ([RFC9420]
+Section 13.4), the counterpart of `ocm_federated_group`
+({{admin-set}}):
+
+~~~
+struct {
+  opaque server_url<V>;
+} FederationAdmin;
+
+struct {
+  opaque federation_id<V>;
+  opaque federation_name<V>;
+  FederationAdmin admins<V>;
+} OCMServersFederation;
+~~~
+
+All URLs are UTF-8 encoded absolute URLs of OCM Servers.  The
+`federation_id` field carries the Federation's `federationId` as
+defined in [OCM] and MUST NOT change for the lifetime of the group;
+`federation_name` carries its human-readable name and MAY change with a
+GroupContextExtensions proposal.
+
+The `admins` list governs Commit construction and arbitration exactly
+as the `admins` list of {{admin-set}} does: it is ordered by
+appointment, its first entry names the Federation Owner Server,
+succession is therefore automatic, and the list MUST NOT otherwise be
+reordered.  The coupling between the admin set and the membership, the
+failover procedure of {{failover}}, the leaf update rules of
+{{leaf-key-updates}}, and the rejoin and reinitialisation procedures of
+{{rejoin}} and {{reinit}} all apply unchanged, reading "Member Server"
+as "member OCM Server", "admin" as "Federation Admin Server", and
+"admin client" as "the MLS client of a Federation Admin Server".  As
+for a federated group, the group MUST have at least one Federation
+Admin Server at all times.
+
+A server MUST list the `ocm_servers_federation` extension type in the
+`capabilities.extensions` field of the KeyPackages it publishes under
+{{server-key-packages}}, since GroupContext extensions must be
+supported by every member of the group ([RFC9420] Section 13.4).
+
+## Membership Changes
+
+A change of Federation membership is an MLS group operation:
+
+- admitting an OCM Server is an Add proposal, committed by the MLS
+client of a Federation Admin Server, followed by an `MLS_WELCOME` to
+the admitted server.  As in {{admins}}, an Add MUST be explicitly
+approved by an administrator before it is committed: this is the same
+human-in-the-loop requirement that [OCM] places on the peer-announced
+model, recorded here in the group state.
+- expelling an OCM Server is a Remove proposal, committed in the same
+way and subject to the same approval.  A server MAY always leave a
+Federation by proposing its own removal, which requires no approval.
+
+Because the resulting epoch is agreed by every member, an expulsion
+takes effect for the whole Federation at once.  This is the guarantee
+the peer-announced model cannot offer, where a removal states only that
+the sender's own directory no longer lists the recipient.
+
+The notifications that carry these operations are the `MLS_*` types of
+{{mls-notification-types}}, with `serverUrl` in place of `userId`.  For
+example, the Welcome delivered to a newly admitted server is:
+
+~~~ json
+{
+  "notificationType": "MLS_WELCOME",
+  "senderDomain": "ocm-server.example.org",
+  "shareType": "federation",
+  "notification": {
+    "federation": {
+      "federationId": "sciencemesh",
+      "mlsGroupId": "<base64url MLS group ID>",
+      "serverUrl": "https://cloud.example.org",
+      "content": "<base64url MLS Welcome wire format>"
+    }
+  }
+}
+~~~
+
+As for a federated group, the Welcome MUST carry the group's ratchet
+tree in a `ratchet_tree` extension, since the admitted server needs it
+to derive the membership and to process subsequent Commits.
+
+The `OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED` notifications of [OCM]
+MAY still be sent to a prospective or a departing member.  They remain
+useful precisely because they reach the administrator of a server that
+is not yet, or no longer, in the group, and therefore cannot receive
+its MLS messages.  They are advisory in this model: the membership is
+what the group state says.
+
+## Publishing the Membership
+
+Every member of a Servers Federation group SHOULD publish the
+Federation at its Directory Endpoint as specified in [OCM], with
+`federationId` equal to the `federation_id` of the GroupContext
+extension, `mlsGroupId` equal to the group's `group_id`, and one entry
+in `servers` per leaf of the ratchet tree at the current epoch, whose
+`url` is the identity carried in that leaf's credential.  A member MUST
+refresh the published document after processing a Commit that changes
+the membership.
+
+The published document carries no signature of its own, as [OCM]
+specifies.  A consumer that is itself a member of the group derives the
+authoritative membership from the group state and does not need the
+document; a consumer that is not a member, a WAYF Page for instance, is
+trusting the server it fetched the document from in either case.
+
 # Trust and Authentication {#trust-and-authentication}
 
 The Authentication Service role ([RFC9420] Section 3) is fulfilled by
@@ -1689,6 +1938,38 @@ that trusted server is outside the threat model.
 Users who require protection of their key material from their own server
 should choose a native client implementation where cryptographic
 operations occur on the user's device.
+
+## Servers Federation group credentials
+
+In a Servers Federation group ({{servers-federation-groups}}) the
+credential identifies an OCM Server rather than a user, so the AS role
+collapses onto the subject itself: a server attests its own identity.
+A KeyPackage for such a group is considered validated when all of the
+following hold:
+
+- it was fetched from the `<endPoint>/mls-key-packages` endpoint of the
+server named by the URL in the credential, over TLS, with the response
+signed using HTTP Signatures [RFC9421] verifying against that server's
+JWKS [RFC7517];
+- the URL in the credential is identical to the `serverId` the
+KeyPackage was requested for ({{server-key-packages}}), and its host
+part names the server the KeyPackage was fetched from; and
+- the KeyPackage signature verifies with the `signature_key` of its
+LeafNode.
+
+This is the same channel binding as for a user credential, with the
+subject and the attesting party coinciding.  It therefore establishes
+only that the party controlling that FQDN and its published keys asked
+to join; it is not, and cannot be, evidence that the server ought to be
+trusted.  That judgement belongs to the administrators, as [OCM]
+requires for both of its Directory Service models, and in this model it
+is recorded in the group state by the admin approval of the Add
+({{servers-federation-groups}}).
+
+The successor-credential policy above applies unchanged, with the
+server URL taking the place of the OCM Address: a credential replacing
+another MUST present the same URL, and members MUST reject the
+proposal or Commit otherwise.
 
 # Security Considerations {#security-considerations}
 
@@ -1969,6 +2250,15 @@ defined in [RFC9420] Section 17.3:
 - Recommended: N
 - Reference: This document
 
+The GroupContext extension `ocm_servers_federation` defined in
+{{servers-federation-state}} is to be registered in the same registry:
+
+- Value: TBD
+- Name: ocm_servers_federation
+- Message(s): GC
+- Recommended: N
+- Reference: This document
+
 The following notification types are to be registered in the "OCM
 Notification Types" registry defined in [OCM], within the "Open Cloud
 Mesh (OCM) Parameters" group:
@@ -1985,18 +2275,12 @@ Mesh (OCM) Parameters" group:
    +===================+===========+===============+
 ~~~
 
-The following entry is to be registered in the "OCM Share Types"
-registry defined in [OCM], within the "Open Cloud Mesh (OCM)
-Parameters" group.  This document is the registering specification for
-the "federation" share type:
-
-~~~
-   +============+===============+
-   | Share Type | Reference     |
-   +============+===============+
-   | federation | This document |
-   +============+===============+
-~~~
+The "federation" share type is registered in the "OCM Share Types"
+registry by [OCM], which specifies its mechanics for a Federation of
+OCM Servers.  This document registers no entry in that registry; it
+specifies the mechanics of the same share type for a group of users
+that spans multiple OCM Servers acting as the Receiving Party of a
+share, and registers the corresponding share payloads below.
 
 The following entries are to be registered in the "OCM Share Payloads"
 registry defined in [OCM], within the "Open Cloud Mesh (OCM)
@@ -2058,6 +2342,27 @@ This section collects the changes with respect to the previous
 version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
+
+## Working Group Version 01
+* Specified Servers Federation groups: an MLS group whose members are
+  the OCM Servers of a Federation, providing the cryptographically
+  guaranteed Directory Service model of [OCM].  One leaf per member
+  server, a credential identifying the server by the same URL its
+  directory entry uses, a new `ocm_servers_federation` GroupContext
+  extension, and Add and Remove Commits as the membership changes.
+  The existing group machinery - admin set, failover, leaf updates,
+  rejoin and reinitialisation - is reused unchanged.
+* Added a `serverId` selector to the KeyPackage endpoint, for the
+  server-level MLS client of a Servers Federation group, and specified
+  the corresponding credential validation.
+* Reused the `MLS_*` notification types for Servers Federation groups,
+  with a `federationId` in the `notification.federation` object as the
+  discriminator between the two kinds of group.
+* Dropped the registration of the `federation` share type, which is
+  now registered by [OCM] as it specifies its mechanics for a
+  Federation of OCM Servers.  This document keeps specifying the
+  mechanics of that share type for federated groups of users, and
+  keeps the corresponding share payload registrations.
 
 ## Working Group Version 00
 * First Working Group version, adopted by the OCM Working Group.
