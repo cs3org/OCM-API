@@ -64,6 +64,6 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * Session about federated sharing at the [Nextcloud conference 2026](https://nextcloud.com/conference-2026/#saturday-19), featuring the work done to align most of Nextcloud server to the latest OCM standard.
 
 
-### The [EOSC](https://eosc.eu/eosc-about) era
-* With the launch of [multiple EU-funded projects](https://cordis.europa.eu/programme/id/HORIZON_HORIZON-INFRA-2025-01-EOSC-01) in September 2026, in the context of the European Open Science Cloud Federation build-up phase, OCM is set to be the backbone of a pan-European infrastructure supporting multiple activities and projects. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
+### The [European Open Science Cloud](https://eosc.eu/eosc-about) era
+* With the launch of [multiple EU-funded projects](https://cordis.europa.eu/programme/id/HORIZON_HORIZON-INFRA-2025-01-EOSC-01) in September 2026, in the context of the EOSC Federation build-up phase, OCM is set to be the backbone of a pan-European infrastructure supporting multiple activities and projects. Presentations and demos are being prepared for the [EOSC Symposium 2026](https://eosc.eu/symposium-2026), to be held in October 2026.
 
