@@ -522,10 +522,9 @@ components:
           description: >
             Optional URL of the Directory Endpoint hosted by this OCM Server,
             where it exposes the Federations it is a member of, along with
-            their membership. The URL is discovered from this field; it is not
-            a fixed path in the OCM API. It MUST use https, though
-            implementations MAY fall back to HTTP in testing setups. The
-            presence of this field is the only signal that an OCM Server
+            their membership. The URL MUST use https, though implementations
+            MAY fall back to HTTP in testing setups.
+            The presence of this field is the only signal that an OCM Server
             offers a Directory Service; no dedicated capability is defined.
             See the Directory schema for the payload, and the Directory
             Service section of the OCM Internet-Draft for the normative
@@ -581,11 +580,11 @@ components:
           name: The ScienceMesh Directory
           servers:
             - url: https://ocm-server.example.org
-              displayName: OCM Server 1
+              displayName: My OCM Server
             - url: https://ocm-server.example.com:4443
-              displayName: OCM Server 2
+              displayName: Another OCM Server
             - url: http://192.168.1.1:8080
-              displayName: OCM Server 3
+              displayName: Test OCM Server
     Federation:
       type: object
       description: >
@@ -642,7 +641,7 @@ components:
               displayName:
                 type: string
                 description: A human-readable name for the OCM Server.
-                example: OCM Server 1
+                example: My OCM Server
     NewShare:
       type: object
       required:
