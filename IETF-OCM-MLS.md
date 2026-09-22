@@ -2,7 +2,7 @@
 title: >-
   Federated Groups in Open Cloud Mesh using Messaging Layer Security
 abbrev: "OCM MLS Federated Groups"
-docname: draft-ietf-ocm-mls-federated-groups-01
+docname: draft-ietf-ocm-mls-federated-groups-00
 category: std
 
 ipr: trust200902
@@ -210,8 +210,6 @@ MUST be used only once, except for a designated last resort KeyPackage
 - **Federation** - As defined in [OCM]: a group of OCM Servers whose
 administrators have established mutual trust, identified by a
 `federationId` and published at the Directory Endpoint of its members.
-A Federation is a set of servers; it is never a Receiving Party of a
-share.
 - **Servers Federation group** - An MLS group whose members are the OCM
 Servers of a Federation, with exactly one leaf per member server, used
 to maintain that Federation's membership with cryptographic guarantees
@@ -435,9 +433,9 @@ its OCM discovery document at `/.well-known/ocm`:
 }
 ~~~
 
-No additional discovery fields are introduced by this document.  The
-notifications endpoint is derived as `<endPoint>/notifications` per the
-base OCM specification.  The KeyPackage endpoint is derived as
+No additional discovery fields are introduced.  The notifications
+endpoint is derived as `<endPoint>/notifications` per the base OCM
+specification.  The KeyPackage endpoint is derived as
 `<endPoint>/mls-key-packages`.
 
 A server that participates in a Servers Federation group
@@ -792,12 +790,9 @@ recipient distinguishes them by the contents of the
 ({{servers-federation-groups}}) the object carries a `federationId`
 field, and a `serverUrl` field wherever the federated-group form
 carries `userId`; for a federated group of users it carries no
-`federationId`.  A recipient MUST reject a notification whose
-`mlsGroupId` and `federationId`, where both are present, do not
-resolve to the same group it knows, and MUST reject one that carries
-both `userId` and `serverUrl`.  `MLS_APPLICATION` is not used for
-Servers Federation groups, as neither File Keys nor per-server
-transport credentials are distributed within them.
+`federationId`.  A recipient MUST reject a notification when both
+`mlsGroupId` and `federationId` are present, and MUST similarly
+reject one that carries both `userId` and `serverUrl`.
 
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
@@ -1712,15 +1707,13 @@ sending server to each Member Server, referencing the share by its
 [OCM] defines a Federation as a group of OCM Servers whose
 administrators have established mutual trust, and specifies two models
 for maintaining its membership: a peer-announced model, where each
-member publishes the membership it knows about and propagates changes
-with the
-`OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED` notifications, and a
-cryptographically guaranteed model, which this section specifies.
+member publishes the membership it knows, and a cryptographically
+guaranteed model, which this section specifies.
 
 The model reuses the group machinery of this document with a single
 substitution: the members of the group are the OCM Servers of the
-Federation, not the users of a federated group.  What follows from that
-substitution is stated explicitly below; nothing else changes.
+Federation, not the users of a federated group.  What follows in this
+section stems from that substitution.
 
 ## Relationship to Federated Groups
 
@@ -1747,8 +1740,7 @@ A Servers Federation group is an MLS group in which:
 
 - each member OCM Server has exactly one leaf node, held by the server
 acting as an MLS client on behalf of its administrator.  There are no
-per-user leaves and no Virtual Clients: the administrator is not
-represented in the group, the server is.
+per-user leaves and no Virtual Clients.
 - the credential at each leaf is a basic credential ([RFC9420] Section
 5.3) whose identity field is the UTF-8 encoded absolute URL of the OCM
 Server, in the format [OCM] specifies for the `url` field of a
@@ -1807,9 +1799,9 @@ A change of Federation membership is an MLS group operation:
 - admitting an OCM Server is an Add proposal, committed by the MLS
 client of a Federation Admin Server, followed by an `MLS_WELCOME` to
 the admitted server.  As in {{admins}}, an Add MUST be explicitly
-approved by an administrator before it is committed: this is the same
-human-in-the-loop requirement that [OCM] places on the peer-announced
-model, recorded here in the group state.
+approved by an administrator before it is committed: this leaves
+the same human-in-the-loop requirement introduced in [OCM] unchanged,
+and recorded here in the group state.
 - expelling an OCM Server is a Remove proposal, committed in the same
 way and subject to the same approval.  A server MAY always leave a
 Federation by proposing its own removal, which requires no approval.
@@ -1844,11 +1836,11 @@ tree in a `ratchet_tree` extension, since the admitted server needs it
 to derive the membership and to process subsequent Commits.
 
 The `OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED` notifications of [OCM]
-MAY still be sent to a prospective or a departing member.  They remain
-useful precisely because they reach the administrator of a server that
-is not yet, or no longer, in the group, and therefore cannot receive
-its MLS messages.  They are advisory in this model: the membership is
-what the group state says.
+SHOULD still be sent to a prospective or a departing member.  They
+remain useful because they reach the administrator of a server that is
+not yet, or no longer, in the group, and therefore cannot receive its
+MLS messages.  They are advisory in this model: the membership is what
+the group state says.
 
 ## Publishing the Membership
 
@@ -1863,9 +1855,9 @@ the membership.
 
 The published document carries no signature of its own, as [OCM]
 specifies.  A consumer that is itself a member of the group derives the
-authoritative membership from the group state and does not need the
-document; a consumer that is not a member, a WAYF Page for instance, is
-trusting the server it fetched the document from in either case.
+authoritative membership from the group state; a consumer that is not
+a member, such as a WAYF Page, is trusting the server it fetched the
+document from in either case.
 
 # Trust and Authentication {#trust-and-authentication}
 
@@ -1960,11 +1952,10 @@ LeafNode.
 This is the same channel binding as for a user credential, with the
 subject and the attesting party coinciding.  It therefore establishes
 only that the party controlling that FQDN and its published keys asked
-to join; it is not, and cannot be, evidence that the server ought to be
-trusted.  That judgement belongs to the administrators, as [OCM]
-requires for both of its Directory Service models, and in this model it
-is recorded in the group state by the admin approval of the Add
-({{servers-federation-groups}}).
+to join.  It is not evidence that the server ought to be trusted: that
+judgement belongs to the administrators, as [OCM] requires, and in this
+model it is recorded in the group state by the admin approval of the
+Add ({{servers-federation-groups}}).
 
 The successor-credential policy above applies unchanged, with the
 server URL taking the place of the OCM Address: a credential replacing
@@ -2274,13 +2265,6 @@ Mesh (OCM) Parameters" group:
    | MLS_REJOIN        | Recipient | This document |
    +===================+===========+===============+
 ~~~
-
-The "federation" share type is registered in the "OCM Share Types"
-registry by [OCM], which specifies its mechanics for a Federation of
-OCM Servers.  This document registers no entry in that registry; it
-specifies the mechanics of the same share type for a group of users
-that spans multiple OCM Servers acting as the Receiving Party of a
-share, and registers the corresponding share payloads below.
 
 The following entries are to be registered in the "OCM Share Payloads"
 registry defined in [OCM], within the "Open Cloud Mesh (OCM)
