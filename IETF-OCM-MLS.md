@@ -2,7 +2,7 @@
 title: >-
   Federated Groups in Open Cloud Mesh using Messaging Layer Security
 abbrev: "OCM MLS Federated Groups"
-docname: draft-ietf-ocm-mls-federated-groups-01
+docname: draft-ietf-ocm-mls-federated-groups-00
 category: std
 
 ipr: trust200902
@@ -792,12 +792,9 @@ recipient distinguishes them by the contents of the
 ({{servers-federation-groups}}) the object carries a `federationId`
 field, and a `serverUrl` field wherever the federated-group form
 carries `userId`; for a federated group of users it carries no
-`federationId`.  A recipient MUST reject a notification whose
-`mlsGroupId` and `federationId`, where both are present, do not
-resolve to the same group it knows, and MUST reject one that carries
-both `userId` and `serverUrl`.  `MLS_APPLICATION` is not used for
-Servers Federation groups, as neither File Keys nor per-server
-transport credentials are distributed within them.
+`federationId`.  A recipient MUST reject a notification when both
+`mlsGroupId` and `federationId` are present, and MUST similarly
+reject one that carries both `userId` and `serverUrl`.
 
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
@@ -1712,15 +1709,13 @@ sending server to each Member Server, referencing the share by its
 [OCM] defines a Federation as a group of OCM Servers whose
 administrators have established mutual trust, and specifies two models
 for maintaining its membership: a peer-announced model, where each
-member publishes the membership it knows about and propagates changes
-with the
-`OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED` notifications, and a
-cryptographically guaranteed model, which this section specifies.
+member publishes the membership it knows, and a cryptographically
+guaranteed model, which this section specifies.
 
 The model reuses the group machinery of this document with a single
 substitution: the members of the group are the OCM Servers of the
-Federation, not the users of a federated group.  What follows from that
-substitution is stated explicitly below; nothing else changes.
+Federation, not the users of a federated group.  What follows in this
+section stems from that substitution.
 
 ## Relationship to Federated Groups
 
@@ -1807,9 +1802,9 @@ A change of Federation membership is an MLS group operation:
 - admitting an OCM Server is an Add proposal, committed by the MLS
 client of a Federation Admin Server, followed by an `MLS_WELCOME` to
 the admitted server.  As in {{admins}}, an Add MUST be explicitly
-approved by an administrator before it is committed: this is the same
-human-in-the-loop requirement that [OCM] places on the peer-announced
-model, recorded here in the group state.
+approved by an administrator before it is committed: this leaves
+the same human-in-the-loop requirement introduced in [OCM] unchanged,
+and recorded here in the group state.
 - expelling an OCM Server is a Remove proposal, committed in the same
 way and subject to the same approval.  A server MAY always leave a
 Federation by proposing its own removal, which requires no approval.
@@ -2274,13 +2269,6 @@ Mesh (OCM) Parameters" group:
    | MLS_REJOIN        | Recipient | This document |
    +===================+===========+===============+
 ~~~
-
-The "federation" share type is registered in the "OCM Share Types"
-registry by [OCM], which specifies its mechanics for a Federation of
-OCM Servers.  This document registers no entry in that registry; it
-specifies the mechanics of the same share type for a group of users
-that spans multiple OCM Servers acting as the Receiving Party of a
-share, and registers the corresponding share payloads below.
 
 The following entries are to be registered in the "OCM Share Payloads"
 registry defined in [OCM], within the "Open Cloud Mesh (OCM)

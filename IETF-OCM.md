@@ -1,6 +1,6 @@
 ---
 title: 'Open Cloud Mesh'
-docname: draft-ietf-ocm-open-cloud-mesh-08
+docname: draft-ietf-ocm-open-cloud-mesh-07
 category: std
 
 ipr: trust200902
@@ -594,9 +594,9 @@ and no transitivity is implied.  In particular, the fact that a given
 OCM Server is a member of two Federations does not, in itself, make
 the members of one Federation trusted by the members of the other.
 
-The Directory Service is deliberately distributed: this document
-defines no central registry of Federations, and any group of OCM
-Servers can form one.  Two operating models are defined:
+The Directory Service is deliberately distributed and does not require
+a central registry of Federations.  Any group of OCM Servers can form
+one.  Two operating models are defined:
 
 * a __peer-announced__ model, specified in [Peer-announced
   Directory](#peer-announced-directory), where each member of the
@@ -729,8 +729,8 @@ And of a member of two Federations:
       ]
     },
     {
-      "federationId": "eosc-data-commons",
-      "name": "The EOSC Data Commons Federation",
+      "federationId": "eosc",
+      "name": "The EOSC Federation",
       "mlsGroupId": "51dc30ddc473d43a6011e9ebba6ca770",
       "servers": [
         {
@@ -869,14 +869,9 @@ local policy decision.
 
 In the cryptographically guaranteed model, the Federation is managed
 as an MLS [RFC9420] group whose members are the OCM Servers of the
-Federation, as specified in [OCM-MLS].  The membership of the
-Federation is then the membership of the MLS group at the current
-epoch: it is agreed upon by means of MLS Commits rather than by
-independent configuration changes, and every member can verify it
-cryptographically.  Removals are propagated with the same guarantees
-as additions.
+Federation, as specified in [OCM-MLS].
 
-An OCM Server that participates in such a Federation MAY still
+An OCM Server that participates in such a Federation MUST still
 advertise a `directoryEndPoint` and publish the membership in the
 format specified in [Directory Payload](#directory-payload), for the
 benefit of consumers that only need the list of members, such as a
@@ -2394,18 +2389,10 @@ type that MAY appear in the "shareTypes" array advertised by the
 field of a [Share Creation Notification](#share-creation-notification),
 or in the "shareType" field of a [Notification](#notifications).  Other
 specifications MAY register additional share types in this registry.
-The "federation" share type is registered by this document, which
-specifies its mechanics for a Federation of OCM Servers: the format in
-which a Federation and its membership are expressed, and the
-notifications that carry membership changes, are defined in
-[Directory Service](#directory-service) and [Federation
-Membership](#federation-membership).  [OCM-MLS] specifies the
-mechanics of the same share type for a group of users that spans
-multiple OCM Servers acting as the Receiving Party of a share, and
-registers the corresponding entries in the "OCM Share Payloads"
-registry; note that no entry is registered there by this document for
-the "federation" share type, as a Federation of OCM Servers is not a
-Receiving Party and no Share is addressed to it.
+Concerning the "federation" share type, this document specifies its
+mechanics for a Federation of OCM Servers, whereas the case of a group
+of users that spans multiple OCM Servers acting as the Receiving Party
+of a share is addressed by [OCM-MLS].
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -3323,17 +3310,15 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 08
-* Promoted the Directory Service from an appendix to a normative
-  section following the Invite Flow, and made it distributed: the
-  membership of a Federation is now published by each member at the
-  `directoryEndPoint` advertised in its Discovery response, in
-  addition to the pre-existing third-party Directory Service.  Two
-  operating models are defined: a peer-announced, eventually consistent
-  one, where trust is delegated to the OCM Server Administrators, and
-  a cryptographically guaranteed one based on [OCM-MLS].  An OCM
-  Server MAY be a member of multiple Federations in both models.
-  The appendices that followed the former Directory Service appendix
-  have been relettered accordingly.
+* Promoted the Directory Service to a normative section following the
+  Invite Flow, and made it distributed: the membership of a Federation
+  is now published by each member at the `directoryEndPoint` advertised
+  in its Discovery response, in addition to the pre-existing
+  third-party Directory Service.  Two operating models are defined: a
+  peer-announced, eventually consistent one, where trust is delegated
+  to the OCM Server Administrators, and a cryptographically guaranteed
+  one based on [OCM-MLS].  An OCM Server MAY be a member of multiple
+  Federations in both models.
 * Simplified the Directory payload: the JWS envelope is gone, as trust
   in the peer-announced model rests with the OCM Server Administrators
   who approve every membership change, and the MLS-based model is
