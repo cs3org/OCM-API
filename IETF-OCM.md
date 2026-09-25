@@ -907,6 +907,35 @@ configure such a Directory Service in addition to the Federations they
 maintain themselves, as one more source of the union described in
 [Federations and Directories](#federations-and-directories).
 
+The Directory Payload is a format, not a mandate on how the membership
+behind it is obtained: an operator MAY derive it from any existing
+trust framework, such as an OpenID Federation [OpenID-Federation] trust anchor, and
+publish the result as a third-party Directory Service.  This document
+specifies no dependency on, nor binding to, any such framework.
+
+An OCM Server Administrator MAY likewise pre-populate a Federation
+configuration with a list of servers assembled out of band, without
+using any Directory Service at all.  This is the same case already
+covered by bullet 2 of [Adding a Member](#adding-a-member): the
+curation of the membership is a one-time act of the Administrator
+rather than a continuous one delegated to a third-party operator, but
+in both this case and the third-party Directory Service case above,
+the resulting members were not learned incrementally through the
+convergence mechanism of [Peer-announced
+Directory](#peer-announced-directory).
+
+For this reason, upon startup an OCM Server MUST send an
+`OCM_SERVER_ADDED` Notification, for the relevant Federation, to every
+member it learned of through a third-party Directory Service or an
+out-of-band pre-populated list, the first time each such member
+appears in its configuration; it MUST NOT send it again for a member
+that is already known, so that restarting the OCM Server does not
+generate duplicate notifications.  This lets those members become
+aware of the sending OCM Server and apply the processing described in
+[Processing an Addition](#processing-an-addition), so that a
+Federation entered through either of these two backward-compatible
+routes still joins the peer-announced convergence.
+
 # OCM API Discovery
 
 ## Introduction
@@ -2572,11 +2601,14 @@ know and have out of band connections with other users on an OCM server.
 Further more the [Directory Service](#directory-service) feature can be
 used to establish a trusted federation.  In the third-party model, a
 central authority can be trusted to implement measures for auditing and
-adding only trusted servers into the directory.  In the peer-announced
-model, there is no such central authority: trust is delegated to the
-OCM Server Administrators, each of whom agrees to every addition to
-their own Federation configuration.  This has a number of consequences
-that Administrators need to be aware of:
+adding only trusted servers into the directory; an Administrator who
+instead pre-populates a Federation configuration out of band, as
+described in [Third-party Directory
+Service](#third-party-directory-service), plays that same role locally.
+In the peer-announced model, there is no such central authority: trust
+is delegated to the OCM Server Administrators, each of whom agrees to
+every addition to their own Federation configuration.  This has a
+number of consequences that Administrators need to be aware of:
 
 * A member of a Federation can cause any other member to be presented
   with a new peer, by adding that peer and letting the propagation
@@ -2586,6 +2618,15 @@ that Administrators need to be aware of:
   and an Administrator that does not recognise a proposed peer is
   expected to refuse it.  Implementations MUST NOT apply such a
   notification automatically.
+* The `OCM_SERVER_ADDED` Notifications an OCM Server sends on startup
+  for members obtained from a third-party Directory Service or an
+  out-of-band pre-populated list (see [Third-party Directory
+  Service](#third-party-directory-service)) reach servers with which
+  no prior peer-announced exchange took place.  A recipient has no way
+  to distinguish such a notification from one resulting from the
+  incremental convergence of [Peer-announced
+  Directory](#peer-announced-directory): its own Administrator's
+  agreement remains the only safeguard, as noted above.
 * Membership is only eventually consistent.  In particular, a removal
   only ever states that the sender's own directory no longer contains
   the recipient, and cannot be enforced on the other members: a server
@@ -2746,6 +2787,11 @@ Work in Progress, Internet-Draft.
 in Open Cloud Mesh using Messaging Layer
 Security](https://datatracker.ietf.org/doc/draft-ietf-ocm-mls-federated-groups/)",
 Work in Progress, Internet-Draft.
+
+[OpenID-Federation] Hedberg, R., Ed., Jones, M.B., Solberg, A.A.,
+Bradley, J., De Marco, G., and V. Dzhuvinov, "[OpenID Federation
+1.0](https://openid.net/specs/openid-federation-1_0.html)", OpenID
+Foundation.
 
 [RFC9420] Barnes, R., Beurdouche, B., Robert, R., Millican, J.,
 Omara, E. and Cohn-Gordon, K., "[The Messaging Layer Security (MLS)
