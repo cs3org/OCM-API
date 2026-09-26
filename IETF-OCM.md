@@ -88,13 +88,22 @@ they appear in all capitals, as shown here.
 We define the following concepts, with some non-normative references to
 related concepts from OAuth [RFC6749] and elsewhere:
 
+* __Directory Endpoint__ - The URL, advertised in the
+  `directoryEndPoint` field of the OCM API Discovery response, at which
+  an OCM Server exposes the Federations it is a member of, along with
+  their membership.
+* __Directory Service__ - The function that exposes the membership of
+  one or more Federations, either as a third-party service or as a
+  Directory Endpoint of each OCM Server that is a member of a
+  Federation (see [Directory Service](#directory-service)).
 * __Discoverable Server__ - A server that tries to supply information in
   OCM API Discovery.
 * __Discovering Server__ - A server that tries to obtain information in
   OCM API Discovery.
 * __Federation__ - A group of OCM Providers that have established
   mutual trust and agree on certain policies for interaction.  A
-  Federation MAY be facilitated by a Directory Service.
+  Federation is facilitated by a Directory Service, and an OCM Provider
+  MAY be a member of multiple Federations.
 * __FQDN__ - Fully Qualified Domain Name, such as `"cloud.example.org"`.
 * __Invite Acceptance Gesture__ - Gesture from the Invite Receiver to
   the Invite Receiver OCM Server, supplying the Invite Token as well as
@@ -160,6 +169,11 @@ related concepts from OAuth [RFC6749] and elsewhere:
 * __OCM Notification__ - A message from the Receiving Server to the
   Sending Server or vice versa, using the OCM Notifications endpoint.
 * __OCM Server__ - A server that has the OCM Provider function.
+* __OCM Server Administrator__ - The person or team operating an OCM
+  Server, responsible for its trust configuration, including the
+  Federations the OCM Server is a member of.  In the peer-announced
+  Directory Service model, the Administrator's agreement is the trust
+  anchor for any change of Federation membership.
 * __Receiving Party__ - A person, group or party who is granted access
   to the Resource through the Share; similar to "Requesting Party / RqP"
   in OAuth-UMA, identified by its OCM Address.
@@ -237,8 +251,11 @@ _Discoverable Server_ and SHOULD be able to receive _Notifications_.
 
 ### OCM Directory Service
 
-An OCM Directory Service is an entity that exposes information about a
-_Federation_ of OCM Providers.
+An OCM Directory Service is a function that exposes information about
+one or more _Federations_ of OCM Providers.  It MAY be provided by a
+third-party service on behalf of the members of a Federation, or by
+each OCM Provider that is a member of a Federation, at its _Directory
+Endpoint_.  See [Directory Service](#directory-service).
 
 ## Roles
 
@@ -264,7 +281,7 @@ _Shares_, and acts as an API client to allow its users to access Remote
 Resources.  It MAY provide its users with an _Address Book_ of
 _Contacts_ and the ability to accept _Invites_.
 
-In Appendix D, an object model is presented as a non-normative guide for
+In Appendix C, an object model is presented as a non-normative guide for
 implementers to understand the relationships between these terms.
 
 # General Flow
@@ -404,13 +421,15 @@ free-text input where any OCM Server can be entered.  This is especially
 useful if the Invite Sender is part of a federation of associated OCM
 Servers.  In order to populate the list of associated OCM Servers, the
 Invite Sender's server MAY make use of a Directory Service, which is
-expected to follow the specification detailed in Appendix C.
+expected to follow the specification detailed in the
+[Directory Service](#directory-service) section.
 
 Implementors that provide a WAYF Page SHOULD make the URL for the API
 endpoint of such a Directory Service configurable, allowing the OCM
 Server to be part of a network of associated OCM Servers.  The
 configuration mechanism MAY allow an OCM Server to be part of multiple
-networks, thus displaying a union of multiple lists in its WAYF Page.
+Federations, thus displaying a union of multiple lists in its WAYF
+Page.
 
 ### Invite Acceptance Response Details
 
@@ -555,6 +574,362 @@ Notification Request, since the Invite Acceptance Request needs to
 contain an Invite Token that was previously uniquely generated at the
 Invite Sender OCM server.
 
+# Directory Service
+
+## Federations and Directories
+
+A _Federation_ is a group of OCM Servers whose Administrators have
+established mutual trust and agreed on common policies for
+interaction.  The membership of a Federation is exposed by a
+_Directory Service_, and is typically used to populate a WAYF Page
+(see [Invite Flow](#invite-flow)), to pre-populate an allowlist, or to
+seed the registry of _Trusted Servers_.
+
+An OCM Server MAY be a member of multiple Federations.  In that case,
+its Directory Service exposes one document per Federation, and the
+OCM Server uses the union of the respective lists for the purposes
+above.  Conversely, a Federation MAY include OCM Servers that are
+themselves members of other Federations: membership is not exclusive,
+and no transitivity is implied.  In particular, the fact that a given
+OCM Server is a member of two Federations does not, in itself, make
+the members of one Federation trusted by the members of the other.
+
+The Directory Service is deliberately distributed and does not require
+a central registry of Federations.  Any group of OCM Servers can form
+one.  Two operating models are defined:
+
+* a __peer-announced__ model, specified in [Peer-announced
+  Directory](#peer-announced-directory), where each member of the
+  Federation publishes the membership it knows about and
+  propagates additions by means of the `OCM_SERVER_ADDED` Notification.
+  The model is eventually consistent, and trust is delegated to the
+  OCM Server Administrators, who agree to each addition.
+* a __cryptographically guaranteed__ model, where the Federation is
+  managed as an MLS [RFC9420] group of OCM Servers as specified in
+  [OCM-MLS], so that the membership of the Federation is attested by
+  the MLS group state rather than by the individual configuration of
+  each member.  See
+  [MLS-based Directory](#mls-based-directory).
+
+In both models, the membership is published in the same format at the
+same endpoint, so that a consumer of a Directory Service does not need
+to know which model is in use.
+
+Additionally, and for backwards compatibility with existing
+deployments, a Federation MAY be published by a third-party Directory
+Service on behalf of its members, as described in
+[Third-party Directory Service](#third-party-directory-service).
+
+## Directory Endpoint
+
+An OCM Server that is a member of one or more Federations SHOULD
+advertise a `directoryEndPoint` in its [OCM API
+Discovery](#ocm-api-discovery) response, and expose at that URL, via
+anonymous HTTPS GET, the Federations it is a member of, in the format
+specified in [Directory Payload](#directory-payload).  The presence of
+the `directoryEndPoint` field is the only signal that an OCM Server
+offers a Directory Service; no dedicated capability is defined.
+
+The response MUST be a JSON object carrying a single REQUIRED
+`federation` property.  Its value MUST be either a Federation object as
+specified below, when the OCM Server is a member of exactly one
+Federation, or a JSON array of Federation objects, one per Federation.
+Consumers MUST accept both forms.
+
+The document is not signed.  The membership it exposes is not
+self-attesting, and a consumer MUST NOT treat it as an authorisation
+to interact with the OCM Servers it lists: it is a proposal, whose
+trust is established elsewhere.  In the peer-announced model that is the
+agreement of the OCM Server Administrators, each of whom approves
+every member of their own Federation configuration (see [Peer-announced
+Directory](#peer-announced-directory)); in the MLS-based model it is the
+MLS group state, which is cryptographically verifiable by every member
+(see [MLS-based Directory](#mls-based-directory)).  In either case a
+consumer MUST fetch the document over TLS, so that it is attributable
+to the host it was fetched from.
+
+An OCM Server MUST NOT expose in its Directory Endpoint a Federation
+whose membership it is not willing to disclose publicly.  If the
+membership of a Federation is confidential, its members MUST NOT
+advertise a `directoryEndPoint` for it, and MUST exchange the
+membership out of band or by means of [OCM-MLS].
+
+## Directory Payload
+
+Each Federation object MUST adhere to the following format:
+
+* REQUIRED: `federationId` - a short, stable identifier of the
+  Federation, agreed out of band among its members.  Members of the
+  same Federation MUST use the same value, as it is used to correlate
+  the documents published by the different members, and to identify the
+  Federation in an `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED`
+  Notification.  It MUST consist of lowercase ASCII letters, digits,
+  and hyphens.
+* REQUIRED: `name` - a human-readable name of the Federation.
+* OPTIONAL: `mlsGroupId` - the identifier of the MLS group that manages
+  this Federation, when the cryptographically guaranteed model is in
+  use (see [MLS-based Directory](#mls-based-directory)).
+* REQUIRED: `servers` - a JSON array of objects to describe the list
+  of OCM Servers that are members of the Federation, with the
+  following string fields:
+  - REQUIRED: `url` - an absolute URL identifying the
+    OCM Server.  It MUST:
+    - include scheme: either `https://` or
+      (for testing purposes) `http://`
+    - include host (either a FQDN or an IP address)
+    - MAY include a non-default port
+    - MUST NOT include a base path (e.g., `/ocm`)
+    - MUST NOT include userinfo, query, or fragment
+  - REQUIRED: `displayName` - a human-readable name
+    for the OCM Server
+
+The publishing OCM Server SHOULD include itself in the `servers`
+array.
+
+Example of a document published at the `directoryEndPoint` of a member
+of a single Federation:
+
+~~~
+{
+  "federation": {
+    "federationId": "sciencemesh",
+    "name": "The ScienceMesh Directory",
+    "servers": [
+      {
+        "url": "https://ocm-server.example.org",
+        "displayName": "OCM Server 1"
+      },
+      {
+        "url": "https://ocm-server.example.com:4443",
+        "displayName": "OCM Server 2"
+      },
+      {
+        "url": "http://192.168.1.1:8080",
+        "displayName": "OCM Server 3"
+      }
+    ]
+  }
+}
+~~~
+{: type="json"}
+
+And of a member of two Federations:
+
+~~~
+{
+  "federation": [
+    {
+      "federationId": "sciencemesh",
+      "name": "The ScienceMesh Directory",
+      "servers": [
+        {
+          "url": "https://ocm-server.example.org",
+          "displayName": "OCM Server 1"
+        }
+      ]
+    },
+    {
+      "federationId": "eosc",
+      "name": "The EOSC Federation",
+      "mlsGroupId": "51dc30ddc473d43a6011e9ebba6ca770",
+      "servers": [
+        {
+          "url": "https://ocm-server.example.com:4443",
+          "displayName": "OCM Server 2"
+        }
+      ]
+    }
+  ]
+}
+~~~
+{: type="json"}
+
+## Peer-announced Directory
+
+In the peer-announced model, each OCM Server holds its own Federation
+configuration, and the trust anchor for every change of that
+configuration is the agreement of its Administrator.  Changes are
+propagated by means of the `OCM_SERVER_ADDED` and
+`OCM_SERVER_REMOVED` Notifications (see [Federation
+Membership](#federation-membership)), such that the members of a
+Federation eventually converge to a consistent membership.
+
+This model is sometimes informally described as gossip-based.  This
+document avoids that term: unlike an epidemic gossip protocol, an
+announcement here concerns only the sender's own directory, is sent
+only to a peer the sender's Administrator deliberately added, and is
+acted upon only after the receiving Administrator agrees.
+
+Both Notifications carry the same, deliberately narrow meaning: an OCM
+Server A sends one to an OCM Server B to inform B that A's directory
+for a given Federation now contains B, respectively no longer contains
+B.  A never asserts anything about the presence of a third server: B
+learns about the rest of the Federation by fetching A's Directory
+Endpoint, not from the notification itself.  This keeps every statement
+on the wire attributable to the Administrator who made it.
+
+### Adding a Member
+
+An OCM Server A MAY add an OCM Server B to one of its Federations in
+either of the following two cases:
+
+1. A received an Invite Acceptance Request from B at its
+   `/invite-accepted` endpoint (see [Invite Flow](#invite-flow)), A's
+   Administrator was notified of the new peer and agreed to include B
+   in the Federation.  Note that in this case one of A's users has
+   already established an out-of-band relationship with one of B's
+   users, which gives A's Administrator a reason to trust B (see
+   [Security Advantages](#security-advantages)).
+2. A's Administrator knows about B out of band and loads B into A's
+   Federation configuration.
+
+In both cases, A MUST send an `OCM_SERVER_ADDED` Notification to B, as
+B is now contained in A's directory for that Federation.  In the second
+case, A MUST send it when the configuration is loaded for the first
+time, and MUST NOT send it again for a member that is already part of
+the Federation configuration, so that reloading or restarting does not
+generate duplicate notifications.
+
+If B does not expose the `notifications` capability, or the
+notification cannot be delivered, A MAY still keep B in its Federation
+configuration, but the membership cannot converge through B: A SHOULD
+report the condition to its Administrator, who is then expected to
+establish the Federation membership with B out of band.
+
+### Processing an Addition
+
+Upon receiving an `OCM_SERVER_ADDED` Notification from an OCM Server
+A, an OCM Server B SHOULD notify its own Administrator, and SHOULD NOT
+change its Federation configuration before its Administrator agrees.
+If B's Administrator agrees to join the Federation identified in the
+notification, B SHOULD:
+
+1. fetch the current membership from A's Directory Endpoint, as
+   advertised in the `directoryEndPoint` field of A's Discovery
+   response, and select the Federation object whose `federationId`
+   matches the one in the notification;
+2. add the members it does not know yet to its own configuration for
+   that Federation, including A itself;
+3. send an `OCM_SERVER_ADDED` Notification for that Federation to each
+   of those members it did not previously know, and only to those, as
+   each of them is now contained in B's own directory.
+
+Step 3 is what makes the membership converge: a server that receives
+an `OCM_SERVER_ADDED` for a Federation in whose directory it already
+appears, from a peer it already knows, MUST respond with HTTP 201 and
+MAY otherwise ignore the notification.  Because a notification is only
+ever sent to a peer that was not previously known, the propagation
+terminates.
+
+If B's Administrator does not agree, B MUST NOT change its
+configuration.  B SHOULD still respond with HTTP 201 if the
+notification was well-formed, as the response acknowledges the receipt
+of the notification, not the acceptance of the Federation membership.
+B MAY respond with HTTP 403 to signal that it does not wish to receive
+further such notifications from A.
+
+### Removing a Member
+
+An OCM Server Administrator MAY remove a member from a Federation
+configuration at any time, and does not need any other member's
+agreement to do so.  When an OCM Server A removes an OCM Server B from
+its directory for a Federation, A MUST send an `OCM_SERVER_REMOVED`
+Notification to B, informing B that A's directory for that Federation
+no longer contains B.
+
+Upon receiving an `OCM_SERVER_REMOVED` Notification from A, an OCM
+Server B SHOULD notify its own Administrator.  As Federation
+membership expresses mutual trust, B SHOULD remove A from its own
+configuration for that Federation, so that the two directories do not
+disagree; B's Administrator MAY nonetheless decide to keep A, for
+instance while the reason for the removal is being clarified out of
+band.
+
+B MUST NOT remove any other member on the strength of such a
+notification, and MUST NOT propagate it: A only ever speaks about its
+own directory.  Consequently, when a Federation as a whole decides to
+exclude a member, each remaining member's Administrator applies the
+removal locally, and each removing OCM Server sends its own
+`OCM_SERVER_REMOVED` to the excluded member.  Until they have all done
+so, a member that one Administrator considers untrustworthy may still
+be listed by others: removal in this model converges only as fast as
+the Administrators act on it, and is not enforceable.  Federations that
+require a consistent and enforceable removal of members are expected
+to use the model described in the next section.
+
+Note that removing a member from a Federation is not equivalent to
+withdrawing trust from it: an OCM Server MAY keep interacting with a
+former co-member, for instance because their users established contact
+through the [Invite Flow](#invite-flow).  A Federation removal only
+withdraws the membership, and any further consequence, such as
+denylisting the peer or removing the Shares exchanged with it, is a
+local policy decision.
+
+## MLS-based Directory
+
+In the cryptographically guaranteed model, the Federation is managed
+as an MLS [RFC9420] group whose members are the OCM Servers of the
+Federation, as specified in [OCM-MLS].
+
+An OCM Server that participates in such a Federation MUST still
+advertise a `directoryEndPoint` and publish the membership in the
+format specified in [Directory Payload](#directory-payload), for the
+benefit of consumers that only need the list of members, such as a
+WAYF Page.  In that case it MUST include the `mlsGroupId` field, and
+the published list MUST reflect the membership of the group at the
+current epoch.  The published document remains informative: the
+authoritative membership is the MLS group state, which every member
+can verify cryptographically and which therefore needs no signature of
+its own on the published document.
+
+The membership changes of such a Federation are carried by the `MLS_*`
+Notifications registered by [OCM-MLS], which already provide the
+transport for MLS group operations: an addition is an MLS Add Commit
+and a removal an MLS Remove Commit, and both are enforceable on all
+members at the resulting epoch.  The `OCM_SERVER_ADDED` and
+`OCM_SERVER_REMOVED` Notifications MAY still be used within such a
+Federation to inform a prospective or departing member, and its
+Administrator, before or after the corresponding MLS operations take
+place, but they are not what establishes the membership.  The
+processing of the MLS messages themselves is specified in [OCM-MLS].
+
+## Third-party Directory Service
+
+A third-party Directory Service is a back-end service used to federate
+multiple OCM Servers and facilitate the Invite flow.  It is expected to
+expose, via anonymous HTTPS GET, a document that adheres to the format
+specified in [Directory Payload](#directory-payload).
+
+In this arrangement, the members of the Federation delegate the
+curation of the membership to the operator of the Directory Service,
+which is trusted to only include audited servers.  Members MAY
+configure such a Directory Service in addition to the Federations they
+maintain themselves, as one more source of the union described in
+[Federations and Directories](#federations-and-directories).
+
+An OCM Server Administrator MAY likewise pre-populate a Federation
+configuration with a list of servers assembled out of band, without
+using any Directory Service at all.  This is the same case already
+covered by bullet 2 of [Adding a Member](#adding-a-member): the
+curation of the membership is a one-time act of the Administrator
+rather than a continuous one delegated to a third-party operator, but
+in both this case and the third-party Directory Service case above,
+the resulting members were not learned incrementally through the
+convergence mechanism of [Peer-announced
+Directory](#peer-announced-directory).
+
+For this reason, upon startup an OCM Server MUST send an
+`OCM_SERVER_ADDED` Notification, for the relevant Federation, to every
+member it learned of through a third-party Directory Service or an
+out-of-band pre-populated list, the first time each such member
+appears in its configuration; it MUST NOT send it again for a member
+that is already known, so that restarting the OCM Server does not
+generate duplicate notifications.  This lets those members become
+aware of the sending OCM Server and apply the processing described in
+[Processing an Addition](#processing-an-addition), so that a
+Federation entered through either of these two backward-compatible
+routes still joins the peer-announced convergence.
+
 # OCM API Discovery
 
 ## Introduction
@@ -599,8 +974,8 @@ When OCM API Discovery can occur in preparation of a Share Creation
 Notification, the Sending Server takes on the 'Discovering Server' role
 and the Receiving Server plays the role of 'Discoverable Server'.
 For a navigation index of discovery fields, capabilities, and related
-informative aids, see [Appendix E: Navigation
-Index](#appendix-e-navigation-index).
+informative aids, see [Appendix D: Navigation
+Index](#appendix-d-navigation-index).
 
 ## Process
 
@@ -762,6 +1137,14 @@ contain the following information about its OCM API:
   - `"must-invite"` - an invite MUST have been exchanged between the
   sender and the receiver before a Share Creation Notification can be
   sent
+* OPTIONAL: directoryEndPoint (string) - URL of the Directory Endpoint
+  hosted by this OCM Server, where it exposes the Federations it is a
+  member of, as specified in [Directory
+  Service](#directory-service).  The URL MUST use HTTPS and is
+  discovered from this field; it is not a fixed path in the OCM API.
+  As with the Discovery Process, implementations MAY fallback to HTTP
+  instead of HTTPS in testing setups.
+  Example: `"https://cloud.example.org/ocm/directory"`.
 * OPTIONAL: inviteAcceptDialog (string) - URL path of a web page where
   a user can accept an invite, when query parameters `"token"` and
   `"providerDomain"` are provided.  Implementations that offer the
@@ -975,6 +1358,12 @@ traffic.  When signing is in play, the signer and verifier roles are:
   Sending Server SHOULD sign; the Receiving Server verifies.  See
   [Notifications](#notifications) and
   [HTTP Message Signatures](#http-message-signatures).
+* __Federation Membership Notification__ (`POST /notifications` with
+  `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED`) - the OCM Server whose
+  directory changed signs; the added or removed OCM Server verifies,
+  using the JWK Set discovered from the `senderDomain`.  See
+  [Federation Membership](#federation-membership) and [HTTP Message
+  Signatures](#http-message-signatures).
 
 # Share Creation Notification
 
@@ -1068,8 +1457,8 @@ described in [OCM-IP].
   Receiving Server.  Other values MAY be used provided they are
   registered in the "OCM Share Types" registry (see
   [IANA Considerations](#iana-considerations)); for example, [OCM-MLS]
-  registers the "federation" share type for a group of users that
-  spans multiple OCM Servers.
+  specifies the use of the "federation" share type for a group of
+  users that spans multiple OCM Servers.
   The Sending Server SHOULD only use a `shareType` that the Receiving
   Server advertises for the share's `resourceType` in its Discovery
   response, i.e. one listed in the `shareTypes` array of the matching
@@ -1340,7 +1729,8 @@ notification that this happened.
 
 This optional endpoint is used to inform the other party about a change
 that concerns a previously known entity, such as a Resource or a
-trusted Share type (e.g. a user).
+trusted Share type (e.g. a user), or about a change of the membership
+of a Federation, which concerns the OCM Servers themselves.
 
 A Server that intends to send a notification SHOULD make a HTTP POST
 request:
@@ -1520,6 +1910,73 @@ Further, the `notification` object MUST include the following fields:
   Whereas in case of `group`, it MUST include:
   * REQUIRED groupId (string) - identifier of the group to be removed
     from the target OCM Server.
+
+## Federation Membership
+
+A notification MUST be sent by an OCM Server to inform a target OCM
+Server that its directory for a given Federation now contains, or no
+longer contains, that target OCM Server, as described in [Peer-announced
+Directory](#peer-announced-directory).  These notifications are
+addressed to the OCM Server Administrator rather than to a user: the
+recipient SHOULD notify its Administrator and SHOULD NOT alter its
+Federation configuration without their agreement.
+
+For these cases, a notification payload is to be formed such that the
+`resourceType` MUST be omitted, the `shareType` MUST be set to
+`federation`, and the `notificationType` MUST be one of:
+
+- "OCM_SERVER_ADDED", to inform the target OCM Server that the
+  sender's directory for the given Federation now contains it.
+- "OCM_SERVER_REMOVED", to inform the target OCM Server that the
+  sender's directory for the given Federation no longer contains it.
+
+Neither notification asserts anything about any other member of the
+Federation: the recipient learns the rest of the membership from the
+sender's Directory Endpoint.
+
+Further, the `notification` object MUST include the following fields:
+
+* OPTIONAL message (string) - an optional human-readable message that
+  describes the event, such as the reason why the target OCM Server
+  was added or removed, for the benefit of its Administrator.
+* REQUIRED federation (object) - an object containing the details of
+  the Federation, including:
+  * REQUIRED federationId (string) - the identifier of the
+    Federation, matching the `federation.federationId` field of the
+    corresponding document published at the sender's Directory
+    Endpoint (see [Directory Payload](#directory-payload)).
+  * OPTIONAL name (string) - the human-readable name of the
+    Federation, for the benefit of the recipient's Administrator.
+  * REQUIRED url (string) - the absolute URL under which the target
+    OCM Server was added to, or removed from, the sender's directory
+    for that Federation, in the format specified for the `url` field
+    in [Directory Payload](#directory-payload).  The target OCM
+    Server SHOULD verify that this URL identifies itself, and SHOULD
+    discard the notification otherwise.
+  * OPTIONAL directoryEndPoint (string) - the URL of the sender's
+    Directory Endpoint, as a hint.  If omitted, the recipient MUST
+    obtain it from the `directoryEndPoint` field of the sender's
+    Discovery response; if the two values differ, the recipient MUST
+    use the discovered one.
+  * OPTIONAL mlsGroupId (string) - the identifier of the MLS group
+    that manages the Federation, when the model described in
+    [MLS-based Directory](#mls-based-directory) is in use.
+
+The recipient of either notification SHOULD respond with HTTP 201 if
+the notification is well-formed, irrespective of whether its
+Administrator agrees to the resulting change of its own configuration,
+and MAY respond with HTTP 403 to signal that it does not wish to
+receive further such notifications from the sender.  As an
+`OCM_SERVER_ADDED` notification establishes trust between servers that
+may have had no prior relationship, it SHOULD NOT be used unless HTTP
+Message Signatures are available on both sides.
+
+Within a Federation managed as an MLS group, these notifications MAY
+be used to inform a prospective or departing member and its
+Administrator, but they are not what changes the membership: the
+`MLS_*` notifications registered by [OCM-MLS] carry the group
+operations that do, as described in [MLS-based
+Directory](#mls-based-directory).
 
 
 # Resource Access
@@ -1952,10 +2409,13 @@ IANA is requested to create the "OCM Share Types" registry in the
 "Open Cloud Mesh (OCM) Parameters" group.  Each entry records a share
 type that MAY appear in the "shareTypes" array advertised by the
 [OCM API Discovery](#ocm-api-discovery) endpoint or in the "shareType"
-field of a [Share Creation Notification](#share-creation-notification).
-This document registers only the "user" and "group" share types; other
+field of a [Share Creation Notification](#share-creation-notification),
+or in the "shareType" field of a [Notification](#notifications).  Other
 specifications MAY register additional share types in this registry.
-The "federation" share type, for example, is registered by [OCM-MLS].
+Concerning the "federation" share type, this document specifies its
+mechanics for a Federation of OCM Servers, whereas the case of a group
+of users that spans multiple OCM Servers acting as the Receiving Party
+of a share is addressed by [OCM-MLS].
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -1967,6 +2427,7 @@ The "federation" share type, for example, is registered by [OCM-MLS].
    +============+===============+
    | user       | This document |
    | group      | This document |
+   | federation | This document |
    +============+===============+
 ~~~
 
@@ -2034,7 +2495,10 @@ Resource, in which case the "providerId" field is REQUIRED in the
 payload, or to a Recipient, i.e. to the shareType in a
 [Share Creation Notification](#share-creation-notification), in which
 case a corresponding identifier such as "userId" is REQUIRED in the
-payload.
+payload.  For the "federation" shareType, the Recipient is the
+Federation itself, and the "federation" object identifying it and the
+OCM Server concerned is REQUIRED in the payload (see [Federation
+Membership](#federation-membership)).
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -2052,6 +2516,8 @@ payload.
    | REQUEST_SHARE             | Resource  | This document |
    | USER_REMOVED              | Recipient | This document |
    | GROUP_REMOVED             | Recipient | This document |
+   | OCM_SERVER_ADDED          | Recipient | This document |
+   | OCM_SERVER_REMOVED        | Recipient | This document |
    +===========================+===========+===============+
 ~~~
 
@@ -2128,10 +2594,60 @@ of the protocol that _can_ be used to assist operators in establishing
 trust.  For instance, invite flow can be used to establish that users
 know and have out of band connections with other users on an OCM server.
 
-Further more the Directory Service feature can be used to establish a
-trusted federation, where a central authority can be trusted to
-implement measures for auditing and adding only trusted servers into the
-discovery service.
+Further more the [Directory Service](#directory-service) feature can be
+used to establish a trusted federation.  In the third-party model, a
+central authority can be trusted to implement measures for auditing and
+adding only trusted servers into the directory; an Administrator who
+instead pre-populates a Federation configuration out of band, as
+described in [Third-party Directory
+Service](#third-party-directory-service), plays that same role locally.
+In the peer-announced model, there is no such central authority: trust
+is delegated to the OCM Server Administrators, each of whom agrees to
+every addition to their own Federation configuration.  This has a
+number of consequences that Administrators need to be aware of:
+
+* A member of a Federation can cause any other member to be presented
+  with a new peer, by adding that peer and letting the propagation
+  described in [Processing an Addition](#processing-an-addition) take
+  place.  The human in the loop is what contains this: an
+  `OCM_SERVER_ADDED` Notification is a proposal, not an instruction,
+  and an Administrator that does not recognise a proposed peer is
+  expected to refuse it.  Implementations MUST NOT apply such a
+  notification automatically.
+* The `OCM_SERVER_ADDED` Notifications an OCM Server sends on startup
+  for members obtained from a third-party Directory Service or an
+  out-of-band pre-populated list (see [Third-party Directory
+  Service](#third-party-directory-service)) reach servers with which
+  no prior peer-announced exchange took place.  A recipient has no way
+  to distinguish such a notification from one resulting from the
+  incremental convergence of [Peer-announced
+  Directory](#peer-announced-directory): its own Administrator's
+  agreement remains the only safeguard, as noted above.
+* Membership is only eventually consistent.  In particular, a removal
+  only ever states that the sender's own directory no longer contains
+  the recipient, and cannot be enforced on the other members: a server
+  that is no longer trusted by one Administrator may still be listed
+  by others until each of them acts on it (see [Removing a
+  Member](#removing-a-member)).
+* The membership published at a Directory Endpoint is available to
+  anonymous clients, and thus discloses the peers of a Federation.
+  Federations whose membership is confidential are expected not to
+  publish it, as stated in [Directory
+  Endpoint](#directory-endpoint).
+* An `OCM_SERVER_ADDED` Notification reaches a server with which no
+  trust relationship exists yet, so its signature can only be verified
+  against key material discovered from the `senderDomain`.  This
+  attributes the notification to the sender's domain, and nothing more;
+  it is the Administrator's decision that establishes trust.
+* Conversely, an unauthenticated or spoofed `OCM_SERVER_REMOVED` would
+  be an inexpensive way to have a member drop a legitimate peer.  A
+  recipient MUST therefore verify the notification as any other, and
+  MUST apply it only to the sender's own membership.
+
+Federations that need membership to be consistent, enforceable, and
+cryptographically verifiable are expected to use the MLS-based model
+described in [MLS-based Directory](#mls-based-directory) and specified
+in [OCM-MLS].
 
 ### httpsig
 
@@ -2208,9 +2724,6 @@ https://datatracker.ietf.org/html/rfc6749)", October 2012.
 Specifications and Registration Procedures
 ](https://datatracker.ietf.org/html/rfc6838)", January 2013.
 
-[RFC7515] Jones, M., Bradley, J., Sakimura, N., "[JSON Web Signature
-(JWS)](https://datatracker.ietf.org/doc/html/rfc7515)", May 2015.
-
 [RFC7517] Jones, M., "[JSON Web Key (JWK)](
 https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.
 
@@ -2270,6 +2783,10 @@ Work in Progress, Internet-Draft.
 in Open Cloud Mesh using Messaging Layer
 Security](https://datatracker.ietf.org/doc/draft-ietf-ocm-mls-federated-groups/)",
 Work in Progress, Internet-Draft.
+
+[RFC9420] Barnes, R., Beurdouche, B., Robert, R., Millican, J.,
+Omara, E. and Cohn-Gordon, K., "[The Messaging Layer Security (MLS)
+Protocol](https://datatracker.ietf.org/doc/html/rfc9420)", July 2023.
 
 [RFC8792] Watsen, K., Auerswald, E., Farrel, A., Wu, Q., "[Handling
 Long Lines in Content of Internet-Drafts and RFCs](
@@ -2431,57 +2948,7 @@ As an example, if the payload is about initiating a new share, the file
 owner has to be an account from the instance at the origin of the
 request.
 
-# Appendix C: Directory Service
-
-A third-party Directory Service is a back-end service used to federate
-multiple OCM Servers and facilitate the Invite flow.  It is expected to
-expose, via anonymous HTTPS GET, a signed JWS document [RFC7515], where
-the signing key MUST be made available offline and the payload MUST
-adhere to the following format:
-
-* REQUIRED: `federation` - a human-readable name for the list of OCM
-  Servers exposed by the Directory Service
-* REQUIRED: `servers` - a JSON array of objects to describe the list
-  of OCM Servers with the following string fields:
-  - REQUIRED: `url` - an absolute URL identifying the
-    OCM Server.  It MUST:
-    - include scheme: either `https://` or
-      (for testing purposes) `http://`
-    - include host (either a FQDN or an IP address)
-    - MAY include a non-default port
-    - MUST NOT include a base path (e.g., `/ocm`)
-    - MUST NOT include userinfo, query, or fragment
-  - REQUIRED: `displayName` - a human-readable name
-    for the OCM Server
-Example:
-
-~~~
-{
-  "payload": {
-    "federation": "The ScienceMesh Directory",
-    "servers": [
-      {
-        "url": "https://ocm-server.example.org",
-        "displayName": "OCM Server 1"
-      },
-      {
-        "url": "https://ocm-server.example.com:4443",
-        "displayName": "OCM Server 2"
-      },
-      {
-        "url": "http://192.168.1.1:8080",
-        "displayName": "OCM Server 3"
-      }
-    ]
-  },
-  "protected": {"alg": "ES256"},
-  "signature": "..."
-}
-~~~
-{: type="json"}
-
-
-# Appendix D: Object models
+# Appendix C: Object models
 
 An implementor of OCM MAY choose any internal object model to represent
 an _Address Book_, a _Contact_, an _Invite_, a _Provider_, a _Share_,
@@ -2626,6 +3093,7 @@ that section.
             |    (OCM Server)       |
             +-----------------------+
             | - apiVersion          |
+            | - directoryEndPoint   |
             | - enabled             |
             | - endPoint            |
             | - inviteAcceptDialog  |
@@ -2685,6 +3153,8 @@ that section.
 * __apiVersion__: Version string of supported OCM API
 * __capabilities__: Optional features supported
 * __criteria__: Criteria for accepting a Share Creation Notification
+* __directoryEndPoint__: URL where the Federations this OCM Server is a
+  member of are exposed
 * __enabled__: Boolean indicating if OCM service is active
 * __endPoint__: Base URI for OCM API endpoints
 * __provider__: Friendly branding name
@@ -2837,7 +3307,7 @@ to model a few key properties.
 * __type__: Type of Resource (file, folder, calendar, etc.)
 
 
-# Appendix E: Navigation Index
+# Appendix D: Navigation Index
 
 This appendix is informative.  It points to normative sections and
 informative aids; it introduces no new rules.
@@ -2857,8 +3327,14 @@ informative aids; it introduces no new rules.
   `protocol.*.requirements[]`
 * __Signing__ - [HTTP Message Signatures](#http-message-signatures),
   [Signing Direction Index](#signing-direction-index)
-* __Object models__ - [Appendix D: Object
-  models](#appendix-d-object-models)
+* __Directory Service__ - [Directory Service](#directory-service);
+  the `directoryEndPoint` field is advertised in [OCM API
+  Discovery](#ocm-api-discovery)
+* __Federation membership__ - propagated with `OCM_SERVER_ADDED` and
+  `OCM_SERVER_REMOVED`; see [Federation
+  Membership](#federation-membership)
+* __Object models__ - [Appendix C: Object
+  models](#appendix-c-object-models)
 * __Informative diagrams__ - in the OCM-API repository under `diagrams/`
 
 # Changes
@@ -2867,6 +3343,34 @@ This section collects the changes with respect to the previous
 version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 08
+* Promoted the Directory Service to a normative section following the
+  Invite Flow, and made it distributed: the membership of a Federation
+  is now published by each member at the `directoryEndPoint` advertised
+  in its Discovery response, in addition to the pre-existing
+  third-party Directory Service.  Two operating models are defined: a
+  peer-announced, eventually consistent one, where trust is delegated
+  to the OCM Server Administrators, and a cryptographically guaranteed
+  one based on [OCM-MLS].  An OCM Server MAY be a member of multiple
+  Federations in both models.
+* Simplified the Directory payload: the JWS envelope is gone, as trust
+  in the peer-announced model rests with the OCM Server Administrators
+  who approve every membership change, and the MLS-based model is
+  cryptographically guaranteed by construction.  The `federation`
+  field is now an object carrying a stable `federationId` and a
+  human-readable `name`.
+* Introduced the `OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED`
+  notification types, with `shareType` set to `federation`, to
+  propagate Federation membership between OCM Servers, to be consumed
+  by the OCM Server Administrator.  Each of them states only whether
+  the sender's directory now contains the recipient, so that every
+  assertion on the wire is attributable to the Administrator who made
+  it.
+* Moved the registration of the `federation` share type from
+  [OCM-MLS] to this document, as it is now used to identify a group of
+  OCM Servers; [OCM-MLS] keeps specifying its use for federated groups
+  of users and the related share payloads.
 
 ## Version 07
 * Required the `keyid` signature parameter and that it matches the
@@ -2896,9 +3400,8 @@ The complete changelog is updated in the OCM-API GitHub repository.
   wrapping.
 * Added informative aids: same-string note for `must-exchange-token`,
   Appendix D criteria label fix, [Signing Direction
-  Index](#signing-direction-index), [Appendix E: Navigation
-  Index](#appendix-e-navigation-index), and companion diagrams under
-  `diagrams/` in the OCM-API repository.
+  Index](#signing-direction-index), the Navigation Index appendix,
+  and companion diagrams under `diagrams/` in the OCM-API repository.
 * Rehaul of the Notification (formerly "Share Acceptance
   Notification") endpoint and payload, and adaptation of the IANA
   registries.  The core notifications have now been fully spelled
