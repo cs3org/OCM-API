@@ -2435,9 +2435,21 @@ request.
 
 A third-party Directory Service is a back-end service used to federate
 multiple OCM Servers and facilitate the Invite flow.  It is expected to
-expose, via anonymous HTTPS GET, a signed JWS document [RFC7515], where
-the signing key MUST be made available offline and the payload MUST
-adhere to the following format:
+expose, via anonymous HTTPS GET, a signed JWS document [RFC7515] using
+the Flattened JWS JSON Serialization.  The corresponding public
+verification key MUST be distributed out of band.  The private signing
+key MUST remain confidential.
+
+The JWS Protected Header MUST contain an `alg` value of `ES256`.
+Producers MUST use ES256 to sign the document, and consumers MUST
+support ES256 and reject any other algorithm.  As required by the JWS
+JSON Serialization, the values of the `protected`, `payload`, and
+`signature` members are Base64url-encoded strings.  They are not JSON
+objects.  Consumers MUST verify the signature before interpreting the
+decoded payload.
+
+After Base64url decoding, the `payload` value MUST be a UTF-8 encoded
+JSON object that adheres to the following format:
 
 * REQUIRED: `federation` - a human-readable name for the list of OCM
   Servers exposed by the Directory Service
@@ -2453,32 +2465,47 @@ adhere to the following format:
     - MUST NOT include userinfo, query, or fragment
   - REQUIRED: `displayName` - a human-readable name
     for the OCM Server
-Example:
+
+The following is an example of the decoded JWS payload.  It is shown
+before Base64url encoding so that its structure is readable:
 
 ~~~
 {
-  "payload": {
-    "federation": "The ScienceMesh Directory",
-    "servers": [
-      {
-        "url": "https://ocm-server.example.org",
-        "displayName": "OCM Server 1"
-      },
-      {
-        "url": "https://ocm-server.example.com:4443",
-        "displayName": "OCM Server 2"
-      },
-      {
-        "url": "http://192.168.1.1:8080",
-        "displayName": "OCM Server 3"
-      }
-    ]
-  },
-  "protected": {"alg": "ES256"},
-  "signature": "..."
+  "federation": "The ScienceMesh Directory",
+  "servers": [
+    {
+      "url": "https://ocm-server.example.org",
+      "displayName": "OCM Server 1"
+    },
+    {
+      "url": "https://ocm-server.example.com:4443",
+      "displayName": "OCM Server 2"
+    },
+    {
+      "url": "http://192.168.1.1:8080",
+      "displayName": "OCM Server 3"
+    }
+  ]
 }
 ~~~
 {: type="json"}
+
+The document returned by the Directory Service has the following wire
+format.  Placeholder values are used to keep the encoded content
+readable in this specification:
+
+~~~
+{
+  "payload": "<base64url-encoded UTF-8 JSON payload>",
+  "protected": "eyJhbGciOiJFUzI1NiJ9",
+  "signature": "<base64url-encoded ES256 signature>"
+}
+~~~
+{: type="json"}
+
+The `protected` value above is the Base64url encoding of
+`{"alg":"ES256"}`.  The `payload` value contains the Base64url encoding
+of the UTF-8 representation of the decoded payload shown above.
 
 
 # Appendix D: Object models
