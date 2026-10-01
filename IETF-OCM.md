@@ -586,12 +586,11 @@ _Directory Service_, and is typically used to populate a WAYF Page
 seed the registry of _Trusted Servers_.
 
 An OCM Server MAY be a member of multiple Federations.  In that case,
-its Directory Service exposes one document per Federation, and the
-OCM Server uses the union of the respective lists for the purposes
-above.  Conversely, a Federation MAY include OCM Servers that are
-themselves members of other Federations: membership is not exclusive,
-and no transitivity is implied.  In particular, the fact that a given
-OCM Server is a member of two Federations does not, in itself, make
+its Directory Service exposes all of them (see below), and the OCM
+Server uses the union of the respective lists for the purposes above.
+Conversely, a Federation MAY include OCM Servers that are themselves
+members of other Federations.  Note that the fact that a given OCM
+Server is a member of two Federations does not, in itself, make
 the members of one Federation trusted by the members of the other.
 
 The Directory Service is deliberately distributed and does not require
@@ -608,8 +607,7 @@ one.  Two operating models are defined:
   managed as an MLS [RFC9420] group of OCM Servers as specified in
   [OCM-MLS], so that the membership of the Federation is attested by
   the MLS group state rather than by the individual configuration of
-  each member.  See
-  [MLS-based Directory](#mls-based-directory).
+  each member.  See [MLS-based Directory](#mls-based-directory).
 
 In both models, the membership is published in the same format at the
 same endpoint, so that a consumer of a Directory Service does not need
@@ -636,15 +634,14 @@ specified below, when the OCM Server is a member of exactly one
 Federation, or a JSON array of Federation objects, one per Federation.
 Consumers MUST accept both forms.
 
-The document is not signed.  The membership it exposes is not
-self-attesting, and a consumer MUST NOT treat it as an authorisation
-to interact with the OCM Servers it lists: it is a proposal, whose
-trust is established elsewhere.  In the peer-announced model that is the
-agreement of the OCM Server Administrators, each of whom approves
-every member of their own Federation configuration (see [Peer-announced
-Directory](#peer-announced-directory)); in the MLS-based model it is the
-MLS group state, which is cryptographically verifiable by every member
-(see [MLS-based Directory](#mls-based-directory)).  In either case a
+The document is not signed.  A consumer MUST NOT consider the listed
+OCM Servers as implicitly trustworthy.  In the peer-announced model,
+trust resides with the agreement of the OCM Server Administrators, each
+of whom approves every member of their own Federation configuration (see
+[Peer-announced Directory](#peer-announced-directory)); in the MLS-based
+model, the cryptographically verifiable MLS group state guarantees
+that the list is trustworthy (see
+[MLS-based Directory](#mls-based-directory)).  In either case a
 consumer MUST fetch the document over TLS, so that it is attributable
 to the host it was fetched from.
 
@@ -723,8 +720,12 @@ And of a member of two Federations:
       "name": "The ScienceMesh Directory",
       "servers": [
         {
-          "url": "https://ocm-server.example.org",
+          "url": "https://ocm-server-1.example.org",
           "displayName": "OCM Server 1"
+        },
+        {
+          "url": "https://ocm-server-2.example.org",
+          "displayName": "OCM Server 2"
         }
       ]
     },
@@ -734,8 +735,12 @@ And of a member of two Federations:
       "mlsGroupId": "51dc30ddc473d43a6011e9ebba6ca770",
       "servers": [
         {
-          "url": "https://ocm-server.example.com:4443",
-          "displayName": "OCM Server 2"
+          "url": "https://ocm-server-1.example.org",
+          "displayName": "OCM Server 1"
+        },
+        {
+          "url": "https://ocm-server-3.example.com:4443",
+          "displayName": "OCM Server 3"
         }
       ]
     }
@@ -754,19 +759,13 @@ propagated by means of the `OCM_SERVER_ADDED` and
 Membership](#federation-membership)), such that the members of a
 Federation eventually converge to a consistent membership.
 
-This model is sometimes informally described as gossip-based.  This
-document avoids that term: unlike an epidemic gossip protocol, an
-announcement here concerns only the sender's own directory, is sent
-only to a peer the sender's Administrator deliberately added, and is
-acted upon only after the receiving Administrator agrees.
-
-Both Notifications carry the same, deliberately narrow meaning: an OCM
-Server A sends one to an OCM Server B to inform B that A's directory
-for a given Federation now contains B, respectively no longer contains
-B.  A never asserts anything about the presence of a third server: B
-learns about the rest of the Federation by fetching A's Directory
-Endpoint, not from the notification itself.  This keeps every statement
-on the wire attributable to the Administrator who made it.
+Both Notifications carry the same meaning: an OCM Server A sends one
+to an OCM Server B to inform B that A's directory for a given Federation
+now contains B, respectively no longer contains B.  A never asserts
+anything about the presence of a third server: B learns about the rest
+of the Federation by fetching A's Directory Endpoint, not from the
+notification itself.  This keeps every statement on the wire
+attributable to the Administrator who made it.
 
 ### Adding a Member
 
@@ -1953,11 +1952,6 @@ Further, the `notification` object MUST include the following fields:
     in [Directory Payload](#directory-payload).  The target OCM
     Server SHOULD verify that this URL identifies itself, and SHOULD
     discard the notification otherwise.
-  * OPTIONAL directoryEndPoint (string) - the URL of the sender's
-    Directory Endpoint, as a hint.  If omitted, the recipient MUST
-    obtain it from the `directoryEndPoint` field of the sender's
-    Discovery response; if the two values differ, the recipient MUST
-    use the discovered one.
   * OPTIONAL mlsGroupId (string) - the identifier of the MLS group
     that manages the Federation, when the model described in
     [MLS-based Directory](#mls-based-directory) is in use.

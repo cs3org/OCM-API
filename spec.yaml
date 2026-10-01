@@ -1156,7 +1156,6 @@ components:
               federationId: sciencemesh
               name: The ScienceMesh Directory
               url: https://cloud.example.org
-              directoryEndPoint: https://ocm-server.example.org/ocm/directory
         ocmServerWasRemoved:
           notificationType: OCM_SERVER_REMOVED
           shareType: federation
