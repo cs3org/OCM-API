@@ -1,249 +1,256 @@
 # OpenGeoMesh Protocol for Open Cloud Mesh
 
-**Matthias Kraus**<sup>1</sup> 
+**Matthias Kraus**<sup>1</sup>
 
-<sup>1</sup>[OpenGeoMesh](https://OpenGeoMesh)</br>
-contact: info@opengeomesh.org 
+<sup>1</sup>[OpenGeoMesh](https://opengeomesh.org)
+contact: info@opengeomesh.org
 
 ## Abstract
 
-This document specifies the `opengeomesh` protocol for OpenCloudMesh (OCM), enabling federated sharing of individual OGC API collections between independently operated servers.
+This document specifies the `opengeomesh` protocol for Open Cloud Mesh (OCM). The protocol enables federated sharing of individual OGC API collections between independently operated servers.
 
-The specification defines the `ogcapi` resource type, the `opengeomesh` protocol, and the `opengeomesh-receive` capability. OCM provides share negotiation and lifecycle management, while OGC API standards define access to geospatial resources.
+This document defines the `ogcapi` Resource Type, the `opengeomesh` protocol and its corresponding `opengeomesh-receive` Discovery property. OGC API collections are accessed using a URI and a share-specific access credential.
 
 ## 1. Introduction
 
-OpenGeoMesh is a lightweight, standards-based protocol for federated sharing and collaboration on private geospatial data. It enables organisations and their tools to exchange and jointly use geospatial maps, for example during incidents involving emergency services.
+The Open Cloud Mesh (OCM) protocol allows a Sending Server to inform a Receiving Server that a Resource has been shared with a recipient.
 
-## 2. Scope
+OCM provides mechanisms for discovering server capabilities, negotiating shares, and managing their lifecycle. This document specifies how OCM can be used to share individual OGC API collections.
 
-This specification defines how individual OGC API collections are shared between federated systems. It builds on existing standards rather than defining a proprietary geospatial data model:
+An OpenGeoMesh share provides the URI of a collection and a credential for accessing it. The Receiving Server uses these details to access the collection on behalf of the recipient, optionally exposing it through its own OGC API.
 
-* **OpenCloudMesh** for discovery, share negotiation, and lifecycle management.
-* **OGC API** for geospatial data access.
-* **Situation Data Exchange Format (SDXF)** for optional representation of operational situation maps.
+This document defines:
 
-A typical sharing process consists of the following steps:
+* the `ogcapi` OCM Resource Type;
+* the `opengeomesh` OCM protocol and its corresponding `opengeomesh-receive` Discovery property; and
+* the OCM Share Payload for `ogcapi` Resources shared using the `opengeomesh` protocol.
 
-1. The Sending Server discovers the Receiving Server's capabilities and sends an OCM share containing the collection URI and access credentials.
-2. The Receiving Server processes the share and notifies the recipient.
-3. The recipient accepts the share through the Receiving Server.
-4. The Receiving Server accesses the shared collection on behalf of the recipient, using the supplied credentials.
-5. The recipient accesses the collection through an interface provided by the Receiving Server.
+This document does not redefine any part of the OCM protocol that is already specified by [OCM]. In particular, OCM Discovery, Share Creation Notifications, HTTP transport, authentication, message signatures, and share lifecycle are defined by [OCM].
 
-## 3. Standards Dependencies
+## 2. Conventions and Terminology
 
-### 3.1 OpenCloudMesh
+The key words MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED, NOT RECOMMENDED, MAY, and OPTIONAL in this document are to be interpreted as described in BCP 14.
 
-[OpenCloudMesh](https://github.com/cs3org/OCM-API) provides federated discovery, share negotiation, and notifications between independently operated servers.
+The terminology of [OCM] applies throughout this document.
 
-The minimum required OCM version is [1.3.0](https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md).
+A **Sending Server** is the OCM server that creates and provides access to a share.
 
-OpenGeoMesh defines the following OCM identifiers:
+A **Receiving Server** is the OCM server that receives a share and provides access to it for the recipient.
 
-* Resource Type: `ogcapi`
-* Protocol: `opengeomesh`
-* Receiving capability: `opengeomesh-receive`
+An **OpenGeoMesh Resource** is an individual OGC API collection, including its metadata, items, and supported subresources.
 
-OCM remains responsible for the underlying notification and share lifecycle mechanisms.
+## 3. `ogcapi` Resource Type
 
-### 3.2 OGC API – Features
+This document defines the following OCM Resource Type:
 
-Shared collections are accessed using OGC API standards. OpenGeoMesh requires support for the following specifications:
+    ogcapi
 
-* [OGC API – Common, Part 1: Core](https://docs.ogc.org/is/19-072/19-072.html)
-* [OGC API – Common, Part 2: Collections](https://docs.ogc.org/DRAFTS/20-024.html)
-* [OGC API – Features, Part 1: Core](https://docs.opengeospatial.org/is/17-069r4/17-069r4.html)
+An `ogcapi` Resource represents an individual collection as defined by [OGC-API-COMMON] and [OGC-API-COLLECTIONS].
 
-Implementations MUST support JSON representations of collection metadata and GeoJSON representations of features.
+The URI identifying the shared Resource MUST identify the individual collection. It MUST NOT identify a general collections listing or an API endpoint exposing multiple collections.
 
-Implementations MAY support additional OGC API interfaces and building blocks, including [OGC API – Features, Part 4: Create, Replace, Update and Delete](https://docs.ogc.org/DRAFTS/20-002r1.html), for writable shares.
+The shared Resource includes the collection metadata and its supported subresources, such as feature items and individual feature endpoints, as defined by [OGC-API-FEATURES].
 
-See the [OGC API Workshop](https://ogcapi-workshop.ogc.org/api-deep-dive/features/) for an introduction to OGC API – Features.
+OpenGeoMesh does not define a proprietary geospatial data model. The structure and semantics of the shared Resource are defined by the applicable OGC API specifications.
 
-### 3.3 Situation Data Exchange Format (SDXF)
+Implementations MUST support:
+* JSON representations of collection metadata, as defined by [OGC-API-COLLECTIONS].
+* GeoJSON representations of features, as defined by [OGC-API-FEATURES].
 
-The [Situation Data Exchange Format (SDXF)](https://github.com/einsatzverwaltung/SituationDataXchangeFormat) is a JSON-based format for exchanging operational information between emergency management systems. It includes a specification for situation maps based on GeoJSON.
+Implementations MAY support additional OGC API interfaces and building blocks.
 
-[SituationMapJson v0.3](https://github.com/einsatzverwaltung/SituationDataXchangeFormat/blob/main/SituationMapJson.md) defines properties for representing tactical symbols, affected areas, fronts, and evacuation routes. It also supports the [Mapbox SimpleStyle specification](https://github.com/mapbox/simplestyle-spec/tree/master/1.1.0) for styling GeoJSON features.
+For writable shares, implementations MAY support [OGC-API-FEATURES-PART4], which specifies operations for creating, replacing, updating, and deleting features.
 
-SDXF support is optional. Implementations claiming compatibility MUST conform to the applicable SDXF specification.
+## 4. `opengeomesh` Protocol
 
-## 4. Protocol Concepts
+This document defines the following OCM Protocol:
 
-### 4.1 Share Negotiation
+    opengeomesh
 
-To initiate a share, the sender provides the Sending Server with the recipient's OCM address, for example `user@receiving-server.example.org`.
+The `opengeomesh` protocol provides access to a shared `ogcapi` Resource through a URI and a share-specific credential.
 
-The Sending Server discovers the recipient's server capabilities through:
+The URI identifies an individual OGC API collection. The collection and its supported subresources MUST be accessible according to the applicable OGC API specifications.
 
-`https://<recipient-domain>/.well-known/ocm`
+When the `opengeomesh` protocol is used:
 
-The Discovery response identifies supported resource types, protocols, share types, and endpoints. See the [OCM API Discovery specification](https://github.com/cs3org/OCM-API).
+1. The protocol details MUST contain the URI of the shared collection.
+2. The protocol details MUST contain a `sharedSecret` used to authorize access to the Resource.
+3. Requests to the shared Resource MUST be authenticated using the `sharedSecret` as a bearer credential.
+4. The shared URI MAY be absolute or relative to the base URI advertised for `opengeomesh` in OCM Discovery.
+5. The protocol MAY provide a `service-desc` identifying an OpenAPI description for the shared collection.
 
-OpenGeoMesh defines the `ogcapi` resource type to represent an individual OGC API collection and the `opengeomesh` protocol to provide authenticated access to it.
+### 4.1. Protocol Details
 
-#### Resource Type: `ogcapi`
+The `protocol` field of a Share Creation Notification using the `opengeomesh` protocol MUST use the `multi` representation defined by [OCM].
 
-An `ogcapi` resource represents one individual OGC API collection, including its metadata, items, and supported subresources.
+The protocol object MUST contain:
 
-The shared URI MUST identify the collection itself, not a general collections listing or an API endpoint exposing multiple collections.
+    {
+      "name": "multi",
+      "opengeomesh": {
+        "sharedSecret": "<share-specific secret>",
+        "uri": "<collection URI>"
+      }
+    }
 
-#### Protocol: `opengeomesh`
+The `service-desc` field MAY be included to identify an OpenAPI description for the shared collection.
 
-The `opengeomesh` protocol provides the URI of the shared collection and a share-specific secret. Requests to the shared resource MUST authenticate using that secret in the HTTP `Authorization: Bearer` header.
+For example:
 
-The URI MAY be absolute or relative to the `opengeomesh` base URI advertised through OCM Discovery.
+    {
+      "name": "multi",
+      "opengeomesh": {
+        "sharedSecret": "<share-specific secret>"
+        "uri": "collections/incidents",
+        "service-desc": "collections/api"
+      }
+    }
 
-An optional `service-desc` field MAY identify an OpenAPI description for the shared collection.
+The `uri` identifies the individual collection defined by [OGC-API-COLLECTIONS]. If relative, it MUST be resolved against the `opengeomesh` base URI advertised by the Sending Server.
 
-#### Discovery
+The `sharedSecret` MUST be unpredictable and MUST be treated as a secret. It MUST grant access only to the Resource and operations authorized by the share.
 
-Servers supporting OpenGeoMesh MUST advertise the `ogcapi` resource type and the applicable protocol capabilities.
+The `service-desc`, if present, MUST resolve to an OpenAPI description applicable to the shared collection. Access to this description MUST be protected by the same authorization requirements as the shared Resource.
 
-A server providing shares MUST advertise `opengeomesh`. A server receiving shares MUST advertise `opengeomesh-receive`.
+The OGC API responses MUST preserve the semantics of the applicable OGC API specifications. In particular, collection metadata and feature resources MUST conform to [OGC-API-COLLECTIONS] and [OGC-API-FEATURES], respectively.
 
-Example Discovery payload:
-```
+## 5. Processing of OpenGeoMesh Shares
 
-{ "enabled": true, "apiVersion": "1.3.0", "endPoint": "https://receiving-server.example.org", "provider": "Example Organization", "resourceTypes": \[ { "name": "ogcapi", "shareTypes": \[ "user" \], "protocols": { "opengeomesh": "/ogm/", "opengeomesh-receive": {} } } \], "capabilities": \[ "protocol-object" \], "criteria": \[ "http-request-signatures" \], "publicKey": { "keyId": "https://receiving-server.example.org/.well-known/ocm#signature", "publicKeyPem": "-----BEGIN PUBLIC KEY-----\\nREPLACE_WITH_SERVER_PUBLIC_KEY\\n-----END PUBLIC KEY-----\\n" } }
+A Receiving Server that advertises support for the `opengeomesh-receive` property for the `ogcapi` Resource Type MUST be capable of receiving the corresponding OpenGeoMesh shares.
 
-```
+Upon receipt of a Share Creation Notification containing an OpenGeoMesh share, the Receiving Server MUST process the share according to [OCM] and this document.
 
-The example illustrates the intended capabilities. The exact representation of `opengeomesh-receive` MUST conform to the applicable OCM Discovery schema.
+The Receiving Server SHOULD provide an interface through which the recipient can access the shared collection.
 
-#### Share Payload
+To access the Resource, the Receiving Server MUST resolve the URI as specified in Section 4.1 and MUST authenticate requests using the `sharedSecret` as a bearer credential.
 
-An OpenGeoMesh share uses the OCM `multi` protocol representation.
+The Receiving Server MUST NOT expose the `sharedSecret` to the recipient.
 
-Example:
-```
+If the Receiving Server provides an OGC API interface for the shared Resource, links in the upstream OGC API responses MUST be rewritten to refer to the corresponding local resources.
 
-{ "name": "Incident Map", "owner": "owner@sending-server.example.org", "protocol": { "name": "multi", "opengeomesh": { "sharedSecret": "REPLACE_WITH_RANDOM_SHARE_SECRET", "uri": "collections/incidents", "service-desc": "collections/incidents/api" } }, "providerId": "incident-map-share", "resourceType": "ogcapi", "sender": "sender@sending-server.example.org", "shareType": "user", "shareWith": "recipient@receiving-server.example.org" }
+The Receiving Server SHOULD respect HTTP caching headers supplied by the Sending Server, subject to authorization and revocation requirements.
 
-```
+Share acceptance, rejection, and deletion are handled through the OCM notification mechanisms defined by [OCM]. The Receiving Server MUST stop providing access to a share when it learns that the share has been revoked.
 
-The example omits any additional fields required by the applicable OCM notification schema.
+## 6. Discovery
 
-The `uri` identifies the individual collection. If relative, it MUST be resolved against the base URI advertised for `opengeomesh` by the Sending Server.
+A Sending Server supporting the `opengeomesh` protocol MUST advertise the protocol according to the OCM Discovery mechanism defined by [OCM].
 
-The `sharedSecret` MUST be unpredictable and scoped to the shared resource. The optional `service-desc` identifies an OpenAPI description applicable to that collection.
+A Receiving Server supporting the reception of OpenGeoMesh shares MUST advertise the corresponding `opengeomesh-receive` property.
 
-### 4.2 Providing Access to a Shared Resource
+For example, a Discovery entry for an OCM server implementing both capabilities MAY be represented as:
 
-The Sending Server MUST provide authenticated access to the shared collection and its supported subresources.
+    {
+      "enabled": true,
+      "apiVersion": "1.3.0",
+      "endPoint": "https://receiving-server.example.org",
+      "provider": "Example Organization",
+      "resourceTypes": [
+        {
+          "name": "ogcapi",
+          "shareTypes": [
+            "user"
+          ],
+          "protocols": {
+            "opengeomesh": "/ogm/",
+            "opengeomesh-receive": {}
+          }
+        }
+      ],
+      "capabilities": [
+        "protocol-object"
+      ],
+      "criteria": [
+        "http-request-signatures"
+      ]
+    }
 
-Requests MUST include the share credential:
-```
+The `opengeomesh` Discovery property identifies the base URI used to resolve relative collection URIs in shares sent by that server.
 
-Authorization: Bearer \<sharedSecret\>
+The `opengeomesh-receive` property indicates that the server can receive OpenGeoMesh shares. It does not define a separate access endpoint.
 
-```
+The precise Discovery document and its processing are defined by [OCM].
 
-The Sending Server MUST enforce the permissions associated with the share for every request. Links in OGC API responses MUST refer to resources accessible through the shared collection endpoint.
+A Sending Server SHOULD send an OpenGeoMesh share only when the Receiving Server advertises the corresponding `opengeomesh-receive` property for the `ogcapi` Resource Type and applicable share type.
 
-The implementation MAY delegate resource access to another service, provided that the URI and authentication behavior remain consistent with this specification.
-
-Responses SHOULD include appropriate HTTP caching headers to reduce unnecessary transfers and server load.
-
-### 4.3 Accessing a Received Share
-
-The Receiving Server SHOULD provide an interface through which the recipient can access received OpenGeoMesh shares.
-
-The Receiving Server accesses the collection using the URI and `sharedSecret` from the share. Relative URIs MUST be resolved against the Sending Server's advertised `opengeomesh` base URI.
-
-Requests MUST use the bearer credential defined in Section 4.1. The Receiving Server MUST NOT expose the credential to the recipient.
-
-If the Receiving Server exposes the collection through its own OGC API interface, it MUST rewrite upstream links to refer to the corresponding local resources.
-
-The Receiving Server SHOULD respect caching headers supplied by the Sending Server, subject to authorization and revocation requirements.
-
-### 4.4 Accepting, Declining or Deleting a Share
-
-Share acceptance, rejection, and deletion MUST follow the applicable OCM notification procedures.
-
-* Acceptance and rejection use the OCM Share Acceptance Notification.
-* Deletion uses the `SHARE_UNSHARED` notification.
-
-See the [OCM Share Acceptance Notification](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh-04#name-share-acceptance-notificati) and [OCM Share Deletion](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh-04#name-share-deletion).
-
-When a share is revoked, the Sending Server MUST prevent subsequent unauthorized access. The Receiving Server MUST stop serving the share when it learns that access has been revoked.
-
-## 5. Security Considerations
-
-### 5.1 Transfer Encryption
+## 7. Security Considerations
 
 All communication between OGM Servers MUST use HTTPS with certificate verification.
 
-Share credentials MUST be protected in transit. They MUST NOT be included in URLs or exposed in logs, error messages, or client-visible responses.
+The authenticity of requests that create or modify shares MUST be verified according to the authentication and HTTP Message Signature requirements defined by [OCM].
 
-### 5.2 Request Authentication
+Public keys used to verify remote servers MUST be retrieved and validated through HTTPS as specified by [OCM].
 
-Requests that create or modify shares MUST be authenticated according to the applicable OCM specification, including its HTTP Message Signature requirements.
+The `sharedSecret` grants access to the shared Resource and MUST be protected accordingly. It MUST NOT be included in URLs or exposed in logs, error messages, or client-visible responses.
 
-Public keys used to verify remote servers MUST be retrieved and validated through HTTPS as specified by OCM.
+The Sending Server MUST enforce the permissions associated with a share for every request. The Receiving Server MUST NOT forward credentials to unauthorized origins.
 
-Requests to shared resources MUST use the share-specific bearer credential. Implementations MUST validate authorization for every request.
+Implementations MUST validate resource URIs and prevent unauthorized access to internal network services. Federated sharing can otherwise be abused to perform server-side request forgery. Deployments SHOULD use network separation, outbound firewall rules, or destination allowlists to restrict access to internal networks.
 
-### 5.3 Network Separation
+Cached resources MUST NOT be served to users who are no longer authorized to access the share. Revocation cannot guarantee deletion of copies already downloaded by recipients.
 
-Federated sharing can cause a server to make outbound requests to arbitrary remote hosts. Incorrect URI validation or unrestricted redirects can expose internal services through server-side request forgery.
+## 8. IANA Considerations
 
-Implementations MUST validate shared resource URIs and prevent access to unauthorized internal endpoints. Credentials MUST NOT be forwarded to unauthorized origins.
+IANA is requested to make the following registrations in the "Open Cloud Mesh (OCM) Parameters" registry group.
 
-Deployments SHOULD use network separation, outbound firewall rules, or destination allowlists to restrict access to internal networks.
+### 8.1. OCM Resource Types Registry
 
-### 5.4 Caching and Revocation
+The following entry is requested:
 
-Cached resources MUST NOT be served to users who are no longer authorized to access the share.
+    Resource Type:  ogcapi
+    Description:    An individual OGC API collection and its supported subresources
+    Reference:      This document, Section 3
 
-Revocation prevents future authorized access but cannot guarantee deletion of copies already downloaded by recipients.
+### 8.2. OCM Protocols Registry
 
-## 6. IANA Considerations
+The following entries are requested:
 
-This document defines identifiers for use with OpenCloudMesh.
+    Property:       opengeomesh
+    Role:           send
+    Reference:      This document, Section 4
 
-The following entries are proposed for registration in the applicable OCM registries, subject to their registration procedures.
+    Property:       opengeomesh-receive
+    Role:           receive
+    Reference:      This document, Section 6
 
-| Registry | Identifier | Description |
-|---|---|---|
-| Resource Type | `ogcapi` | An individual OGC API collection and its supported subresources |
-| Protocol | `opengeomesh` | Provides authenticated access to a shared OGC API collection |
-| Protocol | `opengeomesh-receive` | Indicates support for receiving OpenGeoMesh shares |
+### 8.3. OCM Share Payloads Registry
 
-The registration and wire representation of `opengeomesh-receive` MUST be consistent with the applicable OCM specification.
+The following entry is requested:
 
-## 7. Change Management
+    +===============+=============+=============+===============+
+    | Resource Type | Share Type  | Protocol    | Reference     |
+    +===============+=============+=============+===============+
+    | ogcapi        | user        | opengeomesh | This document |
+    +===============+=============+=============+===============+
 
-OpenGeoMesh prioritizes stability and interoperability while allowing the protocol to evolve.
+These registrations define the wire format of the corresponding Share Creation Notifications in conjunction with [OCM] and this document.
 
-Backward-compatible extensions SHOULD build on existing standards, particularly OCM and OGC API. Implementations MAY add support for additional OGC API interfaces and capabilities without changing the meaning of existing protocol fields.
+## 9. Acknowledgements
 
-Proposed changes SHOULD be discussed through the [OpenGeoMesh issue tracker](https://codeberg.org/OpenGeoMesh/OpenGeoMesh/issues).
+The author thanks the OpenCloudMesh and OpenGeoMesh communities for their work on federated sharing and interoperable geospatial services.
 
-Topics under discussion include:
+## 10. References
 
-* [Real-time collaboration](https://codeberg.org/OpenGeoMesh/OpenGeoMesh/issues/32)
-* [Referencing and sharing additional resources](https://codeberg.org/OpenGeoMesh/OpenGeoMesh/issues/31)
-* [Using the OCM Token Flow instead of shared secrets](https://codeberg.org/OpenGeoMesh/OpenGeoMesh/issues/33)
+### 10.1. Normative References
 
-Breaking changes MAY be introduced when approved by a significant portion of implementers. Such changes SHOULD result in a new major version of this specification.
+[OCM] OpenCloudMesh API. <https://github.com/cs3org/OCM-API>
 
-## 8. References
+[OGC-API-COMMON] Open Geospatial Consortium, "OGC API – Common, Part 1: Core". <https://docs.ogc.org/is/19-072/19-072.html>
 
-### 8.1 Normative References
+[OGC-API-COLLECTIONS] Open Geospatial Consortium, "OGC API – Common, Part 2: Collections". <https://docs.ogc.org/DRAFTS/20-024.html>
 
-* **[OCM]** OpenCloudMesh API. <https://github.com/cs3org/OCM-API>
-* **[OCM-1.3]** OpenCloudMesh Version 1.3.0. <https://github.com/cs3org/OCM-API/blob/v1.3.0/IETF-RFC.md>
-* **[OGC-API-COMMON]** OGC API – Common, Part 1: Core. <https://docs.ogc.org/is/19-072/19-072.html>
-* **[OGC-API-COLLECTIONS]** OGC API – Common, Part 2: Collections. <https://docs.ogc.org/DRAFTS/20-024.html>
-* **[OGC-API-FEATURES]** OGC API – Features, Part 1: Core. <https://docs.opengeospatial.org/is/17-069r4/17-069r4.html>
-* **[RFC9111]** HTTP Caching. <https://www.rfc-editor.org/rfc/rfc9111.html>
-* **[RFC2119]** Key words for use in RFCs to Indicate Requirement Levels. <https://www.rfc-editor.org/rfc/rfc2119.html>
-* **[RFC8174]** Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words. <https://www.rfc-editor.org/rfc/rfc8174.html>
+[OGC-API-FEATURES] Open Geospatial Consortium, "OGC API – Features, Part 1: Core". <https://docs.opengeospatial.org/is/17-069r4/17-069r4.html>
 
-### 8.2 Informative References
+[OGC-API-FEATURES-PART4] Open Geospatial Consortium, "OGC API – Features, Part 4: Create, Replace, Update and Delete". <https://docs.ogc.org/DRAFTS/20-002r1.html>
 
-* **[OPEN-GEOMESH]** OpenGeoMesh. <https://opengeomesh.org/en/>
-* **[OPEN-GEOMESH-CONCEPT]** OpenGeoMesh Concept. <https://opengeomesh.org/posts/concept>
-* **[OGC-API-WORKSHOP]** OGC API Workshop. <https://ogcapi-workshop.ogc.org/api-deep-dive/features/>
+[RFC2119] Bradner, S., "Key words for use in RFCs to Indicate Requirement Levels", BCP 14, RFC 2119. <https://www.rfc-editor.org/rfc/rfc2119.html>
+
+[RFC8174] Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words", BCP 14, RFC 8174. <https://www.rfc-editor.org/rfc/rfc8174.html>
+
+### 10.2. Informative References
+
+[OPEN-GEOMESH] OpenGeoMesh. <https://opengeomesh.org/en/>
+
+[OPEN-GEOMESH-CONCEPT] OpenGeoMesh Concept. <https://opengeomesh.org/posts/concept>
+
+[OGC-API-WORKSHOP] Open Geospatial Consortium, "OGC API Workshop". <https://ogcapi-workshop.ogc.org/api-deep-dive/features/>
