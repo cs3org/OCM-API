@@ -1955,6 +1955,10 @@ Further, the `notification` object MUST include the following fields:
     the `permissions` values specified in the `webdav` and `webapp`
     protocols of a
     [Share Creation Notification](#share-creation-notification).
+* OPTIONAL sharedSecret (string) - the `sharedSecret` of the
+  underlying share, as sent in the `protocol` of the Share Creation
+  Notification.  It is only meant for compatibility, see
+  [Share Identity](#share-identity).
 
 `SHARE_UNSHARED` and `SHARE_CHANGE_PERMISSION` MUST identify the
 individual Share by `providerId` and carry its `resourceType`, including
@@ -1967,6 +1971,72 @@ Sending Server MAY implement the same notifications, provided that
 they get registered in the related IANA Registry.  Note that the
 Sending Server MAY at any time revoke access to a Resource (effectively
 undoing or deleting the Share) without notifying the Receiving Server.
+
+### Share Identity
+
+The `file.providerId` value is the identifier that the provider of a
+Share, i.e. the Sending Server of the original Share Creation
+Notification, assigned to that Share.  A provider assigns a distinct
+identifier to each Share, including separate Shares of the same
+Resource with different recipients.  Identifiers are only unique
+within the provider that assigned them: another provider can use the
+same value for an unrelated Share.  The Server receiving one of the
+notifications above therefore identifies the underlying Share as
+follows:
+
+* "SHARE_UNSHARED" and "SHARE_CHANGE_PERMISSION" are sent by the
+  provider to the recipient's Server, and the `senderDomain` names
+  the provider.  The Receiving Server selects the Share it received
+  from the provider named by `senderDomain` with the identifier
+  `file.providerId`.  It MUST NOT select a Share received from another
+  provider, even if that Share has the same identifier.
+* "SHARE_ACCEPTED" and "SHARE_DECLINED" are sent by the recipient's
+  Server to the provider, and the `senderDomain` names the recipient's
+  Server.  The `file.providerId` is the identifier that the Receiving
+  Server itself assigned as provider: the Receiving Server selects its
+  own outgoing Share with that identifier, and MUST check that the
+  recipient of that Share is hosted at the Server named by
+  `senderDomain`.  In this case `senderDomain` is not the namespace of
+  `file.providerId`, and the notification never refers to a Share
+  that the Receiving Server received.
+
+In both cases, the `resourceType`, and the `shareType` when present,
+MUST match those of the selected Share.  If no Share matches all of
+these values, the notification MUST NOT be applied to any other Share.
+Repeating a notification has no further effect on the selected Share.
+
+A "SHARE_UNSHARED" notification means that the provider withdrew the
+access granted by the selected Share.  The Receiving Server SHOULD
+stop accessing the Resource through that Share, and SHOULD NOT present
+it as an active Share to the recipient any longer.  Whether the
+Receiving Server deletes its record of the Share or retains it, e.g.
+to prevent stale requests from making it active again, is a local
+implementation choice.  A Share that the provider creates later, with
+a different identifier, is a separate Share and is not affected.
+Implementation-specific notification types, such as a notification
+sent by a resharer to the owner of a Resource, are not
+"SHARE_UNSHARED" notifications and MUST NOT be interpreted as the
+withdrawal of a Share that the Receiving Server received.
+
+The OPTIONAL `sharedSecret` in the `notification` object allows some
+implementations to bind a notification to a Share when the payload
+lacks other identifying fields.  Both parties of the Share already
+know this secret, but each notification that carries it is one more
+place where it can leak, and a captured notification can be replayed,
+so it is no substitute for transport security.  A Receiving Server
+MUST NOT require it when the notification carries the `senderDomain`
+and `file.providerId`, and MUST NOT consider its presence as
+authentication of the Sending Server.  A Receiving Server that
+compares it SHOULD use a constant-time comparison, and MUST NOT log
+it.
+
+A notification that lacks the `senderDomain`, as sent by
+implementations of earlier versions of this specification, does not
+identify the provider namespace of the identifier.  The Receiving
+Server MUST NOT select a Share by its identifier alone in that case.
+It MAY apply the notification only when it can bind it to exactly one
+Share deterministically, e.g. through a matching `sharedSecret`, and
+otherwise MUST NOT apply it to any Share.
 
 ## Resharing and Request to Share
 
