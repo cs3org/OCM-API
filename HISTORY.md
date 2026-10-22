@@ -68,5 +68,7 @@ The Open Cloud Mesh initiative started in 2015 within the [GÉANT Association](h
 * The EOSC initiative started as early as 2015, with the [EOSC Association](https://eosc.eu/eosc-association) founded in 2020. Earlier in 2026, the European Commission published the [technical specifications](https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/tender-details/docs/467f5578-aaf1-4955-ad16-f8b17b02e060-CN/Tender%20Specifications_Part%202%20Technical%20Specifications_EC-CNECT-LUX-2026-OP-0090_V1.pdf) for an EOSC Node, which include the requirement to support OCM. With the launch of [multiple EU-funded projects](https://cordis.europa.eu/programme/id/HORIZON_HORIZON-INFRA-2025-01-EOSC-01) in September 2026, in the context of the EOSC Federation initial production phase, OCM is set to become the backbone of a pan-European infrastructure supporting multiple activities and projects.
 * In October 2026, multiple events concern OCM:
   * Third [IETF WG interim meeting](https://datatracker.ietf.org/meeting/interim-2026-ocm-02/session/ocm) to discuss the spec and the coming steps towards publication.
-  * The [EOSC Symposium 2026](https://eosc.eu/symposium-2026) where demos were shown.
-  * The [18th SIG-CISS meeting](https://wiki.geant.org/spaces/CISS/pages/1603469354/18th+SIG-CISS+Meeting+in+collaboration+with+SIG-NGN) with an update of the spec status.
+  * The [EOSC Symposium 2026](https://eosc.eu/symposium-2026) where the EFSS systems belonging to several EOSC Nodes demonstrated OCM-based federation capabilities in production.
+  * The [18th SIG-CISS meeting](https://wiki.geant.org/spaces/CISS/pages/1603469354/18th+SIG-CISS+Meeting+in+collaboration+with+SIG-NGN) with updates on the EOSC Federation and on the OCM spec status.
+* Fourth [IETF WG interim meeting](https://datatracker.ietf.org/meeting/interim-2026-ocm-03/session/ocm) in November 2026 to plan for publication of the core spec.
+
