@@ -1957,7 +1957,7 @@ Further, the `notification` object MUST include the following fields:
     [Share Creation Notification](#share-creation-notification).
 * OPTIONAL sharedSecret (string) - the `sharedSecret` of the
   underlying share, as sent in the `protocol` of the Share Creation
-  Notification.  It is only meant for compatibility, see
+  Notification.  It does not identify the Share, see
   [Share Identity](#share-identity).
 
 `SHARE_UNSHARED` and `SHARE_CHANGE_PERMISSION` MUST identify the
@@ -2018,25 +2018,24 @@ sent by a resharer to the owner of a Resource, are not
 "SHARE_UNSHARED" notifications and MUST NOT be interpreted as the
 withdrawal of a Share that the Receiving Server received.
 
-The OPTIONAL `sharedSecret` in the `notification` object allows some
-implementations to bind a notification to a Share when the payload
-lacks other identifying fields.  Both parties of the Share already
-know this secret, but each notification that carries it is one more
-place where it can leak, and a captured notification can be replayed,
-so it is no substitute for transport security.  A Receiving Server
-MUST NOT require it when the notification carries the `senderDomain`
-and `file.providerId`, and MUST NOT consider its presence as
-authentication of the Sending Server.  A Receiving Server that
-compares it SHOULD use a constant-time comparison, and MUST NOT log
-it.
+The `senderDomain` and the `file.providerId` are the only identity of
+the Share.  The `senderDomain` is compared with the complete host and
+port, if any, of the Servers of the Share after lowercasing, and the
+`file.providerId` byte for byte.  A notification that lacks either of
+them, or carries an invalid value, MUST be rejected and MUST NOT be
+applied to any Share.  A Receiving Server MUST NOT reconstruct a
+missing or invalid identity from the `sharedSecret`, the deprecated
+top-level `providerId`, a local Share identifier or a protocol
+endpoint.
 
-A notification that lacks the `senderDomain`, as sent by
-implementations of earlier versions of this specification, does not
-identify the provider namespace of the identifier.  The Receiving
-Server MUST NOT select a Share by its identifier alone in that case.
-It MAY apply the notification only when it can bind it to exactly one
-Share deterministically, e.g. through a matching `sharedSecret`, and
-otherwise MUST NOT apply it to any Share.
+The OPTIONAL `sharedSecret` in the `notification` object is not part
+of the identity of the Share.  Both parties of the Share already know
+this secret, but each notification that carries it is one more place
+where it can leak, and a captured notification can be replayed, so it
+is no substitute for transport security.  A Receiving Server MUST NOT
+require it and MUST NOT consider its presence as authentication of
+the Sending Server.  A Receiving Server that compares it SHOULD use a
+constant-time comparison, and MUST NOT log it.
 
 ## Resharing and Request to Share
 
