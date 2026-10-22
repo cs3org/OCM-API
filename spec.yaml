@@ -1015,14 +1015,15 @@ components:
             message: Recipient accepted the share
             file:
               providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-        userWasRemoved:
-          notificationType: USER_REMOVED
+        contactWasRemoved:
+          notificationType: CONTACT_REMOVED
           shareType: user
           senderDomain: alice.example.org
           notification:
             message: User is not a trusted contact any longer
             user:
               userId: alice@alice.example.org
+              localUserId: bob@bob.example.org
         mlsWelcome:
           notificationType: MLS_WELCOME
           shareType: federation
