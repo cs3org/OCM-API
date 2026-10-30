@@ -1518,7 +1518,7 @@ Further, the `notification` object MUST include the following fields:
   of the recipient to be removed. In case of `user`, it MUST include:
   * REQUIRED userId (string) - OCM Address of the user that performed
     the removal, or that left.
-  * OPTIONAL localUserId (string) - OCM Address of the user, local at
+  * OPTIONAL targetUserId (string) - OCM Address of the user, local at
     the target server, that was removed by the above peer contact.
     If missing, it is assumed that the user to be removed has left the
     realm of the sending OCM Server.
