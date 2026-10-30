@@ -1497,26 +1497,31 @@ such as HTTP 404.
 A notification MAY be sent to inform a target OCM Server that a share
 recipient (e.g. a user or group) was removed from the list of trusted
 users, following a previous successful Invitation, or otherwise left
-the system.  That recipient may have been previously known to the
-target server because of existing shares whose shareType matched it.
-The recipient of such notification MAY reciprocally remove that
-recipient from the list of trusted users, along with any related
-shares.
+the realm of the sending OCM Server.  That recipient may have been
+previously known to the target server because of existing shares whose
+shareType matched it.  The recipient of such notification SHOULD
+reciprocally remove that peer from the list of trusted users, along
+with any related shares.
 
 For these cases, a notification payload is to be formed such that the
 `resourceType` MUST be omitted, the `shareType` is set to the affected
 shareType being removed, such as `user` or `group`, and the
 `notificationType` MUST be one of:
-- "USER_REMOVED", to inform about a single user that was removed or
-  marked as not trusted.
-- "GROUP_REMOVED", to inform about a removed group.
+- "CONTACT_REMOVED", to inform that a single user contact was removed
+  from the list of trusted contacts, either by the peer user or by the
+  system e.g. in case that user left.
+- "GROUP_REMOVED", to inform about a removed group of users.
 Further, the `notification` object MUST include the following fields:
 * OPTIONAL message (string) - an optional human-readable message that
   describes the event.
 * REQUIRED user or group (object) - an object containing the details
   of the recipient to be removed. In case of `user`, it MUST include:
-  * REQUIRED userId (string) - OCM Address of the user to be removed
-    from the target OCM Server.
+  * REQUIRED userId (string) - OCM Address of the user that performed
+    the removal, or that left.
+  * OPTIONAL targetUserId (string) - OCM Address of the user, local at
+    the target server, that was removed by the above peer contact.
+    If missing, it is assumed that the user to be removed has left the
+    realm of the sending OCM Server.
   Whereas in case of `group`, it MUST include:
   * REQUIRED groupId (string) - identifier of the group to be removed
     from the target OCM Server.
