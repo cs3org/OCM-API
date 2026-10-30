@@ -19,6 +19,8 @@ For a navigable, AI-generated overview of this repository, see
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.
 
+[Extensions](https://github.com/cs3org/OCM-API/tree/develop/extensions) of the core OCM protocol have been published as well.
+
 ## Testing
 
 In this Org we maintain an [OCM-stub](https://github.com/cs3org/OCM-stub) reference implementation, and a [test suite](https://github.com/cs3org/ocm-test-suite?tab=readme-ov-file#open-cloud-mesh-test-suite-) to run UI-based tests between implementers and the stub.
