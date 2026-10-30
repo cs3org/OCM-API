@@ -88,6 +88,9 @@ they appear in all capitals, as shown here.
 We define the following concepts, with some non-normative references to
 related concepts from OAuth [RFC6749] and elsewhere:
 
+* __Collection__ - A grouping of one or more Resources whose membership
+  and semantics are defined by the Sending Server.  The Resources MAY
+  be at different locations and have different Resource types.
 * __Discoverable Server__ - A server that tries to supply information in
   OCM API Discovery.
 * __Discovering Server__ - A server that tries to obtain information in
@@ -1047,6 +1050,26 @@ described in [OCM-IP].
   This MUST be unique per Resource and per share, such that multiple
   shares of a given Resource are guaranteed to get different values.
   Example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+* OPTIONAL collectionId (string)
+  Opaque identifier of the Collection to which the Shared Resource
+  belongs.  Multiple Resources and Shares MAY carry the same value;
+  global uniqueness is not required.  This identifier MAY be advertised
+  out of band, for example in a catalog, and used in a `REQUEST_SHARE`
+  notification.  It MAY also be included in unsolicited Shares.
+  The Receiving Server MAY use it to associate incoming Shares with a
+  pending request for the Collection to the Sending Server.
+  It does not replace `providerId` or grant access to any Resource.
+  Example: "research-data-123"
+* OPTIONAL collectionSize (integer)
+  Total number of distinct Shares representing the Collection for this
+  recipient, including this Share.  It MUST be at least 1 and MUST only
+  be present when `collectionId` is present.  A Share offering multiple
+  protocols counts as one Share.  When included in Shares fulfilling
+  the same request, the values MUST agree.  If the total is unknown,
+  this field MUST be omitted.  The Receiving Server MAY compare this
+  value with the number of distinct `providerId` values received for
+  the Collection and recipient from the Sending Server to determine
+  whether receipt of the Collection is complete.
 * REQUIRED owner (string) -
   OCM Address of the user who owns the
   Resource.
@@ -1368,16 +1391,23 @@ request:
 * OPTIONAL providerId (string) - the identifier assigned by the
   Sending Server to the underlying share, if applicable. This
   field is _deprecated_ and SHOULD NOT be used.
+* OPTIONAL collectionId (string) - the identifier of the Collection.
+  It is REQUIRED for `REQUEST_SHARE` and for a `SHARE_DECLINED`
+  notification declining such a request.
 * OPTIONAL notification (object) - optional additional parameters,
   depending on the notification and the resource type.
 
 A Notification payload MUST include either the `resourceType` or the
-`shareType`, or both when relevant.  Multiple Notification types are
-defined for different purposes, and additional types MAY be defined
-by implementers and registered in the "OCM Notification Types" IANA
-Registry.  For each notification type, a specific format MAY be defined
-for the optional notification object.  In the sections below, the base
-Notification types are detailed along with their specific payload.
+`shareType`, or both when relevant, except for a `SHARE_DECLINED`
+notification declining a collection request.  Collection-scoped
+notifications MUST omit `resourceType` and MUST include `collectionId`.
+`REQUEST_SHARE` MUST also include `shareType`.
+Multiple Notification types are defined for different purposes, and
+additional types MAY be defined by implementers and registered in the
+"OCM Notification Types" IANA Registry.  For each notification type,
+a specific format MAY be defined for the optional notification object.
+In the sections below, the base Notification types are detailed along
+with their specific payload.
 
 ## Share Acceptance and Updating
 
@@ -1409,6 +1439,11 @@ Further, the `notification` object MUST include the following fields:
     `SHARE_CHANGE_PERMISSION` notification.  The allowed values match
     the `permissions` values specified in the `webdav` protocol of a
     [Share Creation Notification](#share-creation-notification).
+
+`SHARE_UNSHARED` and `SHARE_CHANGE_PERMISSION` MUST identify the
+individual Share by `providerId` and carry its `resourceType`, including
+when that Share carries a `collectionId`.  The `collectionId` MUST NOT
+be used as the target of these notifications.
 
 The same notifications identically apply to resources of type `folder`.
 For other resources with a different `resourceType` attribute, a
@@ -1456,40 +1491,55 @@ to the Sending Server.
 
 Similarly, the `"REQUEST_SHARE"` notification type MAY be used by a
 given Recipient OCM Server, to ask a remote OCM Server to share and
-grant access to a Resource, previously made known to the Recipient
-Server out of band.  In this case, the `resourceType` MUST match the
-`resourceType` of the Resource in question (e.g., `file`, `folder`,
-...), the `shareType` MUST be omitted, and the `notification` object
-MUST include the following fields:
+grant access to a Collection, previously made known to the Recipient
+Server out of band, for example through a catalog.  The `resourceType`
+MUST be omitted.  The `collectionSize` field applies only to Share
+Creation Notifications and MUST NOT be included in the request.  The
+request has the following top-level fields:
 
-* OPTIONAL message (string) - an optional human-readable message that
-  describes the request.
-* REQUIRED file (object) - an object containing the details of the
-  request, including:
-  * REQUIRED owner (string) - OCM Address of the user who will be
-    requested to share the resource.
-  * REQUIRED shareWith (string) - OCM Address of the recipient that
-    wishes to receive a share of the resource.
-    Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
-  * REQUIRED shareId (string) - A unique identifier for the resource.
-    Example: https://cloud.example.org/files/data.txt or
-    1234567890abcdef.
-  * REQUIRED permissions (array of strings) - The permissions to be
-    granted to the requesting party.  The allowed values match the
-    `permissions` values specified in the `webdav` protocol of a
-    [Share Creation Notification](#share-creation-notification).
+* REQUIRED collectionId (string) - Opaque identifier of the requested
+  Collection.  Example: "research-data-123".
+* REQUIRED shareType (string) - Type of the recipient identified by
+  `notification.collection.shareWith`, according to the "OCM Share
+  Types" registry, for example `user`, `group`, or `federation`.
+  Each resulting Share Creation Notification MUST use this `shareType`.
+* REQUIRED notification (object) - an object containing:
+  * OPTIONAL message (string) - an optional human-readable message that
+    describes the request.
+  * REQUIRED collection (object) - an object containing the details of
+    the request, including:
+    * REQUIRED owner (string) - OCM Address of the user who will be
+      requested to share the Collection's Resources.
+    * REQUIRED shareWith (string) - OCM Address of the recipient that
+      wishes to receive Shares of the Collection's Resources.
+      Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
+    * REQUIRED permissions (array of strings) - The permissions to be
+      granted to the requesting party.  The allowed values match the
+      `permissions` values specified in the `webdav` protocol of a
+      [Share Creation Notification](#share-creation-notification).
 
 The remote OCM Server MAY choose to fulfill the request, according
 to its trust policies: in that case, it MUST respond with HTTP 201
 to the caller, and asynchronously ask for permission to the `owner`
-user.  If the owner agrees, it MUST send a
-[Share Creation Notification](#share-creation-notification) including
-the `shareWith` user as recipient, whereas if the owner disagrees,
-it MUST send back a `"SHARE_DECLINED"` notification.  The remote OCM
-Server MAY also decline such request because of its policies, without
-even informing the `owner`: in this case, it MUST respond to the
-`"REQUEST_SHARE"` notification with an appropriate HTTP response type
-such as HTTP 404.
+user.  If the owner agrees, it MUST send one or more
+[Share Creation Notifications](#share-creation-notification), each
+including the `shareWith` recipient and the requested `collectionId`
+unchanged.  Each Share MUST have its own `providerId` and declare its
+own `resourceType` and protocols.  The Sending Server determines the
+number of Shares and MAY offer multiple protocols for a Resource in
+one Share.
+
+If the owner disagrees, the remote OCM Server MUST send back a
+`"SHARE_DECLINED"` notification with the requested `collectionId` and
+the requested recipient in `notification.collection.shareWith`.
+This notification MUST omit `resourceType` and MAY echo the request's
+`shareType`.  No `providerId` is required because no Share has been
+created.
+It MUST NOT be interpreted as removing or changing any existing Share.
+The remote OCM Server MAY also decline such request because of its
+policies, without even informing the `owner`: in this case, it MUST
+respond to the `"REQUEST_SHARE"` notification with an appropriate HTTP
+response type such as HTTP 404.
 
 
 ## Recipient Removal
@@ -2030,29 +2080,32 @@ notification sent to the "/notifications" endpoint (see
 [Notifications](#notifications)).
 
 The "Scope" field indicates whether the notification refers to a
-Resource, in which case the "providerId" field is REQUIRED in the
-payload, or to a Recipient, i.e. to the shareType in a
-[Share Creation Notification](#share-creation-notification), in which
-case a corresponding identifier such as "userId" is REQUIRED in the
-payload.
+Resource, a Collection, or a Recipient.  Resource-scoped notifications
+MUST include "providerId" in the payload.  Collection-scoped
+notifications MUST include "collectionId"; this scope applies only to
+`REQUEST_SHARE` and a `SHARE_DECLINED` response to that request.  It
+does not define recipient membership for a Collection.  Recipient-scoped
+notifications refer to the shareType in a
+[Share Creation Notification](#share-creation-notification) and MUST
+include a corresponding identifier such as "userId" in the payload.
 
    Registration Policy: Specification Required [RFC8126]
 
    Initial Contents:
 
 ~~~
-   +===========================+===========+===============+
-   | Notification Type         | Scope     | Reference     |
-   +===========================+===========+===============+
-   | SHARE_ACCEPTED            | Resource  | This document |
-   | SHARE_DECLINED            | Resource  | This document |
-   | SHARE_UNSHARED            | Resource  | This document |
-   | SHARE_CHANGE_PERMISSION   | Resource  | This document |
-   | REQUEST_RESHARE           | Resource  | This document |
-   | REQUEST_SHARE             | Resource  | This document |
-   | USER_REMOVED              | Recipient | This document |
-   | GROUP_REMOVED             | Recipient | This document |
-   +===========================+===========+===============+
+   +=========================+======================+===============+
+   | Notification Type       | Scope                | Reference     |
+   +=========================+======================+===============+
+   | SHARE_ACCEPTED          | Resource             | This document |
+   | SHARE_DECLINED          | Resource, Collection | This document |
+   | SHARE_UNSHARED          | Resource             | This document |
+   | SHARE_CHANGE_PERMISSION | Resource             | This document |
+   | REQUEST_RESHARE         | Resource             | This document |
+   | REQUEST_SHARE           | Collection           | This document |
+   | USER_REMOVED            | Recipient            | This document |
+   | GROUP_REMOVED           | Recipient            | This document |
+   +=========================+======================+===============+
 ~~~
 
 ### OCM Encryption Schemes Registry
