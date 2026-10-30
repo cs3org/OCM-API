@@ -526,6 +526,10 @@ components:
           example: /index.php/apps/sciencemesh/accept
     NewShare:
       type: object
+      anyOf:
+        - required: [collectionId]
+        - not:
+            required: [collectionSize]
       required:
         - shareWith
         - name
@@ -560,6 +564,34 @@ components:
             This MUST be unique per Resource and per share, such that multiple
             shares of a given Resource are guaranteed to get different values.
           example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        collectionId:
+          type: string
+          description: >
+            Opaque identifier of a Collection containing this Resource. A Collection
+            groups one or more Resources whose membership and semantics are defined
+            by the Sending Server; they MAY have different locations and resource
+            types. Multiple Resources and Shares MAY carry the same value; global
+            uniqueness is not required. The identifier MAY be advertised out of band,
+            for example in a catalog, and used in a REQUEST_SHARE notification.
+            Each Share fulfilling that request MUST carry the requested collectionId
+            unchanged. Unsolicited Shares MAY also include it. The Receiving Server
+            MAY use it to associate incoming Shares with a pending request for the
+            Collection to the Sending Server. It does not replace providerId or
+            grant access to any Resource.
+          example: research-data-123
+        collectionSize:
+          type: integer
+          minimum: 1
+          description: >
+            Total number of distinct Shares representing the Collection for this
+            recipient, including this Share. MUST only be present when collectionId
+            is present. A Share offering multiple protocols counts as one Share.
+            When included in Shares fulfilling the same request, the values MUST
+            agree. If the total is unknown, this field MUST be omitted.
+            The Receiving Server MAY compare this value with the number of distinct
+            providerId values received for the Collection and recipient from the
+            Sending Server to determine whether receipt of the Collection is complete.
+          example: 3
         owner:
           description: |
             OCM Address of the user who owns the resource.
@@ -943,6 +975,12 @@ components:
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
+      oneOf:
+        - $ref: "#/components/schemas/RequestShare"
+        - properties:
+            notificationType:
+              not:
+                enum: [REQUEST_SHARE]
       required:
         - notificationType
         - senderDomain
@@ -979,11 +1017,27 @@ components:
           description: >
             Optional unique identifier of the underlying resource. This property
             is now deprecated, in favor of including it in the notification object.
+        collectionId:
+          type: string
+          description: >
+            Identifier of the Collection. REQUIRED for REQUEST_SHARE and for a
+            SHARE_DECLINED notification declining such a request. These notifications
+            MUST omit resourceType. REQUEST_SHARE MUST also include shareType.
+            A collection-scoped SHARE_DECLINED MUST carry the requested collectionId
+            unchanged and the requested recipient in notification.collection.shareWith;
+            no providerId is required. It MAY echo the request's shareType.
+            It MUST NOT be interpreted as removing or changing any existing Share.
+            OCM does not define recipient membership for a Collection.
+            SHARE_UNSHARED and SHARE_CHANGE_PERMISSION MUST identify individual Shares
+            by providerId and carry their resourceType; collectionId MUST NOT be used
+            as their target.
+          example: research-data-123
         notification:
           type: object
           description: >
             Optional additional parameters, depending on the notification
-            and the resource type or share type in question.
+            and the resource type or share type in question. For REQUEST_SHARE
+            and collection-scoped SHARE_DECLINED, the details are keyed by collection.
           properties:
             message:
               type: string
@@ -993,7 +1047,8 @@ components:
             type: object
             description: >
               This object MUST be keyed with the resource type or share type of this
-              notification. It contains its payload and it can vary according to the
+              notification, or with collection for REQUEST_SHARE and collection-scoped
+              SHARE_DECLINED. It contains its payload and it can vary according to the
               implementers. In case of `file` resources, it MUST contain at least the
               `providerId` of the underlying resource, and in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
@@ -1083,27 +1138,82 @@ components:
           example: John Doe
     RequestShare:
       type: object
+      description: >
+        A REQUEST_SHARE notification requesting access to a Collection advertised
+        out of band, for example in a catalog. If the owner agrees, the Sending
+        Server MUST send one or more Share Creation Notifications to shareWith,
+        each carrying the requested collectionId unchanged, its own providerId,
+        and its own resourceType and protocols. The Sending Server determines the
+        number of Shares and MAY offer multiple protocols for a Resource in one
+        Share. resourceType MUST be omitted from the request; shareType is REQUIRED
+        and determines the recipient type of all resulting Shares.
+        collectionSize applies only to share payloads and MUST NOT be included here.
       required:
-        - owner
-        - shareWith
-        - share
+        - notificationType
+        - senderDomain
+        - collectionId
+        - shareType
+        - notification
+      not:
+        anyOf:
+          - required: [resourceType]
+          - required: [collectionSize]
       properties:
-        owner:
+        notificationType:
+          type: string
+          enum: [REQUEST_SHARE]
+        senderDomain:
           type: string
           description: >
-            OCM Address of the user who will be requested to share
-            the resource.
-          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
-        shareWith:
+            The FQDN of the requesting OCM server, used to verify the HTTP Signature.
+          example: requester.example.org
+        collectionId:
+          type: string
+          description: Opaque identifier of the requested Collection.
+          example: research-data-123
+        shareType:
           type: string
           description: >
-            OCM Address of the user, group or federation that
-            wants to receive a share of the resource.
-          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-        share:
-          type: string
-          description: A unique identifier for the resource.
-          example: 1234567890abcdef or https://ocm.example.org/files/spec.yaml
+            Type of the recipient identified by notification.collection.shareWith,
+            according to the OCM Share Types registry, for example user, group, or
+            federation. Each resulting Share Creation Notification MUST use this
+            shareType.
+          example: group
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
+            message:
+              type: string
+              description: An optional human-readable message describing the request.
+            collection:
+              type: object
+              required:
+                - owner
+                - shareWith
+                - permissions
+              properties:
+                owner:
+                  type: string
+                  description: >
+                    OCM Address of the user requested to share the Collection's Resources.
+                  example: alice@provider.example.org
+                shareWith:
+                  type: string
+                  description: >
+                    OCM Address of the recipient wishing to receive Shares of the
+                    Collection's Resources.
+                  example: bob@requester.example.org
+                permissions:
+                  type: array
+                  description: >
+                    Permissions to be granted to the requesting party. The allowed
+                    values match the permissions in the webdav protocol of a Share
+                    Creation Notification.
+                  items:
+                    type: string
+                    enum: [read, write, share]
     TokenRequest:
       type: object
       required:
