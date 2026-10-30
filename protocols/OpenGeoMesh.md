@@ -233,7 +233,7 @@ The author thanks the OpenCloudMesh and OpenGeoMesh communities for their work o
 
 ### 10.1. Normative References
 
-[OCM] OpenCloudMesh API. <https://github.com/cs3org/OCM-API>
+Lo Presti, G., de Jong, M. B., Baghbani, M., and Nordin, M., "Open Cloud Mesh". <https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh>
 
 [OGC-API-COMMON] Open Geospatial Consortium, "OGC API – Common, Part 1: Core". <https://docs.ogc.org/is/19-072/19-072.html>
 
