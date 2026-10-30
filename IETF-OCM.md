@@ -1508,8 +1508,10 @@ For these cases, a notification payload is to be formed such that the
 shareType being removed, such as `user` or `group`, and the
 `notificationType` MUST be one of:
 - "CONTACT_REMOVED", to inform that a single user contact was removed
-  from the list of trusted contacts, either by the peer user or by the
-  system e.g. in case that user left.
+  from the list of trusted contacts by the peer user.
+- "USER_REMOVED", to inform that a user left or was removed from the
+  realm of the sending OCM Server, and is therefore no longer reachable
+  as a contact.
 - "GROUP_REMOVED", to inform about a removed group of users.
 Further, the `notification` object MUST include the following fields:
 * OPTIONAL message (string) - an optional human-readable message that
@@ -1518,10 +1520,11 @@ Further, the `notification` object MUST include the following fields:
   of the recipient to be removed. In case of `user`, it MUST include:
   * REQUIRED userId (string) - OCM Address of the user that performed
     the removal, or that left.
-  * OPTIONAL localUserId (string) - OCM Address of the user, local at
-    the target server, that was removed by the above peer contact.
-    If missing, it is assumed that the user to be removed has left the
-    realm of the sending OCM Server.
+  * REQUIRED targetUserId (string) - only for "CONTACT_REMOVED": OCM
+    Address of the user, local at the target server, that was removed
+    by the above peer contact.  It MUST be omitted for "USER_REMOVED",
+    where all contacts and shares related to `userId` at the target
+    server are to be removed.
   Whereas in case of `group`, it MUST include:
   * REQUIRED groupId (string) - identifier of the group to be removed
     from the target OCM Server.

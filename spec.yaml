@@ -1137,7 +1137,15 @@ components:
             message: User is not a trusted contact any longer
             user:
               userId: alice@alice.example.org
-              localUserId: bob@bob.example.org
+              targetUserId: bob@bob.example.org
+        userLeft:
+          notificationType: USER_REMOVED
+          shareType: user
+          senderDomain: alice.example.org
+          notification:
+            message: User left the system
+            user:
+              userId: alice@alice.example.org
         mlsWelcome:
           notificationType: MLS_WELCOME
           shareType: federation
