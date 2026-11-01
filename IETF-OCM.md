@@ -798,10 +798,10 @@ establish the Federation membership with B out of band.
 ### Processing an Addition
 
 Upon receiving an `OCM_SERVER_ADDED` Notification from an OCM Server
-A, an OCM Server B SHOULD notify its own Administrator, and SHOULD NOT
-change its Federation configuration before its Administrator agrees.
-If B's Administrator agrees to join the Federation identified in the
-notification, B SHOULD:
+A, an OCM Server B SHOULD queue it for approval by its own
+Administrator, and MUST NOT change its Federation configuration before
+its Administrator agrees.  If B's Administrator agrees to join the
+Federation identified in the notification, B SHOULD:
 
 1. fetch the current membership from A's Directory Endpoint, as
    advertised in the `directoryEndPoint` field of A's Discovery
