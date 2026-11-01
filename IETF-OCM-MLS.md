@@ -51,10 +51,11 @@ capabilities for resources shared with federated groups.
 
 Open Cloud Mesh [OCM] currently supports sharing resources with
 individual users across federated servers and with groups on a single
-server.  This document specifies the mechanics of the `"federation"`
-share type, registered in the "OCM Share Types" registry by [OCM], for
-the case where the Receiving Party is a federated group of users: a
-`"federation"` share is then addressed to a group identified by an OCM
+server.  This document specifies the mechanics of the `"dgroup"`
+share type, registered in the "OCM Share Types" registry by this
+document, for the case where the Receiving Party is a federated group
+of users (a distributed group): a
+`"dgroup"` share is then addressed to a group identified by an OCM
 Address such as `research-group@receiver.example.org` whose membership
 spans multiple OCM servers, with group state managed through the MLS
 [RFC9420] epoch mechanism.
@@ -351,7 +352,7 @@ proposals targeting another user require admin approval; any member may
 remove themselves, and Update proposals are committed automatically.
 
 - **Encryption is optional.** MLS group management is useful
-independently of whether encryption is used.  A federation share MAY be
+independently of whether encryption is used.  A dgroup share MAY be
 unencrypted, in which case the `encryption` field is omitted from the
 Share Creation Notification and the MLS layer provides only group
 membership management.
@@ -403,9 +404,9 @@ Servers, at share creation and after every epoch transition
 each resource and use their current Group Key to unwrap it at access
 time.
 
-- **Minimal protocol surface.** The `shareType: "federation"` value
-already defined in the OCM specification is used without modification,
-with `shareWith` carrying the group's OCM Address.  A federation share
+- **Minimal protocol surface.** The `shareType: "dgroup"` value
+registered by this document is used,
+with `shareWith` carrying the group's OCM Address.  A dgroup share
 is otherwise a standard OCM share, carrying every field REQUIRED by
 [OCM] including the `protocol` object.  All new server-to-server
 messages use the existing `/notifications` endpoint with new
@@ -413,8 +414,8 @@ messages use the existing `/notifications` endpoint with new
 
 # Discovery
 
-A server signals support for federation shares by including
-`"federation"` in the `shareTypes` array for a given resource type in
+A server signals support for dgroup shares by including
+`"dgroup"` in the `shareTypes` array for a given resource type in
 its OCM discovery document at `/.well-known/ocm`:
 
 ~~~ json
@@ -426,7 +427,7 @@ its OCM discovery document at `/.well-known/ocm`:
   "resourceTypes": [
     {
       "name": "file",
-      "shareTypes": ["user", "group", "federation"],
+      "shareTypes": ["user", "group", "dgroup"],
       "protocols": { "webdav": "/webdav/", "webdav-receive": {} }
     }
   ]
@@ -447,7 +448,7 @@ Federation's `mlsGroupId` in the directory document exposed there.
 That field, and not a capability of its own, is what signals that the
 server exposes a Federation membership.
 
-A server that advertises `"federation"` MUST be able to receive OCM
+A server that advertises `"dgroup"` MUST be able to receive OCM
 Notifications, since all MLS lifecycle messages are delivered as
 notifications, and SHOULD include `"notifications"` in its
 `capabilities` array.  It MUST also advertise the `"http-sig"`
@@ -839,15 +840,20 @@ application data carried inside `MLS_APPLICATION` messages
 Address, never the MLS `group_id`.
 
 Both kinds of group defined in this document use these notification
-types, with `shareType` set to `"federation"` in either case, and a
-recipient distinguishes them by the contents of the
-`notification.federation` object: for a Servers Federation group
-({{servers-federation-groups}}) the object carries a `federationId`
-field, and a `serverUrl` field wherever the federated-group form
-carries `userId`; for a federated group of users it carries no
-`federationId`.  A recipient MUST reject a notification when both
-`mlsGroupId` and `federationId` are present, and MUST similarly
-reject one that carries both `userId` and `serverUrl`.
+types, and a recipient distinguishes them by the `shareType` or
+`resourceType` field and by the object of the same name in the
+`notification` object: for a federated group of users, `shareType` is
+`"dgroup"`, `resourceType` is omitted, and the `notification.dgroup`
+object is used; for a Servers Federation group
+({{servers-federation-groups}}), `resourceType` is `"federation"`,
+`shareType` is omitted, and the `notification.federation` object
+carries a `federationId` field, and a `serverUrl` field wherever the
+federated-group form carries `userId`, consistently with the Federation
+Membership notifications of [OCM].  A recipient MUST reject a
+notification that carries both a `dgroup` and a `federation` object,
+both a `shareType` and a `resourceType`, or an object that does not
+match its `shareType` or `resourceType`, and MUST similarly reject one
+that carries both `userId` and `serverUrl`.
 
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
@@ -872,9 +878,9 @@ added user.
 {
   "notificationType": "MLS_WELCOME",
   "senderDomain": "othercloud.example.org",
-  "shareType": "federation",
+  "shareType": "dgroup",
   "notification": {
-    "federation": {
+    "dgroup": {
       "mlsGroupId": "<base64url MLS group ID>",
       "userId": "bob@othercloud.example.org",
       "content": "<base64url MLS Welcome wire format>"
@@ -916,9 +922,9 @@ act on it.
 {
   "notificationType": "MLS_PROPOSAL",
   "senderDomain": "cloud.example.org",
-  "shareType": "federation",
+  "shareType": "dgroup",
   "notification": {
-    "federation": {
+    "dgroup": {
       "mlsGroupId": "<base64url MLS group ID>",
       "content": "<base64url MLS PublicMessage carrying the Proposal>"
     }
@@ -948,9 +954,9 @@ data, per [RFC9420] Section 15.2.
 {
   "notificationType": "MLS_COMMIT",
   "senderDomain": "cloud.example.org",
-  "shareType": "federation",
+  "shareType": "dgroup",
   "notification": {
-    "federation": {
+    "dgroup": {
       "mlsGroupId": "<base64url MLS group ID>",
       "proposals": [
         "<base64url MLS PublicMessage carrying a Proposal>"
@@ -1000,9 +1006,9 @@ epoch ([RFC9420] Section 15).
 {
   "notificationType": "MLS_APPLICATION",
   "senderDomain": "cloud.example.org",
-  "shareType": "federation",
+  "shareType": "dgroup",
   "notification": {
-    "federation": {
+    "dgroup": {
       "mlsGroupId": "<base64url MLS group ID>",
       "content": "<base64url MLS PrivateMessage wire format>"
     }
@@ -1045,9 +1051,9 @@ by the KeyPackage endpoint.
 {
   "notificationType": "MLS_REJOIN",
   "senderDomain": "othercloud.example.org",
-  "shareType": "federation",
+  "shareType": "dgroup",
   "notification": {
-    "federation": {
+    "dgroup": {
       "mlsGroupId": "<base64url MLS group ID>",
       "keyPackages": [
         {
@@ -1324,7 +1330,7 @@ removal-triggered policy decision ({{fk-rotation}}).
 If the Commit added one or more members, the set of Member Servers may
 have grown.  The sending server MUST identify Member Servers that are
 new to the group and send them the Share Creation Notifications for its
-federation shares with the group, as described in {{share-creation}}, in
+dgroup shares with the group, as described in {{share-creation}}, in
 addition to the wrapped FKs.  A server that joins the group after a
 share was created thereby receives both the share itself and a wrapped
 FK it can decrypt, since the `MLS_APPLICATION` is encrypted in an epoch
@@ -1620,7 +1626,7 @@ not signalled in the protocol.
 ## Member Removal: OCM Notifications
 
 Member removal requires no OCM-level notification by itself.  Because
-federation shares are addressed to the group ({{share-creation}}), each
+dgroup shares are addressed to the group ({{share-creation}}), each
 Member Server observes the Remove Commit and re-evaluates which of its
 local users the share resolves to; a removed user loses access without
 any action by the sending server.  If the removed member's clients may
@@ -1640,10 +1646,10 @@ The sending server sends one OCM Share Creation Notification directly to
 each current Member Server, identified through the OCM Addresses in the
 ratchet tree's leaf credentials.  This is standard OCM server-to-server
 communication, with `shareWith` set to the group's OCM Address and
-`shareType` set to `"federation"`.  The share is addressed to the group
+`shareType` set to `"dgroup"`.  The share is addressed to the group
 as the Receiving Party; no per-user notifications are sent.
 
-A federation share is a standard OCM share: every field that is REQUIRED
+A dgroup share is a standard OCM share: every field that is REQUIRED
 by [OCM], including the `protocol` object, is REQUIRED here too, and
 resource access follows the standard OCM resource access procedure
 driven by the `protocol` object.  For encrypted resources the protocol
@@ -1676,7 +1682,7 @@ matches the `shareWith` value and delivers the share to every local user
 whose leaf credential appears in that group's ratchet tree.  On every
 subsequent `MLS_COMMIT` the receiving server MUST re-evaluate this
 resolution, so that local users added to the group gain access to
-existing federation shares, and removed users lose it, without any
+existing dgroup shares, and removed users lose it, without any
 further OCM notifications.
 
 Addressing the share to the group also allows the receiving server to
@@ -1689,7 +1695,7 @@ its local wrapped FK store by `(resourceId, groupId)` rather than
 are applied to the correct entry.
 
 Because notifications can be delayed or reordered in transit, a
-federation share MAY arrive before the receiving server has processed
+dgroup share MAY arrive before the receiving server has processed
 the Welcome or Commit that made it a Member Server of the group.  A
 receiving server that does not recognise the `shareWith` value as a
 known group SHOULD queue the share, or reject it in a way that causes
@@ -1699,7 +1705,7 @@ is transient.
 
 When an `MLS_COMMIT` adds one or more members to the group, the sending
 server MUST send each Member Server that is new to the group a Share
-Creation Notification for every federation share it has with that group,
+Creation Notification for every dgroup share it has with that group,
 encrypted or not.  For encrypted resources this accompanies the
 re-wrapped FK ({{fk-rewrap}}).  A server that joins the group after a
 share was created thereby learns of the shares its users now have access
@@ -1711,7 +1717,7 @@ Each notification MAY include the optional `encryption` field:
 {
   "shareWith": "research-group@receiver.example.org",
   "resourceType": "file",
-  "shareType": "federation",
+  "shareType": "dgroup",
   "sender": "alice@cloud.example.org",
   "owner": "alice@cloud.example.org",
   "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
@@ -1874,7 +1880,7 @@ example, the Welcome delivered to a newly admitted server is:
 {
   "notificationType": "MLS_WELCOME",
   "senderDomain": "ocm-server.example.org",
-  "shareType": "federation",
+  "resourceType": "federation",
   "notification": {
     "federation": {
       "federationId": "sciencemesh",
@@ -2099,7 +2105,7 @@ wrapped FKs, and any cached unwrapped FKs.  Key-reuse mode SHOULD only
 be used within formal federations with governance agreements that
 enforce this behaviour.
 
-**Two access-control layers.** For an encrypted federation share, access
+**Two access-control layers.** For an encrypted dgroup share, access
 is controlled at two independent layers: the per-server transport
 credential in the `protocol` object gates who can fetch the ciphertext,
 and the Group Key gates who can unwrap the FK and decrypt it.
@@ -2108,7 +2114,7 @@ credential provides defence in depth and is shared by all users on a
 Member Server.  The two layers can diverge: a server whose last group
 member was just removed may still hold a valid transport credential
 until the sending server revokes it, which is why revocation SHOULD
-accompany the `SHARE_UNSHARED` notification.  For unencrypted federation
+accompany the `SHARE_UNSHARED` notification.  For unencrypted dgroup
 shares the transport credential is the only access control, exactly as
 in base OCM, and access-follows-membership then depends on the receiving
 server re-evaluating share resolution on every Commit
@@ -2212,7 +2218,7 @@ Delivery Service; this protocol deliberately departs from that
 recommendation because the servers performing the DS role must know the
 group's membership anyway: sending servers derive notification
 recipients from the ratchet tree, and receiving servers resolve
-federation shares to their local users.  No information is exposed to
+dgroup shares to their local users.  No information is exposed to
 those servers beyond what their OCM duties already require, and
 transport protection (TLS and HTTP Signatures [RFC9421]) prevents
 exposure to outside observers.  Application Messages, which carry key
@@ -2226,7 +2232,7 @@ member and every Member Server can therefore enumerate all members and
 admins of the group and observe membership and admin-set changes over
 time.  This is an accepted privacy trade-off inherent to this design:
 servers need the membership information to route shares and
-notifications, resolve federation shares to local users, and enforce
+notifications, resolve dgroup shares to local users, and enforce
 admin policy.  Federated groups do not provide anonymous membership or
 hidden administrator roles.  The information is not exposed by the
 protocol to servers outside the group, although an authorized member or
@@ -2333,10 +2339,22 @@ Mesh (OCM) Parameters" group:
    +===================+===========+===============+
 ~~~
 
+The following entry is to be registered in the "OCM Share Types"
+registry defined in [OCM], within the "Open Cloud Mesh (OCM)
+Parameters" group:
+
+~~~
+   +============+===============+
+   | Share Type | Reference     |
+   +============+===============+
+   | dgroup     | This document |
+   +============+===============+
+~~~
+
 The following entries are to be registered in the "OCM Share Payloads"
 registry defined in [OCM], within the "Open Cloud Mesh (OCM)
 Parameters" group.  They extend the existing "webdav", "webapp", and
-"ssh" protocols to the "federation" share type; the wire format of the
+"ssh" protocols to the "dgroup" share type; the wire format of the
 share payload for these combinations is completely specified by this
 document together with [OCM] (see {{share-creation}}).  These
 registrations do not modify the protocols' own registrations:
@@ -2345,8 +2363,8 @@ registrations do not modify the protocols' own registrations:
    +===============+============+=====================+===============+
    | Resource Type | Share Type | Protocols           | Reference     |
    +===============+============+=====================+===============+
-   | file          | federation | webdav, webapp, ssh | This document |
-   | folder        | federation | webdav, webapp, ssh | This document |
+   | file          | dgroup     | webdav, webapp, ssh | This document |
+   | folder        | dgroup     | webdav, webapp, ssh | This document |
    +===============+============+=====================+===============+
 ~~~
 
@@ -2358,8 +2376,8 @@ Parameters" group:
    +=========+============+===============+
    | Scheme  | Share Type | Reference     |
    +=========+============+===============+
-   | ocm-pgp | federation | This document |
-   | ocm-mls | federation | This document |
+   | ocm-pgp | dgroup     | This document |
+   | ocm-mls | dgroup     | This document |
    +=========+============+===============+
 ~~~
 
@@ -2411,13 +2429,16 @@ The complete changelog is updated in the OCM-API GitHub repository.
   server-level MLS client of a Servers Federation group, and specified
   the corresponding credential validation.
 * Reused the `MLS_*` notification types for Servers Federation groups,
-  with a `federationId` in the `notification.federation` object as the
-  discriminator between the two kinds of group.
-* Dropped the registration of the `federation` share type, which is
-  now registered by [OCM] as it specifies its mechanics for a
-  Federation of OCM Servers.  This document keeps specifying the
-  mechanics of that share type for federated groups of users, and
-  keeps the corresponding share payload registrations.
+  with `resourceType` set to `federation` and a `federationId` in the
+  `notification.federation` object, as the discriminator between the
+  two kinds of group.
+* Renamed the share type for federated groups of users from
+  `federation` to `dgroup`, which this document now registers, as
+  `federation` is registered by [OCM] as the resource type of a
+  Federation of OCM Servers.
+  The `MLS_*` notifications for federated groups of users accordingly
+  carry `shareType` `dgroup` and a `notification.dgroup` object.  The
+  corresponding share payload registrations are kept.
 
 ## Working Group Version 00
 * First Working Group version, adopted by the OCM Working Group.
