@@ -962,25 +962,45 @@ components:
                     describes the share as a whole, primarily intended as a way for
                     the receiving server to select an appropriate local icon for the
                     share. This is display metadata and MUST NOT be interpreted as
-                    fetchable or executable content. It does not need to appear in
-                    `mediaTypes`, but SHOULD describe the primary shared resource.
-                appName:
-                  type: string
-                  description: >
-                    An optional human-friendly name of the web application to be used
-                    in user interfaces when referring to this share.
-                mediaTypes:
+                    fetchable or executable content. It does not need to appear in any
+                    of the `apps` media types, but SHOULD describe the primary shared
+                    resource.
+                apps:
                   type: array
-                  description: >
-                    An optional array that describes the media (MIME) types that the
-                    webapp server can handle. This is a hint for receiver UI and
-                    routing decisions, and receivers MAY ignore values they do not
-                    understand. Unlike `appIconHint`, this describes formats the
-                    webapp can open rather than the share-level icon hint.
                   minItems: 1
-                  uniqueItems: true
+                  description: >
+                    An optional array of the web applications available at the
+                    Sending Server to access the shared resource, useful in particular
+                    when the resource is a folder whose files can be opened by different
+                    web applications. The array MUST NOT contain more than one entry per
+                    given `name`. The order of the entries MAY express a preference:
+                    when multiple web applications can handle the same media type, the
+                    receiver SHOULD consider the first matching entry as the default one.
+                    All listed web applications are accessed through the same `uri`,
+                    `sharedSecret`, `targets`, `permissions` and `requirements`.
                   items:
-                    type: string
+                    type: object
+                    required:
+                      - name
+                      - mediaTypes
+                    properties:
+                      name:
+                        type: string
+                        description: >
+                          A human-friendly name of the web application to be used
+                          in user interfaces when referring to this share.
+                      mediaTypes:
+                        type: array
+                        minItems: 1
+                        uniqueItems: true
+                        description: >
+                          The media (MIME) types that this web application can handle.
+                          This is a hint for receiver UI and routing decisions, and
+                          receivers MAY ignore values they do not understand.
+                          Unlike `appIconHint`, this describes formats the web
+                          application can open rather than the share-level icon hint.
+                        items:
+                          type: string
             ssh:
               type: object
               properties:
@@ -1047,11 +1067,16 @@ components:
                 requirements:
                   - must-use-mfa
                   - must-exchange-token
-                appName: HedgeDoc
                 appIconHint: text/markdown
-                mediaTypes:
-                  - text/markdown
-                  - text/html
+                apps:
+                  - name: HedgeDoc
+                    mediaTypes:
+                      - text/markdown
+                      - text/html
+                  - name: Collabora
+                    mediaTypes:
+                      - application/vnd.oasis.opendocument.text
+                      - application/vnd.oasis.opendocument.spreadsheet
               ssh:
                 accessTypes: ["datatx"]
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
