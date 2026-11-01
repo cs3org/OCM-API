@@ -88,6 +88,10 @@ they appear in all capitals, as shown here.
 We define the following concepts, with some non-normative references to
 related concepts from OAuth [RFC6749] and elsewhere:
 
+* __Dgroup__ - A group of users that spans multiple OCM Servers and
+  that MAY act as the Receiving Party of a Share, identified by the
+  `dgroup` share type and specified in [OCM-MLS].  It is not to be
+  confused with a Federation, which is a group of OCM Servers.
 * __Directory Endpoint__ - The URL, advertised in the
   `directoryEndPoint` field of the OCM API Discovery response, at which
   an OCM Server exposes the Federations it is a member of, along with
@@ -908,9 +912,8 @@ maintain themselves, as one more source of the union described in
 
 The Directory Payload is a format, not a mandate on how the membership
 behind it is obtained: an operator MAY derive it from any existing
-trust framework, such as an OpenID Federation [OpenID-Federation] trust anchor, and
-publish the result as a third-party Directory Service.  This document
-specifies no dependency on, nor binding to, any such framework.
+trust framework, such as an OpenID Federation [OpenID-Federation] trust
+anchor, and publish the result as a third-party Directory Service.
 
 An OCM Server Administrator MAY likewise pre-populate a Federation
 configuration with a list of servers assembled out of band, without
@@ -1462,7 +1465,7 @@ described in [OCM-IP].
   Receiving Server.  Other values MAY be used provided they are
   registered in the "OCM Share Types" registry (see
   [IANA Considerations](#iana-considerations)); for example, [OCM-MLS]
-  specifies the use of the "federation" share type for a group of
+  specifies the use of the "dgroup" share type for a group of
   users that spans multiple OCM Servers.
   The Sending Server SHOULD only use a `shareType` that the Receiving
   Server advertises for the share's `resourceType` in its Discovery
@@ -1927,8 +1930,8 @@ recipient SHOULD notify its Administrator and SHOULD NOT alter its
 Federation configuration without their agreement.
 
 For these cases, a notification payload is to be formed such that the
-`resourceType` MUST be omitted, the `shareType` MUST be set to
-`federation`, and the `notificationType` MUST be one of:
+`resourceType` MUST be set to `federation`, the `shareType` MUST be
+omitted, and the `notificationType` MUST be one of:
 
 - "OCM_SERVER_ADDED", to inform the target OCM Server that the
   sender's directory for the given Federation now contains it.
@@ -2349,10 +2352,17 @@ does not duplicate an existing entry.
 
 IANA is requested to create the "OCM Resource Types" registry in the
 "Open Cloud Mesh (OCM) Parameters" group.  This registry records the
-resource type values used both in the "resourceType" field of a
-[Share Creation Notification](#share-creation-notification) and in the
-"name" field of each entry in the "resourceTypes" array advertised by
-the [OCM API Discovery](#ocm-api-discovery) endpoint.
+resource type values used in the "resourceType" field of a
+[Share Creation Notification](#share-creation-notification) or of a
+[Notification](#notifications), and in the "name" field of each entry
+in the "resourceTypes" array advertised by the [OCM API
+Discovery](#ocm-api-discovery) endpoint.  The "federation" resource
+type identifies a Federation of OCM Servers, as used in the
+Notifications of [Federation Membership](#federation-membership): it
+is not shared through a Share Creation Notification, and it is not
+advertised in the "resourceTypes" array of the Discovery response, as
+support for Federations is signalled by the `directoryEndPoint` field
+instead.
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -2364,6 +2374,8 @@ the [OCM API Discovery](#ocm-api-discovery) endpoint.
    +===============+=====================+===============+
    | file          | A single file       | This document |
    | folder        | A folder/collection | This document |
+   | federation    | A Federation of OCM | This document |
+   |               | Servers             |               |
    +===============+=====================+===============+
 ~~~
 
@@ -2410,10 +2422,9 @@ type that MAY appear in the "shareTypes" array advertised by the
 field of a [Share Creation Notification](#share-creation-notification),
 or in the "shareType" field of a [Notification](#notifications).  Other
 specifications MAY register additional share types in this registry.
-Concerning the "federation" share type, this document specifies its
-mechanics for a Federation of OCM Servers, whereas the case of a group
-of users that spans multiple OCM Servers acting as the Receiving Party
-of a share is addressed by [OCM-MLS].
+For instance, the case of a group of users that spans multiple OCM
+Servers acting as the Receiving Party of a share is identified by the
+"dgroup" share type, registered by [OCM-MLS].
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -2425,7 +2436,6 @@ of a share is addressed by [OCM-MLS].
    +============+===============+
    | user       | This document |
    | group      | This document |
-   | federation | This document |
    +============+===============+
 ~~~
 
@@ -2461,7 +2471,7 @@ is usually shared over CalDAV or JMAP, not over ssh.  Other
 specifications MAY register additional combinations, including ones
 that extend an already-registered protocol to a new resource type or
 share type; doing so does not modify that protocol's own registration.
-The federation combinations are registered in this way by [OCM-MLS].
+The dgroup combinations are registered in this way by [OCM-MLS].
 If someone wants to specify how to share calendar events over ssh in an
 interoperable way, they can do so using this very mechanism.
 
@@ -2493,10 +2503,10 @@ Resource, in which case the "providerId" field is REQUIRED in the
 payload, or to a Recipient, i.e. to the shareType in a
 [Share Creation Notification](#share-creation-notification), in which
 case a corresponding identifier such as "userId" is REQUIRED in the
-payload.  For the "federation" shareType, the Recipient is the
+payload.  For the "federation" resourceType, the Resource is the
 Federation itself, and the "federation" object identifying it and the
-OCM Server concerned is REQUIRED in the payload (see [Federation
-Membership](#federation-membership)).
+OCM Server concerned is REQUIRED in the payload in place of the
+"providerId" (see [Federation Membership](#federation-membership)).
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -2514,8 +2524,8 @@ Membership](#federation-membership)).
    | REQUEST_SHARE             | Resource  | This document |
    | USER_REMOVED              | Recipient | This document |
    | GROUP_REMOVED             | Recipient | This document |
-   | OCM_SERVER_ADDED          | Recipient | This document |
-   | OCM_SERVER_REMOVED        | Recipient | This document |
+   | OCM_SERVER_ADDED          | Resource  | This document |
+   | OCM_SERVER_REMOVED        | Resource  | This document |
    +===========================+===========+===============+
 ~~~
 
@@ -3391,16 +3401,16 @@ The complete changelog is updated in the OCM-API GitHub repository.
   field is now an object carrying a stable `federationId` and a
   human-readable `name`.
 * Introduced the `OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED`
-  notification types, with `shareType` set to `federation`, to
+  notification types, with `resourceType` set to `federation`, to
   propagate Federation membership between OCM Servers, to be consumed
   by the OCM Server Administrator.  Each of them states only whether
   the sender's directory now contains the recipient, so that every
   assertion on the wire is attributable to the Administrator who made
   it.
-* Moved the registration of the `federation` share type from
-  [OCM-MLS] to this document, as it is now used to identify a group of
-  OCM Servers; [OCM-MLS] keeps specifying its use for federated groups
-  of users and the related share payloads.
+* Registered the `federation` resource type for a group of OCM
+  Servers, and renamed to `dgroup` the share type for federated groups
+  of users, formerly `federation`, which is registered and specified
+  by [OCM-MLS] together with the related share payloads.
 
 ## Version 07
 * Required the `keyid` signature parameter and that it matches the
