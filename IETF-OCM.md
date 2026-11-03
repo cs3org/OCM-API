@@ -715,6 +715,9 @@ contain the following information about its OCM API:
   capability.
   Example: `["exchange-token", "protocol-object"]`.  The array MAY
   include one or more of the following items:
+  - `"contact-removal-v1"` - to indicate that this OCM Server
+  processes "CONTACT_REMOVED" notifications as specified in
+  [Contact Removal](#contact-removal).
   - `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
   - `"exchange-token"` - to indicate that this OCM Server supports the
@@ -1570,6 +1573,64 @@ Further, the `notification` object MUST include the following fields:
   * REQUIRED groupId (string) - identifier of the group to be removed
     from the target OCM Server.
 
+The "USER_REMOVED" notification identifies the removed user only, and
+not which users of the target OCM Server it concerns.  A Sending
+Server MUST NOT use it to inform that one of its users removed a
+single contact: the "CONTACT_REMOVED" notification is defined for
+that purpose (see [Contact Removal](#contact-removal)).
+
+## Contact Removal
+
+A notification MAY be sent to inform a target OCM Server that a user
+of the Sending Server removed a single user of the target OCM Server
+from their contacts, e.g. a contact established through a previous
+successful Invitation.  Unlike "USER_REMOVED", this notification
+identifies both users of the contact: the user who removed the
+contact, called the actor, and the user who was removed, called the
+counterpart.
+
+For this case, the `notificationType` MUST be "CONTACT_REMOVED", the
+`resourceType` MUST be omitted, the `shareType` MUST be `user`, and
+the `notification` object MUST include the following fields:
+* OPTIONAL message (string) - an optional human-readable message that
+  describes the event.
+* REQUIRED user (object) - an object containing the details of the
+  contact, including:
+  * REQUIRED userId (string) - OCM Address of the actor, i.e. the user
+    of the Sending Server who removed the contact.  Its host part MUST
+    be the `senderDomain`.
+  * REQUIRED counterpartUserId (string) - OCM Address of the
+    counterpart, i.e. the user of the target OCM Server who was
+    removed from the contacts of the actor.
+
+A Sending Server MUST send a "CONTACT_REMOVED" notification only to an
+OCM Server that advertises the `contact-removal-v1` capability in its
+[Discovery](#ocm-api-discovery) response.  If the target OCM Server
+does not advertise it, the Sending Server MUST NOT send a
+"USER_REMOVED" notification instead, because the target OCM Server
+could then remove the actor from the contacts of all of its users.
+An OCM Server MUST NOT advertise the `contact-removal-v1` capability
+unless it processes "CONTACT_REMOVED" notifications as follows:
+
+* A payload that lacks a REQUIRED field, or whose `userId` or
+  `counterpartUserId` is not a valid OCM Address, MUST be rejected
+  with HTTP 400.
+* If the host part of `userId` is not the `senderDomain`, if the
+  counterpart is not a user of the Receiving Server, or if the
+  counterpart has no contact relationship with the actor, the
+  notification has no effect, and the Receiving Server SHOULD respond
+  with HTTP 201.  The same applies to a repeated notification.
+* Otherwise, the Receiving Server MAY reciprocally remove the actor
+  from the contacts of the counterpart.  It MUST NOT remove the actor
+  from the contacts of any other user, and MUST NOT remove any other
+  contact of the counterpart.
+* The Receiving Server MUST NOT send a "CONTACT_REMOVED" notification
+  back to the Sending Server as a consequence.
+
+Removing a contact concerns the contact relationship only: it does not
+by itself delete any Share, and it does not revoke access tokens that
+were already issued, which remain valid until they expire.
+
 
 # Resource Access
 
@@ -2101,6 +2162,7 @@ payload.
    | REQUEST_SHARE             | Resource  | This document |
    | USER_REMOVED              | Recipient | This document |
    | GROUP_REMOVED             | Recipient | This document |
+   | CONTACT_REMOVED           | Recipient | This document |
    +===========================+===========+===============+
 ~~~
 

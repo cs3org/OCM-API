@@ -210,6 +210,18 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NewNotification"
+            examples:
+              contactWasRemoved:
+                summary: A user removed a single contact
+                value:
+                  notificationType: CONTACT_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: Alice removed Bob from her contacts
+                    user:
+                      userId: alice@alice.example.org
+                      counterpartUserId: bob@bob.example.org
         description: The JSON object with a new notification
         required: true
       responses:
@@ -567,6 +579,7 @@ components:
           items:
             type: string
             enum:
+              - contact-removal-v1
               - enforce-mfa
               - exchange-token
               - http-sig
@@ -1137,6 +1150,17 @@ components:
               `providerId` of the underlying resource, and in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
               `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
+      allOf:
+        - description: >
+            A CONTACT_REMOVED notification MUST satisfy its specific payload
+            requirements.
+          anyOf:
+            - properties:
+                notificationType:
+                  not:
+                    enum:
+                      - CONTACT_REMOVED
+            - $ref: "#/components/schemas/ContactRemovedNotification"
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
@@ -1180,6 +1204,52 @@ components:
               mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
               userId: bob@cloud.example.org
               content: base64 MLS welcome
+    ContactRemovedNotification:
+      type: object
+      description: >
+        Payload requirements of the CONTACT_REMOVED notification, which
+        omits the `resourceType` and identifies both users of the removed
+        contact. It is only sent to servers advertising the
+        `contact-removal-v1` capability.
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - CONTACT_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
+        notification:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              type: object
+              required:
+                - userId
+                - counterpartUserId
+              properties:
+                userId:
+                  type: string
+                  pattern: "^.+@[^@]+$"
+                  description: >
+                    OCM Address of the user of the sending server who removed
+                    the contact. Its host part is the `senderDomain`.
+                counterpartUserId:
+                  type: string
+                  pattern: "^.+@[^@]+$"
+                  description: >
+                    OCM Address of the user of the receiving server who was
+                    removed from the contacts.
+      not:
+        required:
+          - resourceType
     AcceptedInvite:
       type: object
       required:
