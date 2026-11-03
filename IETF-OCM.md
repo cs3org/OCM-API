@@ -1598,7 +1598,8 @@ the `notification` object MUST include the following fields:
   contact, including:
   * REQUIRED userId (string) - OCM Address of the actor, i.e. the user
     of the Sending Server who removed the contact.  Its host part MUST
-    be the `senderDomain`.
+    be the `senderDomain`, compared as a whole host without regard to
+    case; a port is never removed to make them match.
   * REQUIRED counterpartUserId (string) - OCM Address of the
     counterpart, i.e. the user of the target OCM Server who was
     removed from the contacts of the actor.
