@@ -715,7 +715,7 @@ contain the following information about its OCM API:
   capability.
   Example: `["exchange-token", "protocol-object"]`.  The array MAY
   include one or more of the following items:
-  - `"contact-removal-v1"` - to indicate that this OCM Server
+  - `"contact-removal"` - to indicate that this OCM Server
   processes "CONTACT_REMOVED" notifications as specified in
   [Contact Removal](#contact-removal).
   - `"enforce-mfa"` - to indicate that this OCM Server can apply a
@@ -1604,17 +1604,18 @@ the `notification` object MUST include the following fields:
     removed from the contacts of the actor.
 
 A Sending Server MUST send a "CONTACT_REMOVED" notification only to an
-OCM Server that advertises the `contact-removal-v1` capability in its
+OCM Server that advertises the `contact-removal` capability in its
 [Discovery](#ocm-api-discovery) response.  If the target OCM Server
 does not advertise it, the Sending Server MUST NOT send a
 "USER_REMOVED" notification instead, because the target OCM Server
 could then remove the actor from the contacts of all of its users.
-An OCM Server MUST NOT advertise the `contact-removal-v1` capability
+An OCM Server MUST NOT advertise the `contact-removal` capability
 unless it processes "CONTACT_REMOVED" notifications as follows:
 
-* A payload that lacks a REQUIRED field, or whose `userId` or
-  `counterpartUserId` is not a valid OCM Address, MUST be rejected
-  with HTTP 400.
+* A payload that lacks a REQUIRED field, that includes a
+  `resourceType` (even if null or empty), that has a field of the
+  wrong type, or whose `userId` or `counterpartUserId` is not a valid
+  OCM Address, MUST be rejected with HTTP 400.
 * If the host part of `userId` is not the `senderDomain`, if the
   counterpart is not a user of the Receiving Server, or if the
   counterpart has no contact relationship with the actor, the

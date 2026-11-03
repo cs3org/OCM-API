@@ -579,7 +579,7 @@ components:
           items:
             type: string
             enum:
-              - contact-removal-v1
+              - contact-removal
               - enforce-mfa
               - exchange-token
               - http-sig
@@ -1210,7 +1210,7 @@ components:
         Payload requirements of the CONTACT_REMOVED notification, which
         omits the `resourceType` and identifies both users of the removed
         contact. It is only sent to servers advertising the
-        `contact-removal-v1` capability.
+        `contact-removal` capability.
       required:
         - notificationType
         - shareType
@@ -1236,20 +1236,28 @@ components:
                 - counterpartUserId
               properties:
                 userId:
-                  type: string
-                  pattern: "^.+@[^@]+$"
                   description: >
                     OCM Address of the user of the sending server who removed
                     the contact. Its host part is the `senderDomain`.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
                 counterpartUserId:
-                  type: string
-                  pattern: "^.+@[^@]+$"
                   description: >
                     OCM Address of the user of the receiving server who was
                     removed from the contacts.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
       not:
         required:
           - resourceType
+    OCMAddress:
+      type: string
+      description: >
+        An OCM Address, `identifier "@" host [":" port]`. The identifier is
+        an opaque, case-sensitive string separated from the host by the last
+        "@". The host is an IP literal, an IPv4 address or a registered name
+        and cannot contain a path, query, fragment or whitespace.
+      pattern: '^.+@(\[(v[0-9A-Fa-f]+\.[A-Za-z0-9._~!$&''()*+,;=:-]+|[0-9A-Fa-f:.]+)\]|([A-Za-z0-9._~!$&''()*+,;=-]|%[0-9A-Fa-f]{2})+)(:[0-9]+)?$'
     AcceptedInvite:
       type: object
       required:
