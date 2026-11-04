@@ -1101,7 +1101,9 @@ components:
       properties:
         notificationType:
           type: string
-          pattern: '\S'
+          pattern: "[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\
+            \\u1680\\u2000-\\u200A\\u2028\\u2029\
+            \\u202F\\u205F\\u3000]"
           description: >
             A notification type that is understandable for both humans and
             machines, providing information about an event.
@@ -1110,10 +1112,11 @@ components:
             provided that they are registered in the OCM IANA Registry.
         senderDomain:
           description: >
-            The FQDN of the sending OCM server, in order for the recipient
-            to validate its key material when verifying the HTTP Signature.
+            The complete host and port, if any, of the sending OCM server,
+            as in the server part of its OCM Addresses. It identifies the
+            sender; the endpoint found by discovery is only used to reach it.
           allOf:
-            - $ref: "#/components/schemas/SenderDomain"
+            - $ref: "#/components/schemas/OCMHost"
         resourceType:
           type: string
           minLength: 1
@@ -1267,13 +1270,17 @@ components:
       not:
         required:
           - resourceType
-    SenderDomain:
+    OCMHost:
       type: string
       description: >
-        A DNS name of at least two labels of ASCII letters, digits and
-        interior hyphens, at most 63 bytes each and 253 bytes in total,
-        without a port, a trailing dot or an IPv4 address.
-      pattern: '^(?!(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])(?![\s\S]))(?=[\s\S]{1,253}(?![\s\S]))[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+(?![\s\S])'
+        The server part of an OCM Address, `host [":" port]`, with the host
+        and port grammar of the OCMAddress schema, for example
+        `cloud.example.org`, `cloud.example.org:8443`, `192.0.2.1` or
+        `[2001:db8::1]:8443`. It has no identifier, scheme, path, query or
+        fragment. Two values name the same server only when they are equal
+        after lowercasing; a port is never removed or assumed.
+      example: cloud.example.org:8443
+      pattern: '^(?:\[(?:(?:(?:[0-9A-Fa-f]{1,4}:){6}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|::(?:[0-9A-Fa-f]{1,4}:){5}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(?:[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){4}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(?:(?:[0-9A-Fa-f]{1,4}:){0,1}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){3}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(?:(?:[0-9A-Fa-f]{1,4}:){0,2}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){2}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(?:(?:[0-9A-Fa-f]{1,4}:){0,3}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:){1}(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(?:(?:[0-9A-Fa-f]{1,4}:){0,4}[0-9A-Fa-f]{1,4})?::(?:[0-9A-Fa-f]{1,4}:[0-9A-Fa-f]{1,4}|(?:(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9]))|(?:(?:[0-9A-Fa-f]{1,4}:){0,5}[0-9A-Fa-f]{1,4})?::[0-9A-Fa-f]{1,4}|(?:(?:[0-9A-Fa-f]{1,4}:){0,6}[0-9A-Fa-f]{1,4})?::)|[vV][0-9A-Fa-f]+\.[A-Za-z0-9\-._~!$&''()*+,;=:]+)\]|(?:[A-Za-z0-9\-._~!$&''()*+,;=]|%[0-9A-Fa-f]{2})+)(?::[0-9]*)?(?![\s\S])'
     OCMAddress:
       type: string
       description: >
@@ -1294,10 +1301,12 @@ components:
         - name
       properties:
         recipientProvider:
-          type: string
-          format: fqdn
-          description: FQDN of the receiver OCM service.
-          example: receiver.org
+          description: >
+            The complete host and port, if any, of the receiver OCM server,
+            as in the server part of its OCM Addresses.
+          example: receiver.org:8443
+          allOf:
+            - $ref: "#/components/schemas/OCMHost"
         token:
           type: string
           description: Token received in the invite
