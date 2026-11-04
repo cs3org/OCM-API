@@ -368,8 +368,10 @@ Acceptance Request MUST be a HTTP POST request:
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object
   with the following string fields:
-  - REQUIRED: `recipientProvider` - FQDN of the Invite Receiver OCM
-    Server.
+  - REQUIRED: `recipientProvider` - The server part,
+    `host [":" port]`, of the Invite Receiver's OCM Addresses, with
+    the same grammar and comparison as the `senderDomain` field of a
+    Notification.
   - REQUIRED: `token` - The Invite Token.  The Invite Sender OCM Server
     SHOULD recall which Invite Sender OCM Address this token was linked
     to.
@@ -1401,10 +1403,19 @@ request:
 * REQUIRED notificationType (string) - it MUST be one of the
   registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
-* REQUIRED senderDomain (string) - the FQDN of the sender.  A Receiving
-  Server SHOULD use this information to verify the HTTP message
-  signature on the request, and it SHOULD also use it to validate the
-  underlying share or resource the notification is about.
+* REQUIRED senderDomain (string) - the server part of the sender's
+  OCM Addresses, `host [":" port]`, with the host and port grammar of
+  an OCM Address, for example `cloud.example.org`,
+  `cloud.example.org:8443`, `192.0.2.1` or `[2001:db8::1]:8443`.  A
+  Sending Server MUST send the complete host and port, if any, that
+  its OCM Addresses use.  Two values name the same server only when
+  they are equal after lowercasing; a Receiving Server MUST NOT remove
+  or assume a port, resolve a name, or use the endpoint found by
+  discovery to identify the sender, as that endpoint is only used to
+  reach it.  A Receiving Server SHOULD use this information to verify
+  the HTTP message signature on the request, and it SHOULD also use
+  it to validate the underlying share or resource the notification
+  is about.
 * OPTIONAL resourceType (string) - the type of the resource this
   notification is about (e.g., `file`).
 * OPTIONAL shareType (string) - the type of recipient this notification
@@ -1602,7 +1613,9 @@ the `notification` object MUST include the following fields:
     case; a port is never removed to make them match.
   * REQUIRED counterpartUserId (string) - OCM Address of the
     counterpart, i.e. the user of the target OCM Server who was
-    removed from the contacts of the actor.
+    removed from the contacts of the actor.  Its host part is the
+    complete host of the target OCM Server, as in its own OCM
+    Addresses, compared in the same way.
 
 A Sending Server MUST send a "CONTACT_REMOVED" notification only to an
 OCM Server that advertises the `contact-removal` capability in its
@@ -1617,8 +1630,10 @@ unless it processes "CONTACT_REMOVED" notifications as follows:
   `resourceType` (even if null or empty), that has a field of the
   wrong type, or whose `userId` or `counterpartUserId` is not a valid
   OCM Address, MUST be rejected with HTTP 400.
-* If the host part of `userId` is not the `senderDomain`, if the
-  counterpart is not a user of the Receiving Server, or if the
+* If the host part of `userId` is not the `senderDomain`, if the host
+  part of `counterpartUserId` is not the complete host of the
+  Receiving Server, if the counterpart is not a user of the Receiving
+  Server, or if the
   counterpart has no contact relationship with the actor, the
   notification has no effect, and the Receiving Server SHOULD respond
   with HTTP 201.  The same applies to a repeated notification.
