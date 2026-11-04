@@ -1549,40 +1549,18 @@ such as HTTP 404.
 
 ## Recipient Removal
 
-A notification MAY be sent to inform a target OCM Server that a share
-recipient (e.g. a user or group) was removed from the list of trusted
-users, following a previous successful Invitation, or otherwise left
-the realm of the sending OCM Server.  That recipient may have been
-previously known to the target server because of existing shares whose
-shareType matched it.  The recipient of such notification SHOULD
-reciprocally remove that peer from the list of trusted users, along
-with any related shares.
+A notification MAY be sent when a user leaves the realm of the
+Sending Server or a group is removed. The Receiving Server SHOULD
+remove the departed recipient from its trusted users and related
+shares. A single contact removal uses CONTACT_REMOVED instead.
 
-For these cases, a notification payload is to be formed such that the
-`resourceType` MUST be omitted, the `shareType` is set to the affected
-shareType being removed, such as `user` or `group`, and the
-`notificationType` MUST be one of:
-- "CONTACT_REMOVED", to inform that a single user contact was removed
-  from the list of trusted contacts by the peer user.
-- "USER_REMOVED", to inform that a user left or was removed from the
-  realm of the sending OCM Server, and is therefore no longer reachable
-  as a contact.
-- "GROUP_REMOVED", to inform about a removed group of users.
-Further, the `notification` object MUST include the following fields:
-* OPTIONAL message (string) - an optional human-readable message that
-  describes the event.
-* REQUIRED user or group (object) - an object containing the details
-  of the recipient to be removed. In case of `user`, it MUST include:
-  * REQUIRED userId (string) - OCM Address of the user that performed
-    the removal, or that left.
-  * REQUIRED targetUserId (string) - only for "CONTACT_REMOVED": OCM
-    Address of the user, local at the target server, that was removed
-    by the above peer contact.  It MUST be omitted for "USER_REMOVED",
-    where all contacts and shares related to `userId` at the target
-    server are to be removed.
-  Whereas in case of `group`, it MUST include:
-  * REQUIRED groupId (string) - identifier of the group to be removed
-    from the target OCM Server.
+The `resourceType` MUST be omitted. The `shareType` MUST be `user`
+for "USER_REMOVED" or `group` for "GROUP_REMOVED". The
+`notification` object MUST contain a `user` object with a REQUIRED
+`userId` OCM Address, or a `group` object with a REQUIRED `groupId`
+string, respectively. An OPTIONAL `message` string describes the
+event. USER_REMOVED identifies the departed user; it does not infer
+departure from an omitted contact counterpart.
 
 The "USER_REMOVED" notification identifies the removed user only, and
 not which users of the target OCM Server it concerns.  A Sending
@@ -1617,37 +1595,93 @@ the `notification` object MUST include the following fields:
     complete host of the target OCM Server, as in its own OCM
     Addresses, compared in the same way.
 
-A Sending Server MUST send a "CONTACT_REMOVED" notification only to an
-OCM Server that advertises the `contact-removal` capability in its
-[Discovery](#ocm-api-discovery) response.  If the target OCM Server
-does not advertise it, the Sending Server MUST NOT send a
-"USER_REMOVED" notification instead, because the target OCM Server
-could then remove the actor from the contacts of all of its users.
-An OCM Server MUST NOT advertise the `contact-removal` capability
-unless it processes "CONTACT_REMOVED" notifications as follows:
+A Sending Server MUST send a "CONTACT_REMOVED" notification only when
+the target advertises both notifications and the versionless
+`contact-removal` capability in [Discovery](#ocm-api-discovery). It
+MUST NOT fall back to USER_REMOVED. Advertising contact-removal
+commits to the complete validation, grant-denial and local acceptance
+contract below across every enabled serving path. Unsupported driver,
+token, application or transfer configurations MUST NOT advertise it.
 
-* A payload that lacks a REQUIRED field, that includes a
-  `resourceType` (even if null or empty), that has a field of the
-  wrong type, or whose `userId` or `counterpartUserId` is not a valid
-  OCM Address, MUST be rejected with HTTP 400.
-* If the host part of `userId` is not the `senderDomain`, if the host
-  part of `counterpartUserId` is not the complete host of the
-  Receiving Server, if the counterpart is not a user of the Receiving
-  Server, or if the
-  counterpart has no contact relationship with the actor, the
-  notification has no effect, and the Receiving Server SHOULD respond
-  with HTTP 201.  The same applies to a repeated notification.
-* Otherwise, the Receiving Server MAY reciprocally remove the actor
-  from the contacts of the counterpart.  It MUST NOT remove the actor
-  from the contacts of any other user, and MUST NOT remove any other
-  contact of the counterpart.
-* The Receiving Server MUST NOT send a "CONTACT_REMOVED" notification
-  back to the Sending Server as a consequence.
+A payload lacking a REQUIRED field, containing `resourceType` even
+when null or empty, containing a wrong-type field, or containing an
+invalid OCM Address MUST receive HTTP 400 before effects. Extra
+`localUserId` or other fields have no selection authority and MUST NOT
+replace or override `counterpartUserId`. The actor host MUST match
+`senderDomain` and the counterpart host MUST match the Receiving
+Server's complete OCM host, including any port, lowercasing hosts
+only. A syntactically valid host-binding mismatch has no effect and
+SHOULD receive bodyless HTTP 201 for privacy. Syntax and binding do
+not authenticate the sender; existing authentication, authorization
+and provider-policy denials still apply.
 
-Removing a contact concerns the contact relationship only: it does not
-by itself delete any Share, and it does not revoke access tokens that
-were already issued, which remain valid until they expire.
+For an authorized, correctly bound removal, each server MUST revoke
+every local OCM Share grant whose actual sender/creator and individual
+user recipient are the actor and counterpart, in EITHER direction.
+This includes pending and accepted grants, all resources and
+protocols, and affected incoming recipient projections. Resource
+ownership alone does not select a grant. Alice resharing Mahdi's
+resource to Bob is an Alice/Bob grant; Mahdi's independent grant to
+Bob is unaffected. Other pairs, groups, providers and ports, other
+recipients' projections of the same grant, underlying resources,
+accounts and account-wide credentials MUST remain intact.
 
+Both the initiating server before reporting local success and a
+capable Receiving Server before accepting the event MUST durably deny
+the affected grants at their controlled enforcement points. Every new
+authorization after that local security commit MUST reject affected
+old secrets, codes, bearer tokens, cached sessions and derived grant
+authority. Existing scope restrictions still apply. Removing a contact
+row, hiding a share, or waiting for token expiry is insufficient.
+Physical cleanup MAY finish later while authorization remains denied.
+Requests authorized before the commit may finish; tracked transfers
+SHOULD receive best-effort cancellation. Already delivered bytes and
+downloaded copies cannot be recalled.
+
+Missing contact or directory entries MUST NOT skip grant
+reconciliation. The server MUST reconcile authoritative exact stored
+pair, grant, projection and pending-cleanup bindings. Directory
+transport errors, non-NOT_FOUND errors and malformed OK-with-nil-user
+responses are not proof of absence and MUST NOT justify successful
+no-op acceptance. Even true NOT_FOUND with residual bindings requires
+selective durable denial, or a retryable server failure if safe
+identity mapping or enforcement cannot be established. Servers MUST
+NOT guess a local IdP or infer identity from owners, credentials or
+endpoints. Only proven absence of affected grants, projections,
+pending cleanup and required contact mutation permits a genuine no-op
+bodyless HTTP 201.
+
+The Receiving Server MAY reciprocally delete the exact contact after
+grant denial. It MUST preserve all other contacts and MUST NOT reflect
+CONTACT_REMOVED or synthesize per-share SHARE_UNSHARED notifications.
+Failures before durable denial MUST return a retryable server error,
+never HTTP 201; unsupported handling MAY return HTTP 501. An accepted
+CONTACT_REMOVED MUST receive bodyless HTTP 201. That receipt requires
+the local denial precondition, not physical cleanup or global effects.
+Unknown-type and genuine no-op receipts do not imply mutation.
+
+Unchanged repeats are idempotent and grant no new send entitlement.
+Ordinary invitation-based reconnect MUST remain available; newly
+authorized grants use fresh identities and MUST NOT revive revoked
+grant IDs or projections. Concurrent and delayed local writers and
+cleanup MUST respect the durable removal boundary. An internal local
+epoch MAY serialize those operations. There is no public relationship
+identifier, permanent pair block or cross-server ordering guarantee.
+An event applies to the exact pair at its local processing boundary.
+
+After local enforcement, a newly completed local removal with contact
+deletion OR newly denied grants permits at most ONE best-effort
+notification attempt. A missing contact MUST NOT suppress a grant-only
+first attempt. Genuine no-ops, unchanged repeats, inbound events and
+local recovery MUST NOT send again. There MUST NOT be a delivery
+retry, outbox, persistent outbound queue or restart send. Local
+interrupted cleanup may recover without reopening grants or scheduling
+delivery. An unavailable peer, lost send or lost response leaves peer
+enforcement unconfirmed; there is no globally instantaneous revocation
+or automatic remote convergence. Each peer enforces only after
+processing the event. The versionless capability and a receipt alone
+do not prove compatible peer semantics; interoperable enforcement
+requires compatible peers.
 
 # Resource Access
 

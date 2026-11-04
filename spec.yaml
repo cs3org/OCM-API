@@ -227,9 +227,12 @@ paths:
       responses:
         "201":
           description: >
-            Receiver succesfully received the notification. The response body
-            MAY contain a JSON object with response data, depending on
-            the actual notification.
+            An accepted CONTACT_REMOVED has a bodyless 201 response only after
+            durable local denial of affected exact-pair grants. Failure to
+            establish safe identity or enforcement is a retryable server error,
+            not acceptance. A genuine authoritative no-op may receive bodyless
+            201. This does not promise physical cleanup or global completion.
+            For other notification types the response MAY contain response data.
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `notificationType` is
@@ -1230,7 +1233,11 @@ components:
         Payload requirements of the CONTACT_REMOVED notification, which
         omits the `resourceType` and identifies both users of the removed
         contact. It is only sent to servers advertising the
-        `contact-removal` capability.
+        `contact-removal` capability, which commits to durable local revocation
+        of both directions of exact sender/creator-to-user-recipient grants and
+        their affected credentials before acceptance. Other pairs, projections,
+        resources and account-wide credentials remain intact. Missing directory
+        or contact entries do not establish authoritative absence of grants.
       required:
         - notificationType
         - shareType
