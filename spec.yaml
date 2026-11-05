@@ -35,6 +35,82 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Discovery"
+  /mls-key-packages:
+    get:
+      summary: Retrieve an MLS KeyPackage for a user
+      description: >
+        Returns MLS KeyPackages for a user as defined by
+        [KeyPackage Distribution](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-mls-federated-groups#keypackage-distribution).
+        The request and successful response MUST use HTTP Message Signatures
+        according to that specification.
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: Full OCM Address of the user whose KeyPackage is requested.
+          schema:
+            type: string
+          example: alice@cloud.example.org
+        - name: senderDomain
+          in: query
+          required: true
+          description: FQDN of the requesting OCM Server.
+          schema:
+            type: string
+            format: fqdn
+          example: requester.example.org
+      responses:
+        "200":
+          description: A signed response containing KeyPackages for the user.
+          headers:
+            Content-Digest:
+              required: true
+              description: RFC 9530 digest of the response body.
+              schema:
+                type: string
+            Signature-Input:
+              required: true
+              description: RFC 9421 response signature input.
+              schema:
+                type: string
+            Signature:
+              required: true
+              description: RFC 9421 response signature.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KeyPackageResponse"
+        "400":
+          description: Missing or invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/400"
+        "401":
+          description: The request signature is missing, invalid, or replayed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: The verified sender is not permitted by local policy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: The requester has exceeded the KeyPackage request limit.
+          headers:
+            Retry-After:
+              description: Time to wait before making another request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /shares:
     post:
       summary: Share Creation Notification endpoint
@@ -290,6 +366,41 @@ components:
             machines (e.g. no use of special characters) providing more
             information on the cause of the error.
           example: RESOURCE_NOT_FOUND
+    KeyPackageEntry:
+      type: object
+      required:
+        - mediaType
+        - encoding
+        - content
+      properties:
+        mediaType:
+          type: string
+          enum:
+            - message/mls
+          example: message/mls
+        encoding:
+          type: string
+          enum:
+            - base64url
+          example: base64url
+        content:
+          type: string
+          description: Base64url-encoded MLS KeyPackage without padding.
+          example: ZXhhbXBsZS1tbHMta2V5LXBhY2thZ2U
+    KeyPackageResponse:
+      type: object
+      required:
+        - userId
+        - keyPackages
+      properties:
+        userId:
+          type: string
+          description: Full OCM Address of the user represented by the KeyPackages.
+          example: alice@cloud.example.org
+        keyPackages:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyPackageEntry"
     Discovery:
       type: object
       required:
