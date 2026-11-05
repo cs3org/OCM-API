@@ -1576,7 +1576,13 @@ from their contacts, e.g. a contact established through a previous
 successful Invitation.  Unlike "USER_REMOVED", this notification
 identifies both users of the contact: the user who removed the
 contact, called the actor, and the user who was removed, called the
-counterpart.
+counterpart.  "CONTACT_REMOVED" informs the Receiving Server that the
+user identified by `notification.user.userId` removed the user
+identified by `notification.user.targetUserId` from their contacts.
+The Receiving Server MAY remove the corresponding contact.  It MUST
+NOT treat this notification alone as a withdrawal or rejection of a
+Share: existing Shares in either direction remain governed by their
+own permissions, expiration and explicit lifecycle operations.
 
 For this case, the `notificationType` MUST be "CONTACT_REMOVED", the
 `resourceType` MUST be omitted, the `shareType` MUST be `user`, and
@@ -1589,7 +1595,7 @@ the `notification` object MUST include the following fields:
     of the Sending Server who removed the contact.  Its host part MUST
     be the `senderDomain`, compared as a whole host without regard to
     case; a port is never removed to make them match.
-  * REQUIRED counterpartUserId (string) - OCM Address of the
+  * REQUIRED targetUserId (string) - OCM Address of the
     counterpart, i.e. the user of the target OCM Server who was
     removed from the contacts of the actor.  Its host part is the
     complete host of the target OCM Server, as in its own OCM
@@ -1598,16 +1604,17 @@ the `notification` object MUST include the following fields:
 A Sending Server MUST send a "CONTACT_REMOVED" notification only when
 the target advertises both notifications and the versionless
 `contact-removal` capability in [Discovery](#ocm-api-discovery). It
-MUST NOT fall back to USER_REMOVED. Advertising contact-removal
-commits to the complete validation, grant-denial and local acceptance
-contract below across every enabled serving path. Unsupported driver,
-token, application or transfer configurations MUST NOT advertise it.
+MUST NOT fall back to USER_REMOVED. Advertising `contact-removal`
+means support for the contact operation and its binding and validation
+as specified here; it is not a commitment to withdraw or reject
+Shares across every enabled application.
 
 A payload lacking a REQUIRED field, containing `resourceType` even
 when null or empty, containing a wrong-type field, or containing an
 invalid OCM Address MUST receive HTTP 400 before effects. Extra
-`localUserId` or other fields have no selection authority and MUST NOT
-replace or override `counterpartUserId`. The actor host MUST match
+fields have no selection authority and MUST NOT replace or override
+`targetUserId`; old target spellings such as `localUserId` or
+`counterpartUserId` are not aliases. The actor host MUST match
 `senderDomain` and the counterpart host MUST match the Receiving
 Server's complete OCM host, including any port, lowercasing hosts
 only. A syntactically valid host-binding mismatch has no effect and
@@ -1615,73 +1622,24 @@ SHOULD receive bodyless HTTP 201 for privacy. Syntax and binding do
 not authenticate the sender; existing authentication, authorization
 and provider-policy denials still apply.
 
-For an authorized, correctly bound removal, each server MUST revoke
-every local OCM Share grant whose actual sender/creator and individual
-user recipient are the actor and counterpart, in EITHER direction.
-This includes pending and accepted grants, all resources and
-protocols, and affected incoming recipient projections. Resource
-ownership alone does not select a grant. Alice resharing Mahdi's
-resource to Bob is an Alice/Bob grant; Mahdi's independent grant to
-Bob is unaffected. Other pairs, groups, providers and ports, other
-recipients' projections of the same grant, underlying resources,
-accounts and account-wide credentials MUST remain intact.
+Each user MAY independently withdraw Shares they issued to the other
+user or reject Shares they received from them.  Such actions use the
+corresponding per-share notifications, for example "SHARE_UNSHARED"
+and "SHARE_DECLINED", and remain explicit separate local decisions.
+Removing one contact MUST NOT affect other users' contacts, other
+grant recipients, Resources or account credentials.
 
-Both the initiating server before reporting local success and a
-capable Receiving Server before accepting the event MUST durably deny
-the affected grants at their controlled enforcement points. Every new
-authorization after that local security commit MUST reject affected
-old secrets, codes, bearer tokens, cached sessions and derived grant
-authority. Existing scope restrictions still apply. Removing a contact
-row, hiding a share, or waiting for token expiry is insufficient.
-Physical cleanup MAY finish later while authorization remains denied.
-Requests authorized before the commit may finish; tracked transfers
-SHOULD receive best-effort cancellation. Already delivered bytes and
-downloaded copies cannot be recalled.
-
-Missing contact or directory entries MUST NOT skip grant
-reconciliation. The server MUST reconcile authoritative exact stored
-pair, grant, projection and pending-cleanup bindings. Directory
-transport errors, non-NOT_FOUND errors and malformed OK-with-nil-user
-responses are not proof of absence and MUST NOT justify successful
-no-op acceptance. Even true NOT_FOUND with residual bindings requires
-selective durable denial, or a retryable server failure if safe
-identity mapping or enforcement cannot be established. Servers MUST
-NOT guess a local IdP or infer identity from owners, credentials or
-endpoints. Only proven absence of affected grants, projections,
-pending cleanup and required contact mutation permits a genuine no-op
-bodyless HTTP 201.
-
-The Receiving Server MAY reciprocally delete the exact contact after
-grant denial. It MUST preserve all other contacts and MUST NOT reflect
-CONTACT_REMOVED or synthesize per-share SHARE_UNSHARED notifications.
-Failures before durable denial MUST return a retryable server error,
-never HTTP 201; unsupported handling MAY return HTTP 501. An accepted
-CONTACT_REMOVED MUST receive bodyless HTTP 201. That receipt requires
-the local denial precondition, not physical cleanup or global effects.
-Unknown-type and genuine no-op receipts do not imply mutation.
-
-Unchanged repeats are idempotent and grant no new send entitlement.
-Ordinary invitation-based reconnect MUST remain available; newly
-authorized grants use fresh identities and MUST NOT revive revoked
-grant IDs or projections. Concurrent and delayed local writers and
-cleanup MUST respect the durable removal boundary. An internal local
-epoch MAY serialize those operations. There is no public relationship
-identifier, permanent pair block or cross-server ordering guarantee.
-An event applies to the exact pair at its local processing boundary.
-
-After local enforcement, a newly completed local removal with contact
-deletion OR newly denied grants permits at most ONE best-effort
-notification attempt. A missing contact MUST NOT suppress a grant-only
-first attempt. Genuine no-ops, unchanged repeats, inbound events and
-local recovery MUST NOT send again. There MUST NOT be a delivery
-retry, outbox, persistent outbound queue or restart send. Local
-interrupted cleanup may recover without reopening grants or scheduling
-delivery. An unavailable peer, lost send or lost response leaves peer
-enforcement unconfirmed; there is no globally instantaneous revocation
-or automatic remote convergence. Each peer enforces only after
-processing the event. The versionless capability and a receipt alone
-do not prove compatible peer semantics; interoperable enforcement
-requires compatible peers.
+The Receiving Server MAY reciprocally delete the exact contact of the
+actor and counterpart pair.  It MUST preserve all other contacts and
+MUST NOT reflect "CONTACT_REMOVED" back to the sender or synthesize
+per-share notifications merely because it received this event.
+Errors of the local contact operation MUST be reported as errors
+rather than falsely claiming success; unsupported contact handling MAY
+return HTTP 501.  An accepted "CONTACT_REMOVED" receives bodyless HTTP
+201; that receipt confirms acceptance of the event, not any Share
+mutation, remote user choice or global completion.  Delivery is one
+best-effort attempt per committed contact transition; there is no
+retry, outbox or cross-server ordering guarantee.
 
 # Resource Access
 
