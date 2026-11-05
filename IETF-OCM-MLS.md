@@ -227,11 +227,11 @@ between a user's OCM Address and their signature key is attested by
 authenticated delivery from the user's home server.  A KeyPackage
 fetched over TLS from the `<endPoint>/mls-key-packages` endpoint of the
 server named in the credential's OCM Address, with the response signed
-using HTTP Signatures [RFC9421] verifying against that server's JWKS
-endpoint at `/.well-known/jwks.json` [RFC7517], is considered validated
-with the AS.  The full validation procedure, including how credentials
-introduced later in the life of a group are validated, is specified in
-{{trust-and-authentication}}.
+using HTTP Signatures [RFC9421] verifying against the JWK Set [RFC7517]
+advertised in the `jwksUri` field of that server's OCM Discovery
+response, is considered validated with the AS.  The full validation
+procedure, including how credentials introduced later in the life of a
+group are validated, is specified in {{trust-and-authentication}}.
 
 ## Delivery Service
 
@@ -412,7 +412,9 @@ specification.  The KeyPackage endpoint is derived as
 A server that advertises `"federation"` MUST be able to receive OCM
 Notifications, since all MLS lifecycle messages are delivered as
 notifications, and SHOULD include `"notifications"` in its
-`capabilities` array.
+`capabilities` array.  It MUST also advertise the `"http-sig"`
+capability and a `jwksUri`, since KeyPackage distribution requires HTTP
+Message Signatures in both directions.
 
 # KeyPackage Distribution
 
@@ -420,8 +422,14 @@ Each OCM Server acting as an MLS client generates and maintains
 KeyPackages for its users and exposes them at:
 
 ~~~
-GET <endPoint>/mls-key-packages?userId={userId}
+GET <endPoint>/mls-key-packages
 ~~~
+
+The request has two REQUIRED query parameters:
+
+- `userId` is the full OCM Address of the user whose KeyPackage is
+requested.
+- `senderDomain` is the FQDN of the requesting OCM Server.
 
 Response:
 
@@ -438,8 +446,53 @@ Response:
 }
 ~~~
 
+## Request authentication
+
 Requests to this endpoint MUST be signed using HTTP Message Signatures
-[RFC9421] ({{security-considerations}}).
+[RFC9421] according to the signing requirements in [OCM].  The
+`senderDomain` value is an untrusted key-selection hint until the
+signature has been verified.  The receiving server MUST perform OCM
+Discovery for `senderDomain`, retrieve the JWK Set from the discovered
+`jwksUri`, and select the JWK whose `kid` exactly equals the `keyid`
+signature parameter.  It MUST then verify the request signature with
+that JWK.  The `keyid` value is opaque and MUST NOT be parsed to derive
+`senderDomain` or a JWK Set location.
+
+The signature MUST cover `@method` and `@target-uri`, which binds both
+query parameters to the signature.  In addition to the signature
+parameters required by [OCM], it MUST contain a `nonce` parameter that
+is unique for the requesting server.  A receiving server MUST reject a
+request if it has previously accepted the same `(senderDomain, keyid,
+nonce)` tuple within its signature freshness window.  It MUST perform
+signature verification, replay detection, and rate limiting before
+delivering or consuming a KeyPackage.
+
+A receiving server MAY apply local policies and access controls to the
+verified `senderDomain` and MAY refuse to serve KeyPackages to a
+requester that those policies do not permit.
+
+## Response authentication
+
+A successful response containing KeyPackages MUST be signed by the
+user's home OCM Server using HTTP Message Signatures [RFC9421].  The
+response signature MUST cover at least:
+
+- `"@status"`
+- `"content-type"`
+- `"content-digest"`
+- `"@method";req`
+- `"@target-uri";req`
+- `"signature-input";req`
+
+The response signature parameters MUST include `created`, `keyid`, and
+`tag="ocm"`.  Covering the request's `Signature-Input` field binds the
+response to the request nonce and prevents a response for one request
+from being replayed as the response to another.  The requester MUST
+resolve the response key through the `jwksUri` advertised by the server
+named in `userId`, select the JWK whose `kid` exactly equals `keyid`,
+and verify the response signature before using a KeyPackage.  The
+response `keyid` is opaque and MUST NOT be used to identify the
+responding server.
 
 In native client deployments, the user's device generates KeyPackages
 and publishes them to the home server, which exposes them at the same
@@ -1647,10 +1700,11 @@ Requests to the KeyPackage endpoint are signed at the server level
 ({{security-considerations}}), so in native client deployments the
 fetch is performed by the admin's home server on the admin client's
 behalf.  The home server SHOULD relay the response with its HTTP
-Message Signature intact, allowing the native client to verify the
-channel binding end-to-end against the target server's published JWKS;
-a native client that cannot do so delegates the channel verification to
-its home server and verifies the KeyPackage signature itself.
+Message Signature and the originating request context intact, allowing
+the native client to verify the channel binding end-to-end against the
+target server's published JWK Set; a native client that cannot do so
+delegates the channel verification to its home server and verifies the
+KeyPackage signature itself.
 
 [RFC9420] Section 5.3.1 requires a credential to be validated whenever
 it is introduced into the group.  This protocol distributes that duty to
@@ -1927,10 +1981,20 @@ KeyPackages are exhausted ([RFC9420] Section 16.8).  Servers MUST remove
 a KeyPackage that has been consumed, and SHOULD rate-limit KeyPackage
 requests to make exhaustion attacks impractical.
 
+**KeyPackage request authentication.** The `senderDomain` parameter on a
+KeyPackage request is not authenticated until the request signature has
+been verified.  Implementations MUST use it only as a key-selection
+hint before verification and MUST apply the network access restrictions
+of the OCM Discovery process when retrieving the Discovery document and
+JWK Set.  Nonce replay detection prevents a captured signed request from
+consuming another KeyPackage.  It does not prevent an authenticated but
+malicious OCM Server from making fresh requests, so implementations
+SHOULD also rate-limit requests by verified `senderDomain` and `userId`.
+
 **User enumeration.** A server MUST only reply to HTTPS GET requests
-signed using HTTP Message Signatures [RFC9421] and SHOULD implement rate
-limiting and other access control methods on the `/mls-key-packages`
-endpoint to avoid user enumeration.
+signed and verified as specified in {{keypackage-distribution}} and
+SHOULD implement rate limiting and other access control methods on the
+`/mls-key-packages` endpoint to avoid user enumeration.
 
 ## Underlying Security Specifications
 
@@ -2058,6 +2122,12 @@ This section collects the changes with respect to the previous
 version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
+
+## Working Group Version 01
+* Added authenticated requester discovery for KeyPackage requests while
+  keeping the HTTP Message Signature `keyid` opaque.
+* Added nonce replay protection and request-bound response signatures
+  for KeyPackage distribution.
 
 ## Working Group Version 00
 * First Working Group version, adopted by the OCM Working Group.
