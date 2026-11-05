@@ -221,18 +221,16 @@ paths:
                     message: Alice removed Bob from her contacts
                     user:
                       userId: alice@alice.example.org
-                      counterpartUserId: bob@bob.example.org
+                      targetUserId: bob@bob.example.org
         description: The JSON object with a new notification
         required: true
       responses:
         "201":
           description: >
-            An accepted CONTACT_REMOVED has a bodyless 201 response only after
-            durable local denial of affected exact-pair grants. Failure to
-            establish safe identity or enforcement is a retryable server error,
-            not acceptance. A genuine authoritative no-op may receive bodyless
-            201. This does not promise physical cleanup or global completion.
-            For other notification types the response MAY contain response data.
+            An accepted notification receives a bodyless 201 response. The
+            receipt confirms acceptance of the event, not any Share mutation,
+            remote user choice or global completion. For other notification
+            types the response MAY contain response data.
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `notificationType` is
@@ -1233,11 +1231,11 @@ components:
         Payload requirements of the CONTACT_REMOVED notification, which
         omits the `resourceType` and identifies both users of the removed
         contact. It is only sent to servers advertising the
-        `contact-removal` capability, which commits to durable local revocation
-        of both directions of exact sender/creator-to-user-recipient grants and
-        their affected credentials before acceptance. Other pairs, projections,
-        resources and account-wide credentials remain intact. Missing directory
-        or contact entries do not establish authoritative absence of grants.
+        `contact-removal` capability, which means support for the contact
+        operation and its binding and validation. The notification concerns
+        the contact relationship only; Shares in either direction remain
+        governed by their own permissions, expiration and explicit
+        lifecycle operations.
       required:
         - notificationType
         - shareType
@@ -1260,7 +1258,7 @@ components:
               type: object
               required:
                 - userId
-                - counterpartUserId
+                - targetUserId
               properties:
                 userId:
                   description: >
@@ -1268,7 +1266,7 @@ components:
                     the contact. Its host part is the `senderDomain`.
                   allOf:
                     - $ref: "#/components/schemas/OCMAddress"
-                counterpartUserId:
+                targetUserId:
                   description: >
                     OCM Address of the user of the receiving server who was
                     removed from the contacts.
