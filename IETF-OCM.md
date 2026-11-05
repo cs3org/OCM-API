@@ -1403,6 +1403,9 @@ request:
 * REQUIRED notificationType (string) - it MUST be one of the
   registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
+  The value MUST contain at least one character outside the Unicode
+  White_Space property and MUST be compared exactly as sent, without
+  trimming or case folding.
 * REQUIRED senderDomain (string) - the server part of the sender's
   OCM Addresses, `host [":" port]`, with the host and port grammar of
   an OCM Address, for example `cloud.example.org`,
@@ -1425,6 +1428,10 @@ request:
   field is _deprecated_ and SHOULD NOT be used.
 * OPTIONAL notification (object) - optional additional parameters,
   depending on the notification and the resource type.
+
+Receivers MUST validate string syntax and identity bindings before
+applying a notification. The OpenAPI schemas express structural
+constraints and do not perform all of these checks.
 
 A Notification payload MUST include either the `resourceType` or the
 `shareType`, or both when relevant.  Multiple Notification types are
@@ -1613,8 +1620,7 @@ A payload lacking a REQUIRED field, containing `resourceType` even
 when null or empty, containing a wrong-type field, or containing an
 invalid OCM Address MUST receive HTTP 400 before effects. Extra
 fields have no selection authority and MUST NOT replace or override
-`targetUserId`; old target spellings such as `localUserId` or
-`counterpartUserId` are not aliases. The actor host MUST match
+`targetUserId`. The actor host MUST match
 `senderDomain` and the counterpart host MUST match the Receiving
 Server's complete OCM host, including any port, lowercasing hosts
 only. A syntactically valid host-binding mismatch has no effect and
@@ -1637,9 +1643,8 @@ Errors of the local contact operation MUST be reported as errors
 rather than falsely claiming success; unsupported contact handling MAY
 return HTTP 501.  An accepted "CONTACT_REMOVED" receives bodyless HTTP
 201; that receipt confirms acceptance of the event, not any Share
-mutation, remote user choice or global completion.  Delivery is one
-best-effort attempt per committed contact transition; there is no
-retry, outbox or cross-server ordering guarantee.
+mutation, remote user choice or global completion.  This
+notification provides no cross-server ordering guarantee.
 
 # Resource Access
 
