@@ -210,27 +210,14 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NewNotification"
-            examples:
-              contactWasRemoved:
-                summary: A user removed a single contact
-                value:
-                  notificationType: CONTACT_REMOVED
-                  shareType: user
-                  senderDomain: alice.example.org
-                  notification:
-                    message: Alice removed Bob from her contacts
-                    user:
-                      userId: alice@alice.example.org
-                      targetUserId: bob@bob.example.org
         description: The JSON object with a new notification
         required: true
       responses:
         "201":
           description: >
-            An accepted notification receives a bodyless 201 response. The
-            receipt confirms acceptance of the event, not any Share mutation,
-            remote user choice or global completion. For other notification
-            types the response MAY contain response data.
+            Receiver succesfully received the notification. The response body
+            MAY contain a JSON object with response data, depending on
+            the actual notification.
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when `notificationType` is
@@ -580,7 +567,6 @@ components:
           items:
             type: string
             enum:
-              - contact-removal
               - enforce-mfa
               - exchange-token
               - http-sig
@@ -1102,24 +1088,19 @@ components:
       properties:
         notificationType:
           type: string
-          minLength: 1
           description: >
-            A non-blank notification type, compared exactly as sent without
-            trimming or case folding. Values containing only Unicode
-            White_Space are invalid.
+            A notification type that is understandable for both humans and
+            machines, providing information about an event.
             Any value registered in the OCM IANA Registry for notification types
             MAY be used here. Implementers MAY define additional custom types,
             provided that they are registered in the OCM IANA Registry.
         senderDomain:
+          type: string
           description: >
-            The complete host and port, if any, of the sending OCM server,
-            as in the server part of its OCM Addresses. It identifies the
-            sender; the endpoint found by discovery is only used to reach it.
-          allOf:
-            - $ref: "#/components/schemas/OCMHost"
+            The FQDN of the sending OCM server, in order for the recipient
+            to validate its key material when verifying the HTTP Signature.
         resourceType:
           type: string
-          minLength: 1
           description: >
             Resource type, according to the OCM IANA Registry for resource types.
             E.g. file, folder, calendar, contact, etc. Implementers MAY define
@@ -1127,7 +1108,6 @@ components:
             respective OCM IANA Registry.
         shareType:
           type: string
-          minLength: 1
           description: >
             Share type, according to the OCM IANA Registry for share types.
             E.g. user, group, federation, etc. Implementers MAY define
@@ -1148,11 +1128,6 @@ components:
               type: string
               description: >
                 An optional human-readable message that describes the event.
-            sharedSecret:
-              type: string
-              description: >
-                An optional secret related to the underlying share. It does not
-                authenticate the sender.
           additionalProperties:
             type: object
             description: >
@@ -1162,25 +1137,6 @@ components:
               `providerId` of the underlying resource, and in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
               `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
-      allOf:
-        - description: >
-            A notification MUST include either the `resourceType` or the
-            `shareType`, or both when relevant.
-          anyOf:
-            - required:
-                - resourceType
-            - required:
-                - shareType
-        - description: >
-            A CONTACT_REMOVED notification MUST satisfy its specific payload
-            requirements.
-          anyOf:
-            - properties:
-                notificationType:
-                  not:
-                    enum:
-                      - CONTACT_REMOVED
-            - $ref: "#/components/schemas/ContactRemovedNotification"
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
@@ -1224,75 +1180,6 @@ components:
               mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
               userId: bob@cloud.example.org
               content: base64 MLS welcome
-    ContactRemovedNotification:
-      type: object
-      description: >
-        Payload requirements of the CONTACT_REMOVED notification, which
-        omits the `resourceType` and identifies both users of the removed
-        contact. It is only sent to servers advertising the
-        `contact-removal` capability, which means support for the contact
-        operation and its binding and validation. The notification concerns
-        the contact relationship only; Shares in either direction remain
-        governed by their own permissions, expiration and explicit
-        lifecycle operations.
-      required:
-        - notificationType
-        - shareType
-        - notification
-      properties:
-        notificationType:
-          type: string
-          enum:
-            - CONTACT_REMOVED
-        shareType:
-          type: string
-          enum:
-            - user
-        notification:
-          type: object
-          required:
-            - user
-          properties:
-            user:
-              type: object
-              required:
-                - userId
-                - targetUserId
-              properties:
-                userId:
-                  description: >
-                    OCM Address of the user of the sending server who removed
-                    the contact. Its host part is the `senderDomain`.
-                  allOf:
-                    - $ref: "#/components/schemas/OCMAddress"
-                targetUserId:
-                  description: >
-                    OCM Address of the user of the receiving server who was
-                    removed from the contacts.
-                  allOf:
-                    - $ref: "#/components/schemas/OCMAddress"
-      not:
-        required:
-          - resourceType
-    OCMHost:
-      type: string
-      minLength: 1
-      description: >
-        The server part of an OCM Address, `host [":" port]`.
-        The host and port follow RFC 3986 sections 3.2.2 and 3.2.3.
-        IPv6 and IPvFuture literals use brackets. No identifier, scheme,
-        path, query or fragment is allowed. Compare the complete value
-        after lowercasing; never remove or assume a port.
-      example: cloud.example.org:8443
-    OCMAddress:
-      type: string
-      minLength: 1
-      description: >
-        An OCM Address, `identifier "@" host [":" port]`, as defined
-        in the Internet-Draft. The identifier is non-empty, opaque
-        and case-sensitive, separated from the host by the last "@".
-        The host and port follow the OCMHost definition.
-      example: alice@cloud.example.org:8443
     AcceptedInvite:
       type: object
       required:
@@ -1303,12 +1190,10 @@ components:
         - name
       properties:
         recipientProvider:
-          description: >
-            The complete host and port, if any, of the receiver OCM server,
-            as in the server part of its OCM Addresses.
-          example: receiver.org:8443
-          allOf:
-            - $ref: "#/components/schemas/OCMHost"
+          type: string
+          format: fqdn
+          description: FQDN of the receiver OCM service.
+          example: receiver.org
         token:
           type: string
           description: Token received in the invite
