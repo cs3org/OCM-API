@@ -1235,23 +1235,61 @@ described in [OCM-IP].
     token in a form field named `access_token` (see
     [Resource Access](#resource-access)).  The shared secret MUST NOT
     be exposed to the browser and MUST NOT appear in any URI.
-  - OPTIONAL appName (string)
-    A human-friendly name of the web application, to be used in user
-    interfaces when referring to this Share.
+  - OPTIONAL apps (array of objects)
+    The web applications available at the Sending Server to access
+    the Shared Resource.  This is useful in particular when the
+    Resource is a folder, whose files can be opened by different web
+    applications depending on their format, and the OCM share payload
+    includes as well a transport protocol such as `webdav`: the
+    receiving OCM server MAY then implement a UI that allows users to
+    navigate the folder, and open the files on the offered web apps
+    according to the files' type.  If present, the array MUST NOT be
+    empty and MUST NOT contain more than one entry per given `name`.
+    Each entry contains:
+    - REQUIRED name (string) - A human-friendly name of the web
+      application, to be used in user interfaces when referring to
+      this Share.
+    - REQUIRED mediaTypes (array of strings) - The media types (MIME
+      types) that this web application can handle.  The array MUST
+      NOT be empty.  This can be any media type entries from the IANA
+      Media Type registry.  The receiver MAY use this as a hint for UI
+      or routing decisions, e.g. to show which web application opens
+      a given file, and MAY ignore values it does not understand.
+      Unlike `appIconHint`, this describes formats the web
+      application can open rather than the share-level icon hint.
+      [RFC6838]
+
+    The order of the entries MAY be used by the Sending Server to
+    express a preference: when multiple web applications can handle
+    the same media type, the receiver SHOULD consider the first
+    matching entry as the default one.  All web applications listed
+    are accessed through the same `uri`, `sharedSecret`, `targets`,
+    `permissions` and `requirements`.  Example:
+
+    ~~~
+            "apps": [
+              {
+                "name": "HedgeDoc",
+                "mediaTypes": ["text/markdown", "text/html"]
+              },
+              {
+                "name": "Collabora",
+                "mediaTypes": [
+                  "application/vnd.oasis.opendocument.text",
+                  "application/vnd.oasis.opendocument.spreadsheet"
+                ]
+              }
+            ]
+    ~~~
+    {: type="json"}
   - OPTIONAL appIconHint (string)
     A string in the form of a media type (MIME type) that describes the
     share as a whole, primarily intended as a way for the receiving
     server to select an appropriate local icon for the share.  This is
     display metadata and MUST NOT be interpreted as fetchable or
-    executable content.  It does not need to appear in `mediaTypes`, but
-    SHOULD describe the primary shared resource. [RFC6838]
-  - OPTIONAL mediaTypes (array of strings)
-    An array of media types (MIME types) the webapp server can handle.
-    This can be any media type entries from the IANA Media Type
-    registry.  The receiver MAY use this as a hint for UI or routing
-    decisions, and MAY ignore values it does not understand.  Unlike
-    `appIconHint`, this describes formats the webapp can open rather
-    than the share-level icon hint. [RFC6838]
+    executable content.  It does not need to appear in any of the
+    `apps` media types, but SHOULD describe the primary shared
+    resource. [RFC6838]
 * Protocol details for `ssh` MAY contain:
   - OPTIONAL accessTypes (array of strings) - The type of access
     being granted to the remote resource.  If omitted, it defaults to
@@ -2875,6 +2913,11 @@ This section collects the changes with respect to the previous
 version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
+
+## Version 08
+* Introduced an `apps` array in the `webapp` protocol payload, listing
+  the available web applications each with the media types it can
+  handle.  It replaces the `appName` and `mediaTypes` properties.
 
 ## Version 07
 * Required the `keyid` signature parameter and that it matches the
