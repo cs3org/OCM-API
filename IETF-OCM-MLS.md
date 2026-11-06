@@ -407,7 +407,9 @@ its OCM discovery document at `/.well-known/ocm`:
 No additional discovery fields are introduced.  The notifications
 endpoint is derived as `<endPoint>/notifications` per the base OCM
 specification.  The KeyPackage endpoint is derived as
-`<endPoint>/mls-key-packages`.
+`<endPoint>/mls-key-packages`.  For example, an `endPoint` of
+`https://cloud.example.org/ocm` results in the KeyPackage endpoint
+`https://cloud.example.org/ocm/mls-key-packages`.
 
 A server that advertises `"federation"` MUST be able to receive OCM
 Notifications, since all MLS lifecycle messages are delivered as
@@ -1728,8 +1730,9 @@ and the integrity of the ratchet tree as required by [RFC9420] Section
 credential carrying a well-formed OCM Address.  The joiner accepts the
 bindings of those credentials transitively, on the basis that each was
 validated by an admin client when it was introduced.  It MAY
-additionally re-validate any leaf against the `/mls-key-packages`
-endpoint of its home server, but such re-validation can fail benignly,
+additionally re-validate any leaf against the
+`<endPoint>/mls-key-packages` endpoint of its home server, but such
+re-validation can fail benignly,
 since published KeyPackages rotate independently of leaves already in
 groups.
 
@@ -1994,7 +1997,7 @@ SHOULD also rate-limit requests by verified `senderDomain` and `userId`.
 **User enumeration.** A server MUST only reply to HTTPS GET requests
 signed and verified as specified in {{keypackage-distribution}} and
 SHOULD implement rate limiting and other access control methods on the
-`/mls-key-packages` endpoint to avoid user enumeration.
+`<endPoint>/mls-key-packages` endpoint to avoid user enumeration.
 
 ## Underlying Security Specifications
 
