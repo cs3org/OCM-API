@@ -1239,9 +1239,13 @@ described in [OCM-IP].
     The web applications available at the Sending Server to access
     the Shared Resource.  This is useful in particular when the
     Resource is a folder, whose files can be opened by different web
-    applications depending on their format.  If present, the array
-    MUST NOT be empty and MUST NOT contain more than one entry per
-    given `name`.  Each entry contains:
+    applications depending on their format, and the OCM share payload
+    includes as well a transport protocol such as `webdav`: the
+    receiving OCM server MAY then implement a UI that allows users to
+    navigate the folder, and open the files on the offered web apps
+    according to the files' type.  If present, the array MUST NOT be
+    empty and MUST NOT contain more than one entry per given `name`.
+    Each entry contains:
     - REQUIRED name (string) - A human-friendly name of the web
       application, to be used in user interfaces when referring to
       this Share.
