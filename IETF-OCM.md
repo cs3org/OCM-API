@@ -368,10 +368,8 @@ Acceptance Request MUST be a HTTP POST request:
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object
   with the following string fields:
-  - REQUIRED: `recipientProvider` - The server part,
-    `host [":" port]`, of the Invite Receiver's OCM Addresses, with
-    the same grammar and comparison as the `senderDomain` field of a
-    Notification.
+  - REQUIRED: `recipientProvider` - FQDN of the Invite Receiver OCM
+    Server.
   - REQUIRED: `token` - The Invite Token.  The Invite Sender OCM Server
     SHOULD recall which Invite Sender OCM Address this token was linked
     to.
@@ -717,9 +715,6 @@ contain the following information about its OCM API:
   capability.
   Example: `["exchange-token", "protocol-object"]`.  The array MAY
   include one or more of the following items:
-  - `"contact-removal"` - to indicate that this OCM Server
-  processes "CONTACT_REMOVED" notifications as specified in
-  [Contact Removal](#contact-removal).
   - `"enforce-mfa"` - to indicate that this OCM Server can apply a
   Sending Server's MFA requirements for a Share on their behalf.
   - `"exchange-token"` - to indicate that this OCM Server supports the
@@ -1403,22 +1398,10 @@ request:
 * REQUIRED notificationType (string) - it MUST be one of the
   registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
-  The value MUST contain at least one character outside the Unicode
-  White_Space property and MUST be compared exactly as sent, without
-  trimming or case folding.
-* REQUIRED senderDomain (string) - the server part of the sender's
-  OCM Addresses, `host [":" port]`, with the host and port grammar of
-  an OCM Address, for example `cloud.example.org`,
-  `cloud.example.org:8443`, `192.0.2.1` or `[2001:db8::1]:8443`.  A
-  Sending Server MUST send the complete host and port, if any, that
-  its OCM Addresses use.  Two values name the same server only when
-  they are equal after lowercasing; a Receiving Server MUST NOT remove
-  or assume a port, resolve a name, or use the endpoint found by
-  discovery to identify the sender, as that endpoint is only used to
-  reach it.  A Receiving Server SHOULD use this information to verify
-  the HTTP message signature on the request, and it SHOULD also use
-  it to validate the underlying share or resource the notification
-  is about.
+* REQUIRED senderDomain (string) - the FQDN of the sender.  A Receiving
+  Server SHOULD use this information to verify the HTTP message
+  signature on the request, and it SHOULD also use it to validate the
+  underlying share or resource the notification is about.
 * OPTIONAL resourceType (string) - the type of the resource this
   notification is about (e.g., `file`).
 * OPTIONAL shareType (string) - the type of recipient this notification
@@ -1428,10 +1411,6 @@ request:
   field is _deprecated_ and SHOULD NOT be used.
 * OPTIONAL notification (object) - optional additional parameters,
   depending on the notification and the resource type.
-
-Receivers MUST validate string syntax and identity bindings before
-applying a notification. The OpenAPI schemas express structural
-constraints and do not perform all of these checks.
 
 A Notification payload MUST include either the `resourceType` or the
 `shareType`, or both when relevant.  Multiple Notification types are
@@ -1556,95 +1535,46 @@ such as HTTP 404.
 
 ## Recipient Removal
 
-A notification MAY be sent when a user leaves the realm of the
-Sending Server or a group is removed. The Receiving Server SHOULD
+A notification MAY report a single contact removal, a user leaving
+the Sending Server's realm, or a group removal.
+
+For "CONTACT_REMOVED", the Receiving Server MAY reciprocally remove
+the contact between the two identified users. This notification alone
+MUST NOT withdraw or reject existing Shares in either direction, or
+affect other users' contacts. Each user MAY separately withdraw Shares
+they issued or decline Shares they received, using the corresponding
+per-share notifications.
+
+For "USER_REMOVED" and "GROUP_REMOVED", the Receiving Server SHOULD
 remove the departed recipient from its trusted users and related
-shares. A single contact removal uses CONTACT_REMOVED instead.
+shares. A single contact removal MUST NOT be reported as user departure.
 
-The `resourceType` MUST be omitted. The `shareType` MUST be `user`
-for "USER_REMOVED" or `group` for "GROUP_REMOVED". The
-`notification` object MUST contain a `user` object with a REQUIRED
-`userId` OCM Address, or a `group` object with a REQUIRED `groupId`
-string, respectively. An OPTIONAL `message` string describes the
-event. USER_REMOVED identifies the departed user; it does not infer
-departure from an omitted contact counterpart.
-
-The "USER_REMOVED" notification identifies the removed user only, and
-not which users of the target OCM Server it concerns.  A Sending
-Server MUST NOT use it to inform that one of its users removed a
-single contact: the "CONTACT_REMOVED" notification is defined for
-that purpose (see [Contact Removal](#contact-removal)).
-
-## Contact Removal
-
-A notification MAY be sent to inform a target OCM Server that a user
-of the Sending Server removed a single user of the target OCM Server
-from their contacts, e.g. a contact established through a previous
-successful Invitation.  Unlike "USER_REMOVED", this notification
-identifies both users of the contact: the user who removed the
-contact, called the actor, and the user who was removed, called the
-counterpart.  "CONTACT_REMOVED" informs the Receiving Server that the
-user identified by `notification.user.userId` removed the user
-identified by `notification.user.targetUserId` from their contacts.
-The Receiving Server MAY remove the corresponding contact.  It MUST
-NOT treat this notification alone as a withdrawal or rejection of a
-Share: existing Shares in either direction remain governed by their
-own permissions, expiration and explicit lifecycle operations.
-
-For this case, the `notificationType` MUST be "CONTACT_REMOVED", the
-`resourceType` MUST be omitted, the `shareType` MUST be `user`, and
-the `notification` object MUST include the following fields:
+For these cases, a notification payload is to be formed such that the
+`resourceType` MUST be omitted, the `shareType` is set to the affected
+shareType being removed, such as `user` or `group`, and the
+`notificationType` MUST be one of:
+- "CONTACT_REMOVED", to inform that a single user contact was removed
+  from the list of trusted contacts by the peer user.
+- "USER_REMOVED", to inform that a user left or was removed from the
+  realm of the sending OCM Server, and is therefore no longer reachable
+  as a contact.
+- "GROUP_REMOVED", to inform about a removed group of users.
+Further, the `notification` object MUST include the following fields:
 * OPTIONAL message (string) - an optional human-readable message that
   describes the event.
-* REQUIRED user (object) - an object containing the details of the
-  contact, including:
-  * REQUIRED userId (string) - OCM Address of the actor, i.e. the user
-    of the Sending Server who removed the contact.  Its host part MUST
-    be the `senderDomain`, compared as a whole host without regard to
-    case; a port is never removed to make them match.
-  * REQUIRED targetUserId (string) - OCM Address of the
-    counterpart, i.e. the user of the target OCM Server who was
-    removed from the contacts of the actor.  Its host part is the
-    complete host of the target OCM Server, as in its own OCM
-    Addresses, compared in the same way.
+* REQUIRED user or group (object) - an object containing the details
+  of the recipient to be removed. In case of `user`, it MUST include:
+  * REQUIRED userId (string) - OCM Address of the user that performed
+    the removal, or that left.
+  * REQUIRED targetUserId (string) - only for "CONTACT_REMOVED": OCM
+    Address of the user, local at the target server, that was removed
+    by the above peer contact.  It MUST be omitted for "USER_REMOVED",
+    where all contacts and shares related to `userId` at the target
+    server are to be removed.
+  Whereas in case of `group`, it MUST include:
+  * REQUIRED groupId (string) - identifier of the group to be removed
+    from the target OCM Server.
 
-A Sending Server MUST send a "CONTACT_REMOVED" notification only when
-the target advertises both notifications and the versionless
-`contact-removal` capability in [Discovery](#ocm-api-discovery). It
-MUST NOT fall back to USER_REMOVED. Advertising `contact-removal`
-means support for the contact operation and its binding and validation
-as specified here; it is not a commitment to withdraw or reject
-Shares across every enabled application.
-
-A payload lacking a REQUIRED field, containing `resourceType` even
-when null or empty, containing a wrong-type field, or containing an
-invalid OCM Address MUST receive HTTP 400 before effects. Extra
-fields have no selection authority and MUST NOT replace or override
-`targetUserId`. The actor host MUST match
-`senderDomain` and the counterpart host MUST match the Receiving
-Server's complete OCM host, including any port, lowercasing hosts
-only. A syntactically valid host-binding mismatch has no effect and
-SHOULD receive bodyless HTTP 201 for privacy. Syntax and binding do
-not authenticate the sender; existing authentication, authorization
-and provider-policy denials still apply.
-
-Each user MAY independently withdraw Shares they issued to the other
-user or reject Shares they received from them.  Such actions use the
-corresponding per-share notifications, for example "SHARE_UNSHARED"
-and "SHARE_DECLINED", and remain explicit separate local decisions.
-Removing one contact MUST NOT affect other users' contacts, other
-grant recipients, Resources or account credentials.
-
-The Receiving Server MAY reciprocally delete the exact contact of the
-actor and counterpart pair.  It MUST preserve all other contacts and
-MUST NOT reflect "CONTACT_REMOVED" back to the sender or synthesize
-per-share notifications merely because it received this event.
-Errors of the local contact operation MUST be reported as errors
-rather than falsely claiming success; unsupported contact handling MAY
-return HTTP 501.  An accepted "CONTACT_REMOVED" receives bodyless HTTP
-201; that receipt confirms acceptance of the event, not any Share
-mutation, remote user choice or global completion.  This
-notification provides no cross-server ordering guarantee.
 
 # Resource Access
 
