@@ -1758,13 +1758,14 @@ components:
               properties:
                 providerId:
                   type: string
+                  minLength: 1
                   description: >
                     The identifier assigned by the Sending Server to the
                     underlying share in a previous Share Creation Notification.
                 permissions:
                   type: array
                   items:
-                    type: string
+                    $ref: "#/components/schemas/NotificationPermission"
     ReshareRequestNotification:
       type: object
       description: Payload requirements of the REQUEST_RESHARE notification.
@@ -1790,12 +1791,13 @@ components:
               properties:
                 providerId:
                   type: string
+                  minLength: 1
                 shareWith:
-                  type: string
+                  $ref: "#/components/schemas/OCMAddress"
                 permissions:
                   type: array
                   items:
-                    type: string
+                    $ref: "#/components/schemas/NotificationPermission"
     ShareRequestNotification:
       type: object
       description: >
@@ -1824,15 +1826,16 @@ components:
                 - permissions
               properties:
                 owner:
-                  type: string
+                  $ref: "#/components/schemas/OCMAddress"
                 shareWith:
-                  type: string
+                  $ref: "#/components/schemas/OCMAddress"
                 shareId:
                   type: string
+                  minLength: 1
                 permissions:
                   type: array
                   items:
-                    type: string
+                    $ref: "#/components/schemas/NotificationPermission"
       not:
         required:
           - shareType
@@ -1861,7 +1864,7 @@ components:
                 - userId
               properties:
                 userId:
-                  type: string
+                  $ref: "#/components/schemas/OCMAddress"
       not:
         required:
           - resourceType
@@ -1891,6 +1894,7 @@ components:
               properties:
                 groupId:
                   type: string
+                  minLength: 1
       not:
         required:
           - resourceType
@@ -1971,6 +1975,15 @@ components:
         fragment. Compare the complete value after lowercasing, preserving
         explicit ports and all other spelling.
       example: cloud.example.org:8443
+    NotificationPermission:
+      type: string
+      description: >
+        A permission value as defined for the `webdav` protocol of a Share
+        Creation Notification.
+      enum:
+        - read
+        - write
+        - share
     OCMAddress:
       type: string
       minLength: 1
