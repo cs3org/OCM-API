@@ -1409,9 +1409,11 @@ request:
 
 ## Fields
 
-* REQUIRED notificationType (string) - it MUST be one of the
-  registered values listed in the "OCM Notification Types"
-  registry (see [IANA Considerations](#iana-considerations)).
+* REQUIRED notificationType (string) - a Sending Server MUST use one
+  of the registered values listed in the "OCM Notification Types"
+  registry (see [IANA Considerations](#iana-considerations)). See
+  [Receiver Processing](#receiver-processing) for values that a
+  Receiving Server does not know.
 * REQUIRED senderDomain (string) - the OCM Server Address of the
   sender. A Receiving Server SHOULD use this information to verify
   the HTTP message signature and validate the underlying share or
@@ -1433,6 +1435,36 @@ by implementers and registered in the "OCM Notification Types" IANA
 Registry.  For each notification type, a specific format MAY be defined
 for the optional notification object.  In the sections below, the base
 Notification types are detailed along with their specific payload.
+
+## Receiver Processing
+
+Because the set of Notification types is extensible, a Receiving
+Server can receive a `notificationType` value that it does not know,
+for instance a type registered after it was implemented, or a type
+defined by another implementer.  A Receiving Server processes a
+notification as follows:
+
+* If the request body is not a JSON object, or the `notificationType`
+  field is missing or is not a string, the Receiving Server MUST
+  reject the request with HTTP 400.
+* If the `notificationType` is not known to the Receiving Server, it
+  SHOULD accept and ignore the notification, and respond with HTTP
+  201.  It MUST NOT apply the payload requirements of any other
+  Notification type to it, and it MUST NOT reject it merely because
+  its type is not known.
+* If the `notificationType` is known to the Receiving Server, the
+  payload MUST be validated according to the definition of that type.
+  A payload that lacks a field REQUIRED for that type, or carries a
+  field with an invalid value, MUST NOT be treated as a notification
+  of an unknown type, and SHOULD be rejected with HTTP 400.  For
+  compatibility with earlier versions of this specification, a
+  Receiving Server MAY accept a known type in a deprecated layout,
+  e.g. with the deprecated top-level `providerId` instead of the one
+  in the `notification` object, provided that it does not guess any
+  value that the payload omits.
+* A Receiving Server that knows a `notificationType` but does not
+  implement it, for instance a request it never fulfills, MAY
+  respond with HTTP 501.
 
 ## Share Acceptance and Updating
 

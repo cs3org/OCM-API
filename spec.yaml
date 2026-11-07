@@ -209,6 +209,77 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NewNotification"
+            examples:
+              contactWasRemoved:
+                summary: A user removed a single contact
+                value:
+                  notificationType: CONTACT_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: Alice removed Bob from her contacts
+                    user:
+                      userId: alice@alice.example.org
+                      targetUserId: bob@bob.example.org
+              shareWasAccepted:
+                summary: A recipient accepted a share
+                value:
+                  notificationType: SHARE_ACCEPTED
+                  resourceType: file
+                  shareType: user
+                  senderDomain: receiver.example.org
+                  notification:
+                    message: Recipient accepted the share
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              shareWasAcceptedWithSecret:
+                summary: A recipient accepted a share, including the optional sharedSecret
+                value:
+                  notificationType: SHARE_ACCEPTED
+                  resourceType: file
+                  senderDomain: receiver.example.org
+                  notification:
+                    sharedSecret: hfiuhworzwnur98d3wjiwhr
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              shareWasUnshared:
+                summary: A provider removed a share
+                value:
+                  notificationType: SHARE_UNSHARED
+                  resourceType: file
+                  senderDomain: sender.example.org
+                  notification:
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              userLeft:
+                summary: A user left the sending server
+                value:
+                  notificationType: USER_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: User left the system
+                    user:
+                      userId: alice@alice.example.org
+              mlsWelcome:
+                summary: A notification type defined in another specification
+                value:
+                  notificationType: MLS_WELCOME
+                  shareType: federation
+                  senderDomain: cloud.example.org
+                  notification:
+                    federation:
+                      mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
+                      userId: bob@cloud.example.org
+                      content: base64 MLS welcome
+              customType:
+                summary: An implementer-defined notification type
+                value:
+                  notificationType: EXAMPLE_CUSTOM_EVENT
+                  resourceType: file
+                  senderDomain: sender.example.org
+                  notification:
+                    message: Something happened
         description: The JSON object with a new notification
         required: true
       responses:
@@ -219,8 +290,11 @@ paths:
             the actual notification.
         "400":
           description: >
-            Bad request due to invalid parameters, e.g. when `notificationType` is
-            invalid, not known or missing.
+            Bad request due to invalid parameters, e.g. when the body is not a
+            JSON object, when `notificationType` is missing, or when the payload
+            of a known notification type is invalid. A notification type that the
+            receiver does not know is not an error: the receiver SHOULD accept
+            and ignore it.
           content:
             application/json:
               schema:
@@ -1141,49 +1215,266 @@ components:
               `providerId` of the underlying resource, and in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
               `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
-      example:
-        legacyShareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-          notification:
-            message: Recipient accepted the share
-            sharedSecret: hfiuhworzwnur98d3wjiwhr
-        shareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          shareType: user
-          senderDomain: sender.example.org
-          notification:
-            message: Recipient accepted the share
+      allOf:
+        - description: >
+            A notification MUST include either the `resourceType` or the
+            `shareType`, or both when relevant.
+          anyOf:
+            - required:
+                - resourceType
+            - required:
+                - shareType
+        - description: >
+            A CONTACT_REMOVED notification MUST satisfy its specific payload
+            requirements.
+          anyOf:
+            - properties:
+                notificationType:
+                  not:
+                    enum:
+                      - CONTACT_REMOVED
+            - $ref: "#/components/schemas/ContactRemovedNotification"
+        - anyOf:
+            - $ref: "#/components/schemas/ShareStateNotification"
+            - $ref: "#/components/schemas/ReshareRequestNotification"
+            - $ref: "#/components/schemas/ShareRequestNotification"
+            - $ref: "#/components/schemas/UserRemovedNotification"
+            - $ref: "#/components/schemas/GroupRemovedNotification"
+            - $ref: "#/components/schemas/ContactRemovedNotification"
+            - $ref: "#/components/schemas/NotificationOfOtherType"
+    ShareStateNotification:
+      type: object
+      description: >
+        Payload requirements of the SHARE_ACCEPTED, SHARE_DECLINED,
+        SHARE_UNSHARED and SHARE_CHANGE_PERMISSION notifications.
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_ACCEPTED
+            - SHARE_DECLINED
+            - SHARE_UNSHARED
+            - SHARE_CHANGE_PERMISSION
+        notification:
+          type: object
+          required:
+            - file
+          properties:
             file:
-              providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-        contactWasRemoved:
-          notificationType: CONTACT_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User is not a trusted contact any longer
+              type: object
+              required:
+                - providerId
+              properties:
+                providerId:
+                  type: string
+                  description: >
+                    The identifier assigned by the Sending Server to the
+                    underlying share in a previous Share Creation Notification.
+                permissions:
+                  type: array
+                  items:
+                    type: string
+    ReshareRequestNotification:
+      type: object
+      description: Payload requirements of the REQUEST_RESHARE notification.
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - REQUEST_RESHARE
+        notification:
+          type: object
+          required:
+            - file
+          properties:
+            file:
+              type: object
+              required:
+                - providerId
+                - shareWith
+              properties:
+                providerId:
+                  type: string
+                shareWith:
+                  type: string
+                permissions:
+                  type: array
+                  items:
+                    type: string
+    ShareRequestNotification:
+      type: object
+      description: >
+        Payload requirements of the REQUEST_SHARE notification, which
+        omits the `shareType`.
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - REQUEST_SHARE
+        notification:
+          type: object
+          required:
+            - file
+          properties:
+            file:
+              type: object
+              required:
+                - owner
+                - shareWith
+                - shareId
+                - permissions
+              properties:
+                owner:
+                  type: string
+                shareWith:
+                  type: string
+                shareId:
+                  type: string
+                permissions:
+                  type: array
+                  items:
+                    type: string
+      not:
+        required:
+          - shareType
+    UserRemovedNotification:
+      type: object
+      description: >
+        Payload requirements of the USER_REMOVED notification, which
+        omits the `resourceType`.
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - USER_REMOVED
+        notification:
+          type: object
+          required:
+            - user
+          properties:
             user:
-              userId: alice@alice.example.org
-              targetUserId: bob@bob.example.org
-        userLeft:
-          notificationType: USER_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User left the system
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+      not:
+        required:
+          - resourceType
+    GroupRemovedNotification:
+      type: object
+      description: >
+        Payload requirements of the GROUP_REMOVED notification, which
+        omits the `resourceType`.
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - GROUP_REMOVED
+        notification:
+          type: object
+          required:
+            - group
+          properties:
+            group:
+              type: object
+              required:
+                - groupId
+              properties:
+                groupId:
+                  type: string
+      not:
+        required:
+          - resourceType
+    NotificationOfOtherType:
+      type: object
+      description: >
+        Any notification type other than those with specific payload
+        requirements above, e.g. a newly registered or implementer-defined
+        type. Such notifications only need to satisfy the generic envelope,
+        and a receiver that does not know their type SHOULD accept and
+        ignore them. A notification of a known type with an invalid payload
+        cannot match this schema.
+      properties:
+        notificationType:
+          type: string
+          not:
+            enum:
+              - SHARE_ACCEPTED
+              - SHARE_DECLINED
+              - SHARE_UNSHARED
+              - SHARE_CHANGE_PERMISSION
+              - REQUEST_RESHARE
+              - REQUEST_SHARE
+              - USER_REMOVED
+              - CONTACT_REMOVED
+              - GROUP_REMOVED
+    ContactRemovedNotification:
+      type: object
+      description: >
+        Payload requirements of the CONTACT_REMOVED notification, which
+        omits the `resourceType` and identifies both users of the removed
+        contact.
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - CONTACT_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
+        notification:
+          type: object
+          required:
+            - user
+          properties:
             user:
-              userId: alice@alice.example.org
-        mlsWelcome:
-          notificationType: MLS_WELCOME
-          shareType: federation
-          senderDomain: cloud.example.org
-          notification:
-            federation:
-              mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
-              userId: bob@cloud.example.org
-              content: base64 MLS welcome
+              type: object
+              required:
+                - userId
+                - targetUserId
+              properties:
+                userId:
+                  description: >
+                    OCM Address of the user of the sending server who removed
+                    the contact. Its host part is the `senderDomain`.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
+                targetUserId:
+                  description: >
+                    OCM Address of the user of the receiving server who was
+                    removed from the contacts.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
+      not:
+        required:
+          - resourceType
     OCMServerAddress:
       type: string
       minLength: 1
