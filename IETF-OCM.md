@@ -1444,9 +1444,11 @@ for instance a type registered after it was implemented, or a type
 defined by another implementer.  A Receiving Server processes a
 notification as follows:
 
-* If the request body is not a JSON object, or the `notificationType`
-  field is missing or is not a string, the Receiving Server MUST
-  reject the request with HTTP 400.
+* If the request body is not a JSON object, the `notificationType`
+  field is missing or is not a non-blank string, the `senderDomain`
+  is not a FQDN (see [Fields](#fields)), or neither a non-empty
+  `resourceType` nor a non-empty `shareType` is present, the Receiving
+  Server MUST reject the request with HTTP 400.
 * If the `notificationType` is not known to the Receiving Server, it
   SHOULD accept and ignore the notification, and respond with HTTP
   201.  It MUST NOT apply the payload requirements of any other
@@ -1456,12 +1458,9 @@ notification as follows:
   payload MUST be validated according to the definition of that type.
   A payload that lacks a field REQUIRED for that type, or carries a
   field with an invalid value, MUST NOT be treated as a notification
-  of an unknown type, and SHOULD be rejected with HTTP 400.  For
-  compatibility with earlier versions of this specification, a
-  Receiving Server MAY accept a known type in a deprecated layout,
-  e.g. with the deprecated top-level `providerId` instead of the one
-  in the `notification` object, provided that it does not guess any
-  value that the payload omits.
+  of an unknown type, and SHOULD be rejected with HTTP 400.  The
+  deprecated top-level `providerId` never replaces a field required in
+  the `notification` object.
 * A Receiving Server that knows a `notificationType` but does not
   implement it, for instance a request it never fulfills, MAY
   respond with HTTP 501.

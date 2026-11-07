@@ -291,8 +291,9 @@ paths:
         "400":
           description: >
             Bad request due to invalid parameters, e.g. when the body is not a
-            JSON object, when `notificationType` is missing, or when the payload
-            of a known notification type is invalid. A notification type that the
+            JSON object, when `notificationType`, `senderDomain` or both
+            `resourceType` and `shareType` are missing or invalid, or when the
+            payload of a known notification type is invalid. A notification type that the
             receiver does not know is not an error: the receiver SHOULD accept
             and ignore it.
           content:
@@ -1195,7 +1196,8 @@ components:
           type: string
           description: >
             Optional unique identifier of the underlying resource. This property
-            is now deprecated, in favor of including it in the notification object.
+            is now deprecated, in favor of including it in the notification object,
+            and it never replaces a field required there.
         notification:
           type: object
           description: >
