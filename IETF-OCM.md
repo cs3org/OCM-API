@@ -1502,6 +1502,15 @@ present it MUST match the `shareType` of the underlying share, and the
   was removed and is not accessible any longer.
 - "SHARE_CHANGE_PERMISSION", to inform the Receiving Server that
   the permissions of a share were updated.
+
+A recipient MAY decline an offered Share or subsequently stop
+receiving a previously accepted Share.  "SHARE_DECLINED" reports that
+decision for that Share.  It does not remove the Resource and does
+not, by itself, withdraw the provider's grant.  Whether the recipient
+can later accept that Share is governed by the provider's current
+grant and local acceptance policy.  A withdrawn Share is not revived
+by a later acceptance notification.
+
 Further, the `notification` object MUST include the following fields:
 * OPTIONAL message (string) - an optional human-readable message that
   describes the event.
