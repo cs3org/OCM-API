@@ -319,7 +319,8 @@ paths:
         "501":
           description: >
             The receiver doesn't support notifications, the resource type is not
-            supported.
+            supported, or the receiver knows the notification type but does not
+            implement it.
           content:
             application/json:
               schema:
@@ -1160,6 +1161,9 @@ components:
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
+      description: >
+        Known notification types must satisfy their specific payload constraints.
+        Other types satisfy only the generic envelope and are ignored.
       required:
         - notificationType
         - senderDomain
@@ -1226,16 +1230,6 @@ components:
                 - resourceType
             - required:
                 - shareType
-        - description: >
-            A CONTACT_REMOVED notification MUST satisfy its specific payload
-            requirements.
-          anyOf:
-            - properties:
-                notificationType:
-                  not:
-                    enum:
-                      - CONTACT_REMOVED
-            - $ref: "#/components/schemas/ContactRemovedNotification"
         - anyOf:
             - $ref: "#/components/schemas/ShareStateNotification"
             - $ref: "#/components/schemas/ReshareRequestNotification"
