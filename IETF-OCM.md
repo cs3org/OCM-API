@@ -1446,9 +1446,13 @@ notification as follows:
 
 * If the request body is not a JSON object, the `notificationType`
   field is missing or is not a non-blank string, the `senderDomain`
-  is not a FQDN (see [Fields](#fields)), or neither a non-empty
+  is not a valid `host [":" port]` (see [Fields](#fields)), or
+  neither a non-empty
   `resourceType` nor a non-empty `shareType` is present, the Receiving
   Server MUST reject the request with HTTP 400.
+* A non-blank string has at least one character that is not Unicode
+  White_Space.  The `notificationType` is compared exactly as sent; it
+  is not trimmed or case folded.
 * If the `notificationType` is not known to the Receiving Server, it
   SHOULD accept and ignore the notification, and respond with HTTP
   201.  It MUST NOT apply the payload requirements of any other
