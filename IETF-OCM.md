@@ -1434,11 +1434,10 @@ request:
 
 ## Fields
 
-* REQUIRED notificationType (string) - a Sending Server MUST use one
-  of the registered values listed in the "OCM Notification Types"
-  registry (see [IANA Considerations](#iana-considerations)). See
-  [Receiver Processing](#receiver-processing) for values that a
-  Receiving Server does not know.
+* REQUIRED notificationType (string) - a non-empty string, compared
+  exactly as sent. A Sending Server MUST use a value in the "OCM
+  Notification Types" registry (see [IANA
+  Considerations](#iana-considerations)).
 * REQUIRED senderDomain (string) - the sender's OCM Server Address
   (host and optional port), as defined in [Terms](#terms). A Receiving
   Server SHOULD use this information to verify the HTTP message
@@ -1447,9 +1446,6 @@ request:
   notification is about (e.g., `file`).
 * OPTIONAL shareType (string) - the type of recipient this notification
   is about (e.g., `user`).
-* OPTIONAL providerId (string) - the identifier assigned by the
-  Sending Server to the underlying share, if applicable. This
-  field is _deprecated_ and SHOULD NOT be used.
 * OPTIONAL collectionId (string) - the identifier of the Collection.
   It is REQUIRED for `REQUEST_SHARE` and for a `SHARE_DECLINED`
   notification declining such a request.
@@ -1469,36 +1465,23 @@ with their specific payload.
 
 ## Receiver Processing
 
-Because the set of Notification types is extensible, a Receiving
-Server can receive a `notificationType` value that it does not know,
-for instance a type registered after it was implemented, or a type
-defined by another implementer.  A Receiving Server processes a
-notification as follows:
+Before applying a notification, the receiver MUST validate its envelope,
+payload and identity bindings. The OpenAPI schemas express structural
+constraints; address syntax and peer bindings also require validation.
 
-* If the request body is not a JSON object, the `notificationType`
-  field is missing or is not a non-blank string, the `senderDomain`
-  is not a valid `host [":" port]` (see [Fields](#fields)), or
-  neither a non-empty
-  `resourceType` nor a non-empty `shareType` is present, the Receiving
-  Server MUST reject the request with HTTP 400.
-* A non-blank string has at least one character that is not Unicode
-  White_Space.  The `notificationType` is compared exactly as sent; it
-  is not trimmed or case folded.
-* If the `notificationType` is not known to the Receiving Server, it
-  SHOULD accept and ignore the notification, and respond with HTTP
-  201.  It MUST NOT apply the payload requirements of any other
-  Notification type to it, and it MUST NOT reject it merely because
-  its type is not known.
-* If the `notificationType` is known to the Receiving Server, the
-  payload MUST be validated according to the definition of that type.
-  A payload that lacks a field REQUIRED for that type, or carries a
-  field with an invalid value, MUST NOT be treated as a notification
-  of an unknown type, and SHOULD be rejected with HTTP 400.  The
-  deprecated top-level `providerId` never replaces a field required in
-  the `notification` object.
-* A Receiving Server that knows a `notificationType` but does not
-  implement it, for instance a request it never fulfills, MAY
-  respond with HTTP 501.
+* A malformed envelope MUST receive HTTP 400. It requires a non-empty
+  `notificationType`, a valid `senderDomain`, and at least one of
+  `resourceType` or `shareType` as a non-empty string. Optional fields,
+  when present, MUST have their defined types.
+* A receiver SHOULD accept and ignore a valid unknown notification
+  type. It MUST NOT reject it merely because the type is unknown, or
+  apply another type's payload requirements to it.
+* A known type MUST satisfy its defined payload requirements. Malformed
+  known notifications MUST receive HTTP 400 and MUST NOT pass through
+  the unknown-type path. Deprecated fields cannot replace required
+  payload fields.
+* A receiver MAY return HTTP 501 for a known, valid notification type
+  whose operation it does not implement.
 
 ## Share Acceptance and Updating
 
@@ -1649,9 +1632,10 @@ For "USER_REMOVED" and "GROUP_REMOVED", the Receiving Server SHOULD
 remove the departed recipient from its trusted users and related
 shares. A single contact removal MUST NOT be reported as user departure.
 
-The `resourceType` MUST be omitted. The `shareType` MUST be `group`
-for "GROUP_REMOVED" and `user` for "CONTACT_REMOVED" or "USER_REMOVED".
-The `notificationType` MUST be one of:
+For these cases, a notification payload is to be formed such that the
+`resourceType` MUST be omitted, the `shareType` is set to the affected
+shareType being removed, such as `user` or `group`, and the
+`notificationType` MUST be one of:
 - "CONTACT_REMOVED", to inform that a single user contact was removed
   from the list of trusted contacts by the peer user.
 - "USER_REMOVED", to inform that a user left or was removed from the
