@@ -1593,10 +1593,9 @@ shareType matched it.  The recipient of such notification SHOULD
 reciprocally remove that peer from the list of trusted users, along
 with any related shares.
 
-For these cases, a notification payload is to be formed such that the
-`resourceType` MUST be omitted, the `shareType` is set to the affected
-shareType being removed, such as `user` or `group`, and the
-`notificationType` MUST be one of:
+The `resourceType` MUST be omitted. The `shareType` MUST be `group`
+for "GROUP_REMOVED" and `user` for "CONTACT_REMOVED" or "USER_REMOVED".
+The `notificationType` MUST be one of:
 - "CONTACT_REMOVED", to inform that a single user contact was removed
   from the list of trusted contacts by the peer user.
 - "USER_REMOVED", to inform that a user left or was removed from the
