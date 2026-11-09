@@ -270,18 +270,21 @@ implementers to understand the relationships between these terms.
 # General Flow
 
 The lifecycle of an Open Cloud Mesh Share starts with prerequisites such
-as establishing trust, establishing contact, and OCM API Discovery.
+as establishing trust, establishing contact, and discovery of the remote
+OCM Server.
 
-Then the share creation involves the Sending Party making a Sending
-Gesture to the Sending Server, the Sending Server carrying out the
-actual Share Creation, and the Sending Server sending a Share Creation
-Notification to the Receiving Server.
+The share creation involves the Sending Party making a Sending Gesture
+to the Sending Server, and the Sending Server preparing the Share and
+sending a Share Creation Notification to the Receiving Server.
 
 After this, the Receiving Server MAY notify the Receiving Party and/or
 the Sending Server, and will act as an API client through which the
 Receiving Party can access the Resource.  The Receiving Party or
 the Sending Party MAY then update or delete the Share: the respective
 Server MAY send a Notification to the other party about the change.
+
+In what follows all the related flows are detailed.  [OpenAPI] contains
+a description of the whole protocol in OpenAPI format.
 
 # Establishing Contact
 
@@ -2186,6 +2189,9 @@ author, version, name of work, or endorsement information.
 # References
 
 ## Normative References
+
+[OpenAPI] "[Open Cloud Mesh protocol specification in OpenAPI format](
+https://cs3org.github.io/OCM-API/docs.html?branch=develop&repo=OCM-API&user=cs3org)".
 
 [IANA-DIGEST-ALG] IANA, "[Hash Algorithms for HTTP Digest Fields](
 https://www.iana.org/assignments/http-digest-hash-alg/http-digest-hash-alg.xhtml)".
