@@ -219,8 +219,8 @@ paths:
             the actual notification.
         "400":
           description: >
-            Bad request due to invalid parameters, e.g. when `notificationType` is
-            invalid, not known or missing.
+            Invalid notification envelope or malformed payload for a known
+            notification type.
           content:
             application/json:
               schema:
@@ -243,8 +243,8 @@ paths:
             does not have rights to access it.
         "501":
           description: >
-            The receiver doesn't support notifications, the resource type is not
-            supported.
+            Notifications or the requested operation are not implemented
+            by the receiver.
           content:
             application/json:
               schema:
