@@ -1094,8 +1094,6 @@ components:
           minLength: 1
           description: >
             A non-empty notification type, compared exactly as sent.
-            A receiver accepts and ignores valid unknown types; known
-            types must satisfy their own payload requirements.
             Any value registered in the OCM IANA Registry for notification types
             MAY be used here. Implementers MAY define additional custom types,
             provided that they are registered in the OCM IANA Registry.
@@ -1121,6 +1119,11 @@ components:
             E.g. user, group, federation, etc. Implementers MAY define
             additional custom types, provided that they are registered in the
             respective OCM IANA Registry.
+        providerId:
+          type: string
+          description: >
+            Optional unique identifier of the underlying resource. This property
+            is now deprecated, in favor of including it in the notification object.
         notification:
           type: object
           description: >
