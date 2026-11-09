@@ -1446,6 +1446,9 @@ request:
   notification is about (e.g., `file`).
 * OPTIONAL shareType (string) - the type of recipient this notification
   is about (e.g., `user`).
+* OPTIONAL providerId (string) - the identifier assigned by the
+  Sending Server to the underlying share, if applicable. This
+  field is _deprecated_ and SHOULD NOT be used.
 * OPTIONAL collectionId (string) - the identifier of the Collection.
   It is REQUIRED for `REQUEST_SHARE` and for a `SHARE_DECLINED`
   notification declining such a request.
@@ -1466,20 +1469,14 @@ with their specific payload.
 ## Receiver Processing
 
 Before applying a notification, the receiver MUST validate its envelope,
-payload and identity bindings. The OpenAPI schemas express structural
-constraints; address syntax and peer bindings also require validation.
+payload and identity bindings.
 
-* A malformed envelope MUST receive HTTP 400. It requires a non-empty
-  `notificationType`, a valid `senderDomain`, and at least one of
-  `resourceType` or `shareType` as a non-empty string. Optional fields,
-  when present, MUST have their defined types.
+* Malformed envelopes and malformed payloads for known notification
+  types MUST receive HTTP 400. Deprecated fields cannot replace required
+  payload fields.
 * A receiver SHOULD accept and ignore a valid unknown notification
   type. It MUST NOT reject it merely because the type is unknown, or
   apply another type's payload requirements to it.
-* A known type MUST satisfy its defined payload requirements. Malformed
-  known notifications MUST receive HTTP 400 and MUST NOT pass through
-  the unknown-type path. Deprecated fields cannot replace required
-  payload fields.
 * A receiver MAY return HTTP 501 for a known, valid notification type
   whose operation it does not implement.
 
