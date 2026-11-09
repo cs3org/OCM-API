@@ -1423,6 +1423,10 @@ components:
           type: string
           enum:
             - USER_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
         notification:
           type: object
           required:
@@ -1435,6 +1439,9 @@ components:
               properties:
                 userId:
                   $ref: "#/components/schemas/OCMAddress"
+              not:
+                required:
+                  - targetUserId
       not:
         required:
           - resourceType
@@ -1452,6 +1459,10 @@ components:
           type: string
           enum:
             - GROUP_REMOVED
+        shareType:
+          type: string
+          enum:
+            - group
         notification:
           type: object
           required:
