@@ -1115,7 +1115,34 @@ components:
     NewNotification:
       type: object
       oneOf:
-        - $ref: "#/components/schemas/RequestShare"
+        - description: >
+            A REQUEST_SHARE notification requesting access to a Collection advertised
+            out of band, for example in a catalog. If the owner agrees, the Sending
+            Server MUST send one or more Share Creation Notifications to shareWith,
+            each carrying the requested collectionId unchanged, its own providerId,
+            and its own resourceType and protocols. The Sending Server determines the
+            number of Shares and MAY offer multiple protocols for a Resource in one
+            Share. resourceType MUST be omitted from the request; shareType is REQUIRED
+            and determines the recipient type of all resulting Shares.
+            collectionSize applies only to share payloads and MUST NOT be included here.
+          required:
+            - collectionId
+            - shareType
+            - notification
+          not:
+            anyOf:
+              - required: [resourceType]
+              - required: [collectionSize]
+          properties:
+            notificationType:
+              enum: [REQUEST_SHARE]
+            notification:
+              type: object
+              required:
+                - collection
+              properties:
+                collection:
+                  $ref: "#/components/schemas/RequestShare"
         - properties:
             notificationType:
               not:
@@ -1287,81 +1314,35 @@ components:
     RequestShare:
       type: object
       description: >
-        A REQUEST_SHARE notification requesting access to a Collection advertised
-        out of band, for example in a catalog. If the owner agrees, the Sending
-        Server MUST send one or more Share Creation Notifications to shareWith,
-        each carrying the requested collectionId unchanged, its own providerId,
-        and its own resourceType and protocols. The Sending Server determines the
-        number of Shares and MAY offer multiple protocols for a Resource in one
-        Share. resourceType MUST be omitted from the request; shareType is REQUIRED
-        and determines the recipient type of all resulting Shares.
-        collectionSize applies only to share payloads and MUST NOT be included here.
+        Details of a Collection request, carried in notification.collection of a
+        REQUEST_SHARE notification.
       required:
-        - notificationType
-        - senderDomain
-        - collectionId
-        - shareType
-        - notification
-      not:
-        anyOf:
-          - required: [resourceType]
-          - required: [collectionSize]
+        - owner
+        - shareWith
+        - permissions
       properties:
-        notificationType:
-          type: string
-          enum: [REQUEST_SHARE]
-        senderDomain:
+        owner:
           type: string
           description: >
-            The FQDN of the requesting OCM server, used to verify the HTTP Signature.
-          example: requester.example.org
-        collectionId:
-          type: string
-          description: Opaque identifier of the requested Collection.
-          example: research-data-123
-        shareType:
+            OCM Address of the user requested to share the Collection's Resources.
+          example: alice@provider.example.org
+        shareWith:
           type: string
           description: >
-            Type of the recipient identified by notification.collection.shareWith,
-            according to the OCM Share Types registry, for example user, group, or
-            federation. Each resulting Share Creation Notification MUST use this
-            shareType.
-          example: group
-        notification:
-          type: object
-          required:
-            - collection
-          properties:
-            message:
-              type: string
-              description: An optional human-readable message describing the request.
-            collection:
-              type: object
-              required:
-                - owner
-                - shareWith
-                - permissions
-              properties:
-                owner:
-                  type: string
-                  description: >
-                    OCM Address of the user requested to share the Collection's Resources.
-                  example: alice@provider.example.org
-                shareWith:
-                  type: string
-                  description: >
-                    OCM Address of the recipient wishing to receive Shares of the
-                    Collection's Resources.
-                  example: bob@requester.example.org
-                permissions:
-                  type: array
-                  description: >
-                    Permissions to be granted to the requesting party. The allowed
-                    values match the permissions in the webdav protocol of a Share
-                    Creation Notification.
-                  items:
-                    type: string
-                    enum: [read, write, share]
+            OCM Address of the recipient wishing to receive Shares of the
+            Collection's Resources. The notification's shareType determines the
+            recipient type and MUST be used in each resulting Share Creation
+            Notification.
+          example: bob@requester.example.org
+        permissions:
+          type: array
+          description: >
+            Permissions to be granted to the requesting party. The allowed
+            values match the permissions in the webdav protocol of a Share
+            Creation Notification.
+          items:
+            type: string
+            enum: [read, write, share]
     TokenRequest:
       type: object
       required:
