@@ -214,9 +214,10 @@ paths:
       responses:
         "201":
           description: >
-            Receiver succesfully received the notification. The response body
-            MAY contain a JSON object with response data, depending on
-            the actual notification.
+            Receiver successfully received the notification. The response has
+            no body, including for unknown types that are accepted and ignored.
+            A receipt does not imply any Share mutation, remote user choice,
+            physical cleanup or global completion.
         "400":
           description: >
             Invalid notification envelope or malformed payload for a known
