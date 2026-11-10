@@ -19,7 +19,14 @@ For a navigable, AI-generated overview of this repository, see
 
 [SemVer](https://semver.org) versioning applies to OCM, and backwards compatibility is supported unless stated otherwise by an implementation.
 
-[Extensions](https://github.com/cs3org/OCM-API/tree/develop/extensions) of the core OCM protocol have been published as well.
+## Extensions
+
+The OCM Protocol Specification is designed to be extensible: multiple IANA Registries have been defined, in order to ease the process of adding new protocols and use-cases without requiring an amendment of the core spec.
+
+Here follow the currently defined extensions:
+
+* [Embedded payloads and RO-Crates](https://github.com/cs3org/OCM-API/tree/develop/extensions/Embedded.md)
+* [OpenGeoMesh](https://github.com/cs3org/OCM-API/tree/develop/extensions/OpenGeoMesh.md)
 
 ## Testing
 
