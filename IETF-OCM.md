@@ -2924,6 +2924,8 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Introduced an `apps` array in the `webapp` protocol payload, listing
   the available web applications each with the media types it can
   handle.  It replaces the `appName` and `mediaTypes` properties.
+* Introduced a CONTACT_REMOVAL notification.
+* Added reference to the OpenAPI protocol specification.
 
 ## Version 07
 * Required the `keyid` signature parameter and that it matches the
