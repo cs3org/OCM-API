@@ -1459,10 +1459,15 @@ This also applies to a notification whose type the Receiving Server
 does not know, and accepts and ignores as described in [Receiver
 Processing](#receiver-processing).
 
-A successful response only confirms that the Receiving Server
-received the notification and, for a type it knows, that the payload
-was valid.  It does not imply that the Receiving Server acted upon the
-notification, changed any state, or informed any of its users.
+A successful response confirms receipt and, for a known type, payload
+validity. Except for the CONTACT_REMOVED acceptance precondition, it
+need not imply action, mutation or user notification. A capable server
+MUST accept an authorized, correctly bound affected CONTACT_REMOVED
+only after durable local denial of its exact pair grants, as specified
+in [Contact Removal](#contact-removal). Identity or enforcement failure
+before that commit requires a retryable server error, never HTTP 201.
+An authoritative no-op may receive HTTP 201 without mutation. Neither
+receipt nor local denial proves physical cleanup or global completion.
 
 ## Share Acceptance and Updating
 
