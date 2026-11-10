@@ -1449,6 +1449,21 @@ payload and identity bindings.
 * A receiver MAY return HTTP 501 for a known, valid notification type
   whose operation it does not implement.
 
+## Response
+
+A Receiving Server that accepts a notification MUST respond with HTTP
+201 (Created).  The response has no body, and a Sending Server MUST
+ignore any body that a Receiving Server nevertheless returns.  A
+Sending Server SHOULD treat any 2xx response as a successful delivery.
+This also applies to a notification whose type the Receiving Server
+does not know, and accepts and ignores as described in [Receiver
+Processing](#receiver-processing).
+
+A successful response only confirms that the Receiving Server
+received the notification and, for a type it knows, that the payload
+was valid.  It does not imply that the Receiving Server acted upon the
+notification, changed any state, or informed any of its users.
+
 ## Share Acceptance and Updating
 
 A notification MAY be sent by a recipient to let the provider know that
