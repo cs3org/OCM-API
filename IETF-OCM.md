@@ -1460,14 +1460,12 @@ does not know, and accepts and ignores as described in [Receiver
 Processing](#receiver-processing).
 
 A successful response confirms receipt and, for a known type, payload
-validity. Except for the CONTACT_REMOVED acceptance precondition, it
-need not imply action, mutation or user notification. A capable server
-MUST accept an authorized, correctly bound affected CONTACT_REMOVED
-only after durable local denial of its exact pair grants, as specified
-in [Contact Removal](#contact-removal). Identity or enforcement failure
-before that commit requires a retryable server error, never HTTP 201.
-An authoritative no-op may receive HTTP 201 without mutation. Neither
-receipt nor local denial proves physical cleanup or global completion.
+validity.  It need not imply action, mutation or user notification.
+An accepted "CONTACT_REMOVED" confirms the contact event only; local
+contact operation errors MUST be reported as errors rather than a
+false success, as described in [Contact Removal](#contact-removal).
+Neither receipt nor a peer being offline proves physical cleanup,
+remote user choice or global completion.
 
 ## Share Acceptance and Updating
 
