@@ -219,8 +219,8 @@ paths:
             the actual notification.
         "400":
           description: >
-            Bad request due to invalid parameters, e.g. when `notificationType` is
-            invalid, not known or missing.
+            Invalid notification envelope or malformed payload for a known
+            notification type.
           content:
             application/json:
               schema:
@@ -243,8 +243,8 @@ paths:
             does not have rights to access it.
         "501":
           description: >
-            The receiver doesn't support notifications, the resource type is not
-            supported.
+            Notifications or the requested operation are not implemented
+            by the receiver.
           content:
             application/json:
               schema:
@@ -1091,9 +1091,9 @@ components:
       properties:
         notificationType:
           type: string
+          minLength: 1
           description: >
-            A notification type that is understandable for both humans and
-            machines, providing information about an event.
+            A non-empty notification type, compared exactly as sent.
             Any value registered in the OCM IANA Registry for notification types
             MAY be used here. Implementers MAY define additional custom types,
             provided that they are registered in the OCM IANA Registry.
@@ -1105,6 +1105,7 @@ components:
             key material and verify the HTTP Message Signature.
         resourceType:
           type: string
+          minLength: 1
           description: >
             Resource type, according to the OCM IANA Registry for resource types.
             E.g. file, folder, calendar, contact, etc. Implementers MAY define
@@ -1112,6 +1113,7 @@ components:
             respective OCM IANA Registry.
         shareType:
           type: string
+          minLength: 1
           description: >
             Share type, according to the OCM IANA Registry for share types.
             E.g. user, group, federation, etc. Implementers MAY define
@@ -1135,12 +1137,8 @@ components:
           additionalProperties:
             type: object
             description: >
-              This object MUST be keyed with the resource type or share type of this
-              notification. It contains its payload and it can vary according to the
-              implementers. In case of `file` resources, it MUST contain at least the
-              `providerId` of the underlying resource, and in case of `user`, `group`,
-              or `federation` share types, it MUST contain at least the `userId`,
-              `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
+              Additional payload objects keyed by resource type or share type.
+              Required fields are defined by the notification type.
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED

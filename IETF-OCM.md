@@ -1409,9 +1409,10 @@ request:
 
 ## Fields
 
-* REQUIRED notificationType (string) - it MUST be one of the
-  registered values listed in the "OCM Notification Types"
-  registry (see [IANA Considerations](#iana-considerations)).
+* REQUIRED notificationType (string) - a non-empty string, compared
+  exactly as sent. A Sending Server MUST use a value in the "OCM
+  Notification Types" registry (see [IANA
+  Considerations](#iana-considerations)).
 * REQUIRED senderDomain (string) - the OCM Server Address of the
   sender. A Receiving Server SHOULD use this information to verify
   the HTTP message signature and validate the underlying share or
@@ -1433,6 +1434,20 @@ by implementers and registered in the "OCM Notification Types" IANA
 Registry.  For each notification type, a specific format MAY be defined
 for the optional notification object.  In the sections below, the base
 Notification types are detailed along with their specific payload.
+
+## Receiver Processing
+
+Before applying a notification, the receiver MUST validate its envelope,
+payload and identity bindings.
+
+* Malformed envelopes and malformed payloads for known notification
+  types MUST receive HTTP 400. Deprecated fields cannot replace required
+  payload fields.
+* A receiver SHOULD accept and ignore a valid unknown notification
+  type. It MUST NOT reject it merely because the type is unknown, or
+  apply another type's payload requirements to it.
+* A receiver MAY return HTTP 501 for a known, valid notification type
+  whose operation it does not implement.
 
 ## Share Acceptance and Updating
 
@@ -2096,11 +2111,8 @@ the values that MAY appear in the "notificationType" field of an OCM
 notification sent to the "/notifications" endpoint (see
 [Notifications](#notifications)).
 
-The "Scope" field indicates whether the notification refers to a
-Resource, in which case the "providerId" field is REQUIRED in the
-payload, or to a Recipient, i.e. to the shareType in a
-[Share Creation Notification](#share-creation-notification), in which
-case a corresponding identifier such as "userId" is REQUIRED in the
+The "Scope" field indicates whether the notification concerns a
+Resource or a Recipient. Each notification type defines its required
 payload.
 
    Registration Policy: Specification Required [RFC8126]
