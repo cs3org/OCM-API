@@ -930,9 +930,10 @@ identities stored in the record.  The Protocol Server MUST verify that:
 Record's `owner`, and
 * the `aud` claim equals the Share Record's `shareWith`.
 
-OCM Addresses MUST be validated and compared as defined in [OCM].
-A scheme or trailing slash in a server address is invalid input; it
-MUST NOT be removed to make identities match.
+OCM Addresses MUST be compared as defined in the Terms section of [OCM]:
+compare opaque identifiers byte for byte and complete server addresses
+after lowercasing. Invalid server addresses MUST be rejected, rather
+than repaired by stripping a scheme or trailing slash.
 
 These checks ensure that an access token can only be used for the exact
 Share it was issued for: a token legitimately issued to one Receiving
@@ -950,7 +951,7 @@ The cross-checks above therefore do not apply; what remains is to
 enforce the scope of the `ocm_ip` claim (protocol entries, permissions,
 expiration) and, where the protocol concerned authenticates the
 Receiving Party, to derive that identity from `aud` using the same
-canonicalisation rules.
+address comparison rules.
 
 ## Token Presentation per Protocol
 
