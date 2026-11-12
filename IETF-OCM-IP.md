@@ -289,7 +289,7 @@ at the Protocol Server.
    on the access protocol) presents the access token to the Protocol
 Server.
 9. The Protocol Server verifies the token against the OCM Server's
-   published keys, looks up the Share Record by (issuer domain,
+   published keys, looks up the Share Record by (issuer server address,
 `client_id`), cross-checks the identities bound into the token, and
 serves the protocol-specific Resource access.
 
@@ -676,7 +676,7 @@ Revocation Request:
 * with a request body containing a JSON document with the following
 fields:
 
-* REQUIRED `sender` (string) - an OCM Address whose domain part
+* REQUIRED `sender` (string) - an OCM Address whose server part
 identifies the paired OCM Server, subject to the same allowlist and
 signature checks as all Integration API requests.
 * REQUIRED `providerId` (string) - the `providerId` of the Share to
@@ -869,6 +869,9 @@ understand MUST be ignored.
 
 ## Token Verification by the Protocol Server
 
+Here, `<iss-server>` is the authority of the `iss` URL: its host and
+optional port, used as an OCM Server Address as defined in [OCM].
+
 When a front-channel request presents a credential, the Protocol Server
 MUST authorize it as follows:
 
@@ -881,7 +884,7 @@ instead: an `active` response supplies the fields (`iss`, `sub`, `aud`,
 `exp`, `client_id`, `ocm_ip`) used in steps 4 to 6, and steps 2 and 3
 are skipped; an inactive response means the request is rejected.
 2. Resolve the signing key: fetch (or use a cached copy of) the OCM
-Server's Discovery document at `https://<iss-host>/.well-known/ocm`,
+Server's Discovery document at `https://<iss-server>/.well-known/ocm`,
 read its `jwksUri` field, fetch the JWK Set from that URL, and select
 the key matching the token's `kid` header parameter.
 3. Verify the token signature and validity per [RFC9068]: the algorithm
@@ -889,14 +892,14 @@ MUST be an asymmetric algorithm matching the key, MUST NOT be `none`,
 and the `exp` claim MUST be in the future.  The claims `iss`, `sub`,
 `aud`, `exp` and `client_id` MUST all be present.
 4. Determine the integration mode:
-   * If a Share Record exists for the pair (host part of `iss`,
+   * If a Share Record exists for the pair (server address from `iss`,
    `client_id` claim), the token is authorized against that record
    (Provisioned Integration).  Any `ocm_ip` claim in the token MUST be
    ignored.
    * Otherwise, if the verified token carries an `ocm_ip` claim and the
-   host part of `iss` is paired for Self-Contained Integration, or the
-   introspection response carries an `ocm_ip` member, the credential is
-   authorized against those claims.
+   server address from `iss` is paired for Self-Contained Integration,
+   or the introspection response carries an `ocm_ip` member, the
+   credential is authorized against those claims.
    * Otherwise, reject the request.  Because Share Records only come
    into existence through signed back-channel requests from paired OCM
    Servers, the `ocm_ip` claim is only honored for paired issuers, and
@@ -923,14 +926,13 @@ In Provisioned Integration, a valid signature and a matching Share
 Record are not sufficient: the token MUST also be bound to the
 identities stored in the record.  The Protocol Server MUST verify that:
 
-* the OCM Address formed as `<sub>@<iss-host>` equals the Share Record's
-`owner`, and
+* the OCM Address formed as `<sub>@<iss-server>` equals the Share
+Record's `owner`, and
 * the `aud` claim equals the Share Record's `shareWith`.
 
-Comparison of OCM Addresses SHOULD be performed after canonicalising the
-host part (lowercasing, removing any stray scheme prefix or trailing
-slash); the identifier part is opaque and MUST be compared byte for
-byte.
+OCM Addresses MUST be validated and compared as defined in [OCM].
+A scheme or trailing slash in a server address is invalid input; it
+MUST NOT be removed to make identities match.
 
 These checks ensure that an access token can only be used for the exact
 Share it was issued for: a token legitimately issued to one Receiving
@@ -943,7 +945,7 @@ come from an introspection response that names a Share Record via
 In Self-Contained Integration, and when serving from the `ocm_ip` member
 of an introspection response, there is no stored record to compare
 against: the credential itself is the authority, and the owner and the
-Receiving Party are read directly from `<sub>@<iss-host>` and `aud`.
+Receiving Party are read directly from `<sub>@<iss-server>` and `aud`.
 The cross-checks above therefore do not apply; what remains is to
 enforce the scope of the `ocm_ip` claim (protocol entries, permissions,
 expiration) and, where the protocol concerned authenticates the

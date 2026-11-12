@@ -431,7 +431,8 @@ The request has two REQUIRED query parameters:
 
 - `userId` is the full OCM Address of the user whose KeyPackage is
 requested.
-- `senderDomain` is the FQDN of the requesting OCM Server.
+- `senderDomain` is the requesting server's OCM Server Address
+as defined in [OCM].
 
 Response:
 
@@ -1345,13 +1346,13 @@ the application data:
 ~~~
 
 Each entry identifies the share by its `providerId`, the group by its
-OCM Address in `groupId`, and the intended Member Server by its FQDN in
-`recipient`.  A Member Server MUST ignore entries whose `recipient` does
-not name itself.  Upon accepting an entry, the Member Server replaces
-the stored transport credential for that share; replacement follows the
-same `(epoch, generation)` supersede rule as wrapped FKs
-({{key-distribution}}).  The sending server invalidates the old
-credential once the rotation has been delivered.
+OCM Address in `groupId`, and the intended Member Server by its OCM
+Server Address in `recipient`. A Member Server MUST ignore entries whose
+`recipient` does not name itself. Upon accepting an entry, the Member
+Server replaces the stored transport credential for that share;
+replacement follows the same `(epoch, generation)` supersede rule as
+wrapped FKs ({{key-distribution}}). The sending server invalidates the
+old credential once the rotation has been delivered.
 
 Encrypting the credential update in the current epoch guarantees that
 the removed member cannot read it, independent of transport protection:
