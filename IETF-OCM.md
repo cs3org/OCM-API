@@ -1452,13 +1452,9 @@ payload and identity bindings.
 ## Response
 
 A receiver that accepts a notification MUST respond with HTTP 201 and
-no body. A sender MUST ignore any response body and SHOULD treat any
-2xx response as successful delivery. This includes valid unknown types
-accepted and ignored under [Receiver Processing](#receiver-processing).
-
-Success confirms receipt and, for a known type, payload validity. It
-does not guarantee a state change or distributed completion. A failed
-local operation MUST NOT be reported as a successful operation.
+no body. Senders SHOULD treat any 2xx response as confirmation of
+receipt and MUST ignore its body. Receipt does not confirm completion
+of the requested action.
 
 ## Share Acceptance and Updating
 
