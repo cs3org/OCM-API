@@ -1451,21 +1451,14 @@ payload and identity bindings.
 
 ## Response
 
-A Receiving Server that accepts a notification MUST respond with HTTP
-201 (Created).  The response has no body, and a Sending Server MUST
-ignore any body that a Receiving Server nevertheless returns.  A
-Sending Server SHOULD treat any 2xx response as a successful delivery.
-This also applies to a notification whose type the Receiving Server
-does not know, and accepts and ignores as described in [Receiver
-Processing](#receiver-processing).
+A receiver that accepts a notification MUST respond with HTTP 201 and
+no body. A sender MUST ignore any response body and SHOULD treat any
+2xx response as successful delivery. This includes valid unknown types
+accepted and ignored under [Receiver Processing](#receiver-processing).
 
-A successful response confirms receipt and, for a known type, payload
-validity.  It need not imply action, mutation or user notification.
-An accepted "CONTACT_REMOVED" confirms the contact event only; local
-contact operation errors MUST be reported as errors rather than a
-false success, as described in [Contact Removal](#contact-removal).
-Neither receipt nor a peer being offline proves physical cleanup,
-remote user choice or global completion.
+Success confirms receipt and, for a known type, payload validity. It
+does not guarantee a state change or distributed completion. A failed
+local operation MUST NOT be reported as a successful operation.
 
 ## Share Acceptance and Updating
 
