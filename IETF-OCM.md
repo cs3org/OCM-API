@@ -1424,7 +1424,7 @@ that concerns a previously known Resource, Collection or Recipient.
 A Server that intends to send a notification SHOULD make a HTTP POST
 request:
 
-* to the `/notifications` path in the Receiving Server's OCM API
+* to the `/notifications` path in the target OCM Server's OCM API
 * using `application/json` as the `Content-Type` HTTP request header
 * its request body containing a JSON document representing an object
   with the fields as described below
@@ -1497,19 +1497,16 @@ underlying share (e.g., `file`), the `shareType` MAY be omitted but if
 present it MUST match the `shareType` of the underlying share, and the
 `notificationType` MUST be one of:
 - "SHARE_ACCEPTED", to inform about the acceptance of a share.
-- "SHARE_DECLINED", to inform that a share was not accepted.
+- "SHARE_DECLINED", to report a recipient's refusal of an offered or
+  previously accepted share.
 - "SHARE_UNSHARED", to inform the Receiving Server that the share
   was removed and is not accessible any longer.
 - "SHARE_CHANGE_PERMISSION", to inform the Receiving Server that
   the permissions of a share were updated.
-
-A recipient MAY decline an offered Share or subsequently stop
-receiving a previously accepted Share.  "SHARE_DECLINED" reports that
-decision for that Share.  It does not remove the Resource and does
-not, by itself, withdraw the provider's grant.  Whether the recipient
-can later accept that Share is governed by the provider's current
-grant and local acceptance policy.  A withdrawn Share is not revived
-by a later acceptance notification.
+A recipient MAY decline an offered Share or stop receiving an accepted
+Share. "SHARE_DECLINED" reports that decision; it does not itself
+withdraw the provider's grant. Later acceptance depends on that grant
+and local policy. A provider withdrawal remains terminal for that Share.
 
 Further, the `notification` object MUST include the following fields:
 * OPTIONAL message (string) - an optional human-readable message that
@@ -1524,10 +1521,6 @@ Further, the `notification` object MUST include the following fields:
     `SHARE_CHANGE_PERMISSION` notification.  The allowed values match
     the `permissions` values specified in the `webdav` protocol of a
     [Share Creation Notification](#share-creation-notification).
-* OPTIONAL sharedSecret (string) - the `sharedSecret` of the
-  underlying share, as sent in the `protocol` of the Share Creation
-  Notification.  It does not identify the Share, see
-  [Share Identity](#share-identity).
 
 `SHARE_UNSHARED` and `SHARE_CHANGE_PERMISSION` MUST identify the
 individual Share by `providerId` and carry its `resourceType`, including
@@ -1543,68 +1536,31 @@ undoing or deleting the Share) without notifying the Receiving Server.
 
 ### Share Identity
 
-The `file.providerId` value is the identifier that the provider of a
-Share, i.e. the Sending Server of the original Share Creation
-Notification, assigned to that Share.  A provider assigns a distinct
-identifier to each Share, including separate Shares of the same
-Resource with different recipients.  Identifiers are only unique
-within the provider that assigned them: another provider can use the
-same value for an unrelated Share.  The Server receiving one of the
-notifications above therefore identifies the underlying Share as
-follows:
+`file.providerId` identifies the Share assigned by its resource
+provider, the sender of the original Share Creation Notification.
+It is unique within that provider, not across providers.
 
-* "SHARE_UNSHARED" and "SHARE_CHANGE_PERMISSION" are sent by the
-  provider to the recipient's Server, and the `senderDomain` names
-  the provider.  The Receiving Server selects the Share it received
-  from the provider named by `senderDomain` with the identifier
-  `file.providerId`.  It MUST NOT select a Share received from another
-  provider, even if that Share has the same identifier.
-* "SHARE_ACCEPTED" and "SHARE_DECLINED" are sent by the recipient's
-  Server to the provider, and the `senderDomain` names the recipient's
-  Server.  The `file.providerId` is the identifier that the Receiving
-  Server itself assigned as provider: the Receiving Server selects its
-  own outgoing Share with that identifier, and MUST check that the
-  recipient of that Share is hosted at the Server named by
-  `senderDomain`.  In this case `senderDomain` is not the namespace of
-  `file.providerId`, and the notification never refers to a Share
-  that the Receiving Server received.
+* For "SHARE_UNSHARED" and "SHARE_CHANGE_PERMISSION", `senderDomain`
+  names the provider. The recipient selects its received Share using
+  that provider and `file.providerId`.
+* For "SHARE_ACCEPTED" and "SHARE_DECLINED", `senderDomain` names the
+  recipient server. The provider selects its own outgoing Share using
+  `file.providerId` and MUST verify that the sender is a recipient
+  server of that Share. For federation Shares, this is the actual
+  member server that received the grant; the group's OCM Address alone
+  does not establish this binding.
 
-In both cases, the `resourceType`, and the `shareType` when present,
-MUST match those of the selected Share.  If no Share matches all of
-these values, the notification MUST NOT be applied to any other Share.
-Repeating a notification has no further effect on the selected Share.
+The `resourceType`, and `shareType` when present, MUST match the
+selected Share. If no Share matches, the notification MUST NOT affect
+another Share. Compare grant identifiers byte for byte and server
+addresses as defined in [Terms](#terms). Credentials, deprecated fields
+and protocol URLs MUST NOT replace explicit notification selectors.
 
-A "SHARE_UNSHARED" notification means that the provider withdrew the
-access granted by the selected Share.  The Receiving Server SHOULD
-stop accessing the Resource through that Share, and SHOULD NOT present
-it as an active Share to the recipient any longer.  Whether the
-Receiving Server deletes its record of the Share or retains it, e.g.
-to prevent stale requests from making it active again, is a local
-implementation choice.  A Share that the provider creates later, with
-a different identifier, is a separate Share and is not affected.
-Implementation-specific notification types, such as a notification
-sent by a resharer to the owner of a Resource, are not
-"SHARE_UNSHARED" notifications and MUST NOT be interpreted as the
-withdrawal of a Share that the Receiving Server received.
-
-The `senderDomain` and the `file.providerId` are the only identity of
-the Share.  The `senderDomain` is compared with the complete host and
-port, if any, of the Servers of the Share after lowercasing, and the
-`file.providerId` byte for byte.  A notification that lacks either of
-them, or carries an invalid value, MUST be rejected and MUST NOT be
-applied to any Share.  A Receiving Server MUST NOT reconstruct a
-missing or invalid identity from the `sharedSecret`, the deprecated
-top-level `providerId`, a local Share identifier or a protocol
-endpoint.
-
-The OPTIONAL `sharedSecret` in the `notification` object is not part
-of the identity of the Share.  Both parties of the Share already know
-this secret, but each notification that carries it is one more place
-where it can leak, and a captured notification can be replayed, so it
-is no substitute for transport security.  A Receiving Server MUST NOT
-require it and MUST NOT consider its presence as authentication of
-the Sending Server.  A Receiving Server that compares it SHOULD use a
-constant-time comparison, and MUST NOT log it.
+"SHARE_UNSHARED" reports provider withdrawal. The recipient SHOULD stop
+using that Share and presenting it as active. A duplicate withdrawal
+does not revive it. A new Share with a different identifier is separate.
+Other event types MUST NOT be interpreted as provider withdrawal.
+This does not guarantee ordering of permission changes or other events.
 
 ## Resharing and Request to Share
 
