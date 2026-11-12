@@ -1449,6 +1449,13 @@ payload and identity bindings.
 * A receiver MAY return HTTP 501 for a known, valid notification type
   whose operation it does not implement.
 
+## Response
+
+A receiver that accepts a notification MUST respond with HTTP 201 and
+no body. Senders SHOULD treat any 2xx response as confirmation of
+receipt and MUST ignore its body. Receipt does not confirm completion
+of the requested action.
+
 ## Share Acceptance and Updating
 
 A notification MAY be sent by a recipient to let the provider know that
