@@ -20,7 +20,7 @@ paths:
   /.well-known/ocm:
     servers:
       - url: https://cloud.example.org
-        description: The OCM Server's top-level FQDN.
+        description: The origin used for OCM API discovery.
     get:
       summary: Discovery endpoint
       description: >
@@ -52,15 +52,14 @@ paths:
           required: true
           description: Full OCM Address of the user whose KeyPackage is requested.
           schema:
-            type: string
+            $ref: "#/components/schemas/OCMAddress"
           example: alice@cloud.example.org
         - name: senderDomain
           in: query
           required: true
-          description: FQDN of the requesting OCM Server.
+          description: OCM Server Address of the requesting server.
           schema:
-            type: string
-            format: fqdn
+            $ref: "#/components/schemas/OCMServerAddress"
           example: requester.example.org
       responses:
         "200":
@@ -397,7 +396,8 @@ components:
         - keyPackages
       properties:
         userId:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
           description: Full OCM Address of the user represented by the KeyPackages.
           example: alice@cloud.example.org
         keyPackages:
@@ -651,7 +651,8 @@ components:
         - protocol
       properties:
         shareWith:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
           description: >
             OCM Address of the user, group or federation the
             provider wants to share the resource with. This MUST be known
@@ -677,13 +678,15 @@ components:
         owner:
           description: |
             OCM Address of the user who owns the resource.
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
           example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
         sender:
           description: |
             OCM Address of the user that wants to share the
             resource.
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
           example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
         ownerDisplayName:
           type: string
@@ -1095,10 +1098,11 @@ components:
             MAY be used here. Implementers MAY define additional custom types,
             provided that they are registered in the OCM IANA Registry.
         senderDomain:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMServerAddress"
           description: >
-            The FQDN of the sending OCM server, in order for the recipient
-            to validate its key material when verifying the HTTP Signature.
+            OCM Server Address of the sender, used to discover its
+            key material and verify the HTTP Message Signature.
         resourceType:
           type: string
           description: >
@@ -1180,6 +1184,23 @@ components:
               mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
               userId: bob@cloud.example.org
               content: base64 MLS welcome
+    OCMServerAddress:
+      type: string
+      minLength: 1
+      description: >
+        The host and optional port of an OCM Server, as defined in Terms
+        of the OCM Internet-Draft. No identifier, scheme, path, query or
+        fragment. Compare the complete value after lowercasing, preserving
+        explicit ports and all other spelling.
+      example: cloud.example.org:8443
+    OCMAddress:
+      type: string
+      minLength: 1
+      description: >
+        An OCM Address as defined in Terms of the OCM Internet-Draft:
+        a non-empty opaque identifier followed by "@" and an OCM Server
+        Address. Split at the last "@"; compare identifiers byte for byte.
+      example: alice@cloud.example.org:8443
     AcceptedInvite:
       type: object
       required:
@@ -1190,9 +1211,9 @@ components:
         - name
       properties:
         recipientProvider:
-          type: string
-          format: fqdn
-          description: FQDN of the receiver OCM service.
+          allOf:
+            - $ref: "#/components/schemas/OCMServerAddress"
+          description: OCM Server Address of the Invite Receiver.
           example: receiver.org
         token:
           type: string
@@ -1237,13 +1258,15 @@ components:
         - share
       properties:
         owner:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
           description: >
             OCM Address of the user who will be requested to share
             the resource.
           example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
         shareWith:
-          type: string
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
           description: >
             OCM Address of the user, group or federation that
             wants to receive a share of the resource.
@@ -1260,9 +1283,9 @@ components:
         - code
       properties:
         client_id:
-          type: string
-          format: fqdn
-          description: FQDN of the Receiving Server.
+          allOf:
+            - $ref: "#/components/schemas/OCMServerAddress"
+          description: OCM Server Address of the Receiving Server.
           example: receiver.org
         code:
           type: string
