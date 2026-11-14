@@ -674,6 +674,34 @@ components:
             This MUST be unique per Resource and per share, such that multiple
             shares of a given Resource are guaranteed to get different values.
           example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        collectionId:
+          type: string
+          description: >
+            Opaque identifier of a Collection containing this Resource. A Collection
+            groups one or more Resources whose membership and semantics are defined
+            by the Sending Server; they MAY have different locations and resource
+            types. Multiple Resources and Shares MAY carry the same value; global
+            uniqueness is not required. The identifier MAY be advertised out of band,
+            for example in a catalog, and used in a REQUEST_SHARE notification.
+            Each Share fulfilling that request MUST carry the requested collectionId
+            unchanged. Unsolicited Shares MAY also include it. The Receiving Server
+            MAY use it to associate incoming Shares with a pending request for the
+            Collection to the Sending Server. It does not replace providerId or
+            grant access to any Resource.
+          example: research-data-123
+        collectionSize:
+          type: integer
+          minimum: 1
+          description: >
+            Total number of distinct Shares representing the Collection for this
+            recipient, including this Share. SHOULD only be present when collectionId
+            is present. A Share offering multiple protocols counts as one Share.
+            When included in Shares fulfilling the same request, the values MUST
+            agree. If the total is unknown, this field MUST be omitted.
+            The Receiving Server MAY compare this value with the number of distinct
+            providerId values received for the Collection and recipient from the
+            Sending Server to determine whether receipt of the Collection is complete.
+          example: 3
         owner:
           description: |
             OCM Address of the user who owns the resource.
@@ -1118,11 +1146,27 @@ components:
           description: >
             Optional unique identifier of the underlying resource. This property
             is now deprecated, in favor of including it in the notification object.
+        collectionId:
+          type: string
+          description: >
+            Identifier of the Collection. REQUIRED for REQUEST_SHARE and for a
+            SHARE_DECLINED notification declining such a request. These notifications
+            MUST omit resourceType. REQUEST_SHARE MUST also include shareType.
+            A collection-scoped SHARE_DECLINED MUST carry the requested collectionId
+            unchanged and the requested recipient in notification.collection.shareWith;
+            no providerId is required. It MAY echo the request's shareType.
+            It MUST NOT be interpreted as removing or changing any existing Share.
+            OCM does not define recipient membership for a Collection.
+            SHARE_UNSHARED and SHARE_CHANGE_PERMISSION MUST identify individual Shares
+            by providerId and carry their resourceType; collectionId MUST NOT be used
+            as their target.
+          example: research-data-123
         notification:
           type: object
           description: >
             Optional additional parameters, depending on the notification
-            and the resource type or share type in question.
+            and the resource type or share type in question. For REQUEST_SHARE
+            and collection-scoped SHARE_DECLINED, the details are keyed by collection.
           properties:
             message:
               type: string
@@ -1132,11 +1176,14 @@ components:
             type: object
             description: >
               This object MUST be keyed with the resource type or share type of this
-              notification. It contains its payload and it can vary according to the
+              notification, or with collection for REQUEST_SHARE and collection-scoped
+              SHARE_DECLINED. It contains its payload and it can vary according to the
               implementers. In case of `file` resources, it MUST contain at least the
-              `providerId` of the underlying resource, and in case of `user`, `group`,
+              `providerId` of the underlying resource; in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
-              `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
+              `groupId`, or `mlsGroupId` of the underlying recipient, respectively;
+              in case of `collection`, it MUST contain at least the `owner`,
+              `shareWith`, and `permissions` of the requested share.
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
@@ -1180,6 +1227,17 @@ components:
               mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
               userId: bob@cloud.example.org
               content: base64 MLS welcome
+        requestShare:
+          notificationType: REQUEST_SHARE
+          shareType: user
+          senderDomain: alice.example.org
+          collectionId: research-data-123
+          notification:
+            collection:
+              owner: bob@bob.example.org
+              shareWith: alice@alice.example.org
+              permissions:
+                - read
     AcceptedInvite:
       type: object
       required:
@@ -1229,29 +1287,6 @@ components:
           type: string
           description: Name of the Invite Sender.
           example: John Doe
-    RequestShare:
-      type: object
-      required:
-        - owner
-        - shareWith
-        - share
-      properties:
-        owner:
-          type: string
-          description: >
-            OCM Address of the user who will be requested to share
-            the resource.
-          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
-        shareWith:
-          type: string
-          description: >
-            OCM Address of the user, group or federation that
-            wants to receive a share of the resource.
-          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-        share:
-          type: string
-          description: A unique identifier for the resource.
-          example: 1234567890abcdef or https://ocm.example.org/files/spec.yaml
     TokenRequest:
       type: object
       required:
