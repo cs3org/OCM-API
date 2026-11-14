@@ -748,22 +748,19 @@ trade-off relative to encrypted handshake messages is discussed in
 Security Considerations.
 
 The notification types defined in this document are group-scoped rather
-than share-scoped.  [OCM] requires a `providerId` field in notifications
-because the notification types it defines all refer to a Share; the MLS
-notification types refer to a group instead, so this document updates
-that requirement: `providerId` is REQUIRED only for notification types
-that refer to a Share, and the MLS notification types omit it.  All
-MLS-specific parameters are carried inside the `notification` object
-that [OCM] provides for type-specific parameters.  The `mlsGroupId`
-field carries the base64url-encoded MLS `group_id` as advisory routing
-information, used to dispatch the message to the right group state
-without parsing the MLS message; the authoritative `group_id` is the one
-inside the MLS message itself, and a mismatch between the two MUST be
-treated as an error.  At the OCM layer, groups are otherwise identified
-by their OCM Address: in particular, the `groupId` field of the
-application data carried inside `MLS_APPLICATION` messages
-({{key-distribution}}, {{credential-update}}) is the group's OCM
-Address, never the MLS `group_id`.
+than share-scoped.  In accordance with [OCM], their payloads set
+`shareType` to `"federation"` and omit `resourceType` and the
+`providerId` field.  The `notification` object is REQUIRED and carries
+all MLS-specific parameters.  The `mlsGroupId` field carries the
+base64url-encoded MLS `group_id` as advisory routing information, used
+to dispatch the message to the right group state without parsing the
+MLS message; the authoritative `group_id` is the one inside the MLS
+message itself, and a mismatch between the two MUST be treated as an
+error.  At the OCM layer, groups are otherwise identified by their OCM
+Address: in particular, the `groupId` field of the application data
+carried inside `MLS_APPLICATION` messages ({{key-distribution}},
+{{credential-update}}) is the group's OCM Address, never the MLS
+`group_id`.
 
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
