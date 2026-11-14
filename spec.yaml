@@ -640,10 +640,6 @@ components:
           example: /index.php/apps/sciencemesh/accept
     NewShare:
       type: object
-      anyOf:
-        - required: [collectionId]
-        - not:
-            required: [collectionSize]
       required:
         - shareWith
         - name
@@ -698,7 +694,7 @@ components:
           minimum: 1
           description: >
             Total number of distinct Shares representing the Collection for this
-            recipient, including this Share. MUST only be present when collectionId
+            recipient, including this Share. SHOULD only be present when collectionId
             is present. A Share offering multiple protocols counts as one Share.
             When included in Shares fulfilling the same request, the values MUST
             agree. If the total is unknown, this field MUST be omitted.
@@ -1114,39 +1110,6 @@ components:
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
       type: object
-      oneOf:
-        - description: >
-            A REQUEST_SHARE notification requesting access to a Collection advertised
-            out of band, for example in a catalog. If the owner agrees, the Sending
-            Server MUST send one or more Share Creation Notifications to shareWith,
-            each carrying the requested collectionId unchanged, its own providerId,
-            and its own resourceType and protocols. The Sending Server determines the
-            number of Shares and MAY offer multiple protocols for a Resource in one
-            Share. resourceType MUST be omitted from the request; shareType is REQUIRED
-            and determines the recipient type of all resulting Shares.
-            collectionSize applies only to share payloads and MUST NOT be included here.
-          required:
-            - collectionId
-            - shareType
-            - notification
-          not:
-            anyOf:
-              - required: [resourceType]
-              - required: [collectionSize]
-          properties:
-            notificationType:
-              enum: [REQUEST_SHARE]
-            notification:
-              type: object
-              required:
-                - collection
-              properties:
-                collection:
-                  $ref: "#/components/schemas/RequestShare"
-        - properties:
-            notificationType:
-              not:
-                enum: [REQUEST_SHARE]
       required:
         - notificationType
         - senderDomain
@@ -1216,9 +1179,11 @@ components:
               notification, or with collection for REQUEST_SHARE and collection-scoped
               SHARE_DECLINED. It contains its payload and it can vary according to the
               implementers. In case of `file` resources, it MUST contain at least the
-              `providerId` of the underlying resource, and in case of `user`, `group`,
+              `providerId` of the underlying resource; in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
-              `groupId`, or `mlsGroupId` of the underlying recipient, respectively.
+              `groupId`, or `mlsGroupId` of the underlying recipient, respectively;
+              in case of `collection`, it MUST contain at least the `owner`,
+              `shareWith`, and `permissions` of the requested share.
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
@@ -1262,6 +1227,17 @@ components:
               mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
               userId: bob@cloud.example.org
               content: base64 MLS welcome
+        requestShare:
+          notificationType: REQUEST_SHARE
+          shareType: user
+          senderDomain: alice.example.org
+          collectionId: research-data-123
+          notification:
+            collection:
+              owner: bob@bob.example.org
+              shareWith: alice@alice.example.org
+              permissions:
+                - read
     AcceptedInvite:
       type: object
       required:
@@ -1311,38 +1287,6 @@ components:
           type: string
           description: Name of the Invite Sender.
           example: John Doe
-    RequestShare:
-      type: object
-      description: >
-        Details of a Collection request, carried in notification.collection of a
-        REQUEST_SHARE notification.
-      required:
-        - owner
-        - shareWith
-        - permissions
-      properties:
-        owner:
-          type: string
-          description: >
-            OCM Address of the user requested to share the Collection's Resources.
-          example: alice@provider.example.org
-        shareWith:
-          type: string
-          description: >
-            OCM Address of the recipient wishing to receive Shares of the
-            Collection's Resources. The notification's shareType determines the
-            recipient type and MUST be used in each resulting Share Creation
-            Notification.
-          example: bob@requester.example.org
-        permissions:
-          type: array
-          description: >
-            Permissions to be granted to the requesting party. The allowed
-            values match the permissions in the webdav protocol of a Share
-            Creation Notification.
-          items:
-            type: string
-            enum: [read, write, share]
     TokenRequest:
       type: object
       required:
