@@ -1398,10 +1398,12 @@ request:
 * REQUIRED notificationType (string) - it MUST be one of the
   registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
-* REQUIRED senderDomain (string) - the FQDN of the sender.  A Receiving
-  Server SHOULD use this information to verify the HTTP message
-  signature on the request, and it SHOULD also use it to validate the
-  underlying share or resource the notification is about.
+* REQUIRED senderDomain (string) - the host and optional port of the
+  sender's OCM Server, using the `host [ ":" port ]` syntax defined for
+  OCM Addresses.  A Receiving Server SHOULD use this information to
+  verify the HTTP message signature on the request, and it SHOULD also
+  use it to validate the underlying share or resource the notification
+  is about.
 * OPTIONAL resourceType (string) - the type of the resource this
   notification is about (e.g., `file`).
 * OPTIONAL shareType (string) - the type of recipient this notification
