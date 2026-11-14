@@ -1484,7 +1484,7 @@ Further, the `notification` object MUST include the following fields:
 `SHARE_UNSHARED` and `SHARE_CHANGE_PERMISSION` MUST identify the
 individual Share by `providerId` and carry its `resourceType`, including
 when that Share carries a `collectionId`.  The `collectionId` MUST NOT
-be used as the target of these notifications.
+be used as the target identifier of these notifications.
 
 The same notifications identically apply to resources of type `folder`.
 For other resources with a different `resourceType` attribute, a
