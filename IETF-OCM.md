@@ -1065,14 +1065,16 @@ described in [OCM-IP].
   Example: "research-data-123"
 * OPTIONAL collectionSize (integer)
   Total number of distinct Shares representing the Collection for this
-  recipient, including this Share.  It MUST be at least 1 and MUST only
-  be present when `collectionId` is present.  A Share offering multiple
-  protocols counts as one Share.  When included in Shares fulfilling
-  the same request, the values MUST agree.  If the total is unknown,
-  this field MUST be omitted.  The Receiving Server MAY compare this
-  value with the number of distinct `providerId` values received for
-  the Collection and recipient from the Sending Server to determine
-  whether receipt of the Collection is complete.
+  recipient, including this Share.  When `collectionId` is present and
+  the total is known, `collectionSize` SHOULD be included.  When
+  present, it MUST be at least 1 and MUST be accompanied by
+  `collectionId`.  If the total is unknown, `collectionSize` MUST be
+  omitted.  A Share offering multiple protocols counts as one Share.
+  When included in Shares fulfilling the same request, the values MUST
+  agree.  The Receiving Server MAY compare this value with the number
+  of distinct `providerId` values received for the Collection and
+  recipient from the Sending Server to determine whether receipt of the
+  Collection is complete.
 * REQUIRED owner (string) -
   OCM Address of the user who owns the
   Resource.
