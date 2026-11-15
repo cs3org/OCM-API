@@ -251,6 +251,17 @@ paths:
                     message: User left the system
                     user:
                       userId: alice@alice.example.org
+              mlsWelcome:
+                summary: MLS Welcome envelope (illustrative content)
+                value:
+                  notificationType: MLS_WELCOME
+                  shareType: federation
+                  senderDomain: cloud.example.org
+                  notification:
+                    federation:
+                      mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
+                      userId: bob@cloud.example.org
+                      content: "<base64url-encoded MLS Welcome>"
               customType:
                 summary: An implementer-defined notification type
                 value:
