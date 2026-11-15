@@ -1131,9 +1131,9 @@ components:
           type: string
           description: >
             Resource type, according to the OCM IANA Registry for resource types.
-            E.g. file, folder, calendar, contact, etc. Implementers MAY define
-            additional custom types, provided that they are registered in the
-            respective OCM IANA Registry.
+            E.g. file, folder, collection, calendar, contact, etc. Implementers
+            MAY define additional custom types, provided that they are registered
+            in the respective OCM IANA Registry.
         shareType:
           type: string
           description: >
@@ -1151,7 +1151,7 @@ components:
           description: >
             Identifier of the Collection. REQUIRED for REQUEST_SHARE and for a
             SHARE_DECLINED notification declining such a request. These notifications
-            MUST omit resourceType. REQUEST_SHARE MUST also include shareType.
+            MUST set resourceType to collection. REQUEST_SHARE MUST also include shareType.
             A collection-scoped SHARE_DECLINED MUST carry the requested collectionId
             unchanged and the requested recipient in notification.collection.shareWith;
             no providerId is required. It MAY echo the request's shareType.
@@ -1176,10 +1176,9 @@ components:
             type: object
             description: >
               This object MUST be keyed with the resource type or share type of this
-              notification, or with collection for REQUEST_SHARE and collection-scoped
-              SHARE_DECLINED. It contains its payload and it can vary according to the
-              implementers. In case of `file` resources, it MUST contain at least the
-              `providerId` of the underlying resource; in case of `user`, `group`,
+              notification. It contains its payload and it can vary according to the
+              implementers. In case of `file` resources, it MUST contain at least
+              the `providerId` of the underlying resource; in case of `user`, `group`,
               or `federation` share types, it MUST contain at least the `userId`,
               `groupId`, or `mlsGroupId` of the underlying recipient, respectively;
               in case of `collection`, it MUST contain at least the `owner`,
@@ -1229,6 +1228,7 @@ components:
               content: base64 MLS welcome
         requestShare:
           notificationType: REQUEST_SHARE
+          resourceType: collection
           shareType: user
           senderDomain: alice.example.org
           collectionId: research-data-123

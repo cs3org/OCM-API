@@ -1439,9 +1439,8 @@ request:
   depending on the notification and the resource type.
 
 A Notification payload MUST include either the `resourceType` or the
-`shareType`, or both when relevant, except for a `SHARE_DECLINED`
-notification declining a collection request.  Collection-scoped
-notifications MUST omit `resourceType` and MUST include `collectionId`.
+`shareType`, or both when relevant.  Collection-scoped notifications
+MUST set `resourceType` to `collection` and MUST include `collectionId`.
 `REQUEST_SHARE` MUST also include `shareType`.
 Multiple Notification types are defined for different purposes, and
 additional types MAY be defined by implementers and registered in the
@@ -1534,7 +1533,7 @@ Similarly, the `"REQUEST_SHARE"` notification type MAY be used by a
 given Recipient OCM Server, to ask a remote OCM Server to share and
 grant access to a Collection, previously made known to the Recipient
 Server out of band, for example through a catalog.  The `resourceType`
-MUST be omitted.  The `collectionSize` field applies only to Share
+MUST be `collection`.  The `collectionSize` field applies only to Share
 Creation Notifications and MUST NOT be included in the request.  The
 request has the following top-level fields:
 
@@ -1573,9 +1572,9 @@ one Share.
 If the owner disagrees, the remote OCM Server MUST send back a
 `"SHARE_DECLINED"` notification with the requested `collectionId` and
 the requested recipient in `notification.collection.shareWith`.
-This notification MUST omit `resourceType` and MAY echo the request's
-`shareType`.  No `providerId` is required because no Share has been
-created.
+This notification MUST set `resourceType` to `collection` and MAY echo
+the request's `shareType`.  No `providerId` is required because no Share
+has been created.
 It MUST NOT be interpreted as removing or changing any existing Share.
 The remote OCM Server MAY also decline such request because of its
 policies, without even informing the `owner`: in this case, it MUST
@@ -1998,22 +1997,27 @@ does not duplicate an existing entry.
 
 IANA is requested to create the "OCM Resource Types" registry in the
 "Open Cloud Mesh (OCM) Parameters" group.  This registry records the
-resource type values used both in the "resourceType" field of a
-[Share Creation Notification](#share-creation-notification) and in the
-"name" field of each entry in the "resourceTypes" array advertised by
-the [OCM API Discovery](#ocm-api-discovery) endpoint.
+resource type values used in the "resourceType" field of a
+[Share Creation Notification](#share-creation-notification) or
+[Notification](#notifications), and in the "name" field of each entry
+in the "resourceTypes" array advertised by the
+[OCM API Discovery](#ocm-api-discovery) endpoint.  The `collection`
+value is a meta resource type used only for collection-scoped
+Notifications; it MUST NOT be used in Share Creation Notifications or
+Discovery.
 
    Registration Policy: Specification Required [RFC8126]
 
    Initial Contents:
 
 ~~~
-   +===============+=====================+===============+
-   | Resource Type | Description         | Reference     |
-   +===============+=====================+===============+
-   | file          | A single file       | This document |
-   | folder        | A folder/collection | This document |
-   +===============+=====================+===============+
+   +===============+============================+===============+
+   | Resource Type | Description                | Reference     |
+   +===============+============================+===============+
+   | file          | A single file              | This document |
+   | folder        | A folder/collection        | This document |
+   | collection    | A Collection meta-resource | This document |
+   +===============+============================+===============+
 ~~~
 
 ### OCM Protocols Registry
@@ -2136,10 +2140,11 @@ notification sent to the "/notifications" endpoint (see
 The "Scope" field indicates whether the notification refers to a
 Resource, a Collection, or a Recipient.  Resource-scoped notifications
 MUST include "providerId" in the payload.  Collection-scoped
-notifications MUST include "collectionId"; this scope applies only to
-`REQUEST_SHARE` and a `SHARE_DECLINED` response to that request.  It
-does not define recipient membership for a Collection.  Recipient-scoped
-notifications refer to the shareType in a
+notifications MUST set "resourceType" to "collection" and include
+"collectionId"; this scope applies only to `REQUEST_SHARE` and a
+`SHARE_DECLINED` response to that request.  It does not define recipient
+membership for a Collection.  Recipient-scoped notifications refer to
+the shareType in a
 [Share Creation Notification](#share-creation-notification) and MUST
 include a corresponding identifier such as "userId" in the payload.
 
