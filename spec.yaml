@@ -251,17 +251,6 @@ paths:
                     message: User left the system
                     user:
                       userId: alice@alice.example.org
-              mlsWelcome:
-                summary: A notification type defined in another specification
-                value:
-                  notificationType: MLS_WELCOME
-                  shareType: federation
-                  senderDomain: cloud.example.org
-                  notification:
-                    federation:
-                      mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
-                      userId: bob@cloud.example.org
-                      content: base64 MLS welcome
               customType:
                 summary: An implementer-defined notification type
                 value:
@@ -1209,9 +1198,9 @@ components:
           minLength: 1
           description: >
             Share type, according to the OCM IANA Registry for share types.
-            E.g. user, group, federation, etc. Implementers MAY define additional
-            custom types, provided that they are registered in the respective
-            OCM IANA Registry.
+            E.g. user, group, federation, etc. Implementers MAY define
+            additional custom types, provided that they are registered in the
+            respective OCM IANA Registry.
         providerId:
           type: string
           description: >
@@ -1261,8 +1250,6 @@ components:
               shareWith: alice@alice.example.org
               permissions:
                 - read
-      description: >
-        Common envelope and type-specific notification payload constraints.
       allOf:
         - anyOf:
             - required:
@@ -1315,8 +1302,6 @@ components:
                     $ref: "#/components/schemas/NotificationPermission"
     ReshareRequestNotification:
       type: object
-      description: >
-        Payload requirements of the REQUEST_RESHARE notification.
       required:
         - notificationType
         - resourceType
@@ -1348,9 +1333,6 @@ components:
                     $ref: "#/components/schemas/NotificationPermission"
     ShareRequestNotification:
       type: object
-      description: >
-        Payload requirements of the REQUEST_SHARE notification, which omits
-        the `shareType`.
       required:
         - notificationType
         - resourceType
@@ -1389,9 +1371,6 @@ components:
           - shareType
     UserRemovedNotification:
       type: object
-      description: >
-        Payload requirements of the USER_REMOVED notification, which omits
-        the `resourceType`.
       required:
         - notificationType
         - shareType
@@ -1425,9 +1404,6 @@ components:
           - resourceType
     GroupRemovedNotification:
       type: object
-      description: >
-        Payload requirements of the GROUP_REMOVED notification, which omits
-        the `resourceType`.
       required:
         - notificationType
         - shareType
@@ -1459,8 +1435,6 @@ components:
           - resourceType
     ContactRemovedNotification:
       type: object
-      description: >
-        Payload constraints for removal of one user contact.
       required:
         - notificationType
         - shareType
