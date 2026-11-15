@@ -24,3 +24,8 @@ jobs:
       - name: Validate OpenAPI using spec-validator
         run: openapi-spec-validator spec.yaml
 
+      - name: Check notification schemas
+        run: |
+          "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
+            tests/test_notification_schema.py
+
