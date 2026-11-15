@@ -736,12 +736,14 @@ published at the JWKS URL exchanged during pairing
 (`{protocolServerJwksUri}`) [RFC7517].
 The introspection endpoint MUST select verification keys from trusted
 pairing records and verify the signature against a paired Protocol
-Server's JWK Set before evaluating the credential. The opaque `keyid`
+Server's JWK Set, unambiguously establishing the caller before
+evaluating the credential. It MUST use that authenticated identity to
+select `client_id` or `ocm_ip` as specified below. The opaque `keyid`
 selects a key in that set; it does not name a server or a JWKS URL.
-Unauthenticated or unpaired requests MUST be rejected without revealing
-whether the presented credential is valid. This authentication
-requirement is what keeps the endpoint from acting as a
-credential-validity oracle (Section 4 of [RFC7662]).
+Unauthenticated, unpaired or ambiguously identified requests MUST be
+rejected without revealing whether the presented credential is valid.
+This authentication requirement is what keeps the endpoint from acting
+as a credential-validity oracle (Section 4 of [RFC7662]).
 
 ## Response
 
@@ -1270,13 +1272,13 @@ keys, so unsolicited requests from arbitrary servers are rejected
 without outbound traffic.  Front-channel token verification does fetch
 JWKS documents from token-asserted issuers; implementations SHOULD
 rate-limit verification failures and SHOULD restrict JWKS fetching to
-the domains of paired OCM Servers, since no unpaired issuer's credential
-can ever be honored in any integration mode.  In Introspected
-Integration the Protocol Server additionally generates one introspection
-request per uncached front-channel credential; implementations SHOULD
-apply negative caching with a short lifetime so that a flood of invalid
-credentials does not translate into a flood of introspection traffic
-towards the OCM Server.
+trusted destinations advertised by paired OCM Servers, since no unpaired
+issuer's credential can ever be honored in any integration mode.  In
+Introspected Integration the Protocol Server additionally generates one
+introspection request per uncached front-channel credential;
+implementations SHOULD apply negative caching with a short lifetime so
+that a flood of invalid credentials does not translate into a flood of
+introspection traffic towards the OCM Server.
 
 ## Underlying Security Specifications
 
