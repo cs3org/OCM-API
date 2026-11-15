@@ -432,7 +432,7 @@ The request has two REQUIRED query parameters:
 - `userId` is the full OCM Address of the user whose KeyPackage is
 requested.
 - `senderDomain` is the requesting server's OCM Server Address
-as defined in [OCM].
+(host and optional port), as defined in [OCM].
 
 Response:
 
