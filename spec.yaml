@@ -673,9 +673,11 @@ components:
         - required: [name]
           properties:
             webdav:
-              required: [uri, permissions]
+              required: [uri]
             webapp:
               required: [uri, targets, permissions, requirements]
+            ssh:
+              required: [uri]
     IPShareProvisioningRequest:
       type: object
       description: >
@@ -1618,8 +1620,8 @@ components:
                 type: string
                 description: >
                   A list of requirements that the recipient provider MUST fulfill
-                  to access the resource. Requirements are optional, but if it is
-                  present it MUST NOT be empty. A recipient provider MUST reject
+                  to access the resource. Requirements are optional.
+                  A recipient provider MUST reject
                   a share whose requirements it does not understand.
                   The following requirements are currently supported:
                   - `must-use-mfa` requires the user accessing the resource to be
@@ -1691,6 +1693,11 @@ components:
             requirements:
               type: array
               minItems: 1
+              # Reject arrays with no must-exchange-token item (OpenAPI 3.0).
+              not:
+                items:
+                  not:
+                    enum: [must-exchange-token]
               description: >
                 The requirements that the sharee MUST fulfill to access the
                 resource. This array is REQUIRED and MUST at least include
@@ -1838,16 +1845,16 @@ components:
                 An identifier of the encryption scheme used to encrypt the resource, as
                 defined in the OCM IANA registry for encryption schemes. The value MUST
                 be a registered scheme name, such as 'ocm-pgp' or 'ocm-mls'.
-            additionalProperties:
-              type: object
-              description: >
-                This object MUST be keyed with the name of the encryption scheme, and its
-                value MUST be a JSON object with additional properties specific to that
-                scheme. For the 'ocm-pgp' scheme, the object MUST contain a 'fingerprints'
-                array of string, with one or more fingerprints of the public keys used to
-                encrypt the resource. For the 'ocm-mls' scheme, the object MUST contain
-                a 'cipher' string with the identifier of the cipher used to encrypt the
-                resource, such as 'AES-256-GCM'.
+          additionalProperties:
+            type: object
+            description: >
+              This object MUST be keyed with the name of the encryption scheme, and its
+              value MUST be a JSON object with additional properties specific to that
+              scheme. For the 'ocm-pgp' scheme, the object MUST contain a 'fingerprints'
+              array of string, with one or more fingerprints of the public keys used to
+              encrypt the resource. For the 'ocm-mls' scheme, the object MUST contain
+              a 'cipher' string with the identifier of the cipher used to encrypt the
+              resource, such as 'AES-256-GCM'.
           example:
             resourceId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
             scheme: ocm-pgp
@@ -1868,9 +1875,11 @@ components:
             - required: [name]
               properties:
                 webdav:
-                  required: [uri, sharedSecret, permissions]
+                  required: [uri, sharedSecret]
                 webapp:
                   required: [uri, sharedSecret, targets, permissions, requirements]
+                ssh:
+                  required: [uri]
           example:
             singleProtocolLegacy:
               name: webdav
