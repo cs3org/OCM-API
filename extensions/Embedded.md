@@ -10,7 +10,7 @@ contact: giuseppe.lopresti@cern.ch
 
 This document specifies the `embedded` protocol for Open Cloud Mesh (OCM). The protocol allows a representation of a Resource to be carried directly in an OCM Share Creation Notification, without requiring the Receiving Server to access the Resource through a remote access protocol or to obtain an access credential.
 
-In addition, this document registers the `ro-crate` Resource Type, for Research Object Crate (RO-Crate) resources, and defines the `embedded` protocol for use with `user`, `group`, and `federation` shares of that Resource Type. RO-Crates are represented as a JSON value and can be carried directly in the OCM `protocol` object.
+In addition, this document registers the `ro-crate` Resource Type, for Research Object Crate (RO-Crate) resources, and defines the `embedded` protocol for use with `user`, `group`, and `dgroup` shares of that Resource Type. RO-Crates are represented as a JSON value and can be carried directly in the OCM `protocol` object.
 
 The `embedded` protocol is generic and does not define the semantics of the embedded JSON value. The semantics of the value are defined by the corresponding Resource Type.
 
@@ -283,7 +283,7 @@ The following entries are requested:
 +===============+=============+===========+===============+
 | ro-crate      | user        | embedded  | This document |
 | ro-crate      | group       | embedded  | This document |
-| ro-crate      | federation  | embedded  | This document |
+| ro-crate      | dgroup      | embedded  | This document |
 +===============+=============+===========+===============+
 ```
 
