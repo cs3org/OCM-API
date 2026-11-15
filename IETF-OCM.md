@@ -914,9 +914,8 @@ maintain themselves, as one more source of the union described in
 
 The Directory Payload is a format, not a mandate on how the membership
 behind it is obtained: an operator MAY derive it from any existing
-trust framework, such as an OpenID Federation [OpenID-Federation] trust anchor, and
-publish the result as a third-party Directory Service.  This document
-specifies no dependency on, nor binding to, any such framework.
+trust framework, such as an OpenID Federation [OpenID-Federation] trust
+anchor, and publish the result as a third-party Directory Service.
 
 An OCM Server Administrator MAY likewise pre-populate a Federation
 configuration with a list of servers assembled out of band, without
@@ -2759,6 +2758,33 @@ number of consequences that Administrators need to be aware of:
   be an inexpensive way to have a member drop a legitimate peer.  A
   recipient MUST therefore verify the notification as any other, and
   MUST apply it only to the sender's own membership.
+
+The threat model of the peer-announced model is thus the following.
+The adversary is either a malicious or compromised member of a
+Federation, or an arbitrary OCM Server that is able to reach the
+Notification endpoint of a victim: as an OCM Server may be invited to
+join a Federation it has never heard of, the sender of a notification
+is not required to be known in advance.  Such an adversary can attempt
+to (a) have a victim adopt a rogue peer, or a whole rogue Federation,
+by sending or propagating `OCM_SERVER_ADDED` Notifications, possibly
+claiming the `federationId` or name of a legitimate Federation in
+order to deceive the Administrator, who by approving also imports the
+membership published by the sender; (b) have a victim drop a
+legitimate peer, by sending or forging `OCM_SERVER_REMOVED`
+Notifications; (c) flood a victim's Administrator with proposals, as a
+denial of service on the approval queue; and (d) learn the membership
+of a Federation from its Directory Endpoint.  The mitigations are,
+respectively, the Administrator's approval of every change, which is
+the only gate and is expected to include a review of the proposed
+membership and its verification out of band; the verification of the
+notification's signature and the restriction of a removal to the
+sender's own membership; the freedom of the recipient to respond with
+HTTP 403 and to rate-limit or ignore a sender; and the non-publication
+of confidential memberships.  The model does not protect against an
+Administrator that approves a rogue peer, nor against a member that is
+compromised after having been approved: such a member retains the
+standing of any other member until it is removed by each Administrator
+individually.
 
 Federations that need membership to be consistent, enforceable, and
 cryptographically verifiable are expected to use the MLS-based model
