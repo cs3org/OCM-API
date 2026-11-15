@@ -874,6 +874,21 @@ withdraws the membership, and any further consequence, such as
 denylisting the peer or removing the Shares exchanged with it, is a
 local policy decision.
 
+### Recovering from Downtime
+
+An OCM Server that has been offline, for instance for maintenance, may
+have missed `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED` Notifications
+sent to it while it was unreachable, leaving its Federation
+configuration stale.  Upon restart, it SHOULD therefore inspect the
+Directory Endpoint of the other members it already knows, for each
+Federation it is a member of, and apply the same processing as in
+[Processing an Addition](#processing-an-addition) and [Removing a
+Member](#removing-a-member) to the differences it finds, repeating the
+process against any newly discovered member until no further change
+results.  This lets it reconstruct an up-to-date view of each
+Federation's membership without depending on the redelivery of
+notifications it missed while offline.
+
 ## MLS-based Directory
 
 In the cryptographically guaranteed model, the Federation is managed
