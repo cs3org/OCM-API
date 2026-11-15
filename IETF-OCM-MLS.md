@@ -154,8 +154,9 @@ wrapped keys, is encoded using base64url (the URL- and filename-safe
 alphabet defined in [RFC4648], Section 5) with padding omitted.  A
 decoder MUST accept such a value whether or not padding is present.
 
-This document uses terminology from [OCM], [RFC9420] and
-[ietf-mls-virtual-clients].  Additional definitions:
+This document uses terminology from [OCM], [RFC9420],
+[ietf-mls-extensions] and [ietf-mls-virtual-clients].  Additional
+definitions:
 
 - **Group** - A Receiving Party identified by an OCM Address whose
 identifier resolves to a set of members spanning multiple OCM servers,
@@ -185,9 +186,15 @@ creates a Group is its first Admin.  Only the MLS clients of Admins
 state ({{admin-set}}).
 - **Admin Server** - The home server of an Admin.  Admin Servers
 collectively queue proposals for the Group.
+- **OCM Community Component** - The MLS application component
+identified by the `ocm_community` Component ID
+({{iana-considerations}}).  Its data in the GroupContext carries the
+group's OCM Address and admin set ({{admin-set}}), and its component
+secret is used to derive the Group Key.
 - **Group Key** - A symmetric key derived from the current MLS epoch
-secret via the MLS Exporter, with the key length of the AEAD algorithm
-of the group's cipher suite.  Rotates with every epoch transition.
+through the component-separated safe exporter defined in
+[ietf-mls-extensions], with the key length of the AEAD algorithm of the
+group's cipher suite.  Rotates with every epoch transition.
 - **File Key (FK)** - A random symmetric key used to encrypt a single
 shared resource.  Wrapped with the current Group Key and distributed to
 Member Servers via MLS Application Messages.  Re-wrapped under the new
@@ -676,7 +683,7 @@ by the Group Owner Server until another admin has been appointed.
 Removing an admin from the group and removing an admin from the admin
 set are distinct operations; when an admin's membership ends, a single
 Commit combines them ({{admin-set}}).  An admin MAY instead resign from
-the admin set while remaining a member: this is a GroupContextExtensions
+the admin set while remaining a member: this is an `AppDataUpdate`
 proposal only, and the resigning admin's own client MAY commit it.
 Removing an admin's membership is constrained by MLS: a Commit that
 removes its own committer is invalid ([RFC9420] Section 12.2).  A Commit
@@ -685,9 +692,10 @@ by an admin client of a different admin.
 
 ### Group OCM Address and Admin Set {#admin-set}
 
-The group's OCM Address and the admin set are part of the group state,
-carried in a GroupContext extension `ocm_community` ([RFC9420]
-Section 13.4):
+The group's OCM Address and the admin set are application state carried
+by the OCM Community Component.  The component data is stored in
+the `app_data_dictionary` GroupContext extension defined by
+[ietf-mls-extensions]:
 
 ~~~
 struct {
@@ -718,37 +726,46 @@ charlie) and server1 is the Group Owner Server; after bob leaves it is
 is the Group Owner Server.
 
 An admin client is any MLS client whose leaf credential identifies a
-user listed in `admins`.  Because this extension is part of the
+user listed in `admins`.  Because the component data is part of the
 GroupContext, it is agreed upon by all members through the MLS key
 schedule, every member can verify which clients are entitled to
 construct Commits and which server arbitrates them, and new members
 learn the group's OCM Address and admin set from the GroupInfo in their
-Welcome.  Changes to the admin set are made with a
-GroupContextExtensions proposal ([RFC9420] Section 12.1.7); such
-proposals MUST be explicitly approved by an admin, MUST be committed by
-an admin client, and MUST NOT change `group_ocm_address`.
+Welcome.
+
+Changes to the admin set are made with an `AppDataUpdate` proposal
+([ietf-mls-extensions]) for the OCM Community Component.  The
+proposal's `update` field carries the complete new encoded
+`OCMCommunity` value.  A Commit MUST NOT contain more than one such
+proposal.  The proposal MUST be explicitly approved by an admin, MUST
+be committed by an admin client, and MUST NOT change
+`group_ocm_address`.
 
 The admin set and the group membership are coupled: an entry in `admins`
 is only meaningful while that admin's leaf is in the ratchet tree.  A
 Commit that removes an admin's leaf MUST therefore also include a
-GroupContextExtensions proposal deleting that admin from `admins`, and
+corresponding `AppDataUpdate` proposal deleting that admin from
+`admins`, and
 the Group Owner Server and all Member Servers MUST reject a Commit that
 would leave an entry in `admins` with no corresponding leaf in the tree.
 (A rejoin pair ({{rejoin}}) that replaces an admin's leaf does not
 trigger this rule, since the admin retains a leaf after the Commit.)
-Because a GroupContextExtensions proposal replaces the extension list
-wholesale ([RFC9420] Section 12.1.7), the proposal carries the complete
-new `OCMCommunity` value, with the departing admin deleted and
-`group_ocm_address` unchanged.  A GroupContextExtensions proposal whose
-only change to the admin set is deleting admins whose leaves are removed
-in the same Commit requires no separate admin approval; it follows the
-approval status of the Remove proposals it accompanies, so that the
-self-removal of an admin can still be committed automatically.
+An `AppDataUpdate` proposal whose only change to the admin set is
+deleting admins whose leaves are removed in the same Commit requires no
+separate admin approval; it follows the approval status of the Remove
+proposals it accompanies, so that the self-removal of an admin can still
+be committed automatically.
 
-Clients implementing this document MUST list the `ocm_community`
-extension type in the `capabilities.extensions` field of their
-KeyPackages, since GroupContext extensions must be supported by every
-member of the group ([RFC9420] Section 13.4).
+Every LeafNode in a KeyPackage used with this protocol MUST advertise
+support for the `app_data_dictionary` extension in
+`capabilities.extensions`, support for the `app_data_update` proposal in
+`capabilities.proposals`, and support for the OCM Community
+Component in the `app_components` component defined by
+[ietf-mls-extensions].  The GroupContext MUST require
+`app_data_dictionary` and `app_data_update` through the
+`required_capabilities` extension, require the OCM Community
+Component through its `app_components` component, and contain the
+encoded `OCMCommunity` value as that component's data.
 
 ## Group Owner Server Failover {#failover}
 
@@ -772,7 +789,7 @@ Failover proceeds as follows:
 2.  Takeover: the home server of the next admin in the admin set MAY
     begin arbitrating Commits.  The first Commit it arbitrates SHOULD
     cover a Remove proposal evicting the stale first admin's leaf,
-    together with the GroupContextExtensions proposal deleting that
+    together with the `AppDataUpdate` proposal deleting that
     admin from the admin set as required by {{admin-set}}, constructed
     by one of its own admin clients.  This makes the takeover permanent
     through the normal succession rule.
@@ -898,23 +915,23 @@ protection as the rest of the group state, as recommended by [RFC9420]
 Section 12.4.3.3.
 
 A Member Server processing a Welcome learns the group's OCM Address from
-the `ocm_community` extension in the GroupContext ({{admin-set}}).
-It MUST reject a Welcome whose `group_ocm_address` is already bound to a
-different MLS `group_id`, unless the Welcome reinitialises the group as
-described in {{reinit}}.  This keeps the local wrapped FK store, keyed
-by `(resourceId, groupId)`, unambiguous.
+the OCM Community Component data in the GroupContext ({{admin-set}}).
+It MUST reject a Welcome whose `group_ocm_address` is already bound to
+a different MLS `group_id`, unless the Welcome reinitialises the group
+as described in {{reinit}}.  This keeps the local wrapped FK store,
+keyed by `(resourceId, groupId)`, unambiguous.
 
 ### MLS_PROPOSAL
 
 Sent by a Member Server to the home server of every admin to propose a
-group change (for example Add, Remove, Update, GroupContextExtensions,
-or ReInit) on behalf of one of its users.  This notification is NOT
-broadcast to other Member Servers.  Each Admin Server queues received
-proposals, deduplicated by ProposalRef ([RFC9420] Section 5.2), for
-handling by its admin clients according to the policy in {{admins}}.
-Sending the proposal to all Admin Servers removes the dependency on any
-single server being available and lets whichever admin is online next
-act on it.
+group change (for example Add, Remove, Update, AppDataUpdate,
+GroupContextExtensions, or ReInit) on behalf of one of its users.  This
+notification is NOT broadcast to other Member Servers.  Each Admin
+Server queues received proposals, deduplicated by ProposalRef
+([RFC9420] Section 5.2), for handling by its admin clients according to
+the policy in {{admins}}.  Sending the proposal to all Admin Servers
+removes the dependency on any single server being available and lets
+whichever admin is online next act on it.
 
 ~~~ json
 {
@@ -987,7 +1004,8 @@ the FKs of the resources it shares with the group ({{fk-rewrap}}), and
 on member removal MAY additionally rotate them according to its policy
 ({{fk-rotation}}).  Any Commit covering a Remove, Update, or
 GroupContextExtensions proposal MUST include an UpdatePath ([RFC9420]
-Section 12.4).
+Section 12.4).  An `AppDataUpdate` proposal does not by itself require
+an UpdatePath ([ietf-mls-extensions]).
 
 ### MLS_APPLICATION
 
@@ -1151,9 +1169,12 @@ A ReInit proposal is a group parameter change and is handled like other
 group-changing proposals: it MUST be explicitly approved by an admin and
 MUST be committed by an admin client.  Per [RFC9420] Section 12.2, a
 ReInit proposal is committed alone.  The `extensions` field of the
-ReInit proposal MUST include an `ocm_community` extension with
+ReInit proposal MUST include an `app_data_dictionary` extension whose
+`app_components` component requires the OCM Community Component
+and whose OCM Community Component data carries
 `group_ocm_address` unchanged; the admin set is normally carried over
-unchanged.
+unchanged.  Its `required_capabilities` extension MUST continue to
+require `app_data_dictionary` and `app_data_update`.
 
 After the ReInit Commit is processed, the old group MUST NOT be used to
 send messages ([RFC9420] Section 12.4.2).  In particular, sending
@@ -1191,13 +1212,13 @@ After joining the new group, a sending server MUST re-wrap the FK of
 every resource it shares with the group under the new group's Group Key
 and redistribute the wrapped FKs to all Member Servers, exactly as for
 an epoch change ({{fk-rewrap}}).  The new group's Group Key differs from
-any key of the old group both through the fresh epoch secret and through
-the new `group_id` in the Exporter context, so no wrapped FK from the
-old group can be unwrapped in the new one.  Until the re-wrapped FKs
-arrive, Member Servers retain the old group's last Group Key under the
-same retention rule as for an epoch change.  Members SHOULD retain the
-resumption PSK of the old group's final epoch until the reinitialisation
-has completed ([RFC9420] Section 8.6).
+any key of the old group both through the fresh component export secret
+and through the new `group_id` in the Group Key derivation context, so
+no wrapped FK from the old group can be unwrapped in the new one.  Until
+the re-wrapped FKs arrive, Member Servers retain the old group's last
+Group Key under the same retention rule as for an epoch change.
+Members SHOULD retain the resumption PSK of the old group's final epoch
+until the reinitialisation has completed ([RFC9420] Section 8.6).
 
 # Encryption Model
 
@@ -1208,28 +1229,34 @@ the new epoch secret before encrypting any application data, then
 derives the current Group Key:
 
 ~~~
-group_key = MLS-Exporter("ocm-group-key", group_id_bytes, AEAD.Nk)
+component_secret = SafeExportSecret(ocm_community)
+group_key = ExpandWithLabel(
+  component_secret,
+  "group key",
+  group_id_bytes,
+  AEAD.Nk
+)
 ~~~
 
+`SafeExportSecret` is the component-separated, forward-secure exporter
+defined by [ietf-mls-extensions].  It is invoked once per epoch for the
+OCM Community Component.  `ExpandWithLabel` is defined in
+[RFC9420] Section 8.  The `group_id_bytes` context is the raw MLS
+`group_id` of the group.
+
 `AEAD.Nk` is the length in bytes of a key for the AEAD algorithm of the
-group's negotiated MLS cipher suite ([RFC9420] Section 9.1).  Deriving
-the Group Key at exactly this length makes it a valid key for the wrap
-AEAD ({{file-key-wrapping}}), which is the AEAD algorithm of the group's
-cipher suite, for every cipher suite, including those whose AEAD takes a
-16-byte key such as AES-128-GCM.
+group's negotiated MLS cipher suite ([RFC9420] Section 9.1).  Expanding
+the component secret to exactly this length makes the Group Key valid
+for the wrap AEAD ({{file-key-wrapping}}), including cipher suites whose
+AEAD takes a 16-byte key such as AES-128-GCM.  Component separation and
+the `group_id_bytes` context bind the output to this application and
+group.  The Group Key changes with every epoch transition and cannot be
+derived by a party that did not participate in that epoch.
 
-The MLS Exporter ([RFC9420] Section 8.5) produces application-specific
-key material from the epoch secret without exposing the epoch secret
-itself.  The label `"ocm-group-key"` scopes the output to this
-application.  The `group_id_bytes` context, the raw MLS `group_id` of
-the group, further binds the output to this specific group.  The Group
-Key therefore changes with every epoch transition and cannot be derived
-by any party that did not participate in that epoch.
-
-Per [RFC9420] Section 8.5, the Group Key SHOULD be refreshed after each
-processed Commit.  Security-sensitive values derived from the epoch
-secret MUST be deleted as soon as they are consumed, per [RFC9420]
-Section 9.2.
+The Group Key MUST be derived after each Welcome or processed Commit.
+The component export secret and any intermediate values MUST be deleted
+as required by [ietf-mls-extensions] and [RFC9420] Section 9.2 after the
+Group Key has been derived.
 
 All MLS clients in the group independently derive the same Group Key for
 a given epoch.
@@ -1309,12 +1336,12 @@ acts on behalf of a user who is a member of that group:
 
 The Group Key changes with every epoch transition, whatever the reason
 for the transition: a Commit covering Add, Remove, Update, or
-GroupContextExtensions proposals, or an empty Commit, all advance the
-epoch.  To maintain the invariant that the current Group Key is always
-sufficient to unwrap the current wrapped FK, a sending server MUST,
-after processing an `MLS_COMMIT` for a group, or after joining the
-successor group of a reinitialisation via its Welcome ({{reinit}}), for
-every resource it shares with that group:
+AppDataUpdate or GroupContextExtensions proposals, or an empty Commit,
+all advance the epoch.  To maintain the invariant that the current
+Group Key is always sufficient to unwrap the current wrapped FK, a
+sending server MUST, after processing an `MLS_COMMIT` for a group, or
+after joining the successor group of a reinitialisation via its Welcome
+({{reinit}}), for every resource it shares with that group:
 
 1.  Re-wrap the resource's current FK under the new Group Key, following
     the procedure in {{file-key-wrapping}}.
@@ -1812,7 +1839,7 @@ this document, it SHOULD be a fresh random value at creation, as
 recommended by [RFC9420] Section 11.
 - the Federation's identity and its set of Federation Admin Servers are
 carried in a GroupContext extension `ocm_servers_federation` ([RFC9420]
-Section 13.4), the counterpart of `ocm_community`
+Section 13.4), the counterpart of the OCM Community Component
 ({{admin-set}}):
 
 ~~~
@@ -2242,11 +2269,12 @@ Member Server can disclose it, and transport protection prevents
 exposure to outside observers in transit.
 
 **Admin set integrity.** The admin set and the group's OCM Address are
-carried in the GroupContext ({{admin-set}}), so they are covered by the
-MLS confirmation tag and agreed upon by all members of every epoch.  A
-malicious server cannot unilaterally appoint admins or seize the Group
-Owner Server role; changing the admin set requires a Commit constructed
-by an existing admin client.
+carried as OCM Community Component data in the GroupContext
+({{admin-set}}), so they are covered by the MLS confirmation tag and
+agreed upon by all members of every epoch.  A malicious server cannot
+unilaterally appoint admins or seize the Group Owner Server role;
+changing the admin set requires an `AppDataUpdate` proposal in a Commit
+constructed by an existing admin client.
 
 **Post-compromise security.** Member Servers SHOULD periodically rotate
 their users' leaf keys via Update proposals to maintain post-compromise
@@ -2255,8 +2283,8 @@ eventually be removed from the group.
 
 **Key material deletion.** Security-sensitive values MUST be deleted as
 soon as they are consumed, per [RFC9420] Section 9.2.  In particular,
-the exporter_secret used to derive the Group Key must not be retained
-after the Group Key has been derived.
+the OCM component export secret and intermediate values used to derive
+the Group Key MUST NOT be retained after the Group Key has been derived.
 
 **KeyPackage reuse.** KeyPackages MUST be one-time use, except for a
 designated last resort KeyPackage used when a user's single-use
@@ -2282,10 +2310,11 @@ SHOULD implement rate limiting and other access control methods on the
 ## Underlying Security Specifications
 
 This specification relies on the base Open Cloud Mesh protocol [OCM],
-the Messaging Layer Security protocol [RFC9420], HTTP Message Signatures
-[RFC9421], and JSON Web Keys and JWK Sets [RFC7517].  All security
-considerations in those specifications apply to implementations of this
-protocol.  The security and privacy considerations of the MLS
+the Messaging Layer Security protocol [RFC9420], the safe application
+interface and component model in [ietf-mls-extensions], HTTP Message
+Signatures [RFC9421], and JSON Web Keys and JWK Sets [RFC7517].  All
+security considerations in those specifications apply to implementations
+of this protocol.  The security and privacy considerations of the MLS
 architecture [RFC9750] also apply.
 
 Implementations using Virtual Clients additionally need to follow all
@@ -2297,6 +2326,16 @@ HPKE construction.
 
 # IANA Considerations
 
+The OCM Community Component defined in {{admin-set}} is to be
+registered in the "MLS Component Types" registry defined by
+[ietf-mls-extensions]:
+
+- Value: 0x0006 (suggested)
+- Name: ocm_community
+- Where: GC, ES
+- Recommended: N
+- Reference: This document
+
 The MLS Exporter label `"ocm-group-key"` used in the Group Key
 Derivation section is to be registered in the "MLS Exporter Labels"
 registry defined in [RFC9420] Section 17.8, to avoid collisions with
@@ -2306,18 +2345,9 @@ other applications using the MLS Exporter:
 - Recommended: N
 - Reference: This document
 
-The GroupContext extension `ocm_community` defined in
-{{admin-set}} is to be registered in the "MLS Extension Types" registry
-defined in [RFC9420] Section 17.3:
-
-- Value: TBD
-- Name: ocm_community
-- Message(s): GC
-- Recommended: N
-- Reference: This document
-
 The GroupContext extension `ocm_servers_federation` defined in
-{{servers-federation-state}} is to be registered in the same registry:
+{{servers-federation-state}} is to be registered in the "MLS Extension
+Types" registry defined in [RFC9420] Section 17.3:
 
 - Value: TBD
 - Name: ocm_servers_federation
@@ -2443,6 +2473,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
   keeping the HTTP Message Signature `keyid` opaque.
 * Added nonce replay protection and request-bound response signatures
   for KeyPackage distribution.
+* Replaced the OCM-specific GroupContext extension and exporter label
+  with the application component model and safe exporter defined by
+  [ietf-mls-extensions].
 
 ## WG Version 01
 * Added authenticated requester discovery for KeyPackage requests while
@@ -2476,6 +2509,10 @@ Work in Progress, Internet-Draft.
 Mularczyk, M. and Robert, R.  "[MLS Virtual
 Clients](https://datatracker.ietf.org/doc/html/draft-ietf-mls-virtual-clients-01)",
 Work in Progress, Internet-Draft, draft-ietf-mls-virtual-clients-01.
+
+[ietf-mls-extensions] Robert, R.  "[The Messaging Layer Security (MLS)
+Extensions](https://datatracker.ietf.org/doc/html/draft-ietf-mls-extensions-11)",
+Work in Progress, Internet-Draft, draft-ietf-mls-extensions-11.
 
 [RFC2119] Bradner, S.  "[Key words for use in RFCs to Indicate
 Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
