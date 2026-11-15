@@ -1472,8 +1472,7 @@ Before applying a notification, the receiver MUST validate its envelope,
 payload and identity bindings.
 
 * Malformed envelopes and malformed payloads for known notification
-  types MUST receive HTTP 400. Deprecated fields cannot replace required
-  payload fields.
+  types MUST receive HTTP 400.
 * A receiver SHOULD accept and ignore a valid unknown notification
   type. It MUST NOT reject it merely because the type is unknown, or
   apply another type's payload requirements to it.
