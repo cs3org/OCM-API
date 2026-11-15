@@ -822,10 +822,11 @@ trade-off relative to encrypted handshake messages is discussed in
 Security Considerations.
 
 The notification types defined in this document are group-scoped rather
-than share-scoped.  In accordance with [OCM], their payloads set
-`shareType` to `"federation"` and omit `resourceType` and the
-`providerId` field.  The `notification` object is REQUIRED and carries
-all MLS-specific parameters.  The `mlsGroupId` field carries the
+than share-scoped.  In accordance with [OCM], their payloads omit the
+`providerId` field, and set exactly one of `shareType` or
+`resourceType`, depending on the kind of group, as detailed below.  The
+`notification` object is REQUIRED and carries all MLS-specific
+parameters.  The `mlsGroupId` field carries the
 base64url-encoded MLS `group_id` as advisory routing information, used
 to dispatch the message to the right group state without parsing the
 MLS message; the authoritative `group_id` is the one inside the MLS
@@ -1866,8 +1867,9 @@ Federation by proposing its own removal, which requires no approval.
 
 Because the resulting epoch is agreed by every member, an expulsion
 takes effect for the whole Federation at once.  This is the guarantee
-the peer-announced model cannot offer, where a removal states only that
-the sender's own directory no longer lists the recipient.
+the peer-announced model cannot offer, where an `OCM_SERVER_REMOVED`
+Notification only ever states that its sender itself is leaving, and
+an unwilling member cannot be expelled by the other members at all.
 
 The notifications that carry these operations are the `MLS_*` types of
 {{mls-notification-types}}, with `serverUrl` in place of `userId`.  For
@@ -1893,12 +1895,15 @@ As for a federated group, the Welcome MUST carry the group's ratchet
 tree in a `ratchet_tree` extension, since the admitted server needs it
 to derive the membership and to process subsequent Commits.
 
-The `OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED` notifications of [OCM]
-SHOULD still be sent to a prospective or a departing member.  They
-remain useful because they reach the administrator of a server that is
-not yet, or no longer, in the group, and therefore cannot receive its
-MLS messages.  They are advisory in this model: the membership is what
-the group state says.
+The `OCM_SERVER_ADDED` notification of [OCM] SHOULD still be sent to a
+prospective member before it is admitted, and a server that leaves the
+group voluntarily SHOULD still send `OCM_SERVER_REMOVED` to the rest of
+the group, consistently with the peer-announced model of [OCM].  They
+remain useful because they notify the administrators of remote servers
+regardless whether they can process the corresponding MLS messages.
+An expulsion, by contrast, has no `OCM_SERVER_REMOVED` counterpart: the
+expelled server instead learns of its expulsion once it can no longer
+process the group's Commits.
 
 ## Publishing the Membership
 

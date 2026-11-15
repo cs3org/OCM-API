@@ -2646,19 +2646,19 @@ notification sent to the "/notifications" endpoint (see
 [Notifications](#notifications)).
 
 The "Scope" field indicates whether the notification refers to a
-Resource, a Collection, or a Recipient.  Resource-scoped notifications
-MUST include "providerId" in the payload.  Collection-scoped
-notifications MUST set "resourceType" to "collection" and include
-"collectionId"; this scope applies only to `REQUEST_SHARE` and a
-`SHARE_DECLINED` response to that request.  It does not define recipient
-membership for a Collection.  Recipient-scoped notifications refer to
-the shareType in a
-[Share Creation Notification](#share-creation-notification) and MUST
+Resource, a Collection, or a Recipient.  A Resource-scoped notification
+MUST identify that Resource in the payload, ordinarily with
+"providerId"; the one exception is the "federation" resourceType,
+where the Resource is the Federation itself and is instead identified
+by the REQUIRED "federation" object, whose "url" field carries the
+identity of the OCM Server the notification concerns (see [Federation
+Membership](#federation-membership)).  Collection-scoped notifications
+MUST set "resourceType" to "collection" and include "collectionId";
+this scope applies only to `REQUEST_SHARE` and a `SHARE_DECLINED`
+response to that request.  It does not define recipient membership for
+a Collection.  Recipient-scoped notifications refer to the shareType in
+a [Share Creation Notification](#share-creation-notification) and MUST
 include a corresponding identifier such as "userId" in the payload.
-For the "federation" resourceType, the Resource is the Federation
-itself, and the "federation" object identifying it and the OCM Server
-concerned is REQUIRED in the payload (see [Federation
-Membership](#federation-membership)).
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -3566,10 +3566,11 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Introduced the `OCM_SERVER_ADDED` and `OCM_SERVER_REMOVED`
   notification types, with `resourceType` set to `federation`, to
   propagate Federation membership between OCM Servers, to be consumed
-  by the OCM Server Administrator.  Each of them states only whether
-  the sender's directory now contains the recipient, so that every
-  assertion on the wire is attributable to the Administrator who made
-  it.
+  by the OCM Server Administrator.  `OCM_SERVER_ADDED` states only
+  that the sender's directory now contains the recipient, and
+  `OCM_SERVER_REMOVED` only that the sender itself is leaving the
+  Federation, so that every assertion on the wire is attributable to,
+  and limited to, the Administrator who made it.
 * Registered the `federation` resource type for a group of OCM
   Servers, and renamed to `dgroup` the share type for federated groups
   of users, formerly `federation`, which is registered and specified

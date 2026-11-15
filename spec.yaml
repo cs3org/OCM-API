@@ -1251,15 +1251,9 @@ components:
           type: string
           description: >
             Resource type, according to the OCM IANA Registry for resource types.
-<<<<<<< HEAD
-            E.g. file, folder, collection, calendar, contact, etc. Implementers
-            MAY define additional custom types, provided that they are registered
-            in the respective OCM IANA Registry.
-=======
-            E.g. file, folder, calendar, contact, federation, etc. Implementers MAY define
-            additional custom types, provided that they are registered in the
-            respective OCM IANA Registry.
->>>>>>> 92c2b9a (Breaking change: `federation` renamed to `dgroup`, `federation` now represents a servers' Federation)
+            E.g. file, folder, collection, calendar, contact, federation, etc.
+            Implementers MAY define additional custom types, provided that
+            they are registered in the respective OCM IANA Registry.
         shareType:
           type: string
           description: >
@@ -1311,9 +1305,10 @@ components:
               `shareWith`, and `permissions` of the requested share.
               For an `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED` notification, the
               `federation` object MUST contain the `federationId` of the
-              Federation and the `url` of the OCM Server that the sender's
-              directory for that Federation now contains, respectively no longer
-              contains.
+              Federation and a `url`: for `OCM_SERVER_ADDED`, the `url` of the
+              target OCM Server that the sender's directory for that Federation
+              now contains; for `OCM_SERVER_REMOVED`, the `url` of the sender
+              itself, which is leaving that Federation.
       example:
         legacyShareWasAccepted:
           notificationType: SHARE_ACCEPTED
@@ -1358,16 +1353,16 @@ components:
               federationId: sciencemesh
               name: The ScienceMesh Directory
               url: https://cloud.example.org
-        ocmServerWasRemoved:
+        ocmServerLeft:
           notificationType: OCM_SERVER_REMOVED
           resourceType: federation
           senderDomain: ocm-server.example.org
           notification:
-            message: Your OCM Server is no longer part of our federation
+            message: We are leaving this federation
             federation:
               federationId: sciencemesh
               name: The ScienceMesh Directory
-              url: https://cloud.example.org
+              url: https://ocm-server.example.org
         mlsWelcome:
           notificationType: MLS_WELCOME
           shareType: dgroup
@@ -1438,32 +1433,6 @@ components:
           type: string
           description: Name of the Invite Sender.
           example: John Doe
-<<<<<<< HEAD
-=======
-    RequestShare:
-      type: object
-      required:
-        - owner
-        - shareWith
-        - share
-      properties:
-        owner:
-          type: string
-          description: >
-            OCM Address of the user who will be requested to share
-            the resource.
-          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
-        shareWith:
-          type: string
-          description: >
-            OCM Address of the user, group or dgroup that
-            wants to receive a share of the resource.
-          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-        share:
-          type: string
-          description: A unique identifier for the resource.
-          example: 1234567890abcdef or https://ocm.example.org/files/spec.yaml
->>>>>>> 92c2b9a (Breaking change: `federation` renamed to `dgroup`, `federation` now represents a servers' Federation)
     TokenRequest:
       type: object
       required:
