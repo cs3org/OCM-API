@@ -650,10 +650,9 @@ components:
             machines (e.g. no use of special characters) providing more
             information on the cause of the error.
           example: RESOURCE_NOT_FOUND
-    IPAllocatedShareProtocol:
+    IPProtocolFields:
       description: >
-        Partial protocol allocation returned by a Protocol Server. Unknown
-        protocol entries remain open; no entry may contain sharedSecret.
+        Credential-free protocol fields; required entries depend on context.
       allOf:
         - $ref: "#/components/schemas/ShareProtocolFields"
         - type: object
@@ -668,7 +667,7 @@ components:
       description: >
         Full IP protocol payload, using the core fields without credentials.
       allOf:
-        - $ref: "#/components/schemas/IPAllocatedShareProtocol"
+        - $ref: "#/components/schemas/IPProtocolFields"
         - required: [name]
           properties:
             webdav:
@@ -689,29 +688,9 @@ components:
         - shareType
         - resourceType
         - protocol
+      allOf:
+        - $ref: "#/components/schemas/ShareFields"
       properties:
-        sender:
-          $ref: "#/components/schemas/NewShare/properties/sender"
-        owner:
-          $ref: "#/components/schemas/NewShare/properties/owner"
-        shareWith:
-          $ref: "#/components/schemas/NewShare/properties/shareWith"
-        providerId:
-          $ref: "#/components/schemas/NewShare/properties/providerId"
-        shareType:
-          $ref: "#/components/schemas/NewShare/properties/shareType"
-        resourceType:
-          $ref: "#/components/schemas/NewShare/properties/resourceType"
-        name:
-          $ref: "#/components/schemas/NewShare/properties/name"
-        description:
-          $ref: "#/components/schemas/NewShare/properties/description"
-        ownerDisplayName:
-          $ref: "#/components/schemas/NewShare/properties/ownerDisplayName"
-        senderDisplayName:
-          $ref: "#/components/schemas/NewShare/properties/senderDisplayName"
-        expiration:
-          $ref: "#/components/schemas/NewShare/properties/expiration"
         protocol:
           $ref: "#/components/schemas/IPShareProtocol"
       example:
@@ -749,7 +728,7 @@ components:
         status:
           type: string
         protocol:
-          $ref: "#/components/schemas/IPAllocatedShareProtocol"
+          $ref: "#/components/schemas/IPProtocolFields"
       example:
         status: stored
     IPTokenPreparationResponse:
@@ -775,7 +754,7 @@ components:
         sender:
           $ref: "#/components/schemas/OCMAddress"
         providerId:
-          $ref: "#/components/schemas/NewShare/properties/providerId"
+          $ref: "#/components/schemas/ShareFields/properties/providerId"
       example:
         sender: alice@cloud.example.org
         providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
@@ -809,15 +788,15 @@ components:
         protocol:
           $ref: "#/components/schemas/IPShareProtocol"
         providerId:
-          $ref: "#/components/schemas/NewShare/properties/providerId"
+          $ref: "#/components/schemas/ShareFields/properties/providerId"
         resourceType:
-          $ref: "#/components/schemas/NewShare/properties/resourceType"
+          $ref: "#/components/schemas/ShareFields/properties/resourceType"
         name:
-          $ref: "#/components/schemas/NewShare/properties/name"
+          $ref: "#/components/schemas/ShareFields/properties/name"
         shareType:
-          $ref: "#/components/schemas/NewShare/properties/shareType"
+          $ref: "#/components/schemas/ShareFields/properties/shareType"
         expiration:
-          $ref: "#/components/schemas/NewShare/properties/expiration"
+          $ref: "#/components/schemas/ShareFields/properties/expiration"
     IPAccessTokenHeader:
       type: object
       description: >
@@ -1450,6 +1429,109 @@ components:
                 type: string
                 description: A human-readable name for the OCM Server.
                 example: My OCM Server
+    ShareFields:
+      type: object
+      properties:
+        shareWith:
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
+          description: >
+            OCM Address of the user, group or community the
+            provider wants to share the resource with. This MUST be known
+            in advance, either via a previous Invitation or through other means.
+          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
+        name:
+          type: string
+          description: Name of the resource (file or folder).
+          example: resource.txt
+        description:
+          type: string
+          description: Optional description of the resource (file or folder).
+          example: |
+            This is the Open API Specification file (in YAML format) of the Open
+            Cloud Mesh API.
+        providerId:
+          type: string
+          description: >
+            Opaque value to identify the Shared Resource at the provider side.
+            This MUST be unique per Resource and per share, such that multiple
+            shares of a given Resource are guaranteed to get different values.
+          example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        collectionId:
+          type: string
+          description: >
+            Opaque identifier of a Collection containing this Resource. A Collection
+            groups one or more Resources whose membership and semantics are defined
+            by the Sending Server; they MAY have different locations and resource
+            types. Multiple Resources and Shares MAY carry the same value; global
+            uniqueness is not required. The identifier MAY be advertised out of band,
+            for example in a catalog, and used in a REQUEST_SHARE notification.
+            Each Share fulfilling that request MUST carry the requested collectionId
+            unchanged. Unsolicited Shares MAY also include it. The Receiving Server
+            MAY use it to associate incoming Shares with a pending request for the
+            Collection to the Sending Server. It does not replace providerId or
+            grant access to any Resource.
+          example: research-data-123
+        collectionSize:
+          type: integer
+          minimum: 1
+          description: >
+            Total number of distinct Shares representing the Collection for this
+            recipient, including this Share. When collectionId is present and the total
+            is known, collectionSize SHOULD be included. When present, it MUST be at
+            least 1 and MUST be accompanied by collectionId. If the total is unknown,
+            collectionSize MUST be omitted. A Share offering multiple protocols counts
+            as one Share. When included in Shares fulfilling the same request, the
+            values MUST agree.
+            The Receiving Server MAY compare this value with the number of distinct
+            providerId values received for the Collection and recipient from the
+            Sending Server to determine whether receipt of the Collection is complete.
+          example: 3
+        owner:
+          description: |
+            OCM Address of the user who owns the resource.
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
+          example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
+        sender:
+          description: |
+            OCM Address of the user that wants to share the
+            resource.
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
+          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
+        ownerDisplayName:
+          type: string
+          description: |
+            Display name of the owner of the resource
+          example: Dimitri
+        senderDisplayName:
+          type: string
+          description: |
+            Display name of the user that wants to share the resource
+          example: John Doe
+        shareType:
+          type: string
+          enum:
+            - user
+            - group
+            - community
+          description: |
+            Recipient share type
+          example: user
+        resourceType:
+          type: string
+          description: |
+            Resource type (file, folder, calendar, contact, ...)
+          example: file
+        expiration:
+          type: integer
+          description: >
+            The expiration time for the share, in seconds of UTC time since Unix
+            epoch. If omitted, it is assumed that the share does not expire. A sender
+            server MAY use the `expiration` to signal that the resource represents
+            a cached copy of a dataset that was made available for an efficient
+            data transfer to the destination server.
     ShareProtocolFields:
       type: object
       properties:
@@ -1740,107 +1822,9 @@ components:
         - shareType
         - resourceType
         - protocol
+      allOf:
+        - $ref: "#/components/schemas/ShareFields"
       properties:
-        shareWith:
-          allOf:
-            - $ref: "#/components/schemas/OCMAddress"
-          description: >
-            OCM Address of the user, group or community the
-            provider wants to share the resource with. This MUST be known
-            in advance, either via a previous Invitation or through other means.
-          example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
-        name:
-          type: string
-          description: Name of the resource (file or folder).
-          example: resource.txt
-        description:
-          type: string
-          description: Optional description of the resource (file or folder).
-          example: |
-            This is the Open API Specification file (in YAML format) of the Open
-            Cloud Mesh API.
-        providerId:
-          type: string
-          description: >
-            Opaque value to identify the Shared Resource at the provider side.
-            This MUST be unique per Resource and per share, such that multiple
-            shares of a given Resource are guaranteed to get different values.
-          example: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-        collectionId:
-          type: string
-          description: >
-            Opaque identifier of a Collection containing this Resource. A Collection
-            groups one or more Resources whose membership and semantics are defined
-            by the Sending Server; they MAY have different locations and resource
-            types. Multiple Resources and Shares MAY carry the same value; global
-            uniqueness is not required. The identifier MAY be advertised out of band,
-            for example in a catalog, and used in a REQUEST_SHARE notification.
-            Each Share fulfilling that request MUST carry the requested collectionId
-            unchanged. Unsolicited Shares MAY also include it. The Receiving Server
-            MAY use it to associate incoming Shares with a pending request for the
-            Collection to the Sending Server. It does not replace providerId or
-            grant access to any Resource.
-          example: research-data-123
-        collectionSize:
-          type: integer
-          minimum: 1
-          description: >
-            Total number of distinct Shares representing the Collection for this
-            recipient, including this Share. When collectionId is present and the total
-            is known, collectionSize SHOULD be included. When present, it MUST be at
-            least 1 and MUST be accompanied by collectionId. If the total is unknown,
-            collectionSize MUST be omitted. A Share offering multiple protocols counts
-            as one Share. When included in Shares fulfilling the same request, the
-            values MUST agree.
-            The Receiving Server MAY compare this value with the number of distinct
-            providerId values received for the Collection and recipient from the
-            Sending Server to determine whether receipt of the Collection is complete.
-          example: 3
-        owner:
-          description: |
-            OCM Address of the user who owns the resource.
-          allOf:
-            - $ref: "#/components/schemas/OCMAddress"
-          example: 6358b71804dfa8ab069cf05ed1b0ed2a@apiwise.nl
-        sender:
-          description: |
-            OCM Address of the user that wants to share the
-            resource.
-          allOf:
-            - $ref: "#/components/schemas/OCMAddress"
-          example: 527bd5b5d689e2c32ae974c6229ff785@apiwise.nl
-        ownerDisplayName:
-          type: string
-          description: |
-            Display name of the owner of the resource
-          example: Dimitri
-        senderDisplayName:
-          type: string
-          description: |
-            Display name of the user that wants to share the resource
-          example: John Doe
-        shareType:
-          type: string
-          enum:
-            - user
-            - group
-            - community
-          description: |
-            Recipient share type
-          example: user
-        resourceType:
-          type: string
-          description: |
-            Resource type (file, folder, calendar, contact, ...)
-          example: file
-        expiration:
-          type: integer
-          description: >
-            The expiration time for the share, in seconds of UTC time since Unix
-            epoch. If omitted, it is assumed that the share does not expire. A sender
-            server MAY use the `expiration` to signal that the resource represents
-            a cached copy of a dataset that was made available for an efficient
-            data transfer to the destination server.
         encryption:
           type: object
           description: >

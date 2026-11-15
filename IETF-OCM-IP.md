@@ -1400,7 +1400,7 @@ the Receiving Server.  The body is the Share Creation Notification with
 every `sharedSecret` removed (line breaks in the signature headers for
 display purposes only):
 
-<sourcecode type="http">
+<sourcecode type="http" anchor="ip-provisioning-request-example">
 POST /services/ocm/shares HTTP/1.1
 Host: hub.example.org
 Date: Wed, 10 Jun 2026 14:00:00 GMT
@@ -1449,7 +1449,7 @@ Content-Type: application/json
 
 { "status": "stored" }
 ~~~
-{: type="http"}
+{: #ip-provisioning-response-example type="http"}
 
 The OCM Server then sends the Share Creation Notification to
 `receiver.example.org` per [OCM], with `must-exchange-token` in the
@@ -1470,6 +1470,7 @@ header:
   "kid": "cloud.example.org#key1"
 }
 ~~~
+{: #ip-access-token-header-example}
 
 and the Claims Set:
 
@@ -1484,6 +1485,7 @@ and the Claims Set:
   "jti": "f3b9c0aa-2f6e-4d57-9d24-6f0a1f6d9b11"
 }
 ~~~
+{: #ip-provisioned-token-claims-example}
 
 ## Front-Channel Access
 
@@ -1522,7 +1524,7 @@ Content-Type: application/json
   "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01"
 }
 ~~~
-{: type="http"}
+{: #ip-revocation-request-example type="http"}
 
 ~~~
 HTTP/1.1 200 OK
@@ -1530,7 +1532,7 @@ Content-Type: application/json
 
 { "status": "revoked" }
 ~~~
-{: type="http"}
+{: #ip-revocation-response-example type="http"}
 
 A repeated revocation for the same `providerId` returns `{ "status":
 "gone" }` with HTTP status 200.
@@ -1570,6 +1572,7 @@ When the Receiving Server performs the Code Flow at
   }
 }
 ~~~
+{: #ip-self-contained-token-claims-example}
 
 Note the short lifetime (300 seconds): the Receiving Server re-exchanges
 the `sharedSecret` at the `tokenEndPoint` for a fresh token before each
@@ -1626,7 +1629,7 @@ Content-Type: application/x-www-form-urlencoded
 
 token=shr-9wq4xkz7vmd2
 ~~~
-{: type="http"}
+{: #ip-introspection-request-example type="http"}
 
 ~~~
 HTTP/1.1 200 OK
@@ -1654,7 +1657,7 @@ Content-Type: application/json
   }
 }
 ~~~
-{: type="http"}
+{: #ip-active-introspection-response-example type="http"}
 
 The gateway serves the PROPFIND read-only and MAY cache this response
 until `exp`.  When Alice unshares the folder, introspection starts
