@@ -6,7 +6,9 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shlex
 import unittest
+from urllib.parse import parse_qsl
 
 from jsonschema import Draft4Validator
 import yaml
@@ -38,29 +40,60 @@ def load_spec(path=ROOT / "spec.yaml"):
     return yaml.load(path.read_text(encoding="utf-8"), Loader=UniqueKeyLoader)
 
 
-def draft_examples():
-    draft = (ROOT / "IETF-OCM-IP.md").read_text(encoding="utf-8")
-    http = re.search(
-        r'<sourcecode type="http">(.*?)\n</sourcecode>', draft, re.S).group(1)
-    body = http.split("\n\n", 1)[1]
-    header, provisioned, contained = (
-        json.loads(block) for block in re.findall(
-            r"~~~ json\n(.*?)\n~~~", draft, re.S))
-    revoke = re.search(
-        r"POST /services/ocm/revoke.*?\n\n(\{.*?\})\n~~~", draft, re.S)
-    active = re.search(
-        r"HTTP/1.1 200 OK\nContent-Type: application/json\n\n"
-        r"(\{\n.*?\})\n~~~", draft, re.S)
-    return http, body, {
-        "IPShareProvisioningRequest": json.loads(body),
-        "IPShareProvisioningResponse": {"status": "stored"},
-        "IPShareRevocationRequest": json.loads(revoke.group(1)),
-        "IPShareRevocationResponse": {"status": "revoked"},
-        "IPAccessTokenHeader": header,
-        "IPProvisionedTokenClaims": provisioned,
-        "IPSelfContainedTokenClaims": contained,
-        "IPIntrospectionResponse": json.loads(active.group(1)),
-    }
+EXAMPLE_SCHEMAS = {
+    "ip-provisioning-request-example": "IPShareProvisioningRequest",
+    "ip-provisioning-response-example": "IPShareProvisioningResponse",
+    "ip-access-token-header-example": "IPAccessTokenHeader",
+    "ip-provisioned-token-claims-example": "IPProvisionedTokenClaims",
+    "ip-revocation-request-example": "IPShareRevocationRequest",
+    "ip-revocation-response-example": "IPShareRevocationResponse",
+    "ip-self-contained-token-claims-example": "IPSelfContainedTokenClaims",
+    "ip-introspection-request-example": "IPIntrospectionRequest",
+    "ip-active-introspection-response-example": "IPIntrospectionResponse",
+}
+
+
+def example_blocks(draft):
+    pattern = (
+        r'<sourcecode\b(?P<attrs>[^>]*)>\n(?P<xml>.*?)\n</sourcecode>'
+        r'|^~~~[^\n]*\n(?P<fenced>.*?)\n~~~'
+        r'(?:\n\{:(?P<ial>[^\n]*)\})?'
+    )
+    blocks = {}
+    for match in re.finditer(pattern, draft, re.M | re.S):
+        if match["xml"] is not None:
+            attrs, prefix = match["attrs"], "anchor="
+            block = match["xml"]
+        else:
+            attrs, prefix = match["ial"] or "", "#"
+            block = match["fenced"]
+        for attr in shlex.split(attrs, comments=False):
+            if not attr.startswith(prefix):
+                continue
+            ident = attr[len(prefix):]
+            if ident not in EXAMPLE_SCHEMAS:
+                continue
+            if ident in blocks:
+                raise ValueError(f"duplicate example ID: {ident}")
+            blocks[ident] = block
+    missing = EXAMPLE_SCHEMAS.keys() - blocks.keys()
+    if missing:
+        raise ValueError("missing example IDs: " + ", ".join(sorted(missing)))
+    return blocks
+
+
+def draft_examples(draft=None):
+    if draft is None:
+        draft = (ROOT / "IETF-OCM-IP.md").read_text(encoding="utf-8")
+    blocks = example_blocks(draft)
+    examples = {}
+    for ident, schema in EXAMPLE_SCHEMAS.items():
+        block = blocks[ident]
+        body = block.split("\n\n", 1)[1] if block.startswith(("POST ", "HTTP/")) else block
+        examples[schema] = (dict(parse_qsl(body, strict_parsing=True))
+                            if schema == "IPIntrospectionRequest" else json.loads(body))
+    http = blocks["ip-provisioning-request-example"]
+    return http, http.split("\n\n", 1)[1], examples
 
 
 def boundary_cases():
@@ -82,7 +115,6 @@ def boundary_cases():
 
     for schema, value in examples.items():
         add("examples", schema, value, label=schema)
-    add("examples", "IPIntrospectionRequest", {"token": "shr-9wq4xkz7vmd2"})
     add("requests", "IPShareProvisioningRequest",
         {k: v for k, v in request.items() if k != "name"})
     add("requests", "IPShareProvisioningRequest", {**request, "extension": 1})
@@ -96,6 +128,8 @@ def boundary_cases():
     add("requests", "IPIntrospectionRequest", {"token": 3}, False)
     missing("requests", "OCMIPClaim", claim,
             ("protocol", "providerId", "resourceType"))
+    add("requests", "OCMIPClaim", {**claim, "owner": {}},
+        label="opaque owner extension")
     for protocol in ({}, {"name": 3}, {"name": "multi", "webdav": {}},
                      {"name": "multi", "webapp": {}},
                      {"name": "multi", "webdav": {"uri": "x", "permissions": ["view"]}},
@@ -210,6 +244,32 @@ class ExtensionSchemaTests(unittest.TestCase):
 
     def test_draft_examples(self):
         self.check_group("examples")
+
+    def test_example_extraction_ignores_unrelated_blocks_and_order(self):
+        draft = (ROOT / "IETF-OCM-IP.md").read_text(encoding="utf-8")
+        unrelated = ('~~~ json\n{"unrelated": true}\n~~~\n\n'
+                     '<sourcecode type="http">\nHTTP/1.1 200 OK\n\n{}\n</sourcecode>\n')
+        expected = draft_examples(draft)
+        self.assertEqual(draft_examples(unrelated + draft), expected)
+        with_title = draft.replace(
+            '{: #ip-provisioning-response-example type="http"}',
+            '{: type="http" title="See #other example" '
+            '#ip-provisioning-response-example}', 1)
+        self.assertEqual(draft_examples(with_title), expected)
+        blocks = example_blocks(draft)
+        reordered = unrelated + "\n\n".join(
+            f'~~~\n{block}\n~~~\n{{: #{ident}}}'
+            for ident, block in reversed(list(blocks.items())))
+        self.assertEqual(draft_examples(reordered), expected)
+
+    def test_example_extraction_reports_missing_and_duplicate_ids(self):
+        draft = (ROOT / "IETF-OCM-IP.md").read_text(encoding="utf-8")
+        ident = "ip-provisioning-request-example"
+        with self.assertRaisesRegex(ValueError, "missing example IDs: " + ident):
+            draft_examples(draft.replace(f' anchor="{ident}"', "", 1))
+        block = example_blocks(draft)[ident]
+        with self.assertRaisesRegex(ValueError, "duplicate example ID: " + ident):
+            draft_examples(draft + f'\n~~~\n{block}\n~~~\n{{: #{ident}}}\n')
 
     def test_request_boundaries(self):
         self.check_group("requests")
