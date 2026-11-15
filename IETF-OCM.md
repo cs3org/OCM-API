@@ -769,13 +769,12 @@ propagated by means of the `OCM_SERVER_ADDED` and
 Membership](#federation-membership)), such that the members of a
 Federation eventually converge to a consistent membership.
 
-Both Notifications carry the same meaning: an OCM Server A sends one
-to an OCM Server B to inform B that A's directory for a given Federation
-now contains B, respectively no longer contains B.  A never asserts
-anything about the presence of a third server: B learns about the rest
-of the Federation by fetching A's Directory Endpoint, not from the
-notification itself.  This keeps every statement on the wire
-attributable to the Administrator who made it.
+The two Notifications are not symmetric.  `OCM_SERVER_ADDED` concerns
+its recipient: an OCM Server A sends it to an OCM Server B to inform B
+that A's directory for a given Federation now contains B.
+`OCM_SERVER_REMOVED` concerns its sender: an OCM Server A sends it to
+an OCM Server B to inform B that A itself is leaving a given
+Federation, so that A's directory for it no longer applies.
 
 ### Adding a Member
 
@@ -839,32 +838,42 @@ further such notifications from A.
 
 ### Removing a Member
 
-An OCM Server Administrator MAY remove a member from a Federation
-configuration at any time, and does not need any other member's
-agreement to do so.  When an OCM Server A removes an OCM Server B from
-its directory for a Federation, A MUST send an `OCM_SERVER_REMOVED`
-Notification to B, informing B that A's directory for that Federation
-no longer contains B.
+An OCM Server MAY leave a Federation on its own initiative at any
+time, and does not need any other member's agreement to do so.  A
+server that leaves MUST remove itself from its own Federation
+configuration, and MUST send an `OCM_SERVER_REMOVED` Notification to
+every other member it is aware of, informing each of them that it is
+leaving and that their directories should no longer list it as a
+member.
+
+An `OCM_SERVER_REMOVED` Notification always concerns the sending OCM
+Server itself: unlike `OCM_SERVER_ADDED`, there is no notification by
+which an OCM Server can remove another member from the Federation.
+An OCM Server Administrator MAY still drop any other member from its
+own configuration unilaterally, for instance because it no longer
+trusts that member, but this is a purely local decision that is not
+announced on the wire, and does not by itself remove that member from
+any other server's directory.
 
 Upon receiving an `OCM_SERVER_REMOVED` Notification from A, an OCM
-Server B SHOULD notify its own Administrator.  As Federation
-membership expresses mutual trust, B SHOULD remove A from its own
-configuration for that Federation, so that the two directories do not
-disagree; B's Administrator MAY nonetheless decide to keep A, for
-instance while the reason for the removal is being clarified out of
-band.
+Server B MUST remove A from its own configuration for that Federation,
+without requiring its Administrator's agreement: the notification only
+ever speaks of A's own departure, so there is nothing for B's
+Administrator to approve.  B SHOULD still notify its Administrator of
+the change.
 
-B MUST NOT remove any other member on the strength of such a
-notification, and MUST NOT propagate it: A only ever speaks about its
-own directory.  Consequently, when a Federation as a whole decides to
-exclude a member, each remaining member's Administrator applies the
-removal locally, and each removing OCM Server sends its own
-`OCM_SERVER_REMOVED` to the excluded member.  Until they have all done
-so, a member that one Administrator considers untrustworthy may still
-be listed by others: removal in this model converges only as fast as
-the Administrators act on it, and is not enforceable.  Federations that
-require a consistent and enforceable removal of members are expected
-to use the model described in the next section.
+Because `OCM_SERVER_REMOVED` only ever concerns the sender, it cannot
+be used to eject an unwilling member: the remaining members of a
+Federation have no notification to compel a peer's departure.  An
+ejection is instead a local policy decision by each remaining member's
+Administrator, coordinated out of band with the other Administrators,
+each of them dropping the ejected member from their own configuration
+as described above.  Such an ejection converges only as fast as the
+Administrators act on it, and is not enforceable; until they have all
+acted, a member that one Administrator considers untrustworthy may
+still be listed by others.  Federations that require a consistent and
+enforceable removal of members are expected to use the model described
+in the next section.
 
 Note that removing a member from a Federation is not equivalent to
 withdrawing trust from it: an OCM Server MAY keep interacting with a
@@ -1388,11 +1397,12 @@ traffic.  When signing is in play, the signer and verifier roles are:
   [Notifications](#notifications) and
   [HTTP Message Signatures](#http-message-signatures).
 * __Federation Membership Notification__ (`POST /notifications` with
-  `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED`) - the OCM Server whose
-  directory changed signs; the added or removed OCM Server verifies,
-  using the JWK Set discovered from the `senderDomain`.  See
-  [Federation Membership](#federation-membership) and [HTTP Message
-  Signatures](#http-message-signatures).
+  `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED`) - the sender signs; for
+  `OCM_SERVER_ADDED`, the added OCM Server verifies; for
+  `OCM_SERVER_REMOVED`, the recipient, which the departing sender
+  informs, verifies, using the JWK Set discovered from the
+  `senderDomain`.  See [Federation Membership](#federation-membership)
+  and [HTTP Message Signatures](#http-message-signatures).
 
 # Share Creation Notification
 
@@ -2043,13 +2053,21 @@ Further, the `notification` object MUST include the following fields:
 
 ## Federation Membership
 
-A notification MUST be sent by an OCM Server to inform a target OCM
-Server that its directory for a given Federation now contains, or no
-longer contains, that target OCM Server, as described in [Peer-announced
-Directory](#peer-announced-directory).  These notifications are
-addressed to the OCM Server Administrator rather than to a user: the
-recipient SHOULD notify its Administrator and SHOULD NOT alter its
-Federation configuration without their agreement.
+A notification MUST be sent by an OCM Server to inform another OCM
+Server of a change of Federation membership, as described in
+[Peer-announced Directory](#peer-announced-directory).
+`OCM_SERVER_ADDED` concerns its recipient: it informs the recipient
+that the sender's directory for a given Federation now contains it.
+`OCM_SERVER_REMOVED` concerns its sender: it informs the recipient
+that the sender itself is leaving a given Federation.  These
+notifications are addressed to the OCM Server Administrator rather
+than to a user: the recipient SHOULD notify its Administrator.  Upon
+an `OCM_SERVER_ADDED` notification, the recipient SHOULD NOT alter its
+Federation configuration without its Administrator's agreement; upon
+an `OCM_SERVER_REMOVED` notification, the recipient MUST remove the
+sender from its configuration for that Federation, without requiring
+such agreement, since the notification only ever speaks of the
+sender's own departure.
 
 For these cases, a notification payload is to be formed such that the
 `resourceType` MUST be set to `federation`, the `shareType` MUST be
@@ -2058,17 +2076,15 @@ omitted, and the `notificationType` MUST be one of:
 - "OCM_SERVER_ADDED", to inform the target OCM Server that the
   sender's directory for the given Federation now contains it.
 - "OCM_SERVER_REMOVED", to inform the target OCM Server that the
-  sender's directory for the given Federation no longer contains it.
-
-Neither notification asserts anything about any other member of the
-Federation: the recipient learns the rest of the membership from the
-sender's Directory Endpoint.
+  sender is leaving the given Federation, and that the target's
+  directory should no longer contain the sender.
 
 Further, the `notification` object MUST include the following fields:
 
 * OPTIONAL message (string) - an optional human-readable message that
   describes the event, such as the reason why the target OCM Server
-  was added or removed, for the benefit of its Administrator.
+  was added, or the sender is leaving, for the benefit of its
+  Administrator.
 * REQUIRED federation (object) - an object containing the details of
   the Federation, including:
   * REQUIRED federationId (string) - the identifier of the
@@ -2077,24 +2093,30 @@ Further, the `notification` object MUST include the following fields:
     Endpoint (see [Directory Payload](#directory-payload)).
   * OPTIONAL name (string) - the human-readable name of the
     Federation, for the benefit of the recipient's Administrator.
-  * REQUIRED url (string) - the absolute URL under which the target
-    OCM Server was added to, or removed from, the sender's directory
-    for that Federation, in the format specified for the `url` field
-    in [Directory Payload](#directory-payload).  The target OCM
-    Server SHOULD verify that this URL identifies itself, and SHOULD
-    discard the notification otherwise.
+  * REQUIRED url (string) - the absolute URL identifying the OCM
+    Server the notification concerns, in the format specified for
+    the `url` field in [Directory Payload](#directory-payload): for
+    `OCM_SERVER_ADDED`, the target OCM Server, under which it was
+    added to the sender's directory for that Federation; for
+    `OCM_SERVER_REMOVED`, the sender itself, under which it has
+    removed itself from its own directory for that Federation.  The
+    recipient SHOULD verify that this URL identifies itself, for an
+    `OCM_SERVER_ADDED` notification, respectively the sender, for an
+    `OCM_SERVER_REMOVED` notification, and SHOULD discard the
+    notification otherwise.
   * OPTIONAL mlsGroupId (string) - the identifier of the MLS group
     that manages the Federation, when the model described in
     [MLS-based Directory](#mls-based-directory) is in use.
 
 The recipient of either notification SHOULD respond with HTTP 201 if
 the notification is well-formed, irrespective of whether its
-Administrator agrees to the resulting change of its own configuration,
-and MAY respond with HTTP 403 to signal that it does not wish to
-receive further such notifications from the sender.  As an
-`OCM_SERVER_ADDED` notification establishes trust between servers that
-may have had no prior relationship, it SHOULD NOT be used unless HTTP
-Message Signatures are available on both sides.
+Administrator agrees to the resulting change of its own configuration
+in the `OCM_SERVER_ADDED` case, and MAY respond with HTTP 403 to
+signal that it does not wish to receive further such notifications
+from the sender.  As an `OCM_SERVER_ADDED` notification establishes
+trust between servers that may have had no prior relationship, it
+SHOULD NOT be used unless HTTP Message Signatures are available on
+both sides.
 
 Within a Federation managed as an MLS group, these notifications MAY
 be used to inform a prospective or departing member and its
@@ -2762,12 +2784,12 @@ number of consequences that Administrators need to be aware of:
   incremental convergence of [Peer-announced
   Directory](#peer-announced-directory): its own Administrator's
   agreement remains the only safeguard, as noted above.
-* Membership is only eventually consistent.  In particular, a removal
-  only ever states that the sender's own directory no longer contains
-  the recipient, and cannot be enforced on the other members: a server
-  that is no longer trusted by one Administrator may still be listed
-  by others until each of them acts on it (see [Removing a
-  Member](#removing-a-member)).
+* Membership is only eventually consistent.  In particular, an
+  `OCM_SERVER_REMOVED` Notification only ever states that the sender
+  itself is leaving, and provides no way to eject an unwilling member:
+  a server that is no longer trusted by one Administrator may still be
+  listed by others until each of them acts on it out of band (see
+  [Removing a Member](#removing-a-member)).
 * The membership published at a Directory Endpoint is available to
   anonymous clients, and thus discloses the peers of a Federation.
   Federations whose membership is confidential are expected not to
