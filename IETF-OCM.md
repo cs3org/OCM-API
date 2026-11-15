@@ -1566,7 +1566,7 @@ described in [OCM-IP].
     [IANA Considerations](#iana-considerations)).
   - REQUIRED {schemeObject} (object) - an object keyed with the given
     scheme, containing the details of the encryption used.
-    For the "ocm-gpg" scheme, it MUST contain:
+    For the "ocm-pgp" scheme, it MUST contain:
     - fingerprints (array of strings) - one or more fingerprints of
       the public keys used to encrypt the resource.
     For the "ocm-mls" scheme, it MUST contain:
@@ -1730,11 +1730,12 @@ described in [OCM-IP].
       application, to be used in user interfaces when referring to
       this Share.
     - REQUIRED mediaTypes (array of strings) - The media types (MIME
-      types) that this web application can handle.  The array MUST
-      NOT be empty.  This can be any media type entries from the IANA
-      Media Type registry.  The receiver MAY use this as a hint for UI
-      or routing decisions, e.g. to show which web application opens
-      a given file, and MAY ignore values it does not understand.
+      types) that this web application can handle.  The array MUST NOT
+      be empty and MUST NOT contain duplicate strings.  This can be any
+      media type entries from the IANA Media Type registry.  The
+      receiver MAY use this as a hint for UI or routing decisions,
+      e.g. to show which web application opens a given file, and MAY
+      ignore values it does not understand.
       Unlike `appIconHint`, this describes formats the web
       application can open rather than the share-level icon hint.
       [RFC6838]
@@ -3126,7 +3127,7 @@ an example response from `https://sender.example.org/ocm/jwks`:
 
 Given a Share Creation Notification request:
 
-<sourcecode type="http">
+<sourcecode type="http" anchor="core-share-request-example">
 POST /ocm/shares HTTP/1.1
 Host: receiver.example.org
 Content-Type: application/json
