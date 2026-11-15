@@ -29,3 +29,7 @@ jobs:
           "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
             tests/test_notification_schema.py
 
+      - name: Check IP extension schemas
+        run: |
+          "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
+            tests/test_extension_schemas.py

@@ -564,10 +564,10 @@ Receiving Server (see Lifecycle below),
 
 ### Fields
 
-The request body is the Share Creation Notification object of [OCM] that
-the OCM Server intends to send to the Receiving Server, with one
-transformation applied: every `sharedSecret` field, in every protocol
-entry, MUST be removed.  The Integration API therefore never transfers a
+The request body contains the fields listed below from the Share
+Creation Notification object of [OCM] that the OCM Server intends to
+send to the Receiving Server. Every `sharedSecret` field, in every
+protocol entry, MUST be removed. The Integration API never transfers a
 `sharedSecret` to the Protocol Server.  Introspected Integration is
 different: a `sharedSecret` may reach the Protocol Server as a
 front-channel credential, independently of provisioning.
@@ -589,7 +589,8 @@ links the back channel to the front channel (see below).
 * REQUIRED `protocol` (object) - as in [OCM], transformed as described
 above.  The protocol entries carry the protocol-specific information the
 Protocol Server needs to serve the Share (for example the `webdav`
-entry's `uri` and `permissions`, or the `webapp` entry's `viewMode`).
+entry's `uri` and `permissions`, or the `webapp` entry's `permissions`
+and `targets`).
 * OPTIONAL `name`, `description`, `ownerDisplayName`,
 `senderDisplayName`, `expiration` - as in [OCM]; informational, except
 `expiration`, which the Protocol Server SHOULD honor (see Lifecycle).
@@ -1404,8 +1405,8 @@ POST /services/ocm/shares HTTP/1.1
 Host: hub.example.org
 Date: Wed, 10 Jun 2026 14:00:00 GMT
 Content-Type: application/json
-Content-Digest: sha-256=:hj3LWOIuryd4XbzFhoHa6YMUbhtzMdMT3e9Bxpu2Lm0=:
-Content-Length: 542
+Content-Digest: sha-256=:ENfuyyRU0yFW73E4NOx3EXuJJxPOa+crVo6dOfGH77o=:
+Content-Length: 669
 Signature-Input: ocm=("@method" "@target-uri" "content-digest" \
   "content-length");created=1781186400;\
   keyid="cloud.example.org#key1";alg="ed25519";tag="ocm"
@@ -1426,11 +1427,14 @@ Signature: ocm=:[signature-value]:
       "permissions": [
         "read",
         "write"
-      ]
+      ],
+      "requirements": ["must-exchange-token"]
     },
     "webapp": {
       "uri": "https://hub.example.org/services/ocm/open",
-      "viewMode": "write"
+      "targets": ["blank"],
+      "permissions": ["write"],
+      "requirements": ["must-exchange-token"]
     }
   }
 }
@@ -1557,6 +1561,7 @@ When the Receiving Server performs the Code Flow at
     "resourceType": "folder",
     "name": "dataset-2026",
     "protocol": {
+      "name": "multi",
       "webdav": {
         "uri": "9b2e41d7-aa31-4a02-9f0d-3c5e8b7a6f10",
         "permissions": ["read"]
@@ -1638,6 +1643,7 @@ Content-Type: application/json
     "resourceType": "folder",
     "name": "dataset-2026",
     "protocol": {
+      "name": "multi",
       "webdav": {
         "uri": "4f6a2c81-77b0-4c0e-9e64-1d2f3a5b6c7d",
         "permissions": [
