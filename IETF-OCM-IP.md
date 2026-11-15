@@ -668,9 +668,8 @@ Share.
 
 ## Share Revocation Request
 
-When a Share is deleted, expires, is declined by the Receiving Party, or
-access is otherwise withdrawn, the OCM Server SHOULD send a Share
-Revocation Request:
+When a Share is deleted, expires, or access is otherwise withdrawn, the
+OCM Server SHOULD send a Share Revocation Request:
 
 * to `{integrationAPI}/revoke`,
 * with a request body containing a JSON document with the following
@@ -989,9 +988,12 @@ Party would be notified of a Share whose Resource access cannot work.
 ## Revocation and Expiration
 
 The OCM Server SHOULD send a Share Revocation Request whenever a Share
-ends, whatever the cause: unshared by the Sending Party, declined by the
-Receiving Party (e.g. on receipt of a `SHARE_DECLINED` notification), or
+ends, whatever the cause: unshared by the Sending Party, expired, or
 administratively removed.
+
+Recipient decline and later acceptance follow Share Identity in [OCM],
+including local policy. If provider policy ends the grant, normal
+revocation applies.
 
 Revocation is deliberately fire-and-forget: because it is idempotent on
 the Protocol Server side, the OCM Server MAY retry it at any time, and a
@@ -1018,8 +1020,8 @@ Self-Contained Integration has no provisioning step and no revocation
 push.  The Share's lifecycle is enforced entirely at token issuance:
 
 * The OCM Server MUST stop issuing tokens for a Share when it ends,
-whatever the cause: unshared by the Sending Party, declined by the
-Receiving Party, expired, or administratively removed.
+whatever the cause: unshared by the Sending Party, expired, or
+administratively removed.
 * Until the last issued token expires, the Protocol Server will continue
 to honor it.  Revocation latency is therefore bounded by the maximum
 token lifetime, which is why the issuance rules require short-lived
