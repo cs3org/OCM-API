@@ -16,12 +16,17 @@ servers:
     variables:
       ocm_endpoint:
         default: cloud.example.org/ocm
+tags:
+  - name: Common
+  - name: Core OCM
+  - name: MLS
 paths:
   /.well-known/ocm:
     servers:
       - url: https://cloud.example.org
         description: The origin used for OCM API discovery.
     get:
+      tags: [Core OCM]
       summary: Discovery endpoint
       description: >
         Following [RFC8615], this endpoint returns the properties and
@@ -37,6 +42,7 @@ paths:
                 $ref: "#/components/schemas/Discovery"
   /mls-key-packages:
     get:
+      tags: [MLS]
       summary: Retrieve an MLS KeyPackage for a user
       description: >
         Returns MLS KeyPackages for a user as defined by
@@ -115,6 +121,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /shares:
     post:
+      tags: [Core OCM]
       summary: Share Creation Notification endpoint
       description: >
         This endpoint is used by a Sending Server to notify a Receiving Server that
@@ -196,6 +203,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /notifications:
     post:
+      tags: [Core OCM]
       summary: General Notification endpoint
       description: >
         This optional endpoint is used to inform the other party about a change
@@ -343,6 +351,7 @@ paths:
                 $ref: "#/components/schemas/Error"
   /invite-accepted:
     post:
+      tags: [Core OCM]
       summary: Invitation Acceptance endpoint
       description: >
         This optional endpoint is used to inform the Sender that an Invitation was accepted.
@@ -409,7 +418,9 @@ components:
         type: integer
         default: 1
   schemas:
+    # Common
     "400":
+      x-tags: [Common]
       type: object
       allOf:
         - $ref: "#/components/schemas/Error"
@@ -431,6 +442,7 @@ components:
                       validation error.
                     example: NOT_FOUND
     Error:
+      x-tags: [Common]
       type: object
       required:
         - message
@@ -442,43 +454,28 @@ components:
             machines (e.g. no use of special characters) providing more
             information on the cause of the error.
           example: RESOURCE_NOT_FOUND
-    KeyPackageEntry:
-      type: object
-      required:
-        - mediaType
-        - encoding
-        - content
-      properties:
-        mediaType:
-          type: string
-          enum:
-            - message/mls
-          example: message/mls
-        encoding:
-          type: string
-          enum:
-            - base64url
-          example: base64url
-        content:
-          type: string
-          description: Base64url-encoded MLS KeyPackage without padding.
-          example: ZXhhbXBsZS1tbHMta2V5LXBhY2thZ2U
-    KeyPackageResponse:
-      type: object
-      required:
-        - userId
-        - keyPackages
-      properties:
-        userId:
-          allOf:
-            - $ref: "#/components/schemas/OCMAddress"
-          description: Full OCM Address of the user represented by the KeyPackages.
-          example: alice@cloud.example.org
-        keyPackages:
-          type: array
-          items:
-            $ref: "#/components/schemas/KeyPackageEntry"
+    OCMServerAddress:
+      x-tags: [Common]
+      type: string
+      minLength: 1
+      description: >
+        The host and optional port of an OCM Server, as defined in Terms
+        of the OCM Internet-Draft. No identifier, scheme, path, query or
+        fragment. Compare the complete value after lowercasing, preserving
+        explicit ports and all other spelling.
+      example: cloud.example.org:8443
+    OCMAddress:
+      x-tags: [Common]
+      type: string
+      minLength: 1
+      description: >
+        An OCM Address as defined in Terms of the OCM Internet-Draft:
+        a non-empty opaque identifier followed by "@" and an OCM Server
+        Address. Split at the last "@"; compare identifiers byte for byte.
+      example: alice@cloud.example.org:8443
+    # Core OCM
     Discovery:
+      x-tags: [Core OCM]
       type: object
       required:
         - enabled
@@ -713,6 +710,7 @@ components:
             to `/index.php/apps/sciencemesh/accept?token=zi5kooKu3ivohr9a&providerDomain=example.com`.
           example: /index.php/apps/sciencemesh/accept
     NewShare:
+      x-tags: [Core OCM]
       type: object
       required:
         - shareWith
@@ -1188,6 +1186,7 @@ components:
                 accessTypes: ["datatx"]
                 uri: extuser@cloud.example.org:/7c084226-d9a1-11e6-bf26-cec0c932ce01
     NewNotification:
+      x-tags: [Core OCM]
       type: object
       required:
         - notificationType
@@ -1552,24 +1551,8 @@ components:
         - read
         - write
         - share
-    OCMServerAddress:
-      type: string
-      minLength: 1
-      description: >
-        The host and optional port of an OCM Server, as defined in Terms
-        of the OCM Internet-Draft. No identifier, scheme, path, query or
-        fragment. Compare the complete value after lowercasing, preserving
-        explicit ports and all other spelling.
-      example: cloud.example.org:8443
-    OCMAddress:
-      type: string
-      minLength: 1
-      description: >
-        An OCM Address as defined in Terms of the OCM Internet-Draft:
-        a non-empty opaque identifier followed by "@" and an OCM Server
-        Address. Split at the last "@"; compare identifiers byte for byte.
-      example: alice@cloud.example.org:8443
     AcceptedInvite:
+      x-tags: [Core OCM]
       type: object
       required:
         - recipientProvider
@@ -1600,6 +1583,7 @@ components:
           description: Name of the Invite Receiver.
           example: Richard Feynman
     AcceptedInviteResponse:
+      x-tags: [Core OCM]
       type: object
       required:
         - userID
@@ -1619,6 +1603,7 @@ components:
           description: Name of the Invite Sender.
           example: John Doe
     TokenRequest:
+      x-tags: [Core OCM]
       type: object
       required:
         - grant_type
@@ -1645,6 +1630,7 @@ components:
             Optional parameter that MUST be ignored by the server.
           example: https://receiver.org/ocm/callback
     TokenResponse:
+      x-tags: [Core OCM]
       type: object
       required:
         - access_token
@@ -1664,3 +1650,42 @@ components:
           type: integer
           description: Number of seconds before this access_token will need to be refreshed.
           example: 300
+    # MLS
+    KeyPackageEntry:
+      x-tags: [MLS]
+      type: object
+      required:
+        - mediaType
+        - encoding
+        - content
+      properties:
+        mediaType:
+          type: string
+          enum:
+            - message/mls
+          example: message/mls
+        encoding:
+          type: string
+          enum:
+            - base64url
+          example: base64url
+        content:
+          type: string
+          description: Base64url-encoded MLS KeyPackage without padding.
+          example: ZXhhbXBsZS1tbHMta2V5LXBhY2thZ2U
+    KeyPackageResponse:
+      x-tags: [MLS]
+      type: object
+      required:
+        - userId
+        - keyPackages
+      properties:
+        userId:
+          allOf:
+            - $ref: "#/components/schemas/OCMAddress"
+          description: Full OCM Address of the user represented by the KeyPackages.
+          example: alice@cloud.example.org
+        keyPackages:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyPackageEntry"
