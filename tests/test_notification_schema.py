@@ -30,10 +30,11 @@ PAYLOADS.update({
         notification={"file": {"providerId": "share-123",
                                "shareWith": "bob@receiver.example.org"}}),
     "REQUEST_SHARE": envelope(
-        "REQUEST_SHARE", resourceType="file",
-        notification={"file": {"owner": "alice@sender.example.org",
-                               "shareWith": "bob@receiver.example.org",
-                               "shareId": "resource-456", "permissions": ["read"]}}),
+        "REQUEST_SHARE", resourceType="collection", shareType="user",
+        senderDomain="alice.example.org", collectionId="research-data-123",
+        notification={"collection": {"owner": "bob@bob.example.org",
+                                     "shareWith": "alice@alice.example.org",
+                                     "permissions": ["read"]}}),
     "USER_REMOVED": envelope(
         "USER_REMOVED", shareType="user",
         notification={"user": {"userId": "alice@sender.example.org"}}),
@@ -46,6 +47,10 @@ PAYLOADS.update({
                                "targetUserId": "bob@receiver.example.org"}}),
 })
 
+COLLECTION_DECLINE = envelope(
+    "SHARE_DECLINED", resourceType="collection", collectionId="research-data-123",
+    notification={"collection": {"shareWith": "alice@alice.example.org"}})
+
 
 class NotificationSchemaTests(unittest.TestCase):
     @classmethod
@@ -55,6 +60,10 @@ class NotificationSchemaTests(unittest.TestCase):
         # Keep local OpenAPI references available to the Draft4 validator.
         cls.validator = Draft4Validator({
             "$ref": "#/components/schemas/NewNotification",
+            "components": cls.spec["components"],
+        })
+        cls.resource_validator = Draft4Validator({
+            "$ref": "#/components/schemas/ShareStateNotification",
             "components": cls.spec["components"],
         })
 
@@ -81,12 +90,83 @@ class NotificationSchemaTests(unittest.TestCase):
                     invalid = deepcopy(PAYLOADS[event])
                     invalid[field] = value
                     self.assertFalse(self.validator.is_valid(invalid))
-        request = deepcopy(PAYLOADS["REQUEST_SHARE"])
-        request["shareType"] = "user"
-        self.assertFalse(self.validator.is_valid(request))
         removed = deepcopy(PAYLOADS["USER_REMOVED"])
         removed["notification"]["user"]["targetUserId"] = "bob@receiver.example.org"
         self.assertFalse(self.validator.is_valid(removed))
+
+    def test_collection_request_required_fields(self):
+        for field in ("resourceType", "collectionId", "shareType", "notification"):
+            with self.subTest(field=field):
+                request = deepcopy(PAYLOADS["REQUEST_SHARE"])
+                del request[field]
+                self.assertFalse(self.validator.is_valid(request))
+        for field in ("owner", "shareWith", "permissions"):
+            with self.subTest(collection_field=field):
+                request = deepcopy(PAYLOADS["REQUEST_SHARE"])
+                del request["notification"]["collection"][field]
+                self.assertFalse(self.validator.is_valid(request))
+
+    def test_collection_request_extensions(self):
+        request = deepcopy(PAYLOADS["REQUEST_SHARE"])
+        request["notification"]["collection"]["permissions"] = []
+        self.validator.validate(request)
+        request["shareType"] = "EXAMPLE_CUSTOM_RECIPIENT"
+        request["collectionId"] = "opaque @collection/id?#"
+        request["notification"]["file"] = {"opaque": "extension"}
+        self.validator.validate(request)
+        request["collectionId"] = ""
+        self.validator.validate(request)
+        request["collectionId"] = None
+        self.assertFalse(self.validator.is_valid(request))
+
+    def test_collection_request_forbids_collection_size(self):
+        for value in (1, None, "", []):
+            with self.subTest(value=value):
+                request = deepcopy(PAYLOADS["REQUEST_SHARE"])
+                request["collectionSize"] = value
+                self.assertFalse(self.validator.is_valid(request))
+
+    def test_retired_request_cannot_use_fallback(self):
+        request = envelope(
+            "REQUEST_SHARE", resourceType="file",
+            notification={"file": {"owner": "alice@sender.example.org",
+                                   "shareWith": "bob@receiver.example.org",
+                                   "shareId": "resource-456", "permissions": ["read"]}})
+        self.assertFalse(self.validator.is_valid(request))
+
+    def test_collection_decline(self):
+        self.validator.validate(COLLECTION_DECLINE)
+        decline = deepcopy(COLLECTION_DECLINE)
+        decline["shareType"] = "EXAMPLE_CUSTOM_RECIPIENT"
+        self.validator.validate(decline)
+        for field in ("collectionId", "notification"):
+            with self.subTest(field=field):
+                missing = deepcopy(COLLECTION_DECLINE)
+                del missing[field]
+                self.assertFalse(self.validator.is_valid(missing))
+        missing = deepcopy(COLLECTION_DECLINE)
+        del missing["notification"]["collection"]["shareWith"]
+        self.assertFalse(self.validator.is_valid(missing))
+
+    def test_collection_decline_cannot_match_resource_state(self):
+        decline = deepcopy(COLLECTION_DECLINE)
+        decline["notification"]["file"] = {"providerId": "incidental-grant-id"}
+        self.validator.validate(decline)
+        self.assertFalse(self.resource_validator.is_valid(decline))
+        del decline["collectionId"]
+        self.assertFalse(self.validator.is_valid(decline))
+
+    def test_resource_events_exclude_collection(self):
+        for event in (*SHARE_EVENTS, "REQUEST_RESHARE"):
+            with self.subTest(event=event):
+                payload = deepcopy(PAYLOADS[event])
+                payload["resourceType"] = "collection"
+                self.assertFalse(self.validator.is_valid(payload))
+                payload["resourceType"] = "EXAMPLE_CUSTOM_RESOURCE"
+                self.validator.validate(payload)
+        folder = deepcopy(PAYLOADS["SHARE_DECLINED"])
+        folder["resourceType"] = "folder"
+        self.validator.validate(folder)
 
     def test_deprecated_id_cannot_replace_nested_share_id(self):
         for event in SHARE_EVENTS:
@@ -97,6 +177,7 @@ class NotificationSchemaTests(unittest.TestCase):
 
     def test_unknown_type(self):
         self.validator.validate(envelope("EXAMPLE_CUSTOM_EVENT", resourceType="file"))
+        self.validator.validate(envelope("EXAMPLE_COLLECTION_EVENT", resourceType="collection"))
 
     def test_fallback_excludes_exactly_the_builtin_types(self):
         schemas = self.spec["components"]["schemas"]
@@ -108,6 +189,7 @@ class NotificationSchemaTests(unittest.TestCase):
                 builtin_types.update(schemas[name]["properties"]["notificationType"]["enum"])
         fallback_type = schemas["NotificationOfOtherType"]["properties"]["notificationType"]
         exclusions = fallback_type["not"]["enum"]
+        self.assertEqual(len(exclusions), 9)
         self.assertEqual(set(exclusions), builtin_types)
         self.assertEqual(set(PAYLOADS), builtin_types)
 
@@ -115,6 +197,8 @@ class NotificationSchemaTests(unittest.TestCase):
         operation = self.spec["paths"]["/notifications"]["post"]
         examples = operation["requestBody"]["content"]["application/json"]["examples"]
         self.assertTrue(examples)
+        self.assertIn("requestShare", examples)
+        self.assertEqual(examples["requestShare"]["value"], PAYLOADS["REQUEST_SHARE"])
         for name, example in examples.items():
             with self.subTest(example=name):
                 self.validator.validate(example["value"])

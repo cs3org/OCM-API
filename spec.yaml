@@ -396,6 +396,20 @@ paths:
             schema:
               $ref: "#/components/schemas/NewNotification"
             examples:
+              requestShare:
+                summary: A recipient requests shares from a collection
+                value:
+                  notificationType: REQUEST_SHARE
+                  resourceType: collection
+                  shareType: user
+                  senderDomain: alice.example.org
+                  collectionId: research-data-123
+                  notification:
+                    collection:
+                      owner: bob@bob.example.org
+                      shareWith: alice@alice.example.org
+                      permissions:
+                      - read
               contactWasRemoved:
                 summary: A user removed a single contact
                 value:
@@ -403,7 +417,7 @@ paths:
                   shareType: user
                   senderDomain: alice.example.org
                   notification:
-                    message: Alice removed Bob from her contacts
+                    message: User is not a trusted contact any longer
                     user:
                       userId: alice@alice.example.org
                       targetUserId: bob@bob.example.org
@@ -413,7 +427,7 @@ paths:
                   notificationType: SHARE_ACCEPTED
                   resourceType: file
                   shareType: user
-                  senderDomain: receiver.example.org
+                  senderDomain: sender.example.org
                   notification:
                     message: Recipient accepted the share
                     file:
@@ -441,13 +455,13 @@ paths:
                 summary: MLS Welcome envelope (illustrative content)
                 value:
                   notificationType: MLS_WELCOME
-                  shareType: federation
+                  shareType: community
                   senderDomain: cloud.example.org
                   notification:
-                    federation:
+                    community:
                       mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
                       userId: bob@cloud.example.org
-                      content: "<base64url-encoded MLS Welcome>"
+                      content: base64 MLS welcome
               customType:
                 summary: An implementer-defined notification type
                 value:
@@ -456,6 +470,30 @@ paths:
                   senderDomain: sender.example.org
                   notification:
                     message: Something happened
+              ocmServerWasAdded:
+                summary: An OCM server was added to a federation
+                value:
+                  notificationType: OCM_SERVER_ADDED
+                  resourceType: federation
+                  senderDomain: ocm-server.example.org
+                  notification:
+                    message: Your OCM Server is now part of our federation
+                    federation:
+                      federationId: sciencemesh
+                      name: The ScienceMesh Directory
+                      url: https://cloud.example.org
+              ocmServerLeft:
+                summary: An OCM server left a federation
+                value:
+                  notificationType: OCM_SERVER_REMOVED
+                  resourceType: federation
+                  senderDomain: ocm-server.example.org
+                  notification:
+                    message: We are leaving this federation
+                    federation:
+                      federationId: sciencemesh
+                      name: The ScienceMesh Directory
+                      url: https://ocm-server.example.org
         description: The JSON object with a new notification
         required: true
       responses:
@@ -1654,74 +1692,6 @@ components:
               the sender's directory for that Federation now contains; for
               `OCM_SERVER_REMOVED`, the `url` of the sender itself, which is leaving
               that Federation.
-      example:
-        shareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          shareType: user
-          senderDomain: sender.example.org
-          notification:
-            message: Recipient accepted the share
-            file:
-              providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-        contactWasRemoved:
-          notificationType: CONTACT_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User is not a trusted contact any longer
-            user:
-              userId: alice@alice.example.org
-              targetUserId: bob@bob.example.org
-        userLeft:
-          notificationType: USER_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User left the system
-            user:
-              userId: alice@alice.example.org
-        ocmServerWasAdded:
-          notificationType: OCM_SERVER_ADDED
-          resourceType: federation
-          senderDomain: ocm-server.example.org
-          notification:
-            message: Your OCM Server is now part of our federation
-            federation:
-              federationId: sciencemesh
-              name: The ScienceMesh Directory
-              url: https://cloud.example.org
-        ocmServerLeft:
-          notificationType: OCM_SERVER_REMOVED
-          resourceType: federation
-          senderDomain: ocm-server.example.org
-          notification:
-            message: We are leaving this federation
-            federation:
-              federationId: sciencemesh
-              name: The ScienceMesh Directory
-              url: https://ocm-server.example.org
-        mlsWelcome:
-          notificationType: MLS_WELCOME
-          shareType: community
-          senderDomain: cloud.example.org
-          notification:
-            community:
-              mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
-              userId: bob@cloud.example.org
-              content: base64 MLS welcome
-        requestShare:
-          notificationType: REQUEST_SHARE
-          resourceType: collection
-          shareType: user
-          senderDomain: alice.example.org
-          collectionId: research-data-123
-          notification:
-            collection:
-              owner: bob@bob.example.org
-              shareWith: alice@alice.example.org
-              permissions:
-                - read
       allOf:
         - anyOf:
             - required:
@@ -1730,6 +1700,7 @@ components:
                 - shareType
         - anyOf:
             - $ref: "#/components/schemas/ShareStateNotification"
+            - $ref: "#/components/schemas/CollectionDeclinedNotification"
             - $ref: "#/components/schemas/ReshareRequestNotification"
             - $ref: "#/components/schemas/ShareRequestNotification"
             - $ref: "#/components/schemas/UserRemovedNotification"
@@ -1753,6 +1724,10 @@ components:
             - SHARE_DECLINED
             - SHARE_UNSHARED
             - SHARE_CHANGE_PERMISSION
+        resourceType:
+          not:
+            enum:
+              - collection
         notification:
           type: object
           required:
@@ -1772,6 +1747,34 @@ components:
                   type: array
                   items:
                     $ref: "#/components/schemas/NotificationPermission"
+    CollectionDeclinedNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - collectionId
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_DECLINED
+        resourceType:
+          type: string
+          enum:
+            - collection
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
+            collection:
+              type: object
+              required:
+                - shareWith
+              properties:
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
     ReshareRequestNotification:
       type: object
       required:
@@ -1783,6 +1786,10 @@ components:
           type: string
           enum:
             - REQUEST_RESHARE
+        resourceType:
+          not:
+            enum:
+              - collection
         notification:
           type: object
           required:
@@ -1808,39 +1815,41 @@ components:
       required:
         - notificationType
         - resourceType
+        - collectionId
+        - shareType
         - notification
       properties:
         notificationType:
           type: string
           enum:
             - REQUEST_SHARE
+        resourceType:
+          type: string
+          enum:
+            - collection
         notification:
           type: object
           required:
-            - file
+            - collection
           properties:
-            file:
+            collection:
               type: object
               required:
                 - owner
                 - shareWith
-                - shareId
                 - permissions
               properties:
                 owner:
                   $ref: "#/components/schemas/OCMAddress"
                 shareWith:
                   $ref: "#/components/schemas/OCMAddress"
-                shareId:
-                  type: string
-                  minLength: 1
                 permissions:
                   type: array
                   items:
                     $ref: "#/components/schemas/NotificationPermission"
       not:
         required:
-          - shareType
+          - collectionSize
     UserRemovedNotification:
       type: object
       required:
