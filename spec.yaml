@@ -210,6 +210,20 @@ paths:
             schema:
               $ref: "#/components/schemas/NewNotification"
             examples:
+              requestShare:
+                summary: A recipient requests shares from a collection
+                value:
+                  notificationType: REQUEST_SHARE
+                  resourceType: collection
+                  shareType: user
+                  senderDomain: alice.example.org
+                  collectionId: research-data-123
+                  notification:
+                    collection:
+                      owner: bob@bob.example.org
+                      shareWith: alice@alice.example.org
+                      permissions:
+                        - read
               contactWasRemoved:
                 summary: A user removed a single contact
                 value:
@@ -1248,19 +1262,6 @@ components:
             description: >
               Additional payload objects keyed by resource type or share type.
               Required fields are defined by the notification type.
-      example:
-        requestShare:
-          notificationType: REQUEST_SHARE
-          resourceType: collection
-          shareType: user
-          senderDomain: alice.example.org
-          collectionId: research-data-123
-          notification:
-            collection:
-              owner: bob@bob.example.org
-              shareWith: alice@alice.example.org
-              permissions:
-                - read
       allOf:
         - anyOf:
             - required:
@@ -1269,6 +1270,7 @@ components:
                 - shareType
         - anyOf:
             - $ref: "#/components/schemas/ShareStateNotification"
+            - $ref: "#/components/schemas/CollectionDeclinedNotification"
             - $ref: "#/components/schemas/ReshareRequestNotification"
             - $ref: "#/components/schemas/ShareRequestNotification"
             - $ref: "#/components/schemas/UserRemovedNotification"
@@ -1292,6 +1294,10 @@ components:
             - SHARE_DECLINED
             - SHARE_UNSHARED
             - SHARE_CHANGE_PERMISSION
+        resourceType:
+          not:
+            enum:
+              - collection
         notification:
           type: object
           required:
@@ -1311,6 +1317,34 @@ components:
                   type: array
                   items:
                     $ref: "#/components/schemas/NotificationPermission"
+    CollectionDeclinedNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - collectionId
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_DECLINED
+        resourceType:
+          type: string
+          enum:
+            - collection
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
+            collection:
+              type: object
+              required:
+                - shareWith
+              properties:
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
     ReshareRequestNotification:
       type: object
       required:
@@ -1322,6 +1356,10 @@ components:
           type: string
           enum:
             - REQUEST_RESHARE
+        resourceType:
+          not:
+            enum:
+              - collection
         notification:
           type: object
           required:
@@ -1347,39 +1385,41 @@ components:
       required:
         - notificationType
         - resourceType
+        - collectionId
+        - shareType
         - notification
       properties:
         notificationType:
           type: string
           enum:
             - REQUEST_SHARE
+        resourceType:
+          type: string
+          enum:
+            - collection
         notification:
           type: object
           required:
-            - file
+            - collection
           properties:
-            file:
+            collection:
               type: object
               required:
                 - owner
                 - shareWith
-                - shareId
                 - permissions
               properties:
                 owner:
                   $ref: "#/components/schemas/OCMAddress"
                 shareWith:
                   $ref: "#/components/schemas/OCMAddress"
-                shareId:
-                  type: string
-                  minLength: 1
                 permissions:
                   type: array
                   items:
                     $ref: "#/components/schemas/NotificationPermission"
       not:
         required:
-          - shareType
+          - collectionSize
     UserRemovedNotification:
       type: object
       required:
