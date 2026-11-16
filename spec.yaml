@@ -209,6 +209,81 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/NewNotification"
+            examples:
+              requestShare:
+                summary: A recipient requests shares from a collection
+                value:
+                  notificationType: REQUEST_SHARE
+                  resourceType: collection
+                  shareType: user
+                  senderDomain: alice.example.org
+                  collectionId: research-data-123
+                  notification:
+                    collection:
+                      owner: bob@bob.example.org
+                      shareWith: alice@alice.example.org
+                      permissions:
+                        - read
+              contactWasRemoved:
+                summary: A user removed a single contact
+                value:
+                  notificationType: CONTACT_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: Alice removed Bob from her contacts
+                    user:
+                      userId: alice@alice.example.org
+                      targetUserId: bob@bob.example.org
+              shareWasAccepted:
+                summary: A recipient accepted a share
+                value:
+                  notificationType: SHARE_ACCEPTED
+                  resourceType: file
+                  shareType: user
+                  senderDomain: receiver.example.org
+                  notification:
+                    message: Recipient accepted the share
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              shareWasUnshared:
+                summary: A provider removed a share
+                value:
+                  notificationType: SHARE_UNSHARED
+                  resourceType: file
+                  senderDomain: sender.example.org
+                  notification:
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              userLeft:
+                summary: A user left the sending server
+                value:
+                  notificationType: USER_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: User left the system
+                    user:
+                      userId: alice@alice.example.org
+              mlsWelcome:
+                summary: MLS Welcome envelope (illustrative content)
+                value:
+                  notificationType: MLS_WELCOME
+                  shareType: federation
+                  senderDomain: cloud.example.org
+                  notification:
+                    federation:
+                      mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
+                      userId: bob@cloud.example.org
+                      content: "<base64url-encoded MLS Welcome>"
+              customType:
+                summary: An implementer-defined notification type
+                value:
+                  notificationType: EXAMPLE_CUSTOM_EVENT
+                  resourceType: file
+                  senderDomain: sender.example.org
+                  notification:
+                    message: Something happened
         description: The JSON object with a new notification
         required: true
       responses:
@@ -1187,61 +1262,296 @@ components:
             description: >
               Additional payload objects keyed by resource type or share type.
               Required fields are defined by the notification type.
-      example:
-        requestShare:
-          notificationType: REQUEST_SHARE
-          resourceType: collection
-          shareType: user
-          senderDomain: alice.example.org
-          collectionId: research-data-123
-          notification:
-            collection:
-              owner: bob@bob.example.org
-              shareWith: alice@alice.example.org
-              permissions:
-                - read
-        legacyShareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-          notification:
-            message: Recipient accepted the share
-            sharedSecret: hfiuhworzwnur98d3wjiwhr
-        shareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          shareType: user
-          senderDomain: sender.example.org
-          notification:
-            message: Recipient accepted the share
+      allOf:
+        - anyOf:
+            - required:
+                - resourceType
+            - required:
+                - shareType
+        - anyOf:
+            - $ref: "#/components/schemas/ShareStateNotification"
+            - $ref: "#/components/schemas/CollectionDeclinedNotification"
+            - $ref: "#/components/schemas/ReshareRequestNotification"
+            - $ref: "#/components/schemas/ShareRequestNotification"
+            - $ref: "#/components/schemas/UserRemovedNotification"
+            - $ref: "#/components/schemas/GroupRemovedNotification"
+            - $ref: "#/components/schemas/ContactRemovedNotification"
+            - $ref: "#/components/schemas/NotificationOfOtherType"
+    ShareStateNotification:
+      type: object
+      description: >
+        Payload constraints for share lifecycle events; see Share Identity
+        in the OCM Internet-Draft.
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_ACCEPTED
+            - SHARE_DECLINED
+            - SHARE_UNSHARED
+            - SHARE_CHANGE_PERMISSION
+        resourceType:
+          not:
+            enum:
+              - collection
+        notification:
+          type: object
+          required:
+            - file
+          properties:
             file:
-              providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-        contactWasRemoved:
-          notificationType: CONTACT_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User is not a trusted contact any longer
+              type: object
+              required:
+                - providerId
+              properties:
+                providerId:
+                  type: string
+                  minLength: 1
+                  description: >
+                    Identifier assigned to this Share by its resource provider.
+                permissions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/NotificationPermission"
+    CollectionDeclinedNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - collectionId
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_DECLINED
+        resourceType:
+          type: string
+          enum:
+            - collection
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
+            collection:
+              type: object
+              required:
+                - shareWith
+              properties:
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
+    ReshareRequestNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - REQUEST_RESHARE
+        resourceType:
+          not:
+            enum:
+              - collection
+        notification:
+          type: object
+          required:
+            - file
+          properties:
+            file:
+              type: object
+              required:
+                - providerId
+                - shareWith
+              properties:
+                providerId:
+                  type: string
+                  minLength: 1
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
+                permissions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/NotificationPermission"
+    ShareRequestNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - collectionId
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - REQUEST_SHARE
+        resourceType:
+          type: string
+          enum:
+            - collection
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
+            collection:
+              type: object
+              required:
+                - owner
+                - shareWith
+                - permissions
+              properties:
+                owner:
+                  $ref: "#/components/schemas/OCMAddress"
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
+                permissions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/NotificationPermission"
+      not:
+        required:
+          - collectionSize
+    UserRemovedNotification:
+      type: object
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - USER_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
+        notification:
+          type: object
+          required:
+            - user
+          properties:
             user:
-              userId: alice@alice.example.org
-              targetUserId: bob@bob.example.org
-        userLeft:
-          notificationType: USER_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User left the system
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  $ref: "#/components/schemas/OCMAddress"
+              not:
+                required:
+                  - targetUserId
+      not:
+        required:
+          - resourceType
+    GroupRemovedNotification:
+      type: object
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - GROUP_REMOVED
+        shareType:
+          type: string
+          enum:
+            - group
+        notification:
+          type: object
+          required:
+            - group
+          properties:
+            group:
+              type: object
+              required:
+                - groupId
+              properties:
+                groupId:
+                  type: string
+                  minLength: 1
+      not:
+        required:
+          - resourceType
+    ContactRemovedNotification:
+      type: object
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - CONTACT_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
+        notification:
+          type: object
+          required:
+            - user
+          properties:
             user:
-              userId: alice@alice.example.org
-        mlsWelcome:
-          notificationType: MLS_WELCOME
-          shareType: federation
-          senderDomain: cloud.example.org
-          notification:
-            federation:
-              mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
-              userId: bob@cloud.example.org
-              content: base64 MLS welcome
+              type: object
+              required:
+                - userId
+                - targetUserId
+              properties:
+                userId:
+                  description: >
+                    OCM Address of the actor. Its OCM Server Address equals
+                    senderDomain.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
+                targetUserId:
+                  description: >
+                    OCM Address of the removed contact at the receiving server.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
+      not:
+        required:
+          - resourceType
+    NotificationOfOtherType:
+      type: object
+      description: >
+        Other notification types satisfy the common envelope. Built-in types
+        cannot use this branch to bypass payload validation.
+      properties:
+        notificationType:
+          type: string
+          not:
+            enum:
+              - SHARE_ACCEPTED
+              - SHARE_DECLINED
+              - SHARE_UNSHARED
+              - SHARE_CHANGE_PERMISSION
+              - REQUEST_RESHARE
+              - REQUEST_SHARE
+              - USER_REMOVED
+              - CONTACT_REMOVED
+              - GROUP_REMOVED
+    NotificationPermission:
+      type: string
+      description: >
+        A permission value as defined for the `webdav` protocol of a Share
+        Creation Notification.
+      enum:
+        - read
+        - write
+        - share
     OCMServerAddress:
       type: string
       minLength: 1
