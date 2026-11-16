@@ -932,8 +932,7 @@ Record's `owner`, and
 
 OCM Addresses MUST be compared as defined in the Terms section of [OCM]:
 compare opaque identifiers byte for byte and complete server addresses
-after lowercasing. Invalid server addresses MUST be rejected, rather
-than repaired by stripping a scheme or trailing slash.
+after lowercasing. Invalid server addresses MUST be rejected.
 
 These checks ensure that an access token can only be used for the exact
 Share it was issued for: a token legitimately issued to one Receiving
