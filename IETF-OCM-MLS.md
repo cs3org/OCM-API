@@ -256,7 +256,7 @@ publishing the user's KeyPackages.
 A basic credential carries no verifiable binding of its own; the binding
 between a user's OCM Address and their signature key is attested by
 authenticated delivery from the user's home server.  A KeyPackage
-fetched over TLS from the `<endPoint>/mls-key-packages` endpoint of the
+fetched over TLS from the `<endPoint>/mls/key-packages` endpoint of the
 server named in the credential's OCM Address, with the response signed
 using HTTP Signatures [RFC9421] verifying against the JWK Set [RFC7517]
 advertised in the `jwksUri` field of that server's OCM Discovery
@@ -449,11 +449,11 @@ its OCM discovery document at `/.well-known/ocm`:
 No additional discovery fields are introduced.  The notifications
 endpoint is derived as `<endPoint>/notifications` per the base OCM
 specification.  The KeyPackage endpoint is derived as
-`<endPoint>/mls-key-packages`, and the group state endpoints as
-`<endPoint>/mls-ratchet-tree` and `<endPoint>/mls-commits`
+`<endPoint>/mls/key-packages`, and the group state endpoints as
+`<endPoint>/mls/ratchet-tree` and `<endPoint>/mls/commits`
 ({{group-state}}).  For example, an `endPoint` of
 `https://cloud.example.org/ocm` results in the KeyPackage endpoint
-`https://cloud.example.org/ocm/mls-key-packages`.
+`https://cloud.example.org/ocm/mls/key-packages`.
 
 A server that participates in a Servers Federation group
 ({{servers-federation-groups}}) additionally advertises the
@@ -475,7 +475,7 @@ Each OCM Server acting as an MLS client generates and maintains
 KeyPackages for its users and exposes them at:
 
 ~~~
-GET <endPoint>/mls-key-packages
+GET <endPoint>/mls/key-packages
 ~~~
 
 The request has two REQUIRED query parameters:
@@ -642,7 +642,7 @@ existence of a group nor its membership is disclosed to other servers.
 ## Ratchet Tree
 
 ~~~
-GET <endPoint>/mls-ratchet-tree
+GET <endPoint>/mls/ratchet-tree
 ~~~
 
 The additional REQUIRED query parameter `epoch` is the decimal number
@@ -684,7 +684,7 @@ group.
 ## Commits
 
 ~~~
-GET <endPoint>/mls-commits
+GET <endPoint>/mls/commits
 ~~~
 
 The additional REQUIRED query parameter `from` is the decimal number of
@@ -2087,7 +2087,7 @@ verifiable binding, the attestation lies in the delivery channel.
 A KeyPackage is considered validated with the AS when all of the
 following hold:
 
-- it was fetched from the `<endPoint>/mls-key-packages` endpoint of the
+- it was fetched from the `<endPoint>/mls/key-packages` endpoint of the
 server named in the credential's OCM Address, over TLS, with the
 response signed using HTTP Signatures [RFC9421] verifying against that
 server's JWKS [RFC7517];
@@ -2132,7 +2132,7 @@ credential carrying a well-formed OCM Address.  The joiner accepts the
 bindings of those credentials transitively, on the basis that each was
 validated by an admin client when it was introduced.  It MAY
 additionally re-validate any leaf against the
-`<endPoint>/mls-key-packages` endpoint of its home server, but such
+`<endPoint>/mls/key-packages` endpoint of its home server, but such
 re-validation can fail benignly,
 since published KeyPackages rotate independently of leaves already in
 groups.
@@ -2430,7 +2430,7 @@ SHOULD also rate-limit requests by verified `senderDomain` and `userId`.
 **User enumeration.** A server MUST only reply to HTTPS GET requests
 signed and verified as specified in {{keypackage-distribution}} and
 SHOULD implement rate limiting and other access control methods on the
-`<endPoint>/mls-key-packages` endpoint to avoid user enumeration.
+`<endPoint>/mls/key-packages` endpoint to avoid user enumeration.
 
 **Group state retrieval.** The ratchet trees and Commits that Admin
 Servers serve ({{group-state}}) are the public group state that every
