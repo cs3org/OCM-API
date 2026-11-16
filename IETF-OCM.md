@@ -1856,10 +1856,9 @@ notification that this happened.
 
 # Notifications
 
-This optional endpoint is used to inform the other party about a change
-that concerns a previously known entity, such as a Resource or a
-trusted Share type (e.g. a user), or about a change of the membership
-of a Federation, which concerns the OCM Servers themselves.
+This optional endpoint reports events concerning a previously known
+Resource, Collection or Recipient, or the membership of a Federation of
+OCM Servers.
 
 A Server that intends to send a notification SHOULD make a HTTP POST
 request:
