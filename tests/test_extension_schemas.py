@@ -118,6 +118,15 @@ def boundary_cases():
     add("requests", "IPShareProvisioningRequest",
         {k: v for k, v in request.items() if k != "name"})
     add("requests", "IPShareProvisioningRequest", {**request, "extension": 1})
+    add("requests", "IPShareProvisioningRequest",
+        {**request, "collectionId": "collection-123", "collectionSize": 2},
+        label="collection metadata")
+    add("requests", "IPShareProvisioningRequest",
+        {**request, "collectionId": "collection-123", "collectionSize": 0}, False,
+        label="collection size below minimum")
+    add("requests", "IPShareProvisioningRequest",
+        {**request, "collectionId": 3, "collectionSize": 2}, False,
+        label="non-string collection id")
     missing("requests", "IPShareProvisioningRequest", request,
             ("sender", "owner", "shareWith", "providerId", "shareType",
              "resourceType", "protocol"))
