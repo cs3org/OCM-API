@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.1] - 2026-11-16 - Giuseppe Lo Presti <lopresti@cern.ch>
+
+* Introduced the notion of a collection.
+* Improved notifications for user vs contact removal.
+* Extended share payloads with a `webapp` to support multiple
+  web applications served from the same URI.
+* Improved and revised phrasing across the Drafts.
+
 ## [1.5.0] - 2026-08-31 - Giuseppe Lo Presti <lopresti@cern.ch>
 
 * Improved usage of HTTP Message Signature, discovery of JWKS keys,
