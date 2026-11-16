@@ -35,7 +35,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Discovery"
-  /mls-key-packages:
+  /mls/key-packages:
     get:
       summary: Retrieve an MLS KeyPackage for a user
       description: >
@@ -43,7 +43,7 @@ paths:
         [KeyPackage Distribution](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-mls-federated-groups#keypackage-distribution).
         This path is relative to the OCM endpoint returned by discovery; for
         example, an endpoint of `https://cloud.example.org/ocm` resolves this
-        path to `https://cloud.example.org/ocm/mls-key-packages`.
+        path to `https://cloud.example.org/ocm/mls/key-packages`.
         The request and successful response MUST use HTTP Message Signatures
         according to that specification.
       parameters:
@@ -114,7 +114,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /mls-ratchet-tree:
+  /mls/ratchet-tree:
     get:
       summary: Retrieve the ratchet tree of an MLS group epoch
       description: >
@@ -205,7 +205,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /mls-commits:
+  /mls/commits:
     get:
       summary: Retrieve missed Commits of an MLS group
       description: >
