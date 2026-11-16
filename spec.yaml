@@ -1532,7 +1532,7 @@ components:
           description: >
             OCM Server Address of the sender, used to discover its
             key material and verify the HTTP Message Signature. For
-            share events, it names the provider or recipient server
+            resource share-state events, it names the provider or recipient server
             according to the event direction; see Share Identity in
             the OCM Internet-Draft.
         resourceType:

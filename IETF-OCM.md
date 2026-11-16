@@ -1927,7 +1927,12 @@ of the requested action.
 ## Share Acceptance and Updating
 
 A server MAY send a share-state notification about an existing Share.
-Its `notificationType` MUST be one of:
+The rules in this section apply only to resource-scoped events, whose
+`resourceType` MUST NOT be `collection`. A collection request decline
+MUST NOT select an existing Share, even if `notification.file` is
+present.
+
+For these resource events, `notificationType` MUST be one of:
 - "SHARE_ACCEPTED", to inform about the acceptance of a share.
 - "SHARE_DECLINED", to report a recipient's refusal of an offered or
   previously accepted share.
