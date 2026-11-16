@@ -436,15 +436,21 @@ its OCM discovery document at `/.well-known/ocm`:
   "apiVersion": "1.5.0",
   "endPoint": "https://cloud.example.org/ocm",
   "provider": "Example Cloud",
+  "capabilities": ["notifications", "http-sig"],
+  "jwksUri": "https://cloud.example.org/ocm/jwks",
   "resourceTypes": [
     {
       "name": "file",
       "shareTypes": ["user", "group", "community"],
-      "protocols": { "webdav": "/webdav/", "webdav-receive": {} }
+      "protocols": {
+        "webdav": "/webdav/",
+        "webdav-receive": { "uri": "relative" }
+      }
     }
   ]
 }
 ~~~
+{:#mls-discovery-example}
 
 No additional discovery fields are introduced.  The notifications
 endpoint is derived as `<endPoint>/notifications` per the base OCM
@@ -499,6 +505,7 @@ Response:
   ]
 }
 ~~~
+{:#mls-key-package-response-example}
 
 ## Request authentication
 
@@ -995,6 +1002,21 @@ both a `shareType` and a `resourceType`, or an object that does not
 match its `shareType` or `resourceType`, and MUST similarly reject one
 that carries both `userId` and `serverUrl`.
 
+The `notification.federation` object MUST contain `mlsGroupId` and
+the fields listed below.
+
+| Notification type | Required fields besides `mlsGroupId` |
+| --- | --- |
+| `MLS_WELCOME` | `userId`, `content` |
+| `MLS_PROPOSAL` | `content` |
+| `MLS_COMMIT` | `content` |
+| `MLS_APPLICATION` | `content` |
+| `MLS_REJOIN` | `keyPackages` |
+
+Each `keyPackages` entry MUST contain `userId` and the fields required
+by the KeyPackage endpoint. The `MLS_COMMIT` field `proposals` remains
+conditional as specified below.
+
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
 proposals.  Proposals covered by a Commit are instead redistributed
@@ -1028,6 +1050,7 @@ added user.
   }
 }
 ~~~
+{:#mls-welcome-example}
 
 The Welcome message MUST NOT include a `ratchet_tree` extension.  The
 receiving Member Server obtains the ratchet tree of the Welcome's epoch
@@ -1071,6 +1094,7 @@ whichever admin is online next act on it.
   }
 }
 ~~~
+{:#mls-proposal-example}
 
 ### MLS_COMMIT
 
@@ -1107,6 +1131,7 @@ data, per [RFC9420] Section 15.2.
   }
 }
 ~~~
+{:#mls-commit-example}
 
 A Commit covers each proposal either by value or by reference ([RFC9420]
 Section 12.4).  Proposals included by value are carried inside the
@@ -1157,6 +1182,7 @@ epoch ([RFC9420] Section 15).
   }
 }
 ~~~
+{:#mls-application-example}
 
 Ordering is provided by authenticated MLS metadata rather than a
 transport counter: the `PrivateMessage` carries the epoch in the clear,
@@ -1209,6 +1235,7 @@ by the KeyPackage endpoint.
   }
 }
 ~~~
+{:#mls-rejoin-example}
 
 Admin Servers queue rejoin requests alongside proposals and make them
 available to their admin clients, which handle them as described in
@@ -1536,6 +1563,11 @@ array, and MAY also carry a `credentials` array ({{credential-update}}):
   ]
 }
 ~~~
+{:#mls-wrapped-keys-example}
+
+Each `keys` entry MUST contain `resourceId`, `groupId` and
+`wrappedKey`. Application data MUST contain `keys`,
+`credentials`, or both.
 
 The `groupId` field carries the group's OCM Address, matching the
 `shareWith` of the corresponding share notification, and the
@@ -1594,6 +1626,10 @@ the application data:
   ]
 }
 ~~~
+{:#mls-credentials-example}
+
+Each `credentials` entry MUST contain `providerId`, `groupId`,
+`recipient` and `sharedSecret`.
 
 Each entry identifies the share by its `providerId`, the group by its
 OCM Address in `groupId`, and the intended Member Server by its OCM
@@ -1900,6 +1936,7 @@ Each notification MAY include the optional `encryption` field:
   }
 }
 ~~~
+{:#mls-encrypted-share-example}
 
 The `encryption` field is OPTIONAL as per [OCM] Share Creation
 Notification specification.  If absent, the resource is unencrypted.
