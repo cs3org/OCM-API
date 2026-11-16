@@ -114,6 +114,194 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /mls-ratchet-tree:
+    get:
+      summary: Retrieve the ratchet tree of an MLS group epoch
+      description: >
+        Returns the ratchet tree of one epoch of a federated group, as defined by
+        [Group State Retrieval](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-mls-federated-groups#group-state).
+        Served by Admin Servers to the Member Server that received a Welcome for
+        that epoch, and to any other server named in a leaf credential of that
+        epoch's tree. This path is relative to the OCM endpoint returned by
+        discovery. The request and successful response MUST use HTTP Message
+        Signatures according to that specification.
+      parameters:
+        - name: mlsGroupId
+          in: query
+          required: true
+          description: Base64url-encoded MLS group_id without padding.
+          schema:
+            type: string
+          example: UmVzZWFyY2hHcm91cA
+        - name: epoch
+          in: query
+          required: true
+          description: Epoch whose ratchet tree is requested.
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+          example: 42
+        - name: senderDomain
+          in: query
+          required: true
+          description: FQDN of the requesting OCM Server.
+          schema:
+            type: string
+            format: fqdn
+          example: requester.example.org
+      responses:
+        "200":
+          description: A signed response containing the ratchet tree.
+          headers:
+            Content-Digest:
+              required: true
+              description: RFC 9530 digest of the response body.
+              schema:
+                type: string
+            Signature-Input:
+              required: true
+              description: RFC 9421 response signature input.
+              schema:
+                type: string
+            Signature:
+              required: true
+              description: RFC 9421 response signature.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatchetTreeResponse"
+        "400":
+          description: Missing or invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/400"
+        "401":
+          description: The request signature is missing, invalid, or replayed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: >
+            The epoch is not retained, or the verified sender is not named in a
+            leaf credential of that epoch's tree. The two cases are deliberately
+            indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: The requester has exceeded the request limit.
+          headers:
+            Retry-After:
+              description: Time to wait before making another request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /mls-commits:
+    get:
+      summary: Retrieve missed Commits of an MLS group
+      description: >
+        Returns the Commits of a federated group sent in the given epoch and
+        later, in epoch order, as defined by
+        [Group State Retrieval](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-mls-federated-groups#group-state).
+        Served by Admin Servers to servers named in a leaf credential of the
+        tree of epoch `from`. The sequence ends at the latest Commit the server
+        holds or at the Commit removing the requester's last leaf; the server
+        MAY stop after any entry, and the requester repeats the request from
+        the epoch following the last entry. An empty `commits` array means the
+        requester is current. This path is relative to the OCM endpoint
+        returned by discovery. The request and successful response MUST use
+        HTTP Message Signatures according to that specification.
+      parameters:
+        - name: mlsGroupId
+          in: query
+          required: true
+          description: Base64url-encoded MLS group_id without padding.
+          schema:
+            type: string
+          example: UmVzZWFyY2hHcm91cA
+        - name: from
+          in: query
+          required: true
+          description: >
+            Epoch in which the first requested Commit was sent, that is, the
+            requester's current epoch.
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+          example: 42
+        - name: senderDomain
+          in: query
+          required: true
+          description: FQDN of the requesting OCM Server.
+          schema:
+            type: string
+            format: fqdn
+          example: requester.example.org
+      responses:
+        "200":
+          description: A signed response containing the Commits.
+          headers:
+            Content-Digest:
+              required: true
+              description: RFC 9530 digest of the response body.
+              schema:
+                type: string
+            Signature-Input:
+              required: true
+              description: RFC 9421 response signature input.
+              schema:
+                type: string
+            Signature:
+              required: true
+              description: RFC 9421 response signature.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommitsResponse"
+        "400":
+          description: Missing or invalid query parameters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/400"
+        "401":
+          description: The request signature is missing, invalid, or replayed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: >
+            Epoch `from` is not retained, or the verified sender is not named in
+            a leaf credential of that epoch's tree. The two cases are
+            deliberately indistinguishable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: The requester has exceeded the request limit.
+          headers:
+            Retry-After:
+              description: Time to wait before making another request.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
   /shares:
     post:
       summary: Share Creation Notification endpoint
@@ -404,6 +592,81 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/KeyPackageEntry"
+    RatchetTreeResponse:
+      type: object
+      required:
+        - mlsGroupId
+        - epoch
+        - ratchetTree
+      properties:
+        mlsGroupId:
+          type: string
+          description: Base64url-encoded MLS group_id without padding.
+          example: UmVzZWFyY2hHcm91cA
+        epoch:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Epoch whose ratchet tree is returned.
+          example: 42
+        ratchetTree:
+          type: object
+          required:
+            - encoding
+            - content
+          properties:
+            encoding:
+              type: string
+              enum:
+                - base64url
+              example: base64url
+            content:
+              type: string
+              description: >
+                Base64url-encoded TLS serialisation of the ratchet_tree value
+                defined in RFC 9420 Section 12.4.3.3, without padding.
+              example: ZXhhbXBsZS1yYXRjaGV0LXRyZWU
+    CommitEntry:
+      type: object
+      required:
+        - epoch
+        - content
+      properties:
+        epoch:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Epoch in which the Commit was sent.
+          example: 42
+        proposals:
+          type: array
+          description: >
+            Base64url-encoded MLS PublicMessages carrying the proposals the
+            Commit covers by reference, in the order of the references in the
+            Commit. Present whenever the Commit covers at least one proposal
+            by reference.
+          items:
+            type: string
+            example: ZXhhbXBsZS1tbHMtcHJvcG9zYWw
+        content:
+          type: string
+          description: Base64url-encoded MLS PublicMessage carrying the Commit.
+          example: ZXhhbXBsZS1tbHMtY29tbWl0
+    CommitsResponse:
+      type: object
+      required:
+        - mlsGroupId
+        - commits
+      properties:
+        mlsGroupId:
+          type: string
+          description: Base64url-encoded MLS group_id without padding.
+          example: UmVzZWFyY2hHcm91cA
+        commits:
+          type: array
+          description: Commits in increasing epoch order, without gaps.
+          items:
+            $ref: "#/components/schemas/CommitEntry"
     Discovery:
       type: object
       required:
