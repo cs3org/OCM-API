@@ -2123,13 +2123,15 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
-## Working Group Version 01
+## WG Version 02
+
+## WG Version 01
 * Added authenticated requester discovery for KeyPackage requests while
   keeping the HTTP Message Signature `keyid` opaque.
 * Added nonce replay protection and request-bound response signatures
   for KeyPackage distribution.
 
-## Working Group Version 00
+## WG Version 00
 * First Working Group version, adopted by the OCM Working Group.
 
 ## Individual Submission Version 02

@@ -2988,6 +2988,8 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
+## Version 09
+
 ## Version 08
 * Introduced an `apps` array in the `webapp` protocol payload, listing
   the available web applications each with the media types it can
