@@ -2444,6 +2444,12 @@ The complete changelog is updated in the OCM-API GitHub repository.
 * Added nonce replay protection and request-bound response signatures
   for KeyPackage distribution.
 
+## WG Version 01
+* Added authenticated requester discovery for KeyPackage requests while
+  keeping the HTTP Message Signature `keyid` opaque.
+* Added nonce replay protection and request-bound response signatures
+  for KeyPackage distribution.
+
 ## WG Version 00
 * First Working Group version, adopted by the OCM Working Group.
 
