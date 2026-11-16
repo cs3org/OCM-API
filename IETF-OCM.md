@@ -1419,8 +1419,7 @@ notification that this happened.
 # Notifications
 
 This optional endpoint is used to inform the other party about a change
-that concerns a previously known entity, such as a Resource or a
-trusted Share type (e.g. a user).
+that concerns a previously known Resource, Collection or Recipient.
 
 A Server that intends to send a notification SHOULD make a HTTP POST
 request:
