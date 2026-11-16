@@ -9,6 +9,7 @@ import shlex
 import unittest
 
 from jsonschema import Draft4Validator
+from jsonschema.validators import validator_for
 
 from test_extension_schemas import ROOT, load_spec
 
@@ -75,6 +76,75 @@ class ShareSchemaTests(unittest.TestCase):
             ("OCMIPClaim", {"providerId": self.share["providerId"],
                             "resourceType": "file", "protocol": ip}),
         )
+
+    def test_collection_metadata(self):
+        cases = (
+            ("absent", {}, True),
+            ("id only", {"collectionId": "opaque @collection/id?#"}, True),
+            ("empty id", {"collectionId": "", "collectionSize": 1}, True),
+            ("minimum", {"collectionId": "opaque", "collectionSize": 1}, True),
+            ("known size", {"collectionId": "opaque", "collectionSize": 3}, True),
+            ("missing id", {"collectionSize": 1}, False),
+            ("null id", {"collectionId": None, "collectionSize": 1}, False),
+            ("wrong id", {"collectionId": 7, "collectionSize": 1}, False),
+            ("zero", {"collectionId": "opaque", "collectionSize": 0}, False),
+            ("fractional", {"collectionId": "opaque", "collectionSize": 1.5}, False),
+            ("string", {"collectionId": "opaque", "collectionSize": "1"}, False),
+            ("boolean", {"collectionId": "opaque", "collectionSize": True}, False),
+            ("null size", {"collectionId": "opaque", "collectionSize": None}, False),
+        )
+        contexts = {"ShareFields": {}, **dict(self.full_contexts(self.share["protocol"]))}
+        for schema in ("ShareFields", "NewShare", "IPShareProvisioningRequest"):
+            base = {k: v for k, v in contexts[schema].items()
+                    if k not in ("collectionId", "collectionSize")}
+            for label, metadata, expected in cases:
+                with self.subTest(schema=schema, metadata=label):
+                    self.check(schema, {**base, **metadata}, expected)
+
+    def test_share_resource_types(self):
+        schemas = self.spec["components"]["schemas"]
+        contexts = self.full_contexts(self.share["protocol"])
+        mls = schemas["MLSEncryptedShare"]["example"]
+        for resource, expected in (("file", True), ("folder", True),
+                                    ("future-resource", True), ("Collection", True),
+                                    ("collection", False), (7, False), (None, False)):
+            for schema, payload in (*contexts, ("MLSEncryptedShare", mls)):
+                value = {**payload, "resourceType": resource}
+                if schema == "OCMIPClaim":
+                    value.update(owner={}, collectionSize=2)
+                with self.subTest(schema=schema, resourceType=resource):
+                    self.check(schema, value, expected)
+            for schema in ("IPSelfContainedTokenClaims",
+                           "IPActiveSelfContainedIntrospectionResponse"):
+                value = deepcopy(schemas[schema]["example"])
+                value["ocm_ip"].update(resourceType=resource, owner={}, collectionSize=2)
+                with self.subTest(schema=schema, resourceType=resource):
+                    self.check(schema, value, expected)
+        for metadata, expected in (({"collectionSize": 2}, False),
+                                    ({"collectionId": "opaque @id/?#",
+                                      "collectionSize": 2}, True)):
+            with self.subTest(schema="MLSEncryptedShare", metadata=metadata):
+                self.check("MLSEncryptedShare", {**mls, **metadata}, expected)
+
+    def test_discovery_resource_types(self):
+        standalone = json.loads((ROOT / "schemas/ocm-discovery.json").read_text(
+            encoding="utf-8"))
+        dialect = validator_for(standalone)
+        dialect.check_schema(standalone)
+        validator = dialect(standalone)
+        discovery = {"enabled": True, "apiVersion": "1.5.1",
+                     "endPoint": "https://cloud.example.org/ocm",
+                     "resourceTypes": [{"name": "file", "shareTypes": ["user"],
+                                        "protocols": {"webdav": "/dav/"}}]}
+        for name, expected in (("file", True), ("folder", True),
+                                ("future-resource", True), ("Collection", True),
+                                ("collection", False), (7, False), (None, False)):
+            value = deepcopy(discovery)
+            value["resourceTypes"][0]["name"] = name
+            with self.subTest(schema="Discovery", dialect="Draft4", name=name):
+                self.check("Discovery", value, expected)
+            with self.subTest(schema="StandaloneDiscovery", dialect=dialect.__name__, name=name):
+                self.assertEqual(validator.is_valid(value), expected)
 
     def test_webdav_optional_permissions(self):
         dav = deepcopy(self.share["protocol"]["webdav"])

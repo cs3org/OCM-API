@@ -55,7 +55,8 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "type": "string",
+          "not": { "enum": ["collection"] }
         },
         "shareTypes": {
           "type": "array"
