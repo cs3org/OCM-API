@@ -745,16 +745,15 @@ The admin set and the group membership are coupled: an entry in `admins`
 is only meaningful while that admin's leaf is in the ratchet tree.  A
 Commit that removes an admin's leaf MUST therefore also include a
 corresponding `AppDataUpdate` proposal deleting that admin from
-`admins`, and
-the Group Owner Server and all Member Servers MUST reject a Commit that
-would leave an entry in `admins` with no corresponding leaf in the tree.
-(A rejoin pair ({{rejoin}}) that replaces an admin's leaf does not
-trigger this rule, since the admin retains a leaf after the Commit.)
-An `AppDataUpdate` proposal whose only change to the admin set is
-deleting admins whose leaves are removed in the same Commit requires no
-separate admin approval; it follows the approval status of the Remove
-proposals it accompanies, so that the self-removal of an admin can still
-be committed automatically.
+`admins`, and the Group Owner Server and all Member Servers MUST reject
+a Commit that would leave an entry in `admins` with no corresponding
+leaf in the tree.  (A rejoin pair ({{rejoin}}) that replaces an admin's
+leaf does not trigger this rule, since the admin retains a leaf after
+the Commit.)  An `AppDataUpdate` proposal whose only change to the
+admin set is deleting admins whose leaves are removed in the same
+Commit requires no separate admin approval; it follows the approval
+status of the Remove proposals it accompanies, so that the self-removal
+of an admin can still be committed automatically.
 
 Every LeafNode in a KeyPackage used with this protocol MUST advertise
 support for the `app_data_dictionary` extension in
@@ -1335,8 +1334,8 @@ acts on behalf of a user who is a member of that group:
 ## FK Re-wrap on Epoch Change {#fk-rewrap}
 
 The Group Key changes with every epoch transition, whatever the reason
-for the transition: a Commit covering Add, Remove, Update, or
-AppDataUpdate or GroupContextExtensions proposals, or an empty Commit,
+for the transition: a Commit covering Add, Remove, Update,
+AppDataUpdate, or GroupContextExtensions proposals, or an empty Commit,
 all advance the epoch.  To maintain the invariant that the current
 Group Key is always sufficient to unwrap the current wrapped FK, a
 sending server MUST, after processing an `MLS_COMMIT` for a group, or
