@@ -282,6 +282,10 @@ an admin client and broadcasts it to all Member Servers.
 are sent directly from the sending server to all current Member Servers,
 exactly like OCM share notifications; credential updates are sent to a
 single Member Server ({{credential-update}}).
+- Group state retrieval: Admin Servers retain the public group state of
+recent epochs and serve the ratchet tree to newly added Member Servers
+and missed Commits to Member Servers that have fallen behind
+({{group-state}}).
 
 All MLS messages are delivered to the `<endPoint>/notifications`
 endpoint of each recipient server, authenticated with HTTP Signatures
@@ -417,7 +421,8 @@ with `shareWith` carrying the group's OCM Address.  A community share
 is otherwise a standard OCM share, carrying every field REQUIRED by
 [OCM] including the `protocol` object.  All new server-to-server
 messages use the existing `/notifications` endpoint with new
-`notificationType` values.
+`notificationType` values; KeyPackages and public group state are
+retrieved through signed GET endpoints derived from `endPoint`.
 
 # Discovery
 
@@ -444,7 +449,9 @@ its OCM discovery document at `/.well-known/ocm`:
 No additional discovery fields are introduced.  The notifications
 endpoint is derived as `<endPoint>/notifications` per the base OCM
 specification.  The KeyPackage endpoint is derived as
-`<endPoint>/mls-key-packages`.  For example, an `endPoint` of
+`<endPoint>/mls-key-packages`, and the group state endpoints as
+`<endPoint>/mls-ratchet-tree` and `<endPoint>/mls-commits`
+({{group-state}}).  For example, an `endPoint` of
 `https://cloud.example.org/ocm` results in the KeyPackage endpoint
 `https://cloud.example.org/ocm/mls-key-packages`.
 
@@ -459,8 +466,8 @@ A server that advertises `"community"` MUST be able to receive OCM
 Notifications, since all MLS lifecycle messages are delivered as
 notifications, and SHOULD include `"notifications"` in its
 `capabilities` array.  It MUST also advertise the `"http-sig"`
-capability and a `jwksUri`, since KeyPackage distribution requires HTTP
-Message Signatures in both directions.
+capability and a `jwksUri`, since KeyPackage distribution and group
+state retrieval require HTTP Message Signatures in both directions.
 
 # KeyPackage Distribution
 
@@ -604,6 +611,123 @@ request MUST be signed, KeyPackages MUST be one-time use except for a
 designated last resort KeyPackage, and the server MUST remove a
 KeyPackage once delivered.  A request MUST carry exactly one of
 `userId` and `serverId`.
+
+# Group State Retrieval {#group-state}
+
+Admin Servers track the public state of every group their admins
+administer, as every server that routes or arbitrates handshake
+messages does ({{mls-notification-types}}).  They serve two things a
+Member Server may lack: the ratchet tree that a newly added Member
+Server needs to process its Welcome, and Commits that a Member Server
+has missed.
+
+An Admin Server MUST retain the ratchet tree of each epoch, and the
+Commit sent in that epoch together with the proposals it covers by
+reference, for at least the group's update deadline
+({{leaf-key-updates}}) after the end of the epoch.
+
+Requests to both endpoints carry the REQUIRED query parameters
+`mlsGroupId`, the base64url-encoded MLS `group_id`, and `senderDomain`,
+the FQDN of the requesting server, and are authenticated exactly like
+requests to the KeyPackage endpoint ({{request-authentication}}).
+Responses are signed exactly like KeyPackage responses
+({{response-authentication}}), with the response key resolved through
+the `jwksUri` of the server the request was addressed to.  A server
+MUST serve a request only if the verified `senderDomain` is the host
+part of the OCM Address in a leaf credential of the ratchet tree of the
+epoch the request refers to.  Otherwise, and when it does not retain
+that epoch, it MUST respond with 404 Not Found, so that neither the
+existence of a group nor its membership is disclosed to other servers.
+
+## Ratchet Tree
+
+~~~
+GET <endPoint>/mls-ratchet-tree
+~~~
+
+The additional REQUIRED query parameter `epoch` is the decimal number
+of the epoch whose ratchet tree is requested.
+
+Response:
+
+~~~ json
+{
+  "mlsGroupId": "<base64url MLS group ID>",
+  "epoch": 42,
+  "ratchetTree": {
+    "encoding": "base64url",
+    "content": "<base64url ratchet_tree>"
+  }
+}
+~~~
+
+`content` is the TLS serialisation of the `ratchet_tree` value defined
+in [RFC9420] Section 12.4.3.3, that is, the `extension_data` that a
+`ratchet_tree` extension would carry.
+
+A Member Server that receives an `MLS_WELCOME`
+({{mls-notification-types}}) decrypts the GroupInfo, which does not
+require the tree, reads `group_id` and `epoch` from its GroupContext,
+requests the tree of that epoch from the server named in the
+notification's `senderDomain`, and then processes the Welcome as
+specified in [RFC9420] Section 12.4.3.1, which verifies the tree
+against the `tree_hash` in the GroupInfo.  If that server does not
+respond, the Member Server MAY request the tree from any other Admin
+Server, derived from the admin set ({{admin-set}}) in the same
+GroupContext.  In native client deployments the home server performs
+the request and relays the tree to the client; the client's
+verification against `tree_hash` does not depend on the channel.  A
+Member Server that cannot obtain the tree recovers through the rejoin
+procedure ({{rejoin}}), since its users already hold leaves in the
+group.
+
+## Commits
+
+~~~
+GET <endPoint>/mls-commits
+~~~
+
+The additional REQUIRED query parameter `from` is the decimal number of
+the epoch in which the first requested Commit was sent, that is, the
+requester's current epoch.
+
+Response:
+
+~~~ json
+{
+  "mlsGroupId": "<base64url MLS group ID>",
+  "commits": [
+    {
+      "epoch": 42,
+      "proposals": [
+        "<base64url MLS PublicMessage carrying a Proposal>"
+      ],
+      "content": "<base64url MLS PublicMessage carrying the Commit>"
+    }
+  ]
+}
+~~~
+
+Each entry carries one Commit exactly as it was broadcast in
+`MLS_COMMIT` ({{mls-notification-types}}): `epoch` is the epoch in
+which the Commit was sent, `content` is the Commit, and `proposals`
+carries the proposals it covers by reference, under the same rules as
+in the notification.  Entries are in increasing epoch order, starting
+at `from`, without gaps.  The sequence ends at the latest Commit the
+server holds or at the Commit that removes the requester's last leaf,
+whichever comes first.  A server MAY stop after any entry, for example
+to bound the response size; the requester repeats the request from the
+epoch following the last entry.  An empty `commits` array means that
+no Commit has been sent in epoch `from`, that is, the requester is
+current.
+
+A Member Server that receives an `MLS_COMMIT` for an epoch later than
+the next expected one obtains the missing Commits from any Admin
+Server through this endpoint and processes them in epoch order before
+the Commit that revealed the gap.  Retrieved Commits are verified
+exactly like broadcast ones ({{admins}}).  If no Admin Server retains
+the missing epochs, the Member Server has drifted and recovers through
+the rejoin procedure ({{rejoin}}).
 
 # Group Lifecycle
 
@@ -903,15 +1027,15 @@ added user.
 }
 ~~~
 
-The Welcome message MUST include the group's ratchet tree in a
-`ratchet_tree` extension ([RFC9420] Section 12.4.3.3).  By default a
-Welcome carries only a hash of the tree, and this document defines no
-other channel through which a newly added Member Server could obtain it.
-Member Servers depend on holding the current ratchet tree, both to
-derive the group membership and to process subsequent Commits.  Carrying
-the tree inside the Welcome also gives it the same confidentiality
-protection as the rest of the group state, as recommended by [RFC9420]
-Section 12.4.3.3.
+The Welcome message MUST NOT include a `ratchet_tree` extension.  The
+receiving Member Server obtains the ratchet tree of the Welcome's epoch
+from the sending server ({{group-state}}) and MUST do so before
+processing the Welcome ([RFC9420] Section 12.4.3.1); the `tree_hash` in
+the GroupInfo guarantees the integrity of the tree so obtained
+([RFC9420] Section 12.4.3.3).  Member Servers depend on holding the
+current ratchet tree, both to derive the group membership and to
+process subsequent Commits.  Keeping the tree out of the Welcome keeps
+the size of the notification independent of the size of the group.
 
 A Member Server processing a Welcome learns the group's OCM Address from
 the OCM Community Component data in the GroupContext ({{admin-set}}).
@@ -960,7 +1084,8 @@ signed by an admin client before processing it, as specified in
 broadcast it.  Commits are ordered by the MLS epoch itself: each Commit
 advances the epoch by exactly one, so Member Servers MUST process
 Commits in epoch order, and a Commit arriving for an epoch later than
-the next expected one indicates one or more missed Commits.  Member
+the next expected one indicates one or more missed Commits, which the
+Member Server retrieves from an Admin Server ({{group-state}}).  Member
 Servers MUST apply the new epoch secret before sending any application
 data, per [RFC9420] Section 15.2.
 
@@ -1117,8 +1242,8 @@ Application Messages, and because MLS messages are bound to the current
 GroupContext, it cannot sign a valid Proposal with which to recover.  A
 drifted server detects its condition when an `MLS_COMMIT` fails to
 process against its local state, for example through a confirmation tag
-mismatch, or arrives for an epoch it cannot reach after Commit
-retransmission has been exhausted.
+mismatch, or arrives for an epoch it cannot reach because no Admin
+Server retains the missed Commits ({{group-state}}).
 
 Recovery is mediated by an admin client through the normal Commit path:
 
@@ -1146,7 +1271,8 @@ Recovery is mediated by an admin client through the normal Commit path:
     {{admins}}.
 5.  The Commit is arbitrated and broadcast as usual, and the drifted
     server receives one `MLS_WELCOME` per re-added user, restoring clean
-    state from the Welcome's `ratchet_tree` extension.
+    state from the Welcome and the ratchet tree retrieved from its
+    sender ({{group-state}}).
 
 A single Commit recovers all of the drifted server's users at once.
 Until the rejoin completes, the drifted server can continue to serve
@@ -2306,6 +2432,20 @@ signed and verified as specified in {{keypackage-distribution}} and
 SHOULD implement rate limiting and other access control methods on the
 `<endPoint>/mls-key-packages` endpoint to avoid user enumeration.
 
+**Group state retrieval.** The ratchet trees and Commits that Admin
+Servers serve ({{group-state}}) are the public group state that every
+Member Server holds and that handshake messages already expose to it.
+They are served only to servers named in a leaf credential of the
+requested epoch, under the same authentication as KeyPackage requests,
+and requests from any other server are indistinguishable from requests
+for an unknown group, so nothing is disclosed to servers outside the
+group.  Integrity does not rest on the serving server: a retrieved tree
+is verified against the `tree_hash` in the GroupInfo ([RFC9420] Section
+12.4.3.3) and retrieved Commits are verified like broadcast ones.  A
+serving server can withhold state, which delays a join or a catch-up
+but cannot cause invalid state to be accepted; the requester turns to
+another Admin Server or to the rejoin procedure ({{rejoin}}).
+
 ## Underlying Security Specifications
 
 This specification relies on the base Open Cloud Mesh protocol [OCM],
@@ -2427,14 +2567,6 @@ with the FK wrapping model needs to be defined.
 Since every epoch transition triggers a re-wrap of every shared
 resource's FK ({{fk-rewrap}}), batching is load-bearing when many shares
 exist and epoch transitions are frequent.
-- **Commit retransmission.** A missed Commit is detected directly from
-the MLS epoch: a Commit arriving for a later epoch than the next
-expected one indicates a gap.  A mechanism for requesting retransmission
-of missed Commits, from the Group Owner Server or any Admin Server,
-needs to be specified.  Retransmission is the first remedy for a gap;
-the rejoin procedure ({{rejoin}}) is the fallback when retransmitted
-Commits can no longer be applied. The proposed OCM Journaling mechanism
-can be useful in this context.
 
 # Changes
 
@@ -2466,6 +2598,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
   The `MLS_*` notifications for federated groups of users accordingly
   carry `shareType` `community` and a `notification.community`
   object.  The corresponding share payload registrations are kept.
+* Removed the ratchet tree from the Welcome; newly added Member Servers
+  retrieve it from an Admin Server.  Added retrieval of missed Commits
+  from Admin Servers, closing the Commit retransmission open issue.
 
 ## WG Version 01
 * Added authenticated requester discovery for KeyPackage requests while
