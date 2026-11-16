@@ -3541,13 +3541,6 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## Version 09
-
-## Version 08
-* Introduced an `apps` array in the `webapp` protocol payload, listing
-  the available web applications each with the media types it can
-  handle.  It replaces the `appName` and `mediaTypes` properties.
-* Introduced a CONTACT_REMOVED notification.
-* Added reference to the OpenAPI protocol specification.
 * Promoted the Directory Service to a normative section following the
   Invite Flow, and made it distributed: the membership of a Federation
   is now published by each member at the `directoryEndPoint` advertised
@@ -3575,6 +3568,13 @@ The complete changelog is updated in the OCM-API GitHub repository.
   Servers, and renamed to `dgroup` the share type for federated groups
   of users, formerly `federation`, which is registered and specified
   by [OCM-MLS] together with the related share payloads.
+
+## Version 08
+* Introduced an `apps` array in the `webapp` protocol payload, listing
+  the available web applications each with the media types it can
+  handle.  It replaces the `appName` and `mediaTypes` properties.
+* Introduced a CONTACT_REMOVED notification.
+* Added reference to the OpenAPI protocol specification.
 
 ## Version 07
 * Required the `keyid` signature parameter and that it matches the

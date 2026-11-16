@@ -2415,12 +2415,6 @@ process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.
 
 ## WG Version 02
-
-## WG Version 01
-* Added authenticated requester discovery for KeyPackage requests while
-  keeping the HTTP Message Signature `keyid` opaque.
-* Added nonce replay protection and request-bound response signatures
-  for KeyPackage distribution.
 * Specified Servers Federation groups: an MLS group whose members are
   the OCM Servers of a Federation, providing the cryptographically
   guaranteed Directory Service model of [OCM].  One leaf per member
@@ -2443,6 +2437,12 @@ The complete changelog is updated in the OCM-API GitHub repository.
   The `MLS_*` notifications for federated groups of users accordingly
   carry `shareType` `dgroup` and a `notification.dgroup` object.  The
   corresponding share payload registrations are kept.
+
+## WG Version 01
+* Added authenticated requester discovery for KeyPackage requests while
+  keeping the HTTP Message Signature `keyid` opaque.
+* Added nonce replay protection and request-bound response signatures
+  for KeyPackage distribution.
 
 ## WG Version 00
 * First Working Group version, adopted by the OCM Working Group.
