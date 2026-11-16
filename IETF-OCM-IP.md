@@ -409,8 +409,8 @@ of this document:
 
 * The Token Server holds its own signing keypair, and the OCM Server
 publishes the public key in its own JWK Set, advertised via the
-`jwksUri` field of its Discovery response, under a `kid` in its own
-domain.  The `iss` and `kid` rules of this document
+`jwksUri` field of its Discovery response, under an opaque `kid`.
+The `iss` and `kid` rules of this document
 (see Token Issuance by the OCM Server) are then satisfied without any
 private key leaving the Token Server, and token
 verification by Receiving Servers and Protocol Servers is unchanged.
@@ -523,13 +523,10 @@ All Integration API requests:
 testing setups only),
 * MUST use the HTTP POST method with `application/json` as the
 `Content-Type` request header,
-* MUST be signed with an HTTP Message Signature [RFC9421] carrying the
-label `ocm`, following the same rules as server-to-server requests in
-[OCM]: the signature MUST cover at least `@method`, `@target-uri`,
-`content-digest`, `content-length` and `date`, MUST include the
-`created` parameter, and MUST be made with an asymmetric algorithm using
-a key advertised in the OCM Server's JWK Set, located via the `jwksUri`
-field of its Discovery response.
+* MUST use HTTP Message Signatures [RFC9421] with `tag="ocm"`, following
+the signing requirements of [OCM]. The signing key MUST be advertised
+in the OCM Server's JWK Set, located through the `jwksUri` in its
+Discovery response.
 
 On receipt of an Integration API request, the Protocol Server:
 
@@ -537,12 +534,12 @@ On receipt of an Integration API request, the Protocol Server:
 sender domain from the part after the last `@` sign.
 2. MUST verify that the sender domain is on its allowlist of paired OCM
 Servers, and reject the request with HTTP status 401 otherwise.
-3. MUST verify the `ocm`-labeled signature against the JWKS of the
-sender domain, following the verification rules of [OCM] (single `ocm`
-label, required covered components, content-digest match [RFC9530],
-`created`
-within a freshness window, `keyid` domain equal to the sender domain),
-and reject the request with HTTP status 401 on any failure.
+3. MUST locate the unique signature with `tag="ocm"` and verify it
+against the sender's JWK Set, discovered through its `jwksUri`, using
+the key whose `kid` equals `keyid`. The rules of [OCM] apply, including
+covered components, content-digest matching and `created` freshness.
+Server identity MUST NOT be inferred from a label or key identifier.
+Reject the request with HTTP status 401 on any verification failure.
 
 Note that, unlike the Share Creation Notification of [OCM], where the
 verification key is discovered from the `sender` field of an arbitrary
@@ -732,18 +729,21 @@ token; the endpoint MUST accept any credential that is valid for a Share
 at this OCM Server.
 
 The request MUST be made over TLS and MUST be signed with an HTTP
-Message Signature [RFC9421] carrying the label `ocm`, with the same
+Message Signature [RFC9421] carrying `tag="ocm"`, with the same
 covered components and `created` rules as Integration API requests.  The
 `keyid` MUST identify a key in the Protocol Server's own JWKS,
 published at the JWKS URL exchanged during pairing
 (`{protocolServerJwksUri}`) [RFC7517].
-The introspection endpoint MUST verify that the `keyid` domain belongs
-to a paired Protocol Server and MUST verify the signature against that
-domain's JWKS before evaluating the credential; unauthenticated or
-unpaired requests MUST be rejected without revealing whether the
-presented credential is valid.  This authentication requirement is what
-keeps the endpoint from acting as a credential-validity oracle (Section
-4 of [RFC7662]).
+The introspection endpoint MUST select verification keys from trusted
+pairing records and verify the signature against a paired Protocol
+Server's JWK Set, unambiguously establishing the caller before
+evaluating the credential. It MUST use that authenticated identity to
+select `client_id` or `ocm_ip` as specified below. The opaque `keyid`
+selects a key in that set; it does not name a server or a JWKS URL.
+Unauthenticated, unpaired or ambiguously identified requests MUST be
+rejected without revealing whether the presented credential is valid.
+This authentication requirement is what keeps the endpoint from acting
+as a credential-validity oracle (Section 4 of [RFC7662]).
 
 ## Response
 
@@ -799,8 +799,9 @@ The JWT Claims Set MUST include the claims required by [RFC9068], with
 the following OCM-specific semantics, on which the Protocol Server
 relies:
 
-* `iss` - the Sending Server identifier, derived from the scheme and
-authority of the signatory keyId.
+* `iss` - an HTTPS issuer URL identifying the Sending Server. Its
+authority is the Sending Server's OCM Server Address, independently
+of the signing key identifier.
 * `sub` - the Share owner on the Sending Server.
 * `aud` - the OCM principal authorized by the token, i.e. the
 `shareWith` value of the Share.  Per Section 4.1.3 of [RFC7519] the
@@ -1247,21 +1248,22 @@ Integration: the introspection response names the Share Record via
 
 ## Signature and Token Verification Considerations
 
-All the verification rules of [OCM] for HTTP Message Signatures apply to
-the back channel, in particular: exactly one `ocm`-labeled signature,
-required covered components, `created` freshness, `keyid` domain
-matching the sender domain, and rejection of symmetric algorithms.  Two
-considerations deserve emphasis in the Protocol Server context:
+The HTTP Message Signature rules of [OCM] apply to the back channel:
+exactly one signature with `tag="ocm"`, required covered components,
+`created` freshness, and an asymmetric key from the expected peer's
+JWK Set whose `kid` matches `keyid`. Dictionary labels are arbitrary.
+An advertised JWKS or token endpoint may use another host; its URL does
+not change the peer's identity. Two considerations deserve emphasis:
 
 * Reverse proxies: when TLS terminates in front of the Protocol Server,
 the internally observed URI differs from the signed `@target-uri`.  The
 Protocol Server MUST reconstruct the public URL for verification, and
 MUST only trust forwarding headers set by its own proxy.
 * Issuer/key binding: on the front channel, the key used to verify a
-token MUST be fetched from the JWKS of the token's own `iss` host, and
-the Share Record lookup MUST use that same host.  An implementation that
-verifies against one domain's keys but looks up records under another's
-would allow cross-tenant confusion on multi-tenant Protocol Servers.
+token MUST be fetched from the JWKS advertised by its issuer's OCM
+Server. The Share Record lookup MUST use that same OCM Server Address.
+Using one server's keys with another's Share Records would allow
+cross-tenant confusion on a multi-tenant Protocol Server.
 
 ## Denial of Service
 
@@ -1270,13 +1272,13 @@ keys, so unsolicited requests from arbitrary servers are rejected
 without outbound traffic.  Front-channel token verification does fetch
 JWKS documents from token-asserted issuers; implementations SHOULD
 rate-limit verification failures and SHOULD restrict JWKS fetching to
-the domains of paired OCM Servers, since no unpaired issuer's credential
-can ever be honored in any integration mode.  In Introspected
-Integration the Protocol Server additionally generates one introspection
-request per uncached front-channel credential; implementations SHOULD
-apply negative caching with a short lifetime so that a flood of invalid
-credentials does not translate into a flood of introspection traffic
-towards the OCM Server.
+trusted destinations advertised by paired OCM Servers, since no unpaired
+issuer's credential can ever be honored in any integration mode.  In
+Introspected Integration the Protocol Server additionally generates one
+introspection request per uncached front-channel credential;
+implementations SHOULD apply negative caching with a short lifetime so
+that a flood of invalid credentials does not translate into a flood of
+introspection traffic towards the OCM Server.
 
 ## Underlying Security Specifications
 
@@ -1404,7 +1406,7 @@ Date: Wed, 10 Jun 2026 14:00:00 GMT
 Content-Type: application/json
 Content-Digest: sha-256=:hj3LWOIuryd4XbzFhoHa6YMUbhtzMdMT3e9Bxpu2Lm0=:
 Content-Length: 542
-"@signature-params": ("@method" "@target-uri" "content-digest" \
+Signature-Input: ocm=("@method" "@target-uri" "content-digest" \
   "content-length");created=1781186400;\
   keyid="cloud.example.org#key1";alg="ed25519";tag="ocm"
 Signature: ocm=:[signature-value]:
