@@ -91,10 +91,11 @@ related concepts from OAuth [RFC6749] and elsewhere:
 * __Collection__ - A grouping of one or more Resources whose membership
   and semantics are defined by the Sending Server.  The Resources MAY
   be at different locations and have different Resource types.
-* __Dgroup__ - A group of users that spans multiple OCM Servers and
-  that MAY act as the Receiving Party of a Share, identified by the
-  `dgroup` share type and specified in [OCM-MLS].  It is not to be
-  confused with a Federation, which is a group of OCM Servers.
+* __Community__ - A loosely coupled group of users spanning multiple
+  OCM Servers, and that MAY act as the Receiving Party of a Share,
+  identified by the `community` share type and specified in
+  [OCM-MLS].  It is not to be confused with a Federation, which is a
+  group of OCM Servers.
 * __Directory Endpoint__ - The URL, advertised in the
   `directoryEndPoint` field of the OCM API Discovery response, at which
   an OCM Server exposes the Federations it is a member of, along with
@@ -1518,7 +1519,7 @@ described in [OCM-IP].
   Receiving Server.  Other values MAY be used provided they are
   registered in the "OCM Share Types" registry (see
   [IANA Considerations](#iana-considerations)); for example, [OCM-MLS]
-  specifies the use of the "dgroup" share type for a group of
+  specifies the use of the "community" share type for a group of
   users that spans multiple OCM Servers.
   The Sending Server SHOULD only use a `shareType` that the Receiving
   Server advertises for the share's `resourceType` in its Discovery
@@ -2571,7 +2572,7 @@ or in the "shareType" field of a [Notification](#notifications).  Other
 specifications MAY register additional share types in this registry.
 For instance, the case of a group of users that spans multiple OCM
 Servers acting as the Receiving Party of a share is identified by the
-"dgroup" share type, registered by [OCM-MLS].
+"community" share type, registered by [OCM-MLS].
 
    Registration Policy: Specification Required [RFC8126]
 
@@ -2618,7 +2619,7 @@ is usually shared over CalDAV or JMAP, not over ssh.  Other
 specifications MAY register additional combinations, including ones
 that extend an already-registered protocol to a new resource type or
 share type; doing so does not modify that protocol's own registration.
-The dgroup combinations are registered in this way by [OCM-MLS].
+The community combinations are registered in this way by [OCM-MLS].
 If someone wants to specify how to share calendar events over ssh in an
 interoperable way, they can do so using this very mechanism.
 
@@ -3565,9 +3566,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
   Federation, so that every assertion on the wire is attributable to,
   and limited to, the Administrator who made it.
 * Registered the `federation` resource type for a group of OCM
-  Servers, and renamed to `dgroup` the share type for federated groups
-  of users, formerly `federation`, which is registered and specified
-  by [OCM-MLS] together with the related share payloads.
+  Servers, and renamed to `community` the share type for federated
+  groups of users, formerly `federation`, which is registered and
+  specified by [OCM-MLS] together with the related share payloads.
 
 ## Version 08
 * Introduced an `apps` array in the `webapp` protocol payload, listing

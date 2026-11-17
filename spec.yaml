@@ -453,13 +453,13 @@ components:
                 description: |
                   The supported recipient share types.
                   MUST contain `"user"` at a minimum, plus optionally
-                  `"group"` and `"dgroup"`.
+                  `"group"` and `"community"`.
                 items:
                   type: string
                   enum:
                     - user
                     - group
-                    - dgroup
+                    - community
                 example:
                   - user
               protocols:
@@ -771,7 +771,7 @@ components:
         shareWith:
           type: string
           description: >
-            OCM Address of the user, group or dgroup the
+            OCM Address of the user, group or community the
             provider wants to share the resource with. This MUST be known
             in advance, either via a previous Invitation or through other means.
           example: 51dc30ddc473d43a6011e9ebba6ca770@geant.org
@@ -848,7 +848,7 @@ components:
           enum:
             - user
             - group
-            - dgroup
+            - community
           description: |
             Recipient share type
           example: user
@@ -1258,7 +1258,7 @@ components:
           type: string
           description: >
             Share type, according to the OCM IANA Registry for share types.
-            E.g. user, group, dgroup, etc. Implementers MAY define
+            E.g. user, group, community, etc. Implementers MAY define
             additional custom types, provided that they are registered in the
             respective OCM IANA Registry.
         providerId:
@@ -1299,7 +1299,7 @@ components:
               notification. It contains its payload and it can vary according to the
               implementers. In case of `file` resources, it MUST contain at least
               the `providerId` of the underlying resource; in case of `user`, `group`,
-              or `dgroup` share types, it MUST contain at least the `userId`,
+              or `community` share types, it MUST contain at least the `userId`,
               `groupId`, or `mlsGroupId` of the underlying recipient, respectively;
               in case of `collection`, it MUST contain at least the `owner`,
               `shareWith`, and `permissions` of the requested share.
@@ -1365,10 +1365,10 @@ components:
               url: https://ocm-server.example.org
         mlsWelcome:
           notificationType: MLS_WELCOME
-          shareType: dgroup
+          shareType: community
           senderDomain: cloud.example.org
           notification:
-            dgroup:
+            community:
               mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
               userId: bob@cloud.example.org
               content: base64 MLS welcome
