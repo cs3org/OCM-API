@@ -88,6 +88,22 @@ class ShareSchemaTests(unittest.TestCase):
                 with self.subTest(schema=schema, permissions=permissions):
                     self.check(schema, payload, expected)
 
+    def test_granular_protocol_permissions(self):
+        for protocol in ("webdav", "webapp"):
+            entry = deepcopy(self.protocols["multipleProtocols"][protocol])
+            for permission in ("create", "update", "delete", "view", "admin"):
+                entry["permissions"] = [permission]
+                expected = permission != "admin" and (protocol == "webapp" or permission != "view")
+                for schema, payload in self.full_contexts({"name": "multi", protocol: entry}):
+                    with self.subTest(schema=schema, protocol=protocol, permission=permission):
+                        self.check(schema, payload, expected)
+
+    def test_community_recipients(self):
+        for recipient in ("user", "group", "community", "federation"):
+            for schema, payload in self.full_contexts(self.share["protocol"]):
+                with self.subTest(schema=schema, recipient=recipient):
+                    self.check(schema, {**payload, "shareType": recipient}, recipient != "federation")
+
     def test_ssh_full_and_partial(self):
         for entry, expected in (({}, False), ({"accessTypes": ["datatx"]}, False),
                                 ({"uri": "alice@host.example:22/path"}, True)):
