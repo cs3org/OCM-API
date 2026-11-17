@@ -1,0 +1,94 @@
+name: Validate Internet-Drafts
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PYTHONDONTWRITEBYTECODE: "1"
+  IETF_OUTPUT: ${{ runner.temp }}/ietf-output
+  KRAMDOWN_REFCACHEDIR: ${{ runner.temp }}/ietf-reference-cache
+
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - name: Check draft tooling
+        run: python -m unittest discover -s tests -p test_draft_style.py
+      - name: Check sentence spacing
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          args=()
+          if [ -n "$BASE_SHA" ]; then args=(--base "$BASE_SHA"); fi
+          python tools/check_draft_style.py "${args[@]}" IETF-*.md
+
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "4.0.4"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Install RFC tools
+        run: |
+          gem install --no-document kramdown-rfc -v 1.7.43
+          python -m pip install xml2rfc==3.35.0
+          npm install --prefix "$RUNNER_TEMP/ietf-tools" --ignore-scripts \
+            --no-audit --no-fund @ietf-tools/idnits@3.3.0
+      - name: Build drafts and check RFC nits
+        run: |
+          set -euo pipefail
+          mkdir -p "$IETF_OUTPUT" "$KRAMDOWN_REFCACHEDIR"
+          for draft in IETF-*.md; do
+            name=$(sed -n 's/^docname: *//p' "$draft")
+            [[ "$name" =~ ^draft-[a-z0-9-]+-[0-9]{2,}$ ]]
+            kramdown-rfc "$draft" > "$IETF_OUTPUT/$name.xml"
+            xml2rfc "$IETF_OUTPUT/$name.xml" --text --html \
+              --path "$IETF_OUTPUT"
+            status=0
+            "$RUNNER_TEMP/ietf-tools/node_modules/.bin/idnits" \
+              --mode normal --output json --fail-on errors \
+              "$IETF_OUTPUT/$name.txt" > "$IETF_OUTPUT/$name.nits.json" || status=$?
+            if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then exit "$status"; fi
+            python tools/check_idnits.py "$IETF_OUTPUT/$name.nits.json" \
+              "$IETF_OUTPUT/$name.txt" .github/ietf/idnits-baseline.json
+          done
+      - name: Install prose checker
+        run: |
+          curl -fsSL https://github.com/vale-cli/vale/releases/download/v3.27.0/vale_3.27.0_Linux_64-bit.tar.gz \
+            -o "$RUNNER_TEMP/vale.tar.gz"
+          printf '%s  %s\n' c80d62f6bce87b81843ac5b512a26e63213927b957adba0a64fc594570da2000 \
+            "$RUNNER_TEMP/vale.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/vale.tar.gz" -C "$RUNNER_TEMP" vale
+          curl -fsSL https://github.com/OR13/ietf-vale/releases/download/v0.5.0/IETF-Draft.zip \
+            -o "$RUNNER_TEMP/ietf-draft.zip"
+          printf '%s  %s\n' 1615d0dc95f98c3965a6b3ae77f662e56e428118fd4f00ff8df1cf17ad01675e \
+            "$RUNNER_TEMP/ietf-draft.zip" | sha256sum -c -
+          python -m zipfile -e "$RUNNER_TEMP/ietf-draft.zip" .github/ietf/styles
+      - name: Report prose suggestions
+        run: |
+          "$RUNNER_TEMP/vale" --config=.github/ietf/vale.ini --no-global \
+            --no-exit --output=JSON IETF-*.md > "$IETF_OUTPUT/prose.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: internet-drafts
+          path: ${{ env.IETF_OUTPUT }}
+          retention-days: 7

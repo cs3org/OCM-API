@@ -12,3 +12,20 @@ To contribute to the Internet Draft, please do all edits in the markdown files o
 To preview the changes of your PR, you can change the repo and branch in the API docs URL.
 For instance to see the proposed changes of https://github.com/cs3org/OCM-API/pull/41, use:
 [https://cs3org.github.io/OCM-API/docs.html?repo=OCM-API&branch=add-endpoint-to-accept-invite](https://cs3org.github.io/OCM-API/docs.html?repo=OCM-API&branch=add-endpoint-to-accept-invite)
+
+## Draft checks
+
+Pull requests check sentence spacing in changed draft prose and render all
+three Internet-Drafts. Manual runs check the complete sources. Prose
+suggestions are advisory; idnits permits only the exact inherited exceptions
+in `.github/ietf/idnits-baseline.json`.
+
+Run the source checks locally with:
+
+```sh
+python tools/check_draft_style.py --base develop IETF-*.md
+python -m unittest discover -s tests -p test_draft_style.py
+```
+
+The render commands and pinned tools are in
+`.github/workflows/draft-validation.yml`.

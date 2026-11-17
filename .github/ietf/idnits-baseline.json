@@ -1,0 +1,44 @@
+{
+  "source_commit": "aad17460e93b460d246f8d645cdddd17f0d9ed1d",
+  "idnits": "3.3.0",
+  "drafts": {
+    "draft-ietf-ocm-integration-protocol": [
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "   Content-Digest: sha-256=:ENfuyyRU0yFW73E4NOx3EXuJJxPOa+crVo6dOfGH77o=:"
+      }
+    ],
+    "draft-ietf-ocm-mls-federated-groups": [
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "         \"content\": \"<base64url MLS PublicMessage carrying the Proposal>\""
+      }
+    ],
+    "draft-ietf-ocm-open-cloud-mesh": [
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "      YTU1YTk2NmUtMTVjMS00Y2I5LWEzOWQtNGU0YzU0Mzk5YmFmQGNsb3VkLmV4YW1wbGUu"
+      },
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "   Content-Digest: sha-256=:81kCnlO5UY/mZ8UgpxBWnq18GY3WhzJnDjOTvSvjbhw=:"
+      },
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "   Content-Digest: sha-256=:/Uz47cfD1HOdMTIqcWjd84iMLQ4gVJdC7ZFACf1ViqU=:"
+      },
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "   \"content-digest\": sha-256=:/Uz47cfD1HOdMTIqcWjd84iMLQ4gVJdC7ZFACf1ViqU=:"
+      },
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "   Content-Digest: sha-256=:/Uz47cfD1HOdMTIqcWjd84iMLQ4gVJdC7ZFACf1ViqU=:"
+      },
+      {
+        "code": "LINE_TOO_LONG",
+        "text": "   Signature: sig1=:Epax4XFqvbrrDzQUAaNl+uECasEKbArgz8AlEkXspvYX2fSkQFlC\\"
+      }
+    ]
+  }
+}
