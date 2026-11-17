@@ -47,6 +47,15 @@ PAYLOADS.update({
                                "targetUserId": "bob@receiver.example.org"}}),
 })
 
+SERVER_EVENTS = ("OCM_SERVER_ADDED", "OCM_SERVER_REMOVED")
+PAYLOADS.update({
+    event: envelope(event, resourceType="federation", notification={
+        "federation": {"federationId": "sciencemesh",
+                       "url": "https://server.example.org"}})
+    for event in SERVER_EVENTS
+})
+
+
 COLLECTION_DECLINE = envelope(
     "SHARE_DECLINED", resourceType="collection", collectionId="research-data-123",
     notification={"collection": {"shareWith": "alice@alice.example.org"}})
@@ -156,12 +165,13 @@ class NotificationSchemaTests(unittest.TestCase):
         del decline["collectionId"]
         self.assertFalse(self.validator.is_valid(decline))
 
-    def test_resource_events_exclude_collection(self):
+    def test_resource_events_exclude_reserved_types(self):
         for event in (*SHARE_EVENTS, "REQUEST_RESHARE"):
             with self.subTest(event=event):
                 payload = deepcopy(PAYLOADS[event])
-                payload["resourceType"] = "collection"
-                self.assertFalse(self.validator.is_valid(payload))
+                for resource in ("collection", "federation"):
+                    payload["resourceType"] = resource
+                    self.assertFalse(self.validator.is_valid(payload), resource)
                 payload["resourceType"] = "EXAMPLE_CUSTOM_RESOURCE"
                 self.validator.validate(payload)
         folder = deepcopy(PAYLOADS["SHARE_DECLINED"])
@@ -175,9 +185,43 @@ class NotificationSchemaTests(unittest.TestCase):
                 payload["providerId"] = payload["notification"]["file"].pop("providerId")
                 self.assertFalse(self.validator.is_valid(payload))
 
+    def test_server_membership_payloads(self):
+        for event in SERVER_EVENTS:
+            payload = PAYLOADS[event]
+            for field in ("federationId", "url"):
+                for remove in (True, False):
+                    invalid = deepcopy(payload)
+                    if remove:
+                        del invalid["notification"]["federation"][field]
+                    else:
+                        invalid["notification"]["federation"][field] = 7
+                    with self.subTest(event=event, field=field, remove=remove):
+                        self.assertFalse(self.validator.is_valid(invalid))
+            for change in ({"shareType": "user"}, {"shareType": None},
+                           {"resourceType": "file"}):
+                with self.subTest(event=event, change=change):
+                    self.assertFalse(self.validator.is_valid({**payload, **change}))
+            extended = deepcopy(payload)
+            extended["notification"]["federation"].update(
+                name="ScienceMesh", mlsGroupId="opaque", future={"value": 1})
+            self.validator.validate(extended)
+
+    def test_notification_permissions(self):
+        contexts = (("SHARE_CHANGE_PERMISSION", "file"),
+                    ("REQUEST_RESHARE", "file"), ("REQUEST_SHARE", "collection"))
+        permissions = ("read", "create", "update", "delete", "write", "share", "view")
+        for event, key in contexts:
+            for permission in (*permissions, "admin", 7, None):
+                payload = deepcopy(PAYLOADS[event])
+                payload["notification"][key]["permissions"] = [permission]
+                with self.subTest(event=event, permission=permission):
+                    self.assertEqual(self.validator.is_valid(payload),
+                                     permission in permissions)
+
     def test_unknown_type(self):
         self.validator.validate(envelope("EXAMPLE_CUSTOM_EVENT", resourceType="file"))
         self.validator.validate(envelope("EXAMPLE_COLLECTION_EVENT", resourceType="collection"))
+        self.validator.validate(envelope("EXAMPLE_FEDERATION_EVENT", resourceType="federation"))
 
     def test_fallback_excludes_exactly_the_builtin_types(self):
         schemas = self.spec["components"]["schemas"]
@@ -189,7 +233,7 @@ class NotificationSchemaTests(unittest.TestCase):
                 builtin_types.update(schemas[name]["properties"]["notificationType"]["enum"])
         fallback_type = schemas["NotificationOfOtherType"]["properties"]["notificationType"]
         exclusions = fallback_type["not"]["enum"]
-        self.assertEqual(len(exclusions), 9)
+        self.assertEqual(len(exclusions), 11)
         self.assertEqual(set(exclusions), builtin_types)
         self.assertEqual(set(PAYLOADS), builtin_types)
 
