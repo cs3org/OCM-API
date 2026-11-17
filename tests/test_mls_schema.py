@@ -14,6 +14,10 @@ from test_extension_schemas import ROOT, load_spec
 EXAMPLE_SCHEMAS = {
     "mls-discovery-example": "Discovery",
     "mls-key-package-response-example": "KeyPackageResponse",
+    "mls-server-key-package-response-example": "KeyPackageResponse",
+    "mls-ratchet-tree-response-example": "RatchetTreeResponse",
+    "mls-commits-response-example": "CommitsResponse",
+    "mls-server-welcome-example": "MLSWelcomeNotification",
     "mls-welcome-example": "MLSWelcomeNotification",
     "mls-proposal-example": "MLSProposalNotification",
     "mls-commit-example": "MLSCommitNotification",
@@ -65,7 +69,7 @@ def boundary_cases():
         for field, wrong in {"mlsGroupId": 7, **fields}.items():
             for label, replace in (("missing", False), ("wrong type", True)):
                 invalid = deepcopy(event)
-                federation = invalid["notification"]["federation"]
+                federation = invalid["notification"]["community"]
                 if replace:
                     federation[field] = wrong
                 else:
@@ -92,40 +96,40 @@ def boundary_cases():
             f"forbidden top-level {field}={value!r}")
     extended = deepcopy(proposal)
     extended["future"] = 1
-    extended["notification"]["federation"].update(mlsGroupId="", content="", future=True)
+    extended["notification"]["community"].update(mlsGroupId="", content="", future=True)
     add("envelopes", "MLSNotification", extended, label="open extensions and opaque strings")
     welcome = deepcopy(examples["mls-welcome-example"])
-    welcome["notification"]["federation"]["userId"] = "bob@elsewhere.example:8443"
+    welcome["notification"]["community"]["userId"] = "bob@elsewhere.example:8443"
     add("envelopes", "MLSNotification", welcome, label="Welcome user has another home server")
 
     malformed = deepcopy(proposal)
-    del malformed["notification"]["federation"]["content"]
+    del malformed["notification"]["community"]["content"]
     future = {**proposal, "notificationType": "MLS_FUTURE"}
     for label, value in (("known Proposal without content", malformed),
                          ("future MLS type", future)):
         add("boundary", "MLSNotification", value, False, label)
         add("boundary", "NewNotification", value, label=f"core accepts {label}")
-    resource = {"notificationType": "SHARE_UNSHARED", "shareType": "federation",
+    resource = {"notificationType": "SHARE_UNSHARED", "shareType": "community",
                 "senderDomain": "cloud.example.org", "resourceType": "file",
                 "notification": {"file": {"providerId": "opaque grant/id"}}}
-    add("boundary", "NewNotification", resource, label="federation resource event")
+    add("boundary", "NewNotification", resource, label="community resource event")
     add("boundary", "MLSNotification", resource, False, "resource event is not lifecycle")
     del resource["notification"]["file"]["providerId"]
     add("boundary", "NewNotification", resource, False, "resource event still needs grant ID")
 
     commit = deepcopy(examples["mls-commit-example"])
     for label, proposals in (("empty", []), ("wrong item", [7]), ("wrong type", {})):
-        commit["notification"]["federation"]["proposals"] = proposals
+        commit["notification"]["community"]["proposals"] = proposals
         add("entries", "MLSCommitNotification", commit, label == "empty", f"proposals {label}")
-    del commit["notification"]["federation"]["proposals"]
+    del commit["notification"]["community"]["proposals"]
     add("entries", "MLSCommitNotification", commit, label="proposals absent")
     rejoin = examples["mls-rejoin-example"]
-    entry = rejoin["notification"]["federation"]["keyPackages"][0]
+    entry = rejoin["notification"]["community"]["keyPackages"][0]
     for field, wrong in (("userId", 7), ("mediaType", "text/plain"),
                          ("encoding", "base64"), ("content", {})):
         for label, replace in (("missing", False), ("wrong value", True)):
             invalid = deepcopy(rejoin)
-            key_package = invalid["notification"]["federation"]["keyPackages"][0]
+            key_package = invalid["notification"]["community"]["keyPackages"][0]
             if replace:
                 key_package[field] = wrong
             else:
@@ -133,8 +137,84 @@ def boundary_cases():
             add("entries", "MLSRejoinNotification", invalid, False, f"{label} {field}")
     for packages in ([], [{**entry, "content": "", "extension": True}]):
         empty = deepcopy(rejoin)
-        empty["notification"]["federation"]["keyPackages"] = packages
+        empty["notification"]["community"]["keyPackages"] = packages
         add("entries", "MLSRejoinNotification", empty, label=f"unbounded package array: {packages}")
+
+    for kind in ("welcome", "proposal", "commit", "application", "rejoin"):
+        event = deepcopy(examples[f"mls-{kind}-example"])
+        del event["shareType"]
+        event["resourceType"] = "federation"
+        group = event["notification"].pop("community")
+        group["federationId"] = "sciencemesh"
+        if kind == "welcome":
+            del group["userId"]
+            group["serverUrl"] = "https://receiver.example.org:8443"
+        if kind == "rejoin":
+            for item in group["keyPackages"]:
+                del item["userId"]
+                item["serverUrl"] = "https://receiver.example.org:8443"
+        event["notification"]["federation"] = group
+        add("servers", "MLSNotification", event, label=kind)
+        add("servers", "NewNotification", event, label=f"core {kind}")
+        for field in ("federationId", "mlsGroupId",
+                      "keyPackages" if kind == "rejoin" else "content",
+                      *(("serverUrl",) if kind == "welcome" else ())):
+            invalid = deepcopy(event)
+            del invalid["notification"]["federation"][field]
+            add("servers", "MLSNotification", invalid, False, f"{kind}: missing {field}")
+            invalid = deepcopy(event)
+            invalid["notification"]["federation"][field] = 7
+            add("servers", "MLSNotification", invalid, False, f"{kind}: wrong {field}")
+        for field, value in (("shareType", "community"), ("resourceType", "file")):
+            add("servers", "MLSNotification", {**event, field: value}, False,
+                f"{kind}: wrong scope {field}")
+        invalid = deepcopy(event)
+        invalid["notification"]["community"] = deepcopy(group)
+        add("servers", "MLSNotification", invalid, False, f"{kind}: both group objects")
+        invalid = deepcopy(event)
+        invalid["notification"]["federation"]["userId"] = "bob@receiver.example.org"
+        add("servers", "MLSNotification", invalid, False, f"{kind}: person in server body")
+        if kind in ("welcome", "rejoin"):
+            invalid = deepcopy(event)
+            target = invalid["notification"]["federation"]
+            if kind == "rejoin":
+                target = target["keyPackages"][0]
+            del target["serverUrl"]
+            target["userId"] = "bob@receiver.example.org"
+            add("servers", "MLSNotification", invalid, False, f"{kind}: wrong selector")
+    for kind in ("welcome", "proposal", "commit", "application", "rejoin"):
+        invalid = deepcopy(examples[f"mls-{kind}-example"])
+        invalid["notification"]["community"]["serverUrl"] = "https://receiver.example.org"
+        add("servers", "MLSNotification", invalid, False, f"{kind}: server in person body")
+    rejoin = deepcopy(examples["mls-rejoin-example"])
+    entry = rejoin["notification"]["community"]["keyPackages"][0]
+    del entry["userId"]
+    entry["serverUrl"] = "https://receiver.example.org"
+    add("servers", "MLSNotification", rejoin, False, "server in person rejoin list")
+
+    for ident in ("mls-key-package-response-example", "mls-server-key-package-response-example"):
+        response = examples[ident]
+        selector = "serverId" if "serverId" in response else "userId"
+        other = "userId" if selector == "serverId" else "serverId"
+        add("retrieval", "KeyPackageResponse", response, label=selector)
+        add("retrieval", "KeyPackageResponse", {k:v for k,v in response.items() if k != selector}, False,
+            "no selector")
+        add("retrieval", "KeyPackageResponse", {**response, other: "opaque"}, False, "both selectors")
+        add("retrieval", "KeyPackageResponse", {**response, selector: 7}, False, "non-string selector")
+    for ident, schema, fields in (
+            ("mls-ratchet-tree-response-example", "RatchetTreeResponse", ("epoch", "ratchetTree")),
+            ("mls-commits-response-example", "CommitsResponse", ("commits",))):
+        response = examples[ident]
+        add("retrieval", schema, response, label=schema)
+        for field in ("mlsGroupId", *fields):
+            invalid = {k:v for k,v in response.items() if k != field}
+            add("retrieval", schema, invalid, False, f"{schema}: missing {field}")
+        invalid = deepcopy(response)
+        if schema == "RatchetTreeResponse":
+            invalid["epoch"] = -1
+        else:
+            invalid["commits"][0]["proposals"] = [7]
+        add("retrieval", schema, invalid, False, f"{schema}: invalid entry")
 
     keys = examples["mls-wrapped-keys-example"]
     credentials = examples["mls-credentials-example"]
@@ -182,7 +262,7 @@ def boundary_cases():
                            "scheme": "custom", "custom": {"opaque": True}}})):
         add("encryption", "NewShare", value, label=f"core {label}")
         add("encryption", "MLSEncryptedShare", value, False, label)
-    add("encryption", "MLSEncryptedShare", {**share, "shareType": "user"}, False, "non-federation share")
+    add("encryption", "MLSEncryptedShare", {**share, "shareType": "user"}, False, "non-community share")
     return cases
 
 
@@ -213,7 +293,7 @@ class MLSSchemaTests(unittest.TestCase):
         self.assertIn("http-sig", discovery["capabilities"])
         self.assertIn("notifications", discovery["capabilities"])
         self.assertEqual(discovery["jwksUri"], discovery["endPoint"] + "/jwks")
-        self.assertIn("federation", discovery["resourceTypes"][0]["shareTypes"])
+        self.assertIn("community", discovery["resourceTypes"][0]["shareTypes"])
 
     def test_example_ownership_ignores_order_and_unrelated_blocks(self):
         draft = (ROOT / "IETF-OCM-MLS.md").read_text(encoding="utf-8")
@@ -241,6 +321,28 @@ class MLSSchemaTests(unittest.TestCase):
     def test_commit_and_rejoin_entries(self):
         self.check_group("entries")
 
+    def test_server_group_envelopes(self):
+        self.check_group("servers")
+
+    def test_retrieval_responses(self):
+        self.check_group("retrieval")
+        paths = self.spec["paths"]
+        self.assertNotIn("/mls-key-packages", paths)
+        key_packages = paths["/mls/key-packages"]["get"]
+        parameters = {p["name"]: p for p in key_packages["parameters"]}
+        self.assertEqual(set(parameters), {"userId", "serverId", "senderDomain"})
+        self.assertTrue(parameters["senderDomain"]["required"])
+        self.assertFalse(parameters["userId"]["required"])
+        self.assertFalse(parameters["serverId"]["required"])
+        self.assertIn("exactly one of userId and serverId", key_packages["description"])
+        for path, selector in (("/mls/ratchet-tree", "epoch"), ("/mls/commits", "from")):
+            operation = paths[path]["get"]
+            params = {p["name"]:p for p in operation["parameters"]}
+            self.assertTrue(params[selector]["required"])
+            self.assertIn("404", operation["responses"])
+            for header in ("Content-Digest", "Signature-Input", "Signature"):
+                self.assertTrue(operation["responses"]["200"]["headers"][header]["required"])
+
     def test_private_application_data(self):
         self.check_group("private")
 
@@ -259,8 +361,6 @@ class MLSSchemaTests(unittest.TestCase):
         for name in sorted(operation_names):
             with self.subTest(operation_example=name):
                 self.check("MLSNotification", media["examples"][name]["value"])
-        for name in ("MLSNotification", "MLSApplicationData", "MLSEncryption", "MLSEncryptedShare"):
-            self.assertEqual(schemas[name]["x-tags"], ["MLS"])
         for name in ("MLSApplicationData", "MLSEncryptedShare"):
             with self.subTest(component_example=name):
                 self.check(name, schemas[name]["example"])

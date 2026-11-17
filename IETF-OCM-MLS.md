@@ -484,12 +484,13 @@ KeyPackages for its users and exposes them at:
 GET <endPoint>/mls/key-packages
 ~~~
 
-The request has two REQUIRED query parameters:
+The request MUST carry `senderDomain`, the requesting server's OCM
+Server Address (host and optional port), and exactly one selector:
 
-- `userId` is the full OCM Address of the user whose KeyPackage is
-requested.
-- `senderDomain` is the requesting server's OCM Server Address
-(host and optional port), as defined in [OCM].
+- `userId`, the full OCM Address of the user whose KeyPackage is
+requested; or
+- `serverId`, the absolute URL of the OCM Server whose KeyPackage is
+requested ({{server-key-packages}}).
 
 Response:
 
@@ -519,7 +520,7 @@ signature parameter.  It MUST then verify the request signature with
 that JWK.  The `keyid` value is opaque and MUST NOT be parsed to derive
 `senderDomain` or a JWK Set location.
 
-The signature MUST cover `@method` and `@target-uri`, which binds both
+The signature MUST cover `@method` and `@target-uri`, which binds all
 query parameters to the signature.  In addition to the signature
 parameters required by [OCM], it MUST contain a `nonce` parameter that
 is unique for the requesting server.  A receiving server MUST reject a
@@ -534,9 +535,9 @@ requester that those policies do not permit.
 
 ## Response authentication
 
-A successful response containing KeyPackages MUST be signed by the
-user's home OCM Server using HTTP Message Signatures [RFC9421].  The
-response signature MUST cover at least:
+A successful KeyPackage response MUST be signed by the selected user's
+home OCM Server, or the selected server, using HTTP Message Signatures
+[RFC9421].  The response signature MUST cover at least:
 
 - `"@status"`
 - `"content-type"`
@@ -549,8 +550,8 @@ The response signature parameters MUST include `created`, `keyid`, and
 `tag="ocm"`.  Covering the request's `Signature-Input` field binds the
 response to the request nonce and prevents a response for one request
 from being replayed as the response to another.  The requester MUST
-resolve the response key through the `jwksUri` advertised by the server
-named in `userId`, select the JWK whose `kid` exactly equals `keyid`,
+resolve the response key through the `jwksUri` advertised by that
+server, select the JWK whose `kid` exactly equals `keyid`,
 and verify the response signature before using a KeyPackage.  The
 response `keyid` is opaque and MUST NOT be used to identify the
 responding server.
@@ -609,6 +610,7 @@ Response:
   ]
 }
 ~~~
+{: #mls-server-key-package-response-example}
 
 The `serverId` value is the absolute URL of the OCM Server in the
 format [OCM] specifies for the `url` field of a directory document, and
@@ -669,6 +671,7 @@ Response:
   }
 }
 ~~~
+{: #mls-ratchet-tree-response-example}
 
 `content` is the TLS serialisation of the `ratchet_tree` value defined
 in [RFC9420] Section 12.4.3.3, that is, the `extension_data` that a
@@ -716,6 +719,7 @@ Response:
   ]
 }
 ~~~
+{: #mls-commits-response-example}
 
 Each entry carries one Commit exactly as it was broadcast in
 `MLS_COMMIT` ({{mls-notification-types}}): `epoch` is the epoch in
@@ -980,7 +984,7 @@ base64url-encoded MLS `group_id` as advisory routing information, used
 to dispatch the message to the right group state without parsing the
 MLS message; the authoritative `group_id` is the one inside the MLS
 message itself, and a mismatch between the two MUST be treated as an
-error.  At the OCM layer, groups are otherwise identified by their OCM
+error.  At the OCM layer, Communities are identified by their OCM
 Address: in particular, the `groupId` field of the application data
 carried inside `MLS_APPLICATION` messages ({{key-distribution}},
 {{credential-update}}) is the group's OCM Address, never the MLS
@@ -1002,8 +1006,9 @@ both a `shareType` and a `resourceType`, or an object that does not
 match its `shareType` or `resourceType`, and MUST similarly reject one
 that carries both `userId` and `serverUrl`.
 
-The `notification.federation` object MUST contain `mlsGroupId` and
-the fields listed below.
+The `notification.community` object MUST contain `mlsGroupId` and
+the fields below, with the server-Federation substitutions above for
+`notification.federation`.
 
 | Notification type | Required fields besides `mlsGroupId` |
 | --- | --- |
@@ -1013,9 +1018,9 @@ the fields listed below.
 | `MLS_APPLICATION` | `content` |
 | `MLS_REJOIN` | `keyPackages` |
 
-Each `keyPackages` entry MUST contain `userId` and the fields required
-by the KeyPackage endpoint. The `MLS_COMMIT` field `proposals` remains
-conditional as specified below.
+Each `keyPackages` entry MUST contain the matching `userId` or
+`serverUrl` and the fields required by the KeyPackage endpoint.  The
+`MLS_COMMIT` field `proposals` remains conditional as specified below.
 
 Since `MLS_PROPOSAL` is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
@@ -1566,7 +1571,7 @@ array, and MAY also carry a `credentials` array ({{credential-update}}):
 {:#mls-wrapped-keys-example}
 
 Each `keys` entry MUST contain `resourceId`, `groupId` and
-`wrappedKey`. Application data MUST contain `keys`,
+`wrappedKey`.  Application data MUST contain `keys`,
 `credentials`, or both.
 
 The `groupId` field carries the group's OCM Address, matching the
@@ -2090,10 +2095,11 @@ example, the Welcome delivered to a newly admitted server is:
   }
 }
 ~~~
+{: #mls-server-welcome-example}
 
-As for a federated group, the Welcome MUST carry the group's ratchet
-tree in a `ratchet_tree` extension, since the admitted server needs it
-to derive the membership and to process subsequent Commits.
+The Welcome MUST NOT include a `ratchet_tree` extension.  The admitted
+server MUST retrieve and verify the tree as specified in
+{{group-state}} before processing the Welcome.
 
 The `OCM_SERVER_ADDED` notification of [OCM] SHOULD still be sent to a
 prospective member before it is admitted, and a server that leaves the
