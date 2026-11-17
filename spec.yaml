@@ -977,12 +977,24 @@ components:
                   description: >
                     The permissions granted to the sharee.
                     - `read` allows read-only access including download of a copy.
-                    - `write` allows create, update, and delete rights on the resource.
+                    - `create` allows creating new resources within the shared
+                      resource, e.g. in an upload-only folder.
+                    - `update` allows updating existing resources.
+                    - `delete` allows deleting resources.
+                    - `write` allows create, update, and delete rights on the
+                      resource. It is kept for backwards compatibility and
+                      SHALL be interpreted as the union of `create`, `update`,
+                      and `delete` in any given permissions set. A recipient
+                      that only supports `write` SHOULD grant it when any of
+                      `create`, `update`, or `delete` is present.
                     - `share` allows re-share rights on the resource.
                   items:
                     type: string
                     enum:
                       - read
+                      - create
+                      - update
+                      - delete
                       - write
                       - share
                 requirements:
@@ -1056,7 +1068,13 @@ components:
                     REQUIRED and MUST NOT be empty.
                     - `view` allows access to the web app in view-only mode.
                     - `read` allows read and download access via the web app.
-                    - `write` allows full editing rights via the web app.
+                    - `create` allows creating new resources via the web app.
+                    - `update` allows updating existing resources via the web app.
+                    - `delete` allows deleting resources via the web app.
+                    - `write` allows full editing rights via the web app. It is
+                      kept for backwards compatibility and SHALL be interpreted
+                      as the union of `create`, `update`, and `delete` in any
+                      given permissions set.
                     - `share` allows re-share rights on the resource. This only
                       applies to web apps that provide a mechanism for re-sharing.
                   items:
@@ -1064,6 +1082,9 @@ components:
                     enum:
                       - view
                       - read
+                      - create
+                      - update
+                      - delete
                       - write
                       - share
                 requirements:
