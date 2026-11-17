@@ -1623,8 +1623,17 @@ described in [OCM-IP].
   - OPTIONAL permissions (array of strings) -
     The permissions granted to the sharee.  A subset of:
     - `read` allows read-only access including download of a copy.
-    - `write` allows create, update, and delete rights on the Resource.
+    - `create` allows creating new Resources within the shared
+      Resource, e.g. in an upload-only folder.
+    - `update` allows updating existing Resources.
+    - `delete` allows deleting Resources.
+    - `write` allows create, update, and delete rights on the
+      Resource.  It is kept for backwards compatibility and MUST be
+      interpreted as the union of `create`, `update`, and `delete`
+      in any given permissions set.
     - `share` allows re-share rights on the Resource.
+    A Receiving Server that only supports `write` SHOULD grant it
+    when any of `create`, `update`, or `delete` is present.
   - OPTIONAL requirements (array of strings) -
     The requirements that the sharee MUST fulfill to
     access the Resource.  A subset of:
@@ -1666,7 +1675,13 @@ described in [OCM-IP].
     A subset of:
     - `view` allows access to the web app in view-only mode.
     - `read` allows read and download access via the web app.
-    - `write` allows full editing rights via the web app.
+    - `create` allows creating new Resources via the web app.
+    - `update` allows updating existing Resources via the web app.
+    - `delete` allows deleting Resources via the web app.
+    - `write` allows full editing rights via the web app.  It is
+      kept for backwards compatibility and MUST be interpreted as
+      the union of `create`, `update`, and `delete` in any given
+      permissions set.
     - `share` allows re-share rights on the Resource.  This only
       applies to web apps that provide a mechanism for re-sharing.
   - REQUIRED requirements (array of strings) -
@@ -1905,7 +1920,8 @@ Further, the `notification` object MUST include the following fields:
   * OPTIONAL permissions (array of strings) - The permissions granted
     to the sharee, in case they have changed in the context of a
     `SHARE_CHANGE_PERMISSION` notification.  The allowed values match
-    the `permissions` values specified in the `webdav` protocol of a
+    the `permissions` values specified in the `webdav` and `webapp`
+    protocols of a
     [Share Creation Notification](#share-creation-notification).
 
 `SHARE_UNSHARED` and `SHARE_CHANGE_PERMISSION` MUST identify the
@@ -1948,7 +1964,8 @@ the following fields:
     the underlying share should be reshared with.
   * OPTIONAL permissions (array of strings) - The permissions to be
     granted to the third party.  The allowed values match the
-    `permissions` values specified in the `webdav` protocol of a
+    `permissions` values specified in the `webdav` and `webapp`
+    protocols of a
     [Share Creation Notification](#share-creation-notification).
 
 The Receiving Server SHOULD receive a response whether the reshare
@@ -1983,7 +2000,8 @@ request has the following top-level fields:
       Example: "51dc30ddc473d43a6011e9ebba6ca770@cloud.example.org"
     * REQUIRED permissions (array of strings) - The permissions to be
       granted to the requesting party.  The allowed values match the
-      `permissions` values specified in the `webdav` protocol of a
+      `permissions` values specified in the `webdav` and `webapp`
+      protocols of a
       [Share Creation Notification](#share-creation-notification).
 
 The remote OCM Server MAY choose to fulfill the request, according
@@ -3569,6 +3587,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
   Servers, and renamed to `community` the share type for federated
   groups of users, formerly `federation`, which is registered and
   specified by [OCM-MLS] together with the related share payloads.
+* Split the `write` permission of the `webdav` and `webapp` protocols
+  into the finer-grained `create`, `update`, and `delete` permissions,
+  keeping `write` as their union for backwards compatibility.
 
 ## Version 08
 * Introduced an `apps` array in the `webapp` protocol payload, listing
