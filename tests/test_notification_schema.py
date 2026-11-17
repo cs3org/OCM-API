@@ -51,7 +51,9 @@ SERVER_EVENTS = ("OCM_SERVER_ADDED", "OCM_SERVER_REMOVED")
 PAYLOADS.update({
     event: envelope(event, resourceType="federation", notification={
         "federation": {"federationId": "sciencemesh",
-                       "url": "https://server.example.org"}})
+                       "url": ("https://sender.example.org"
+                               if event == "OCM_SERVER_REMOVED"
+                               else "https://receiver.example.org")}})
     for event in SERVER_EVENTS
 })
 
