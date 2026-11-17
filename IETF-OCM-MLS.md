@@ -2558,7 +2558,9 @@ Architecture](https://datatracker.ietf.org/doc/html/rfc9750)", April
 # Acknowledgements
 
 This work builds on the Open Cloud Mesh specification and the
-discussions in the OCM community.
+discussions in the OCM community. In addition valuable feedback
+was received from the IETF MLS Working Group and in particular from
+Britta Hale, Konrad Kohbrok and Rohan Mahy.
 
 Work on this document has been funded by [Sovereign Tech Agency][sta]
 through the [Tech Fund][sta-fund], with a specific [project][sta-ocm].
