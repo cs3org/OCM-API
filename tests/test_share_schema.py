@@ -107,7 +107,8 @@ class ShareSchemaTests(unittest.TestCase):
         mls = schemas["MLSEncryptedShare"]["example"]
         for resource, expected in (("file", True), ("folder", True),
                                     ("future-resource", True), ("Collection", True),
-                                    ("collection", False), (7, False), (None, False)):
+                                    ("collection", False), ("federation", False),
+                                    ("Federation", True), (7, False), (None, False)):
             for schema, payload in (*contexts, ("MLSEncryptedShare", mls)):
                 value = {**payload, "resourceType": resource}
                 if schema == "OCMIPClaim":
@@ -138,7 +139,8 @@ class ShareSchemaTests(unittest.TestCase):
                                         "protocols": {"webdav": "/dav/"}}]}
         for name, expected in (("file", True), ("folder", True),
                                 ("future-resource", True), ("Collection", True),
-                                ("collection", False), (7, False), (None, False)):
+                                ("collection", False), ("federation", False),
+                                ("Federation", True), (7, False), (None, False)):
             value = deepcopy(discovery)
             value["resourceTypes"][0]["name"] = name
             with self.subTest(schema="Discovery", dialect="Draft4", name=name):
