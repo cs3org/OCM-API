@@ -1920,8 +1920,8 @@ payload and identity bindings.
 ## Response
 
 A receiver that accepts a notification MUST respond with HTTP 201 and
-no body. Senders SHOULD treat any 2xx response as confirmation of
-receipt and MUST ignore its body. Receipt does not confirm completion
+no body.  Senders SHOULD treat any 2xx response as confirmation of
+receipt and MUST ignore its body.  Receipt does not confirm completion
 of the requested action.
 
 ## Share Acceptance and Updating
