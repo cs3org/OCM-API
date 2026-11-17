@@ -566,8 +566,8 @@ Receiving Server (see Lifecycle below),
 
 The request body contains the fields listed below from the Share
 Creation Notification object of [OCM] that the OCM Server intends to
-send to the Receiving Server. Every `sharedSecret` field, in every
-protocol entry, MUST be removed. The Integration API never transfers a
+send to the Receiving Server.  Every `sharedSecret` field, in every
+protocol entry, MUST be removed.  The Integration API never transfers a
 `sharedSecret` to the Protocol Server.  Introspected Integration is
 different: a `sharedSecret` may reach the Protocol Server as a
 front-channel credential, independently of provisioning.
@@ -1443,13 +1443,12 @@ Signature: ocm=:[signature-value]:
 The Protocol Server stores the Share Record under (`cloud.example.org`,
 `7c084226-d9a1-11e6-bf26-cec0c932ce01`) and responds:
 
-~~~
+<sourcecode type="http" anchor="ip-provisioning-response-example">
 HTTP/1.1 201 Created
 Content-Type: application/json
 
 { "status": "stored" }
-~~~
-{: #ip-provisioning-response-example type="http"}
+</sourcecode>
 
 The OCM Server then sends the Share Creation Notification to
 `receiver.example.org` per [OCM], with `must-exchange-token` in the
@@ -1514,7 +1513,7 @@ starts (or resumes) the notebook session for the Share.
 When Alice unshares the notebook (body shown without the signature
 headers, which are as in the provisioning example):
 
-~~~
+<sourcecode type="http" anchor="ip-revocation-request-example">
 POST /services/ocm/revoke HTTP/1.1
 Host: hub.example.org
 Content-Type: application/json
@@ -1523,16 +1522,14 @@ Content-Type: application/json
   "sender": "alice@cloud.example.org",
   "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01"
 }
-~~~
-{: #ip-revocation-request-example type="http"}
+</sourcecode>
 
-~~~
+<sourcecode type="http" anchor="ip-revocation-response-example">
 HTTP/1.1 200 OK
 Content-Type: application/json
 
 { "status": "revoked" }
-~~~
-{: #ip-revocation-response-example type="http"}
+</sourcecode>
 
 A repeated revocation for the same `providerId` returns `{ "status":
 "gone" }` with HTTP status 200.
@@ -1622,16 +1619,16 @@ The credential does not parse as a JWT, so the gateway introspects it
 (signature headers as in the provisioning example, but signed by the
 gateway with keyid="dav.example.org#key1"):
 
-~~~
+<sourcecode type="http" anchor="ip-introspection-request-example">
 POST /ocm/introspect HTTP/1.1
 Host: cloud.example.org
 Content-Type: application/x-www-form-urlencoded
 
 token=shr-9wq4xkz7vmd2
-~~~
-{: #ip-introspection-request-example type="http"}
+</sourcecode>
 
-~~~
+<sourcecode type="http"
+anchor="ip-active-introspection-response-example">
 HTTP/1.1 200 OK
 Content-Type: application/json
 
@@ -1656,8 +1653,7 @@ Content-Type: application/json
     }
   }
 }
-~~~
-{: #ip-active-introspection-response-example type="http"}
+</sourcecode>
 
 The gateway serves the PROPFIND read-only and MAY cache this response
 until `exp`.  When Alice unshares the folder, introspection starts
