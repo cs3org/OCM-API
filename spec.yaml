@@ -144,10 +144,9 @@ paths:
         - name: senderDomain
           in: query
           required: true
-          description: FQDN of the requesting OCM Server.
+          description: OCM Server Address of the requesting server.
           schema:
-            type: string
-            format: fqdn
+            $ref: "#/components/schemas/OCMServerAddress"
           example: requester.example.org
       responses:
         "200":
@@ -241,10 +240,9 @@ paths:
         - name: senderDomain
           in: query
           required: true
-          description: FQDN of the requesting OCM Server.
+          description: OCM Server Address of the requesting server.
           schema:
-            type: string
-            format: fqdn
+            $ref: "#/components/schemas/OCMServerAddress"
           example: requester.example.org
       responses:
         "200":

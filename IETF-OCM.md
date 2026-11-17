@@ -156,8 +156,8 @@ related concepts from OAuth [RFC6749] and elsewhere:
 
       ocm-address = identifier "@" host [ ":" port]
 
-  "identifier" is a non-empty, opaque, case-sensitive UTF-8 string. It
-  is separated from the host by the last "@" in the OCM Address. It is
+  "identifier" is a non-empty, opaque, case-sensitive UTF-8 string.  It
+  is separated from the host by the last "@" in the OCM Address.  It is
   possible to have multiple @-signs in a OCM-address, e.g. when an email
   address is the local part of the address like
   `nomen.nescio@example.org@cloud.example.org`.
@@ -173,17 +173,17 @@ related concepts from OAuth [RFC6749] and elsewhere:
   port via the Well-Known [RFC8615] path `/.well-known/ocm`.  The OCM
   Address MUST NOT contain a path.
 * __OCM Server Address__ - The server part of an OCM Address:
-  its host and optional port, without an identifier or `@`. It has no
-  scheme, path, query or fragment. For example, `cloud.example.org`,
+  its host and optional port, without an identifier or `@`.  It has no
+  scheme, path, query or fragment.  For example, `cloud.example.org`,
   `cloud.example.org:8443`, `192.0.2.1` or `[2001:db8::1]:8443`.
   Server addresses MUST be compared as complete strings after
   lowercasing, preserving explicit ports and all other spelling.
   OCM Addresses use this comparison for their server part and compare
-  identifiers byte for byte. An implementation MUST NOT strip a
+  identifiers byte for byte.  An implementation MUST NOT strip a
   scheme, infer a port, resolve a name or rewrite an IP spelling to
-  make identities match. Invalid input MUST be rejected before use;
+  make identities match.  Invalid input MUST be rejected before use;
   an address that cannot be used for discovery MUST fail rather than
-  select another server. Discovered endpoint URLs locate services;
+  select another server.  Discovered endpoint URLs locate services;
   they do not change the server's identity.
 * __OCM API Discovery__ - Process of evaluating properties of a Remote
   Resource, after establishing contact with an OCM Server.
@@ -329,9 +329,9 @@ a description of the whole protocol in OpenAPI format.
 Before the Sending Server can send a Share Creation Notification to the
 Receiving Server, it MUST establish the Receiving Party's OCM Address
 (containing the Receiving Party's identifier and the Receiving Server's
-OCM Server Address), among other things. Some steps may preceed the
+OCM Server Address), among other things.  Some steps may preceed the
 Sending Gesture, allowing the Sending Party to establish (with some
-level of trust) the OCM Address of the Receiving Party. In other cases,
+level of trust) the OCM Address of the Receiving Party.  In other cases,
 establishing the OCM Address of the Receiving Party happens as part of
 the Sending Gesture.
 
@@ -414,7 +414,7 @@ Acceptance Request MUST be a HTTP POST request:
   - REQUIRED: `userID` - The Invite Receiver's identifier at their OCM
     Server.
   - REQUIRED: `email` - Non-normative / informational; an email address
-    for the Invite Receiver. Its domain need not match the
+    for the Invite Receiver.  Its domain need not match the
     OCM Server Address.
   - REQUIRED: `name` - Human-readable name of the Invite Receiver, as a
     suggestion for display in the Invite Sender's address book
@@ -466,7 +466,7 @@ The Invite Acceptance Response SHOULD be a HTTP response:
   - REQUIRED: `userID` - the Invite Sender's identifier at their OCM
     Server
   - REQUIRED: `email` - non-normative / informational; an email address
-    for the Invite Sender. Its domain need not match the
+    for the Invite Sender.  Its domain need not match the
     OCM Server Address
   - REQUIRED: `name` - human-readable name of the Invite Sender, as a
     suggestion for display in the Invite Receiver's address book
@@ -1877,7 +1877,7 @@ request:
   registered values listed in the "OCM Notification Types"
   registry (see [IANA Considerations](#iana-considerations)).
 * REQUIRED senderDomain (string) - the sender's OCM Server Address
-  (host and optional port), as defined in [Terms](#terms). A Receiving
+  (host and optional port), as defined in [Terms](#terms).  A Receiving
   Server SHOULD use this information to verify the HTTP message
   signature and validate the underlying share or resource.
 * OPTIONAL resourceType (string) - the type of the resource this

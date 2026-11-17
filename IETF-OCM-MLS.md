@@ -629,14 +629,15 @@ reference, for at least the group's update deadline
 
 Requests to both endpoints carry the REQUIRED query parameters
 `mlsGroupId`, the base64url-encoded MLS `group_id`, and `senderDomain`,
-the FQDN of the requesting server, and are authenticated exactly like
+the requesting server's OCM Server Address, and are authenticated like
 requests to the KeyPackage endpoint ({{request-authentication}}).
 Responses are signed exactly like KeyPackage responses
 ({{response-authentication}}), with the response key resolved through
 the `jwksUri` of the server the request was addressed to.  A server
-MUST serve a request only if the verified `senderDomain` is the host
-part of the OCM Address in a leaf credential of the ratchet tree of the
-epoch the request refers to.  Otherwise, and when it does not retain
+MUST serve a request only if the verified `senderDomain` matches a leaf
+credential's complete server address in that epoch: the server part of
+an OCM Address, or the host and optional port of a server URL, compared
+as defined in [OCM].  Otherwise, and when it does not retain
 that epoch, it MUST respond with 404 Not Found, so that neither the
 existence of a group nor its membership is disclosed to other servers.
 
@@ -1587,11 +1588,11 @@ the application data:
 
 Each entry identifies the share by its `providerId`, the group by its
 OCM Address in `groupId`, and the intended Member Server by its OCM
-Server Address in `recipient`. A Member Server MUST ignore entries whose
-`recipient` does not name itself. Upon accepting an entry, the Member
-Server replaces the stored transport credential for that share;
+Server Address in `recipient`.  A Member Server MUST ignore entries
+whose `recipient` does not name itself.  Upon accepting an entry, the
+Member Server replaces the stored transport credential for that share;
 replacement follows the same `(epoch, generation)` supersede rule as
-wrapped FKs ({{key-distribution}}). The sending server invalidates the
+wrapped FKs ({{key-distribution}}).  The sending server invalidates the
 old credential once the rotation has been delivered.
 
 Encrypting the credential update in the current epoch guarantees that
@@ -2094,7 +2095,7 @@ response signed using HTTP Signatures [RFC9421] verifying against that
 server's JWKS [RFC7517];
 - the OCM Address in the credential is identical to the `userId` the
 KeyPackage was requested for, which is the OCM Address of the user the
-requester intends to add; in particular, its host part names the server
+requester intends to add; its server part names the server
 the KeyPackage was fetched from; and
 - the KeyPackage signature verifies with the `signature_key` of its
 LeafNode, proving possession of the private key ([RFC9420] Section
@@ -2163,13 +2164,13 @@ signed using HTTP Signatures [RFC9421] verifying against that server's
 JWKS [RFC7517];
 - the URL in the credential is identical to the `serverId` the
 KeyPackage was requested for ({{server-key-packages}}), and its host
-part names the server the KeyPackage was fetched from; and
+and optional port identify the server it was fetched from; and
 - the KeyPackage signature verifies with the `signature_key` of its
 LeafNode.
 
 This is the same channel binding as for a user credential, with the
 subject and the attesting party coinciding.  It therefore establishes
-only that the party controlling that FQDN and its published keys asked
+only that the party controlling that server address and its keys asked
 to join.  It is not evidence that the server ought to be trusted: that
 judgement belongs to the administrators, as [OCM] requires, and in this
 model it is recorded in the group state by the admin approval of the

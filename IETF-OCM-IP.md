@@ -578,7 +578,7 @@ front-channel credential, independently of provisioning.
 The fields used by the Protocol Server are thus:
 
 * REQUIRED `sender` (string) - OCM Address of the user that creates the
-Share.  The domain part identifies the paired OCM Server and selects the
+Share.  The server part identifies the paired OCM Server and selects the
 verification keys, as described above.
 * REQUIRED `owner` (string) - OCM Address of the user that owns the
 Resource.  Used for identity binding on the front channel.
@@ -932,7 +932,7 @@ Record's `owner`, and
 
 OCM Addresses MUST be compared as defined in the Terms section of [OCM]:
 compare opaque identifiers byte for byte and complete server addresses
-after lowercasing. Invalid server addresses MUST be rejected.
+after lowercasing.  Invalid server addresses MUST be rejected.
 
 These checks ensure that an access token can only be used for the exact
 Share it was issued for: a token legitimately issued to one Receiving
