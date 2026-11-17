@@ -384,12 +384,10 @@ paths:
     post:
       summary: General Notification endpoint
       description: >
-        This optional endpoint is used to inform the other party about a change
-        that concerns a previously known entity, such as a Share or a trusted User,
-        or to request an action to be performed (such as sharing or re-sharing)
-        on a previously known resource.
+        Notifications and requests concerning Resources, Collections, Recipients
+        or Federation membership.
         See [Notifications](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#notifications)
-        for more details.
+        for details.
       requestBody:
         content:
           application/json:
@@ -1700,6 +1698,7 @@ components:
             - $ref: "#/components/schemas/UserRemovedNotification"
             - $ref: "#/components/schemas/GroupRemovedNotification"
             - $ref: "#/components/schemas/ContactRemovedNotification"
+            - $ref: "#/components/schemas/FederationMembershipNotification"
             - $ref: "#/components/schemas/NotificationOfOtherType"
     ShareStateNotification:
       type: object
@@ -1722,6 +1721,7 @@ components:
           not:
             enum:
               - collection
+              - federation
         notification:
           type: object
           required:
@@ -1784,6 +1784,7 @@ components:
           not:
             enum:
               - collection
+              - federation
         notification:
           type: object
           required:
@@ -1948,6 +1949,40 @@ components:
       not:
         required:
           - resourceType
+    FederationMembershipNotification:
+      type: object
+      required: [notificationType, resourceType, notification]
+      not:
+        required: [shareType]
+      properties:
+        notificationType:
+          type: string
+          enum: [OCM_SERVER_ADDED, OCM_SERVER_REMOVED]
+        resourceType:
+          type: string
+          enum: [federation]
+        notification:
+          type: object
+          required: [federation]
+          properties:
+            federation:
+              type: object
+              required: [federationId, url]
+              properties:
+                federationId:
+                  type: string
+                  description: Matches federation.federationId in the sender's directory.
+                name:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+                  description: >
+                    The recipient's server URL for OCM_SERVER_ADDED, or the
+                    sender's server URL for OCM_SERVER_REMOVED, as defined in
+                    Federation Membership of the OCM Internet-Draft.
+                mlsGroupId:
+                  type: string
     NotificationOfOtherType:
       type: object
       description: >
@@ -1967,15 +2002,19 @@ components:
               - USER_REMOVED
               - CONTACT_REMOVED
               - GROUP_REMOVED
+              - OCM_SERVER_ADDED
+              - OCM_SERVER_REMOVED
     NotificationPermission:
       type: string
-      description: >
-        A permission value as defined for the `webdav` protocol of a Share
-        Creation Notification.
+      description: A permission value of the webdav or webapp protocol.
       enum:
         - read
+        - create
+        - update
+        - delete
         - write
         - share
+        - view
     OCMServerAddress:
       type: string
       minLength: 1
