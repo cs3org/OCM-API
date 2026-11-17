@@ -524,7 +524,7 @@ testing setups only),
 * MUST use the HTTP POST method with `application/json` as the
 `Content-Type` request header,
 * MUST use HTTP Message Signatures [RFC9421] with `tag="ocm"`, following
-the signing requirements of [OCM]. The signing key MUST be advertised
+the signing requirements of [OCM].  The signing key MUST be advertised
 in the OCM Server's JWK Set, located through the `jwksUri` in its
 Discovery response.
 
@@ -536,7 +536,7 @@ sender domain from the part after the last `@` sign.
 Servers, and reject the request with HTTP status 401 otherwise.
 3. MUST locate the unique signature with `tag="ocm"` and verify it
 against the sender's JWK Set, discovered through its `jwksUri`, using
-the key whose `kid` equals `keyid`. The rules of [OCM] apply, including
+the key whose `kid` equals `keyid`.  The rules of [OCM] apply, including
 covered components, content-digest matching and `created` freshness.
 Server identity MUST NOT be inferred from a label or key identifier.
 Reject the request with HTTP status 401 on any verification failure.
@@ -737,8 +737,8 @@ published at the JWKS URL exchanged during pairing
 The introspection endpoint MUST select verification keys from trusted
 pairing records and verify the signature against a paired Protocol
 Server's JWK Set, unambiguously establishing the caller before
-evaluating the credential. It MUST use that authenticated identity to
-select `client_id` or `ocm_ip` as specified below. The opaque `keyid`
+evaluating the credential.  It MUST use that authenticated identity to
+select `client_id` or `ocm_ip` as specified below.  The opaque `keyid`
 selects a key in that set; it does not name a server or a JWKS URL.
 Unauthenticated, unpaired or ambiguously identified requests MUST be
 rejected without revealing whether the presented credential is valid.
@@ -799,7 +799,7 @@ The JWT Claims Set MUST include the claims required by [RFC9068], with
 the following OCM-specific semantics, on which the Protocol Server
 relies:
 
-* `iss` - an HTTPS issuer URL identifying the Sending Server. Its
+* `iss` - an HTTPS issuer URL identifying the Sending Server.  Its
 authority is the Sending Server's OCM Server Address, independently
 of the signing key identifier.
 * `sub` - the Share owner on the Sending Server.
@@ -1251,9 +1251,9 @@ Integration: the introspection response names the Share Record via
 The HTTP Message Signature rules of [OCM] apply to the back channel:
 exactly one signature with `tag="ocm"`, required covered components,
 `created` freshness, and an asymmetric key from the expected peer's
-JWK Set whose `kid` matches `keyid`. Dictionary labels are arbitrary.
+JWK Set whose `kid` matches `keyid`.  Dictionary labels are arbitrary.
 An advertised JWKS or token endpoint may use another host; its URL does
-not change the peer's identity. Two considerations deserve emphasis:
+not change the peer's identity.  Two considerations deserve emphasis:
 
 * Reverse proxies: when TLS terminates in front of the Protocol Server,
 the internally observed URI differs from the signed `@target-uri`.  The
@@ -1261,7 +1261,7 @@ Protocol Server MUST reconstruct the public URL for verification, and
 MUST only trust forwarding headers set by its own proxy.
 * Issuer/key binding: on the front channel, the key used to verify a
 token MUST be fetched from the JWKS advertised by its issuer's OCM
-Server. The Share Record lookup MUST use that same OCM Server Address.
+Server.  The Share Record lookup MUST use that same OCM Server Address.
 Using one server's keys with another's Share Records would allow
 cross-tenant confusion on a multi-tenant Protocol Server.
 
