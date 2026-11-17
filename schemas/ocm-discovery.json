@@ -56,7 +56,7 @@
       "properties": {
         "name": {
           "type": "string",
-          "not": { "enum": ["collection"] }
+          "not": { "enum": ["collection", "federation"] }
         },
         "shareTypes": {
           "type": "array"

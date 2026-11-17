@@ -1172,7 +1172,7 @@ components:
               name:
                 type: string
                 not:
-                  enum: [collection]
+                  enum: [collection, federation]
                 description: >
                   A supported resource type (file, calendar, contact, ...).
                   Implementations MUST offer support for at least one resource type,
@@ -1588,7 +1588,7 @@ components:
         resourceType:
           type: string
           not:
-            enum: [collection]
+            enum: [collection, federation]
           description: |
             Resource type (file, folder, calendar, contact, ...)
           example: file
