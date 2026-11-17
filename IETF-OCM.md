@@ -1873,7 +1873,7 @@ request:
 ## Fields
 
 * REQUIRED notificationType (string) - a non-empty string, compared
-  exactly as sent. A Sending Server MUST use a value in the "OCM
+  exactly as sent.  A Sending Server MUST use a value in the "OCM
   Notification Types" registry (see [IANA
   Considerations](#iana-considerations)).
 * REQUIRED senderDomain (string) - the sender's OCM Server Address
@@ -1912,7 +1912,7 @@ payload and identity bindings.
 * Malformed envelopes and malformed payloads for known notification
   types MUST receive HTTP 400.
 * A receiver SHOULD accept and ignore a valid unknown notification
-  type. It MUST NOT reject it merely because the type is unknown, or
+  type.  It MUST NOT reject it merely because the type is unknown, or
   apply another type's payload requirements to it.
 * A receiver MAY return HTTP 501 for a known, valid notification type
   whose operation it does not implement.

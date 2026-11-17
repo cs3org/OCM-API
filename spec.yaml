@@ -1538,9 +1538,9 @@ components:
           minLength: 1
           description: >
             Resource type, according to the OCM IANA Registry for resource types.
-            E.g. file, folder, collection, calendar, contact, federation, etc.
-            Implementers MAY define additional custom types, provided that
-            they are registered in the respective OCM IANA Registry.
+            E.g. file, folder, collection, calendar, contact, federation, etc. Implementers
+            MAY define additional custom types, provided that they are registered
+            in the respective OCM IANA Registry.
         shareType:
           type: string
           minLength: 1
@@ -1568,7 +1568,25 @@ components:
             SHARE_UNSHARED and SHARE_CHANGE_PERMISSION MUST identify individual Shares
             by providerId and carry their resourceType; collectionId MUST NOT be used
             as their target.
-          example:
+          example: research-data-123
+        notification:
+          type: object
+          description: >
+            Optional additional parameters, depending on the notification
+            and the resource type or share type in question. For REQUEST_SHARE
+            and collection-scoped SHARE_DECLINED, the details are keyed by collection.
+          properties:
+            message:
+              type: string
+              description: >
+                An optional human-readable message that describes the event.
+          additionalProperties:
+            type: object
+            description: >
+              Additional payload objects keyed by resource type or share type.
+              Required fields are defined by the notification type.
+              For an `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED` notification, the `federation` object MUST contain the `federationId` of the Federation and a `url`: for `OCM_SERVER_ADDED`, the `url` of the target OCM Server that the sender's directory for that Federation now contains; for `OCM_SERVER_REMOVED`, the `url` of the sender itself, which is leaving that Federation.
+      example:
         shareWasAccepted:
           notificationType: SHARE_ACCEPTED
           resourceType: file
