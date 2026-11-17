@@ -992,7 +992,7 @@ ends, whatever the cause: unshared by the Sending Party, expired, or
 administratively removed.
 
 Recipient decline and later acceptance follow Share Identity in [OCM],
-including local policy. If provider policy ends the grant, normal
+including local policy.  If provider policy ends the grant, normal
 revocation applies.
 
 Revocation is deliberately fire-and-forget: because it is idempotent on

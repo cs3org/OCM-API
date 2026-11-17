@@ -1928,9 +1928,9 @@ of the requested action.
 
 A server MAY send a share-state notification about an existing Share.
 The rules in this section apply only to resource-scoped events, whose
-`resourceType` MUST NOT be `collection`. A collection request decline
-MUST NOT select an existing Share, even if `notification.file` is
-present.
+`resourceType` MUST NOT be `collection` or `federation`.  A collection
+request decline MUST NOT select an existing Share, even if
+`notification.file` is present.
 
 For these resource events, `notificationType` MUST be one of:
 - "SHARE_ACCEPTED", to inform about the acceptance of a share.
@@ -1971,33 +1971,33 @@ undoing or deleting the Share) without notifying the Receiving Server.
 ### Share Identity
 
 `notification.file.providerId` identifies the Share within its resource
-provider, the sender of the original Share Creation Notification. It is
+provider, the sender of the original Share Creation Notification.  It is
 unique within that provider, not across providers.
 
 * For "SHARE_UNSHARED" and "SHARE_CHANGE_PERMISSION", `senderDomain`
-  names the provider. The recipient MUST select its received Share
+  names the provider.  The recipient MUST select its received Share
   using that provider and `notification.file.providerId`.
 * For "SHARE_ACCEPTED" and "SHARE_DECLINED", `senderDomain` names the
-  recipient server. The provider MUST select its own outgoing Share
+  recipient server.  The provider MUST select its own outgoing Share
   using `notification.file.providerId` and verify that the sender is
-  a recipient server of that Share. For federation Shares, this is the
+  a recipient server of that Share.  For community Shares, this is the
   actual member server that received the grant; the group's OCM Address
   alone does not establish this binding.
 
 The `resourceType` MUST match the selected Share (e.g., `file` or
-`folder`); `shareType` MAY be omitted but MUST match when present. If no
-Share matches, the notification MUST NOT affect another Share. Compare
-grant identifiers byte for byte and complete server addresses as defined
-in [Terms](#terms). Credentials, deprecated fields and protocol URLs
-MUST NOT replace explicit notification selectors.
+`folder`); `shareType` MAY be omitted but MUST match when present.
+If no Share matches, the notification MUST NOT affect another Share.
+Compare grant identifiers byte for byte and complete server addresses
+as defined in [Terms](#terms).  Credentials, deprecated fields and
+protocol URLs MUST NOT replace explicit notification selectors.
 
 For these share-state events, "SHARE_DECLINED" reports recipient intent
 to decline an offered Share or stop receiving an accepted Share; it does
-not itself withdraw the provider's grant. Later acceptance depends on
-that grant and local policy. Only "SHARE_UNSHARED" reports provider
+not itself withdraw the provider's grant.  Later acceptance depends on
+that grant and local policy.  Only "SHARE_UNSHARED" reports provider
 withdrawal, after which the recipient SHOULD stop using the Share and
-presenting it as active. Withdrawal is terminal for that provider and
-identifier: later share-state events MUST NOT revive the Share. A new
+presenting it as active.  Withdrawal is terminal for that provider and
+identifier: later share-state events MUST NOT revive the Share.  A new
 Share with a different identifier is separate.
 This does not guarantee ordering of permission changes or other events.
 
