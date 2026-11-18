@@ -15,10 +15,19 @@ For instance to see the proposed changes of https://github.com/cs3org/OCM-API/pu
 
 ## Draft checks
 
-Pull requests check sentence spacing in changed draft prose and render all
-three Internet-Drafts. Manual runs check the complete sources. Prose
-suggestions are advisory; idnits permits only the exact inherited exceptions
-in `.github/ietf/idnits-baseline.json`.
+Pull requests check clear sentence boundaries in changed draft prose against
+the [RFC 7322 spacing convention](https://www.rfc-editor.org/rfc/rfc7322.html#section-3.2).
+The source checker skips code examples and leaves all source files unchanged.
+
+The workflow renders all three drafts with kramdown-rfc and xml2rfc, then
+runs [idnits](https://github.com/ietf-tools/idnits). New idnits errors fail
+the check; `.github/ietf/idnits-baseline.json` allows eight existing long
+example lines individually, preserving their literal contents.
+
+Selected [ietf-vale](https://github.com/OR13/ietf-vale) community rules
+provide advisory prose suggestions. Download the `internet-drafts` artifact
+from the Actions run for XML, text and HTML previews, idnits reports and
+`prose.json`.
 
 Run the source checks locally with:
 
@@ -26,6 +35,9 @@ Run the source checks locally with:
 python tools/check_draft_style.py --base develop IETF-*.md
 python -m unittest discover -s tests -p test_draft_style.py
 ```
+
+Use your PR's base branch for `--base`. Omit it to check all prose, including
+older spacing issues. Manual workflow runs also check the complete sources.
 
 The render commands and pinned tools are in
 `.github/workflows/draft-validation.yml`.

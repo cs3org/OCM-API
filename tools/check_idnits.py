@@ -8,7 +8,9 @@ import re
 
 
 def new_errors(report, text, baseline):
+    # Each exact allowance is consumed once, even when its line number moves.
     remaining = Counter((item["code"], item["text"]) for item in baseline)
+    # idnits counts newlines, not form feeds in paginated text.
     lines = text.split("\n")
     errors = []
     for nit in report["nits"]:

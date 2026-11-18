@@ -1,6 +1,7 @@
-"""Check clear sentence boundaries in kramdown-rfc prose."""
+"""Check two spaces after clear sentence-ending periods in draft prose."""
 
 import argparse
+from itertools import groupby
 from pathlib import Path
 import re
 import subprocess
@@ -13,18 +14,20 @@ FENCE = re.compile(r"^[ \t>]*(`{3,}|~{3,})")
 
 
 def mask(match):
+    """Hide literals without shifting diagnostic positions."""
     return re.sub(r"[^\n]", "x", match[0])
 
 
 def spacing_findings(text):
-    protected = re.sub(r"(`+).*?\1", mask, text, flags=re.S)
-    protected = re.sub(r"<?https?://[^\s<>]+>?", mask, protected)
     findings = []
+    # Kramdown's multipart header ends at "--- abstract".
     header = text.startswith("---\n")
     fence = None
     list_indent = 0
-    for number, (raw, line) in enumerate(zip(text.splitlines(),
-                                           protected.splitlines()), 1):
+    prose = []
+    for number, raw in enumerate(text.splitlines(), 1):
+        # Excluded blocks also bound multiline inline-code spans.
+        prose.append(None)
         if header:
             if number > 1 and (raw == "---" or raw.startswith("--- ")):
                 header = False
@@ -38,7 +41,7 @@ def spacing_findings(text):
                   and not raw[delimiter.end():].strip()):
                 fence = None
             continue
-        if fence or raw.startswith(("---", "\t")):
+        if fence or not raw.strip() or raw.startswith(("---", "\t")):
             continue
         marker = re.match(r"^\s*(?:[*+-]|\d+[.)])\s+", raw)
         indent = len(raw) - len(raw.lstrip())
@@ -50,19 +53,28 @@ def spacing_findings(text):
             continue
         if re.match(r"^\s*(?:#{1,6} |\{:|\[[^\]]+\]:|<)", raw):
             continue
-        line = re.sub(r"^(\s*\d+\.\s+)", lambda m: "x" * len(m[0]), line)
-        for match in BOUNDARY.finditer(line):
-            word = re.search(r"[\w.-]+$", line[:match.start()])
-            if word and word[0] + "." in ABBREVIATIONS:
-                continue
-            if len(match[1]) != 2:
-                findings.append((number, match.start(1) + 1))
+        prose[-1] = (number, re.sub(r"^(\s*\d+\.\s+)", mask, raw))
+    for is_prose, entries in groupby(prose, key=lambda entry: entry is not None):
+        if not is_prose:
+            continue
+        block = list(entries)
+        protected = re.sub(r"(`+).*?\1", mask,
+                           "\n".join(line for _, line in block), flags=re.S)
+        protected = re.sub(r"<?https?://[^\s<>]+>?", mask, protected)
+        for (number, _), line in zip(block, protected.split("\n")):
+            for match in BOUNDARY.finditer(line):
+                word = re.search(r"[\w.-]+$", line[:match.start()])
+                if word and word[0] + "." in ABBREVIATIONS:
+                    continue
+                if len(match[1]) != 2:
+                    findings.append((number, match.start(1) + 1))
     return findings
 
 
 def added_lines(base, path):
     diff = subprocess.check_output(
-        ["git", "diff", "--no-ext-diff", "--unified=0", base, "--", str(path)],
+        ["git", "diff", "--no-ext-diff", "--no-color", "--unified=0",
+         base, "--", str(path)],
         text=True)
     result = set()
     for start, count in re.findall(r"^@@ -[^ ]+ \+(\d+)(?:,(\d+))? @@", diff, re.M):
