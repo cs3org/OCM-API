@@ -31,6 +31,7 @@ jobs:
           python tools/check_draft_style.py "${args[@]}" IETF-*.md
 
   render:
+    # The pinned Ruby has no Ubuntu 26.04 binary.
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -68,6 +69,7 @@ jobs:
             "$RUNNER_TEMP/ietf-tools/node_modules/.bin/idnits" \
               --mode normal --output json --fail-on errors \
               "$IETF_OUTPUT/$name.txt" > "$IETF_OUTPUT/$name.nits.json" || status=$?
+            # Exit 2 reports nits; the baseline filter decides which ones fail.
             if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then exit "$status"; fi
             python tools/check_idnits.py "$IETF_OUTPUT/$name.nits.json" \
               "$IETF_OUTPUT/$name.txt" .github/ietf/idnits-baseline.json

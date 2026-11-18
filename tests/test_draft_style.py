@@ -1,5 +1,6 @@
 """Checks for prose boundaries and exact inherited draft nits."""
 
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -19,7 +20,9 @@ class DraftStyleTests(unittest.TestCase):
         self.assertFalse(spacing_findings("A sentence.\nNext sentence."))
 
     def test_multipart_header(self):
-        draft = "---\ntitle: A title. Another phrase\n--- abstract\nA sentence. Next one.\n--- middle\nMore prose.  Correct spacing.\n"
+        draft = ("---\ntitle: A title. Another phrase\n--- abstract\n"
+                 "A sentence. Next one.\n--- middle\n"
+                 "More prose.  Correct spacing.\n")
         self.assertEqual(spacing_findings(draft), [(4, 12)])
 
     def test_code_and_attributes(self):
@@ -33,6 +36,15 @@ class DraftStyleTests(unittest.TestCase):
                 self.assertFalse(spacing_findings(draft))
                 self.assertTrue(spacing_findings(draft + "Outside prose. Next sentence."))
         self.assertFalse(spacing_findings('    Code. Another token.\n'))
+        self.assertFalse(spacing_findings('An opaque `first.\nNext part` value.\n'))
+
+    def test_backticks_in_examples_leave_prose_visible(self):
+        for fence in ("~~~", "```"):
+            draft = (f'{fence} json\n{{"id": "first`literal"}}\n{fence}\n'
+                     'Bad prose. Next sentence.\n'
+                     f'{fence} json\n{{"id": "second`literal"}}\n{fence}\n')
+            with self.subTest(fence=fence):
+                self.assertEqual(spacing_findings(draft), [(4, 11)])
 
     def test_lists(self):
         self.assertFalse(spacing_findings('1. First item\n2. Another item\n'))
@@ -59,6 +71,35 @@ class DraftStyleTests(unittest.TestCase):
             result = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1)
             self.assertIn("use two spaces between sentences", result.stdout)
+            self.assertEqual(result.stderr, "")
+            self.assertEqual(source.read_bytes(), value)
+
+    def test_changed_lines_with_git_color(self):
+        script = Path(__file__).resolve().parents[1] / "tools/check_draft_style.py"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "IETF-example.md"
+            original = b"Old sentence. Next sentence.\n"
+            value = original + b"New sentence. Next sentence.\n"
+            env = dict(os.environ, GIT_CONFIG_COUNT="1", GIT_CONFIG_KEY_0="color.ui",
+                       GIT_CONFIG_VALUE_0="always")
+            subprocess.run(["git", "init", "--quiet", directory],
+                           check=True, capture_output=True, env=env)
+            blob = subprocess.check_output(
+                ["git", "hash-object", "-w", "--stdin"],
+                input=original, cwd=root, env=env).decode().strip()
+            base = subprocess.check_output(
+                ["git", "mktree"], input=f"100644 blob {blob}\t{source.name}\n",
+                text=True, cwd=root, env=env).strip()
+            source.write_bytes(value)
+            subprocess.run(["git", "add", "--", source.name],
+                           cwd=root, env=env, check=True, capture_output=True)
+            result = subprocess.run(
+                [sys.executable, str(script), "--base", base, source.name],
+                cwd=root, env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertEqual(result.stdout,
+                             f"{source.name}:2:14: use two spaces between sentences\n")
             self.assertEqual(result.stderr, "")
             self.assertEqual(source.read_bytes(), value)
 
