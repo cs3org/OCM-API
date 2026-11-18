@@ -15,29 +15,36 @@ For instance to see the proposed changes of https://github.com/cs3org/OCM-API/pu
 
 ## Draft checks
 
-Pull requests check clear sentence boundaries in changed draft prose against
+Pull requests check clear sentence boundaries in draft prose against
 the [RFC 7322 spacing convention](https://www.rfc-editor.org/rfc/rfc7322.html#section-3.2).
-The source checker skips code examples and leaves all source files unchanged.
+The same checker inspects the PR result and its pinned base. Introduced
+violations fail the check; inherited findings remain visible and nonblocking.
+The checker skips code examples and leaves source files unchanged.
 
-The workflow renders all three drafts with kramdown-rfc and xml2rfc, then
-runs [idnits](https://github.com/ietf-tools/idnits). New idnits errors fail
-the check; `.github/ietf/idnits-baseline.json` allows eight existing long
-example lines individually, preserving their literal contents.
+For PRs, the workflow renders all three drafts with kramdown-rfc and xml2rfc, then
+runs [idnits](https://github.com/ietf-tools/idnits) on both snapshots. Only
+introduced idnits errors block. Each inherited occurrence is matched once,
+so adding another copy still fails. Build and checker errors remain failures.
 
 Selected [ietf-vale](https://github.com/OR13/ietf-vale) community rules
-provide advisory prose suggestions. Download the `internet-drafts` artifact
-from the Actions run for XML, text and HTML previews, idnits reports and
-`prose.json`.
+provide advisory prose suggestions. CI logs show every finding with its
+location, message, matched text and guidance, followed by totals. Download
+the `internet-drafts` artifact for XML, text and HTML previews, idnits reports,
+`prose.json` and `comparison.json`. Base outputs are under `base/`.
 
 Run the source checks locally with:
 
 ```sh
 python tools/check_draft_style.py --base develop IETF-*.md
-python -m unittest discover -s tests -p test_draft_style.py
+python tools/check_draft_style.py --audit IETF-*.md
+python -m unittest discover -s tests -p 'test_draft_*.py'
 ```
 
-Use your PR's base branch for `--base`. Omit it to check all prose, including
-older spacing issues. Manual workflow runs also check the complete sources.
+Use your PR's immediate base branch for `--base`, including stacked PRs.
+Manual workflow runs use audit mode: all findings are reported without PR
+attribution or content gating. Without either option, the source CLI runs
+a strict full-source check. Checks continue across drafts before returning
+their final result; a failed prerequisite skips only its dependent stages.
 
 The render commands and pinned tools are in
 `.github/workflows/draft-validation.yml`.

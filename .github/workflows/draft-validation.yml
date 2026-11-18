@@ -8,6 +8,8 @@ permissions:
 
 env:
   PYTHONDONTWRITEBYTECODE: "1"
+  BASE_SHA: ${{ github.event.pull_request.base.sha }}
+  PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
 
 jobs:
   source:
@@ -18,63 +20,72 @@ jobs:
         with:
           fetch-depth: 0
       - uses: actions/setup-python@v6
+        id: python
         with:
           python-version: "3.14"
       - name: Check draft tooling
-        run: python -m unittest discover -s tests -p test_draft_style.py
+        run: python -m unittest discover -s tests -p 'test_draft_*.py'
       - name: Check sentence spacing
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        if: ${{ !cancelled() && steps.python.outcome == 'success' }}
         run: |
-          args=()
-          if [ -n "$BASE_SHA" ]; then args=(--base "$BASE_SHA"); fi
+          printf 'Checkout: %s\n' "$(git rev-parse HEAD)"
+          args=(--audit)
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            test -n "$BASE_SHA"
+            git rev-parse --verify --end-of-options "$BASE_SHA^{commit}" >/dev/null
+            git merge-base --is-ancestor "$BASE_SHA" HEAD
+            printf 'PR head: %s\nBase: %s\n' "$PR_HEAD_SHA" "$BASE_SHA"
+            args=(--base "$BASE_SHA")
+          fi
           python tools/check_draft_style.py "${args[@]}" IETF-*.md
 
   render:
-    # The pinned Ruby has no Ubuntu 26.04 binary.
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Initialize draft paths
+        id: paths
         run: |
+          mkdir -p "$RUNNER_TEMP/ietf-output" "$RUNNER_TEMP/ietf-reference-cache"
           echo "IETF_OUTPUT=$RUNNER_TEMP/ietf-output" >> "$GITHUB_ENV"
           echo "KRAMDOWN_REFCACHEDIR=$RUNNER_TEMP/ietf-reference-cache" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v6
+        id: python
         with:
           python-version: "3.14"
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "4.0.4"
+          ruby-version: "4.0.9"
       - uses: actions/setup-node@v6
         with:
           node-version: "24"
       - name: Install RFC tools
+        id: rfc_tools
         run: |
           gem install --no-document kramdown-rfc -v 1.7.43
           python -m pip install xml2rfc==3.35.0
           npm install --prefix "$RUNNER_TEMP/ietf-tools" --ignore-scripts \
             --no-audit --no-fund @ietf-tools/idnits@3.3.0
       - name: Build drafts and check RFC nits
+        if: ${{ !cancelled() && steps.rfc_tools.outcome == 'success' && steps.paths.outcome == 'success' }}
         run: |
-          set -euo pipefail
-          mkdir -p "$IETF_OUTPUT" "$KRAMDOWN_REFCACHEDIR"
-          for draft in IETF-*.md; do
-            name=$(sed -n 's/^docname: *//p' "$draft")
-            [[ "$name" =~ ^draft-[a-z0-9-]+-[0-9]{2,}$ ]]
-            kramdown-rfc "$draft" > "$IETF_OUTPUT/$name.xml"
-            xml2rfc "$IETF_OUTPUT/$name.xml" --text --html \
-              --path "$IETF_OUTPUT"
-            status=0
-            "$RUNNER_TEMP/ietf-tools/node_modules/.bin/idnits" \
-              --mode normal --output json --fail-on errors \
-              "$IETF_OUTPUT/$name.txt" > "$IETF_OUTPUT/$name.nits.json" || status=$?
-            # Exit 2 reports nits; the baseline filter decides which ones fail.
-            if [ "$status" -ne 0 ] && [ "$status" -ne 2 ]; then exit "$status"; fi
-            python tools/check_idnits.py "$IETF_OUTPUT/$name.nits.json" \
-              "$IETF_OUTPUT/$name.txt" .github/ietf/idnits-baseline.json
-          done
+          printf 'Checkout: %s\n' "$(git rev-parse HEAD)"
+          args=(--audit)
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            test -n "$BASE_SHA"
+            git rev-parse --verify --end-of-options "$BASE_SHA^{commit}" >/dev/null
+            git merge-base --is-ancestor "$BASE_SHA" HEAD
+            printf 'PR head: %s\nBase: %s\n' "$PR_HEAD_SHA" "$BASE_SHA"
+            args=(--base "$BASE_SHA")
+          fi
+          python tools/check_draft_build.py "${args[@]}" --output "$IETF_OUTPUT" \
+            --idnits "$RUNNER_TEMP/ietf-tools/node_modules/.bin/idnits"
       - name: Install prose checker
+        id: prose_tools
+        if: ${{ !cancelled() && steps.python.outcome == 'success' && steps.paths.outcome == 'success' }}
         run: |
           curl -fsSL https://github.com/vale-cli/vale/releases/download/v3.27.0/vale_3.27.0_Linux_64-bit.tar.gz \
             -o "$RUNNER_TEMP/vale.tar.gz"
@@ -87,11 +98,17 @@ jobs:
             "$RUNNER_TEMP/ietf-draft.zip" | sha256sum -c -
           python -m zipfile -e "$RUNNER_TEMP/ietf-draft.zip" .github/ietf/styles
       - name: Report prose suggestions
+        if: ${{ !cancelled() && steps.prose_tools.outcome == 'success' }}
         run: |
-          "$RUNNER_TEMP/vale" --config=.github/ietf/vale.ini --no-global \
-            --no-exit --output=JSON IETF-*.md > "$IETF_OUTPUT/prose.json"
-      - uses: actions/upload-artifact@v4
-        if: always()
+          args=(--config=.github/ietf/vale.ini --no-global --no-exit --no-color)
+          status=0
+          "$RUNNER_TEMP/vale" "${args[@]}" --output=JSON IETF-*.md \
+            > "$IETF_OUTPUT/prose.json" || status=1
+          "$RUNNER_TEMP/vale" "${args[@]}" --output=.github/ietf/prose.tmpl \
+            IETF-*.md || status=1
+          exit "$status"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() && steps.paths.outcome == 'success' }}
         with:
           name: internet-drafts
           path: ${{ env.IETF_OUTPUT }}

@@ -7,8 +7,9 @@ import sys
 import tempfile
 import unittest
 
+from tools import check_draft_style as style
+from tools import check_idnits as nits
 from tools.check_draft_style import spacing_findings
-from tools.check_idnits import new_errors
 
 
 class DraftStyleTests(unittest.TestCase):
@@ -98,32 +99,114 @@ class DraftStyleTests(unittest.TestCase):
                 [sys.executable, str(script), "--base", base, source.name],
                 cwd=root, env=env, capture_output=True, text=True)
             self.assertEqual(result.returncode, 1)
-            self.assertEqual(result.stdout,
-                             f"{source.name}:2:14: use two spaces between sentences\n")
+            self.assertIn(f"{source.name}:1:14: [inherited]", result.stdout)
+            self.assertIn(f"{source.name}:2:14: [introduced]", result.stdout)
+            self.assertIn("1 introduced, 1 inherited", result.stdout)
             self.assertEqual(result.stderr, "")
             self.assertEqual(source.read_bytes(), value)
+
+    def test_finding_inheritance(self):
+        bad = "Old sentence. Next sentence.\n"
+        cases = [
+            (bad, bad, 0, 1),
+            (bad, "\n" + bad, 0, 1),
+            (bad, bad.replace("Old", "New"), 0, 1),
+            (bad, bad.replace("Next", "Another"), 1, 0),
+            (bad, bad.replace(". Next", ".  Next"), 0, 0),
+            (bad, bad * 2, 1, 1),
+            ("Header\n" + bad + "Footer\n", bad + "Header\nFooter\n", 0, 1),
+            ("~~~ text\n" + bad + "~~~\n", bad, 1, 0),
+            (bad + "Left one\nLeft two\n~~~\n" + bad + "~~~\nRight one\nRight two\n",
+             "Left one\nLeft two\n" + bad + "Right one\nRight two\n", 1, 0),
+            ("", bad, 1, 0),
+        ]
+        for base, result, new_count, old_count in cases:
+            with self.subTest(base=base, result=result):
+                introduced, inherited = style.classify_findings(base, result)
+                self.assertEqual(len(introduced), new_count)
+                self.assertEqual(len(inherited), old_count)
+
+    def test_audit_reports_all_inputs(self):
+        script = Path(__file__).resolve().parents[1] / "tools/check_draft_style.py"
+        with tempfile.TemporaryDirectory() as directory:
+            paths = [Path(directory) / name for name in ["first.md", "second.md"]]
+            for path in paths:
+                path.write_text("A sentence. Next sentence.\n")
+            result = subprocess.run(
+                [sys.executable, str(script), "--audit", *map(str, paths)],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            for path in paths:
+                self.assertIn(f"{path}:1:12: [audit]", result.stdout)
+            self.assertIn("2 findings in 2 files", result.stdout)
+
+    def test_source_errors_do_not_hide_other_findings(self):
+        script = Path(__file__).resolve().parents[1] / "tools/check_draft_style.py"
+        with tempfile.TemporaryDirectory() as directory:
+            good = Path(directory) / "exists.md"
+            good.write_text("A sentence. Next sentence.\n")
+            result = subprocess.run(
+                [sys.executable, str(script), "--audit",
+                 str(Path(directory) / "missing.md"), str(good)],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("missing.md", result.stdout)
+            self.assertIn(f"{good}:1:12: [audit]", result.stdout)
+            self.assertIn("1 check error", result.stdout)
+            result = subprocess.run(
+                [sys.executable, str(script), "--base", "", str(good)],
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn("--base must not be empty", result.stderr)
 
     def test_exact_nit_baseline(self):
         nit = {"severity": "ValidationError", "code": "LINE_TOO_LONG",
                "desc": "overlong", "line": [{"line": 1}]}
         report = {"nits": [nit]}
-        baseline = [{"code": "LINE_TOO_LONG", "text": "original line"}]
-        self.assertFalse(new_errors(report, 'original line', baseline))
-        self.assertTrue(new_errors(report, 'different line', baseline))
-        self.assertTrue(new_errors({"nits": [nit, nit]}, 'original line', baseline))
+        for text, result, expected in [
+                ('original line', report, (0, 1)),
+                ('different line', report, (1, 0)),
+                ('original line', {"nits": [nit, nit]}, (1, 1))]:
+            with self.subTest(text=text, result=result):
+                new, old, advisory = nits.classify_findings(
+                    result, text, report, 'original line')
+                self.assertEqual((len(new), len(old)), expected)
+                self.assertEqual(advisory, [])
 
     def test_nit_lines_follow_newlines_across_page_breaks(self):
         report = {"nits": [{"severity": "ValidationError", "code": "LINE_TOO_LONG",
                             "desc": "overlong", "line": [{"line": 3}]}]}
-        baseline = [{"code": "LINE_TOO_LONG", "text": "original line"}]
-        self.assertFalse(new_errors(report, 'page one\n\f\noriginal line', baseline))
-        self.assertTrue(new_errors(report, 'page one\n\f\ndifferent line', baseline))
+        base = 'page one\n\f\noriginal line'
+        for result, expected in [(base, (0, 1)),
+                                 ('page one\n\f\ndifferent line', (1, 0))]:
+            new, old, _ = nits.classify_findings(report, result, report, base)
+            self.assertEqual((len(new), len(old)), expected)
 
     def test_unexpected_nit(self):
         report = {"nits": [{"severity": "ValidationError", "code": "OTHER",
                             "desc": "another error"}]}
-        self.assertTrue(new_errors(report, '', []))
-        self.assertFalse(new_errors({"nits": []}, '', []))
+        empty = {"nits": []}
+        new, old, _ = nits.classify_findings(report, '', empty, '')
+        self.assertEqual((len(new), len(old)), (1, 0))
+        new, old, _ = nits.classify_findings(report, '', report, '')
+        self.assertEqual((len(new), len(old)), (0, 1))
+        self.assertEqual(nits.classify_findings(empty, '', empty, ''), ([], [], []))
+
+    def test_grouped_nits_and_invalid_reports(self):
+        nit = {"severity": "ValidationError", "code": "LINE_TOO_LONG",
+               "desc": "two lines", "line": [{"line": 1}, {"line": 2}]}
+        base = {"nits": [{**nit, "desc": "one line", "line": [{"line": 1}]}]}
+        new, old, _ = nits.classify_findings(
+            {"nits": [nit]}, 'same\nsame', base, 'same')
+        self.assertEqual((len(new), len(old)), (1, 1))
+        warning = {"severity": "ValidationWarning", "code": "REFERENCE",
+                   "desc": "review this reference"}
+        self.assertEqual(len(nits.classify_findings(
+            {"nits": [warning]}, '', {"nits": []}, '')[2]), 1)
+        for report in [{}, {"nits": "bad"},
+                       {"nits": [{**nit, "line": [{"line": 99}]}]}]:
+            with self.subTest(report=report), self.assertRaises(ValueError):
+                nits.classify_findings(report, 'one line', {"nits": []}, '')
 
 
 if __name__ == "__main__":

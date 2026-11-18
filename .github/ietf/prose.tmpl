@@ -1,0 +1,20 @@
+{{- $errors := 0 -}}
+{{- $warnings := 0 -}}
+{{- $suggestions := 0 -}}
+{{- range .Files -}}
+{{- $path := .Path -}}
+{{- range .Alerts }}
+{{ $path }}:{{ .Line }}:{{ index .Span 0 }}: {{ .Severity }} [{{ .Check }}]
+  {{ .Message }}
+  Matched: {{ printf "%q" .Match }}
+{{ if .Link }}  Guidance: {{ .Link }}
+{{ end }}
+{{- if eq .Severity "error" -}}{{ $errors = add $errors 1 }}
+{{- else if eq .Severity "warning" -}}{{ $warnings = add $warnings 1 }}
+{{- else -}}{{ $suggestions = add $suggestions 1 }}{{- end -}}
+{{- end -}}
+{{- end }}
+Prose (advisory): {{ $errors }} error{{ if ne $errors 1 }}s{{ end }},
+{{- printf " " }}{{ $warnings }} warning{{ if ne $warnings 1 }}s{{ end }},
+{{- printf " " }}{{ $suggestions }} suggestion{{ if ne $suggestions 1 }}s{{ end }} across
+{{- printf " " }}{{ .LintedTotal }} file{{ if ne .LintedTotal 1 }}s{{ end }}.
