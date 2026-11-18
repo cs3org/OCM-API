@@ -49,8 +49,41 @@ class DraftStyleTests(unittest.TestCase):
 
     def test_lists(self):
         self.assertFalse(spacing_findings('1. First item\n2. Another item\n'))
+        self.assertFalse(spacing_findings('3.1. First item\n3.2. Another item\n'))
+        self.assertEqual(spacing_findings('3.1. First item. Next sentence.\n'),
+                         [(1, 17)])
         self.assertTrue(spacing_findings('* Item\n    A sentence. Next one.\n'))
         self.assertFalse(spacing_findings('* Item\n      Code. Another token.\n'))
+
+    def test_reference_author_initials(self):
+        for authors in ['Bradner, S.', 'Dusseault, L. M.',
+                        'Barnes, R., Bhargavan, K., Lipp, B. and Wood, C. A.',
+                        'Hedberg, R., Ed., Jones, M.B., Solberg, A.A.,\n'
+                        'Bradley, J., De Marco, G., and V. Dzhuvinov,']:
+            with self.subTest(authors=authors):
+                entry = f'[REF] {authors} "[A title](https://example.org)".\n'
+                self.assertFalse(spacing_findings(entry))
+                self.assertEqual(spacing_findings(entry + 'Bad prose. Next sentence.\n'),
+                                 [(entry.count('\n') + 1, 11)])
+        self.assertTrue(spacing_findings(
+            '[REF] Bradner, S. "[A title](https://example.org)", 1997. Next sentence.\n'))
+        self.assertTrue(spacing_findings(
+            '[REF] Bradner, S. "[A sentence. Next sentence](https://example.org)".\n'))
+
+    def test_initials_in_name_lists(self):
+        self.assertFalse(spacing_findings(
+            'Tilo Steiger, C.D. Tiwari, Alejandro Unger and Tom Wezepoel.\n'))
+        self.assertTrue(spacing_findings('Choose option A. Next sentence.\n'))
+        self.assertTrue(spacing_findings('We visited the U.S. Next sentence.\n'))
+        self.assertTrue(spacing_findings(
+            'Tilo Steiger, C.D. Tiwari, Alejandro Unger. Next sentence.\n'))
+
+    def test_trailing_citations(self):
+        self.assertFalse(spacing_findings('A statement. [RFC6838]\n'))
+        self.assertEqual(spacing_findings('A statement. [RFC6838]\nBad prose. Next one.\n'),
+                         [(2, 11)])
+        self.assertTrue(spacing_findings('A statement. [RFC6838] Next sentence.\n'))
+        self.assertTrue(spacing_findings('A statement. [Important note]\n'))
 
     def test_abbreviations_and_identifiers(self):
         self.assertFalse(spacing_findings('See e.g. Figure 2 or Dr. Smith.\n'))
@@ -118,6 +151,10 @@ class DraftStyleTests(unittest.TestCase):
             ("~~~ text\n" + bad + "~~~\n", bad, 1, 0),
             (bad + "Left one\nLeft two\n~~~\n" + bad + "~~~\nRight one\nRight two\n",
              "Left one\nLeft two\n" + bad + "Right one\nRight two\n", 1, 0),
+            ('[REF] Bradner, S. "[A title]"\n',
+             'Bradner, S. "[A title]"\n', 1, 0),
+            ('A statement. [RFC6838]\n',
+             'A statement. [RFC6838] Next sentence.\n', 1, 0),
             ("", bad, 1, 0),
         ]
         for base, result, new_count, old_count in cases:
