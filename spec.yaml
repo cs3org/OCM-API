@@ -1169,6 +1169,8 @@ components:
             properties:
               name:
                 type: string
+                not:
+                  enum: [collection, federation]
                 description: >
                   A supported resource type (file, calendar, contact, ...).
                   Implementations MUST offer support for at least one resource type,
@@ -1489,6 +1491,10 @@ components:
                 example: My OCM Server
     ShareFields:
       type: object
+      anyOf:
+        - not:
+            required: [collectionSize]
+        - required: [collectionId]
       properties:
         shareWith:
           allOf:
@@ -1579,6 +1585,8 @@ components:
           example: user
         resourceType:
           type: string
+          not:
+            enum: [collection, federation]
           description: |
             Resource type (file, folder, calendar, contact, ...)
           example: file
