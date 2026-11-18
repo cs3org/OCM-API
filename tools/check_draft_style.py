@@ -21,6 +21,17 @@ def mask(match):
     return re.sub(r"[^\n]", "x", match[0])
 
 
+def mask_references(text):
+    # Keep reference titles and annotations visible; only mask author initials.
+    authors = re.match(r'\A\[[\w.-]+\][ \t]+[^"]*"(?=\[)', text)
+    if authors:
+        prefix = re.sub(r"\b(?:[A-Z]\.)+(?=\s)", mask, authors[0])
+        text = prefix + text[authors.end():]
+    text = re.sub(r"(?<=, )(?:[A-Z]\.)+(?= [A-Z][a-z]+,)", mask, text)
+    # A trailing RFC citation does not start another sentence.
+    return re.sub(r"(?m)\[RFC[0-9]+\](?=[ \t]*$)", mask, text)
+
+
 def spacing_findings(text):
     findings = []
     # Kramdown's multipart header ends at "--- abstract".
@@ -46,7 +57,7 @@ def spacing_findings(text):
             continue
         if fence or not raw.strip() or raw.startswith(("---", "\t")):
             continue
-        marker = re.match(r"^\s*(?:[*+-]|\d+[.)])\s+", raw)
+        marker = re.match(r"^\s*(?:[*+-]|\d+(?:\.\d+)*[.)])\s+", raw)
         indent = len(raw) - len(raw.lstrip())
         if marker:
             list_indent = marker.end()
@@ -56,7 +67,7 @@ def spacing_findings(text):
             continue
         if re.match(r"^\s*(?:#{1,6} |\{:|\[[^\]]+\]:|<)", raw):
             continue
-        prose[-1] = (number, re.sub(r"^(\s*\d+\.\s+)", mask, raw))
+        prose[-1] = (number, re.sub(r"^\s*\d+(?:\.\d+)*[.)]\s+", mask, raw))
     for is_prose, entries in groupby(prose, key=lambda entry: entry is not None):
         if not is_prose:
             continue
@@ -64,6 +75,7 @@ def spacing_findings(text):
         protected = re.sub(r"(`+).*?\1", mask,
                            "\n".join(line for _, line in block), flags=re.S)
         protected = re.sub(r"<?https?://[^\s<>]+>?", mask, protected)
+        protected = mask_references(protected)
         for (number, _), line in zip(block, protected.split("\n")):
             for match in BOUNDARY.finditer(line):
                 word = re.search(r"[\w.-]+$", line[:match.start()])
