@@ -8,8 +8,6 @@ permissions:
 
 env:
   PYTHONDONTWRITEBYTECODE: "1"
-  IETF_OUTPUT: ${{ runner.temp }}/ietf-output
-  KRAMDOWN_REFCACHEDIR: ${{ runner.temp }}/ietf-reference-cache
 
 jobs:
   source:
@@ -37,6 +35,10 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
+      - name: Initialize draft paths
+        run: |
+          echo "IETF_OUTPUT=$RUNNER_TEMP/ietf-output" >> "$GITHUB_ENV"
+          echo "KRAMDOWN_REFCACHEDIR=$RUNNER_TEMP/ietf-reference-cache" >> "$GITHUB_ENV"
       - uses: actions/setup-python@v6
         with:
           python-version: "3.14"
