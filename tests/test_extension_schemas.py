@@ -157,7 +157,8 @@ def boundary_cases():
             {"name": "multi", "webapp": {**webapp, **change}}, False)
     add("requests", "IPShareProtocol",
         {"name": "multi", "webapp": {**webapp, "permissions": ["view"]}})
-    add("requests", "IPShareProtocol", {"name": "ssh", "ssh": {}})
+    add("requests", "IPShareProtocol",
+        {"name": "ssh", "ssh": {"uri": "alice@host.example:22/path"}})
     add("requests", "IPShareProtocol", {"name": "custom", "custom": {"opaque": 7}})
 
     for entry in ("webdav", "webapp", "options", "custom"):
