@@ -1856,10 +1856,9 @@ notification that this happened.
 
 # Notifications
 
-This optional endpoint is used to inform the other party about a change
-that concerns a previously known entity, such as a Resource or a
-trusted Share type (e.g. a user), or about a change of the membership
-of a Federation, which concerns the OCM Servers themselves.
+This optional endpoint reports events concerning a previously known
+Resource, Collection or Recipient, or the membership of a Federation of
+OCM Servers.
 
 A Server that intends to send a notification SHOULD make a HTTP POST
 request:
@@ -1873,9 +1872,10 @@ request:
 
 ## Fields
 
-* REQUIRED notificationType (string) - it MUST be one of the
-  registered values listed in the "OCM Notification Types"
-  registry (see [IANA Considerations](#iana-considerations)).
+* REQUIRED notificationType (string) - a non-empty string, compared
+  exactly as sent.  A Sending Server MUST use a value in the "OCM
+  Notification Types" registry (see [IANA
+  Considerations](#iana-considerations)).
 * REQUIRED senderDomain (string) - the sender's OCM Server Address
   (host and optional port), as defined in [Terms](#terms).  A Receiving
   Server SHOULD use this information to verify the HTTP message
@@ -1903,6 +1903,19 @@ additional types MAY be defined by implementers and registered in the
 a specific format MAY be defined for the optional notification object.
 In the sections below, the base Notification types are detailed along
 with their specific payload.
+
+## Receiver Processing
+
+Before applying a notification, the receiver MUST validate its envelope,
+payload and identity bindings.
+
+* Malformed envelopes and malformed payloads for known notification
+  types MUST receive HTTP 400.
+* A receiver SHOULD accept and ignore a valid unknown notification
+  type.  It MUST NOT reject it merely because the type is unknown, or
+  apply another type's payload requirements to it.
+* A receiver MAY return HTTP 501 for a known, valid notification type
+  whose operation it does not implement.
 
 ## Share Acceptance and Updating
 
