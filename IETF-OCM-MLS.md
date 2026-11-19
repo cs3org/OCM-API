@@ -1402,6 +1402,15 @@ in the AEAD associated data MUST be the same.  This means that the
 responsible for maintaining this stable `resourceId` and MUST send it
 in the `encryption` object of the share payload ({{share-creation}}).
 
+The optional top-level `collectionId` in the share payload identifies a
+Collection of one or more resources grouped by the sending server.
+When the server shares two encrypted files in response to one
+`REQUEST_SHARE`, both shares carry the requested `collectionId`, but
+each file has its own `encryption.resourceId`.  FK wrapping and lookup
+use the file's `resourceId` and the group's OCM Address, not
+`collectionId`, even for a Collection containing only one resource
+({{file-key-wrapping}}, {{key-distribution}}).
+
 ## File Key Wrapping {#file-key-wrapping}
 
 Two AEAD algorithms are involved in protecting a resource, and they are
