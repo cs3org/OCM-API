@@ -585,7 +585,7 @@ such groups MUST expose KeyPackages for its own client at the same
 endpoint, selected by `serverId` instead of `userId`:
 
 ~~~
-GET <endPoint>/mls-key-packages?serverId={serverUrl}
+GET <endPoint>/mls/key-packages?serverId={serverUrl}
 ~~~
 
 Response:
@@ -2167,7 +2167,7 @@ collapses onto the subject itself: a server attests its own identity.
 A KeyPackage for such a group is considered validated when all of the
 following hold:
 
-- it was fetched from the `<endPoint>/mls-key-packages` endpoint of the
+- it was fetched from the `<endPoint>/mls/key-packages` endpoint of the
 server named by the URL in the credential, over TLS, with the response
 signed using HTTP Signatures [RFC9421] verifying against that server's
 JWKS [RFC7517];
