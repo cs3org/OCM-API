@@ -2097,9 +2097,9 @@ example, the Welcome delivered to a newly admitted server is:
 ~~~
 {: #mls-server-welcome-example}
 
-The Welcome MUST NOT include a `ratchet_tree` extension.  The admitted
-server MUST retrieve and verify the tree as specified in
-{{group-state}} before processing the Welcome.
+As for a federated group, the Welcome MUST carry the group's ratchet
+tree in a `ratchet_tree` extension, since the admitted server needs it
+to derive the membership and to process subsequent Commits.
 
 The `OCM_SERVER_ADDED` notification of [OCM] SHOULD still be sent to a
 prospective member before it is admitted, and a server that leaves the
