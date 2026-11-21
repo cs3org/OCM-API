@@ -1635,7 +1635,10 @@ described in [OCM-IP].
     a bearer token.  To prevent leaking it in logs it
     MUST NOT appear in any URI.
   - OPTIONAL permissions (array of strings) -
-    The permissions granted to the sharee.  A subset of:
+    The permissions granted to the sharee.  If present, it MUST NOT
+    be empty.  If omitted, the permissions are unspecified and access
+    remains subject to the Sending Server's authorization.  A subset
+    of:
     - `read` allows read-only access including download of a copy.
     - `create` allows creating new Resources within the shared
       Resource, e.g. in an upload-only folder.
@@ -1650,7 +1653,8 @@ described in [OCM-IP].
     when any of `create`, `update`, or `delete` is present.
   - OPTIONAL requirements (array of strings) -
     The requirements that the sharee MUST fulfill to
-    access the Resource.  A subset of:
+    access the Resource.  If present, it MUST NOT be empty.  A subset
+    of:
     - `must-exchange-token` requires the recipient to
     exchange the given `sharedSecret` via a signed HTTPS request
     to the Sending Server's {tokenEndPoint} [RFC6749].
@@ -2215,7 +2219,10 @@ Directory](#mls-based-directory).
 
 To access the Resource, the Receiving Server MAY use multiple ways,
 depending on the body of the Share Creation Notification and the
-protocol required for access.  The procedure is as follows:
+protocol required for access.  A Receiving Server MUST reject a Share
+if it cannot understand or enforce a requirement of the protocol
+selected for access, and MUST NOT skip that requirement.  The
+procedure is as follows:
 
 1.  The receiver MUST extract the OCM Server Address from `sender`
     field of the received share, and MUST query the

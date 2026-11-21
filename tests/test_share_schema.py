@@ -76,17 +76,30 @@ class ShareSchemaTests(unittest.TestCase):
                             "resourceType": "file", "protocol": ip}),
         )
 
-    def test_webdav_optional_permissions(self):
-        dav = deepcopy(self.share["protocol"]["webdav"])
-        del dav["permissions"]
-        for permissions, expected in ((None, True), ([], True),
-                                      (["read", "write"], True), (["view"], False)):
-            entry = {**dav, "requirements": []}
-            if permissions is not None:
-                entry["permissions"] = permissions
-            for schema, payload in self.full_contexts({"name": "multi", "webdav": entry}):
-                with self.subTest(schema=schema, permissions=permissions):
-                    self.check(schema, payload, expected)
+    def test_webdav_optional_arrays(self):
+        absent = object()
+        cases = {
+            "permissions": (
+                (absent, True), ([], False), (["read", "write"], True),
+                (["view"], False), ("read", False), (None, False), ([None], False)),
+            "requirements": (
+                (absent, True), ([], False), (["must-use-mfa"], True),
+                (["must-exchange-token", "must-use-mfa"], True),
+                (["bogus"], False), ("must-use-mfa", False), (None, False)),
+        }
+        for field, values in cases.items():
+            for value, expected in values:
+                entry = deepcopy(self.share["protocol"]["webdav"])
+                entry.pop(field, None)
+                if value is not absent:
+                    entry[field] = value
+                for schema, payload in self.full_contexts({"name": "multi", "webdav": entry}):
+                    with self.subTest(schema=schema, field=field, value=value):
+                        self.check(schema, payload, expected)
+                for schema in ("IPShareProvisioningResponse", "IPTokenPreparationResponse"):
+                    partial = {} if value is absent else {field: value}
+                    with self.subTest(schema=schema, field=field, value=value):
+                        self.check(schema, {"protocol": {"webdav": partial}}, expected)
 
     def test_granular_protocol_permissions(self):
         for protocol in ("webdav", "webapp"):
