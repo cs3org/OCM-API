@@ -55,9 +55,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("report", type=Path)
     parser.add_argument("text", type=Path)
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--base-report", type=Path)
-    mode.add_argument("--audit", action="store_true")
+    parser.add_argument("--base-report", type=Path)
+    parser.add_argument("--audit", action="store_true",
+                        help="report introduced findings without failing; "
+                             "invalid reports and other operational errors still fail")
     parser.add_argument("--base-text", type=Path)
     args = parser.parse_args()
     if bool(args.base_report) != bool(args.base_text):
@@ -70,7 +71,7 @@ def main():
         base_text = (args.base_text.read_text(encoding="utf-8")
                      if args.base_text else "")
         introduced, inherited, advisory = classify_findings(report, text, base, base_text)
-        new_label = "audit" if args.audit else "introduced" if args.base_report else "full"
+        new_label = "introduced" if args.base_report else "audit" if args.audit else "full"
         for label, findings in [(new_label, introduced), ("inherited", inherited),
                                 ("advisory", advisory)]:
             for _, nit, location in findings:

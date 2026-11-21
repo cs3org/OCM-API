@@ -35,7 +35,7 @@ jobs:
             git rev-parse --verify --end-of-options "$BASE_SHA^{commit}" >/dev/null
             git merge-base --is-ancestor "$BASE_SHA" HEAD
             printf 'PR head: %s\nBase: %s\n' "$PR_HEAD_SHA" "$BASE_SHA"
-            args=(--base "$BASE_SHA")
+            args=(--base "$BASE_SHA" --audit)
           fi
           python tools/check_draft_style.py "${args[@]}" IETF-*.md
 
@@ -79,7 +79,7 @@ jobs:
             git rev-parse --verify --end-of-options "$BASE_SHA^{commit}" >/dev/null
             git merge-base --is-ancestor "$BASE_SHA" HEAD
             printf 'PR head: %s\nBase: %s\n' "$PR_HEAD_SHA" "$BASE_SHA"
-            args=(--base "$BASE_SHA")
+            args=(--base "$BASE_SHA" --audit)
           fi
           python tools/check_draft_build.py "${args[@]}" --output "$IETF_OUTPUT" \
             --idnits "$RUNNER_TEMP/ietf-tools/node_modules/.bin/idnits"
@@ -112,4 +112,5 @@ jobs:
         with:
           name: internet-drafts
           path: ${{ env.IETF_OUTPUT }}
+          if-no-files-found: error
           retention-days: 7

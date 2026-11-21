@@ -177,6 +177,34 @@ class DraftStyleTests(unittest.TestCase):
                 self.assertIn(f"{path}:1:12: [audit]", result.stdout)
             self.assertIn("2 findings in 2 files", result.stdout)
 
+    def test_audit_with_base_classifies_without_failing(self):
+        script = Path(__file__).resolve().parents[1] / "tools/check_draft_style.py"
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "IETF-example.md"
+            original = "Old sentence. Next sentence.\n"
+            subprocess.run(["git", "init", "--quiet", directory],
+                           check=True, capture_output=True)
+            blob = subprocess.check_output(
+                ["git", "hash-object", "-w", "--stdin"],
+                input=original.encode(), cwd=root).decode().strip()
+            base = subprocess.check_output(
+                ["git", "mktree"], input=f"100644 blob {blob}\t{source.name}\n",
+                text=True, cwd=root).strip()
+            source.write_text(original + "New sentence. Next sentence.\n")
+            result = subprocess.run(
+                [sys.executable, str(script), "--base", base, "--audit", source.name],
+                cwd=root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn(f"{source.name}:1:14: [inherited]", result.stdout)
+            self.assertIn(f"{source.name}:2:14: [introduced]", result.stdout)
+            self.assertIn("AUDIT (1 introduced, 1 inherited", result.stdout)
+            result = subprocess.run(
+                [sys.executable, str(script), "--base", "missing-revision",
+                 "--audit", source.name], cwd=root, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("Baseline check failed", result.stdout)
+
     def test_source_errors_do_not_hide_other_findings(self):
         script = Path(__file__).resolve().parents[1] / "tools/check_draft_style.py"
         with tempfile.TemporaryDirectory() as directory:

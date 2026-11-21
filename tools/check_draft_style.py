@@ -164,9 +164,10 @@ def base_source(tree, path, root):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--base", help="compare findings with this Git revision")
-    mode.add_argument("--audit", action="store_true", help="report without content gating")
+    parser.add_argument("--base", help="compare findings with this Git revision")
+    parser.add_argument("--audit", action="store_true",
+                        help="report content findings without failing; "
+                             "operational errors still fail")
     parser.add_argument("paths", nargs="*", type=Path)
     args = parser.parse_args()
     if args.base is not None and not args.base.strip():
@@ -210,7 +211,7 @@ def main():
                       if isinstance(error, subprocess.CalledProcessError) else error)
             print(f"{path}: check failed: {detail}")
             errors += 1
-    failed = errors or counts["introduced"] or counts["error"]
+    failed = errors or (not args.audit and (counts["introduced"] or counts["error"]))
     status = "FAILED" if failed else "AUDIT" if args.audit else "OK"
     if args.base:
         details = f'{counts["introduced"]} introduced, {counts["inherited"]} inherited'

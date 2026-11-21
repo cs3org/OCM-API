@@ -26,6 +26,8 @@ if tool == "kramdown-rfc":
 elif tool == "xml2rfc":
     xml = Path(args[0])
     for suffix in [".txt", ".html"]:
+        if suffix == ".txt" and os.environ.get("XML2RFC_NO_TEXT"):
+            continue
         xml.with_suffix(suffix).write_text(xml.read_text())
 else:
     if os.environ.get("IDNITS_CRASH"):
@@ -144,6 +146,35 @@ class DraftBuildTests(unittest.TestCase):
         result = self.run_check("--base", "", output=self.root / "empty-base")
         self.assertEqual(result.returncode, 2)
         self.assertIn("--base must not be empty", result.stderr)
+
+    def test_audit_with_base_classifies_findings_and_keeps_operational_failures(self):
+        sources = {**self.sources, "IETF-a.md": self.sources["IETF-a.md"] + "BAD\n"}
+        base = self.base_tree(sources)
+        (self.root / "IETF-a.md").write_text(sources["IETF-a.md"] + "BAD\n")
+        result = self.run_check("--base", base, "--audit")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("[inherited error]", result.stdout)
+        self.assertIn("[introduced error]", result.stdout)
+        self.assertIn("AUDIT (1 introduced finding, 1 inherited error", result.stdout)
+        self.assertIn("comparison, advisory", result.stdout)
+        record = json.loads((self.output / "comparison.json").read_text())
+        self.assertEqual((record["mode"], record["advisory"]), ("comparison", True))
+        failures = {"bad report": {"IDNITS_BAD_JSON": "1"},
+                    "tool exit": {"IDNITS_CRASH": "1"},
+                    "converter": {"FAIL_TOOL": "kramdown-rfc", "FAIL_DRAFT": "IETF-b.md"},
+                    "missing text": {"XML2RFC_NO_TEXT": "1"}}
+        for name, variables in failures.items():
+            with self.subTest(failure=name):
+                self.env.update(variables)
+                result = self.run_check("--base", base, "--audit", output=self.root / name)
+                for variable in variables:
+                    self.env.pop(variable)
+                self.assertEqual(result.returncode, 1)
+                self.assertRegex(result.stdout, r"[1-3] failed")
+        result = self.run_check("--base", "missing-revision", "--audit",
+                                output=self.root / "invalid")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Baseline extraction failed", result.stdout)
 
     def test_bad_reports_and_tool_exits_are_check_failures(self):
         base = self.base_tree(self.sources)

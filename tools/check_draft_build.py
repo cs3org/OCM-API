@@ -63,8 +63,12 @@ def extract_base(revision, directory):
 
 def check_drafts(root, output, base, audit, idnits, temporary):
     output.mkdir(parents=True, exist_ok=True)
+    if audit:
+        print("Advisory mode: content findings do not fail; build and "
+              "tool errors still do.", flush=True)
     record = {"mode": "comparison" if base else "audit" if audit else "full",
-              "base": base, "checkout": os.environ.get("GITHUB_SHA"),
+              "advisory": audit, "base": base,
+              "checkout": os.environ.get("GITHUB_SHA"),
               "pr_head": os.environ.get("PR_HEAD_SHA"), "drafts": []}
     baseline = None
     baseline_error = False
@@ -105,7 +109,7 @@ def check_drafts(root, output, base, audit, idnits, temporary):
             args = [sys.executable, str(adapter), *map(str, current)]
             if base:
                 args += ["--base-report", str(old[0]), "--base-text", str(old[1])]
-            elif audit:
+            if audit:
                 args += ["--audit"]
             result = subprocess.run(args)
             entry["status"] = "passed" if result.returncode == 0 else "failed"
@@ -123,16 +127,18 @@ def check_drafts(root, output, base, audit, idnits, temporary):
     (output / "comparison.json").write_text(json.dumps(record, indent=2) + "\n",
                                             encoding="utf-8")
     status = "FAILED" if failed or baseline_error or not head_names else "OK"
+    advisory = ", advisory" if audit else ""
     print(f"Draft builds: {status} ({len(head_names)} result drafts, {failed} failed; "
-          f"{record['mode']}).", flush=True)
+          f"{record['mode']}{advisory}).", flush=True)
     return int(status == "FAILED")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--base")
-    mode.add_argument("--audit", action="store_true")
+    parser.add_argument("--base")
+    parser.add_argument("--audit", action="store_true",
+                        help="report content findings without failing; "
+                             "operational errors still fail")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--idnits", default="idnits")
     args = parser.parse_args()
