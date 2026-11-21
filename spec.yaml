@@ -1585,7 +1585,6 @@ components:
             description: >
               Additional payload objects keyed by resource type or share type.
               Required fields are defined by the notification type.
-              For an `OCM_SERVER_ADDED` or `OCM_SERVER_REMOVED` notification, the `federation` object MUST contain the `federationId` of the Federation and a `url`: for `OCM_SERVER_ADDED`, the `url` of the target OCM Server that the sender's directory for that Federation now contains; for `OCM_SERVER_REMOVED`, the `url` of the sender itself, which is leaving that Federation.
       example:
         shareWasAccepted:
           notificationType: SHARE_ACCEPTED
