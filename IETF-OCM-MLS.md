@@ -2002,12 +2002,14 @@ appointment, its first entry names the Federation Owner Server,
 succession is therefore automatic, and the list MUST NOT otherwise be
 reordered.  The coupling between the admin set and the membership, the
 failover procedure of {{failover}}, the leaf update rules of
-{{leaf-key-updates}}, and the rejoin and reinitialisation procedures of
-{{rejoin}} and {{reinit}} all apply unchanged, reading "Member Server"
-as "member OCM Server", "admin" as "Federation Admin Server", and
-"admin client" as "the MLS client of a Federation Admin Server".  As
-for a federated group, the group MUST have at least one Federation
-Admin Server at all times.
+{{leaf-key-updates}}, the group state retrieval of {{group-state}}, and
+the rejoin and reinitialisation procedures of {{rejoin}} and {{reinit}}
+all apply unchanged, reading "Member Server" as "member OCM Server",
+"Admin Server" and "admin" as "Federation Admin Server", and "admin
+client" as "the MLS client of a Federation Admin Server".  The fallback
+Admin Servers of {{group-state}} are those listed in the
+`ocm_servers_federation` extension.  As for a federated group, the
+group MUST have at least one Federation Admin Server at all times.
 
 A server MUST list the `ocm_servers_federation` extension type in the
 `capabilities.extensions` field of the KeyPackages it publishes under
@@ -2054,9 +2056,10 @@ example, the Welcome delivered to a newly admitted server is:
 }
 ~~~
 
-As for a federated group, the Welcome MUST carry the group's ratchet
-tree in a `ratchet_tree` extension, since the admitted server needs it
-to derive the membership and to process subsequent Commits.
+The Welcome MUST NOT include a `ratchet_tree` extension.  The admitted
+server MUST retrieve and verify the ratchet tree of the Welcome's epoch
+as specified in {{group-state}} before processing the Welcome
+([RFC9420] Section 12.4.3.1).
 
 The `OCM_SERVER_ADDED` notification of [OCM] SHOULD still be sent to a
 prospective member before it is admitted, and a server that leaves the
@@ -2595,6 +2598,9 @@ The complete changelog is updated in the OCM-API GitHub repository.
   extension, and Add and Remove Commits as the membership changes.
   The existing group machinery - admin set, failover, leaf updates,
   rejoin and reinitialisation - is reused unchanged.
+* Specified that the Welcome of a Servers Federation group omits the
+  ratchet tree, which the admitted server retrieves from a Federation
+  Admin Server as for other groups.
 * Added a `serverId` selector to the KeyPackage endpoint, for the
   server-level MLS client of a Servers Federation group, and specified
   the corresponding credential validation.
