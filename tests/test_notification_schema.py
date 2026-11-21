@@ -220,6 +220,18 @@ class NotificationSchemaTests(unittest.TestCase):
                     self.assertEqual(self.validator.is_valid(payload),
                                      permission in permissions)
 
+    def test_share_protocol_view_permission(self):
+        protocol = self.spec["components"]["schemas"]["NewShare"]["properties"]["protocol"]
+        validator = Draft4Validator({
+            "$ref": "#/components/schemas/NewShare/properties/protocol",
+            "components": self.spec["components"],
+        })
+        for name, accepted in (("webdav", False), ("webapp", True)):
+            payload = deepcopy(protocol["example"]["multipleProtocols"])
+            payload[name]["permissions"] = ["view"]
+            with self.subTest(protocol=name):
+                self.assertEqual(validator.is_valid(payload), accepted)
+
     def test_unknown_type(self):
         self.validator.validate(envelope("EXAMPLE_CUSTOM_EVENT", resourceType="file"))
         self.validator.validate(envelope("EXAMPLE_COLLECTION_EVENT", resourceType="collection"))
