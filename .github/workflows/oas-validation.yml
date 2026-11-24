@@ -38,3 +38,8 @@ jobs:
         run: |
           "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
             tests/test_share_schema.py
+
+      - name: Check MLS schemas
+        run: |
+          "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
+            tests/test_mls_schema.py

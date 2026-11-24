@@ -37,23 +37,32 @@ paths:
                 $ref: "#/components/schemas/Discovery"
   /mls/key-packages:
     get:
-      summary: Retrieve an MLS KeyPackage for a user
+      summary: Retrieve MLS KeyPackages
       description: >
-        Returns MLS KeyPackages for a user as defined by
+        Returns MLS KeyPackages for a user or OCM Server as defined by
         [KeyPackage Distribution](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-mls-federated-groups#keypackage-distribution).
         This path is relative to the OCM endpoint returned by discovery; for
         example, an endpoint of `https://cloud.example.org/ocm` resolves this
         path to `https://cloud.example.org/ocm/mls/key-packages`.
+        Supply exactly one of userId and serverId, together with senderDomain.
         The request and successful response MUST use HTTP Message Signatures
         according to that specification.
       parameters:
         - name: userId
           in: query
-          required: true
+          required: false
           description: Full OCM Address of the user whose KeyPackage is requested.
           schema:
             $ref: "#/components/schemas/OCMAddress"
           example: alice@cloud.example.org
+        - name: serverId
+          in: query
+          required: false
+          description: Absolute URL identifying the OCM Server whose KeyPackage is requested.
+          schema:
+            type: string
+            format: uri
+          example: https://cloud.example.org
         - name: senderDomain
           in: query
           required: true
@@ -63,7 +72,7 @@ paths:
           example: requester.example.org
       responses:
         "200":
-          description: A signed response containing KeyPackages for the user.
+          description: A signed response containing KeyPackages for the selected user or server.
           headers:
             Content-Digest:
               required: true
@@ -460,6 +469,52 @@ paths:
                       mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
                       userId: bob@cloud.example.org
                       content: base64 MLS welcome
+              mlsProposal:
+                summary: MLS Proposal envelope (illustrative content)
+                value:
+                  notificationType: MLS_PROPOSAL
+                  senderDomain: cloud.example.org
+                  shareType: community
+                  notification:
+                    community:
+                      mlsGroupId: <base64url MLS group ID>
+                      content: <base64url MLS PublicMessage carrying the Proposal>
+              mlsCommit:
+                summary: MLS Commit envelope (illustrative content)
+                value:
+                  notificationType: MLS_COMMIT
+                  senderDomain: cloud.example.org
+                  shareType: community
+                  notification:
+                    community:
+                      mlsGroupId: <base64url MLS group ID>
+                      proposals:
+                      - <base64url MLS PublicMessage carrying a Proposal>
+                      content: <base64url MLS PublicMessage carrying the Commit>
+              mlsApplication:
+                summary: MLS Application envelope (illustrative content)
+                value:
+                  notificationType: MLS_APPLICATION
+                  senderDomain: cloud.example.org
+                  shareType: community
+                  notification:
+                    community:
+                      mlsGroupId: <base64url MLS group ID>
+                      content: <base64url MLS PrivateMessage wire format>
+              mlsRejoin:
+                summary: MLS Rejoin envelope (illustrative content)
+                value:
+                  notificationType: MLS_REJOIN
+                  senderDomain: othercloud.example.org
+                  shareType: community
+                  notification:
+                    community:
+                      mlsGroupId: <base64url MLS group ID>
+                      keyPackages:
+                      - userId: bob@othercloud.example.org
+                        mediaType: message/mls
+                        encoding: base64url
+                        content: <base64url-encoded MLS KeyPackage>
               customType:
                 summary: An implementer-defined notification type
                 value:
@@ -993,19 +1048,20 @@ components:
           example: ZXhhbXBsZS1tbHMta2V5LXBhY2thZ2U
     KeyPackageResponse:
       type: object
-      required:
-        - userId
-        - keyPackages
+      required: [keyPackages]
       properties:
         userId:
-          allOf:
-            - $ref: "#/components/schemas/OCMAddress"
-          description: Full OCM Address of the user represented by the KeyPackages.
-          example: alice@cloud.example.org
+          $ref: '#/components/schemas/OCMAddress'
+        serverId:
+          type: string
+          format: uri
         keyPackages:
           type: array
           items:
-            $ref: "#/components/schemas/KeyPackageEntry"
+            $ref: '#/components/schemas/KeyPackageEntry'
+      oneOf:
+        - required: [userId]
+        - required: [serverId]
     RatchetTreeResponse:
       type: object
       required:
@@ -2453,3 +2509,334 @@ components:
           type: integer
           description: Number of seconds before this access_token will need to be refreshed.
           example: 300
+
+    MLSNotificationEnvelope:
+      allOf:
+        - $ref: '#/components/schemas/NewNotification'
+        - not:
+            required: [providerId]
+        - oneOf:
+            - type: object
+              required: [shareType, notification]
+              properties:
+                shareType:
+                  type: string
+                  enum: [community]
+                notification:
+                  type: object
+                  required: [community]
+                  properties:
+                    community:
+                      type: object
+                      required: [mlsGroupId]
+                      properties:
+                        mlsGroupId:
+                          type: string
+                          description: >-
+                            Base64url MLS group_id hint; the MLS message carries the authoritative
+                            value.
+                      not:
+                        required: [serverUrl]
+                  not:
+                    required: [federation]
+              not:
+                required: [resourceType]
+            - type: object
+              required: [resourceType, notification]
+              properties:
+                resourceType:
+                  type: string
+                  enum: [federation]
+                notification:
+                  type: object
+                  required: [federation]
+                  properties:
+                    federation:
+                      type: object
+                      required: [mlsGroupId, federationId]
+                      properties:
+                        mlsGroupId:
+                          type: string
+                          description: >-
+                            Base64url MLS group_id hint; the MLS message carries the authoritative
+                            value.
+                        federationId:
+                          type: string
+                      not:
+                        required: [userId]
+                  not:
+                    required: [community]
+              not:
+                required: [shareType]
+    MLSRejoinKeyPackage:
+      allOf:
+        - $ref: '#/components/schemas/KeyPackageEntry'
+        - type: object
+          properties:
+            userId:
+              $ref: '#/components/schemas/OCMAddress'
+            serverUrl:
+              type: string
+              format: uri
+          oneOf:
+            - required: [userId]
+            - required: [serverUrl]
+    MLSWelcomeNotification:
+      allOf:
+        - $ref: '#/components/schemas/MLSNotificationEnvelope'
+        - type: object
+          properties:
+            notificationType:
+              type: string
+              enum: [MLS_WELCOME]
+            notification:
+              type: object
+              properties:
+                community:
+                  type: object
+                  required: [userId, content]
+                  properties:
+                    userId:
+                      $ref: '#/components/schemas/OCMAddress'
+                    content:
+                      type: string
+                      description: Base64url-encoded MLS Welcome.
+                federation:
+                  type: object
+                  required: [serverUrl, content]
+                  properties:
+                    serverUrl:
+                      type: string
+                      format: uri
+                    content:
+                      type: string
+                      description: Base64url-encoded MLS Welcome.
+    MLSProposalNotification:
+      allOf:
+        - $ref: '#/components/schemas/MLSNotificationEnvelope'
+        - type: object
+          properties:
+            notificationType:
+              type: string
+              enum: [MLS_PROPOSAL]
+            notification:
+              type: object
+              properties:
+                community:
+                  type: object
+                  required: [content]
+                  properties:
+                    content:
+                      type: string
+                      description: Base64url-encoded MLS PublicMessage carrying a Proposal.
+                federation:
+                  type: object
+                  required: [content]
+                  properties:
+                    content:
+                      type: string
+                      description: Base64url-encoded MLS PublicMessage carrying a Proposal.
+    MLSCommitNotification:
+      allOf:
+        - $ref: '#/components/schemas/MLSNotificationEnvelope'
+        - type: object
+          properties:
+            notificationType:
+              type: string
+              enum: [MLS_COMMIT]
+            notification:
+              type: object
+              properties:
+                community:
+                  type: object
+                  required: [content]
+                  properties:
+                    content:
+                      type: string
+                      description: Base64url-encoded MLS PublicMessage carrying a Commit.
+                    proposals:
+                      type: array
+                      description: >-
+                        Original Proposal PublicMessages, base64url-encoded, when referenced by
+                        the Commit.
+                      items:
+                        type: string
+                federation:
+                  type: object
+                  required: [content]
+                  properties:
+                    content:
+                      type: string
+                      description: Base64url-encoded MLS PublicMessage carrying a Commit.
+                    proposals:
+                      type: array
+                      description: >-
+                        Original Proposal PublicMessages, base64url-encoded, when referenced by
+                        the Commit.
+                      items:
+                        type: string
+    MLSApplicationNotification:
+      allOf:
+        - $ref: '#/components/schemas/MLSNotificationEnvelope'
+        - type: object
+          properties:
+            notificationType:
+              type: string
+              enum: [MLS_APPLICATION]
+            notification:
+              type: object
+              properties:
+                community:
+                  type: object
+                  required: [content]
+                  properties:
+                    content:
+                      type: string
+                      description: >-
+                        Base64url-encoded MLS PrivateMessage; decrypted data uses MLSApplicationData.
+                federation:
+                  type: object
+                  required: [content]
+                  properties:
+                    content:
+                      type: string
+                      description: >-
+                        Base64url-encoded MLS PrivateMessage; decrypted data uses MLSApplicationData.
+    MLSRejoinNotification:
+      allOf:
+        - $ref: '#/components/schemas/MLSNotificationEnvelope'
+        - type: object
+          properties:
+            notificationType:
+              type: string
+              enum: [MLS_REJOIN]
+            notification:
+              type: object
+              properties:
+                community:
+                  type: object
+                  required: [keyPackages]
+                  properties:
+                    keyPackages:
+                      type: array
+                      items:
+                        allOf:
+                          - $ref: '#/components/schemas/MLSRejoinKeyPackage'
+                          - required: [userId]
+                federation:
+                  type: object
+                  required: [keyPackages]
+                  properties:
+                    keyPackages:
+                      type: array
+                      items:
+                        allOf:
+                          - $ref: '#/components/schemas/MLSRejoinKeyPackage'
+                          - required: [serverUrl]
+    MLSNotification:
+      description: >
+        Strict profile for the five MLS lifecycle types. Core receivers use
+        NewNotification to accept unfamiliar types without processing MLS.
+      anyOf:
+        - $ref: "#/components/schemas/MLSWelcomeNotification"
+        - $ref: "#/components/schemas/MLSProposalNotification"
+        - $ref: "#/components/schemas/MLSCommitNotification"
+        - $ref: "#/components/schemas/MLSApplicationNotification"
+        - $ref: "#/components/schemas/MLSRejoinNotification"
+    MLSWrappedKey:
+      type: object
+      required: [resourceId, groupId, wrappedKey]
+      properties:
+        resourceId:
+          $ref: "#/components/schemas/NewShare/properties/encryption/properties/resourceId"
+        groupId:
+          $ref: "#/components/schemas/OCMAddress"
+        wrappedKey:
+          type: string
+          description: Base64url-encoded nonce, wrapped file key and tag.
+    MLSCredentialUpdate:
+      type: object
+      required: [providerId, groupId, recipient, sharedSecret]
+      properties:
+        providerId:
+          $ref: "#/components/schemas/ShareFields/properties/providerId"
+        groupId:
+          $ref: "#/components/schemas/OCMAddress"
+        recipient:
+          $ref: "#/components/schemas/OCMServerAddress"
+        sharedSecret:
+          type: string
+    MLSApplicationData:
+      type: object
+      description: >
+        Decrypted PrivateMessage application data. Combined keys and credentials
+        are delivered to the same single Member Server; structure alone does not
+        verify credential targeting or MLS authentication.
+      anyOf:
+        - required: [keys]
+        - required: [credentials]
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: "#/components/schemas/MLSWrappedKey"
+        credentials:
+          type: array
+          items:
+            $ref: "#/components/schemas/MLSCredentialUpdate"
+      example:
+        keys:
+          - resourceId: 3a02538b-aa54-42f2-8853-a38996e211b1
+            groupId: research-group@receiver.example.org
+            wrappedKey: "<base64url nonce || wrapped_file_key || tag>"
+        credentials:
+          - providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+            groupId: research-group@receiver.example.org
+            recipient: othercloud.example.org
+            sharedSecret: "<new transport credential>"
+    MLSEncryption:
+      allOf:
+        - $ref: "#/components/schemas/NewShare/properties/encryption"
+        - type: object
+          required: [ocm-mls]
+          properties:
+            scheme:
+              type: string
+              enum: [ocm-mls]
+            ocm-mls:
+              type: object
+              required: [cipher]
+              properties:
+                cipher:
+                  type: string
+                  enum: [AES-128-GCM, AES-256-GCM, CHACHA20-POLY1305]
+    MLSEncryptedShare:
+      allOf:
+        - $ref: "#/components/schemas/NewShare"
+        - type: object
+          required: [encryption]
+          properties:
+            shareType:
+              type: string
+              enum: [community]
+            encryption:
+              $ref: "#/components/schemas/MLSEncryption"
+      example:
+        shareWith: research-group@receiver.example.org
+        resourceType: file
+        shareType: community
+        sender: alice@cloud.example.org
+        owner: alice@cloud.example.org
+        providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        name: experiment-data.tar
+        protocol:
+          name: multi
+          webdav:
+            uri: experiment-data.tar
+            sharedSecret: "<per-Member-Server secret>"
+            permissions: [read, write]
+        encryption:
+          resourceId: 3a02538b-aa54-42f2-8853-a38996e211b1
+          scheme: ocm-mls
+          ocm-mls:
+            cipher: AES-256-GCM
