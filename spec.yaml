@@ -384,17 +384,116 @@ paths:
     post:
       summary: General Notification endpoint
       description: >
-        This optional endpoint is used to inform the other party about a change
-        that concerns a previously known entity, such as a Share or a trusted User,
-        or to request an action to be performed (such as sharing or re-sharing)
-        on a previously known resource.
+        Notifications and requests concerning Resources, Collections, Recipients
+        or Federation membership.
         See [Notifications](https://datatracker.ietf.org/doc/html/draft-ietf-ocm-open-cloud-mesh#notifications)
-        for more details.
+        for details.
       requestBody:
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/NewNotification"
+            examples:
+              requestShare:
+                summary: A recipient requests shares from a collection
+                value:
+                  notificationType: REQUEST_SHARE
+                  resourceType: collection
+                  shareType: user
+                  senderDomain: alice.example.org
+                  collectionId: research-data-123
+                  notification:
+                    collection:
+                      owner: bob@bob.example.org
+                      shareWith: alice@alice.example.org
+                      permissions:
+                      - read
+              contactWasRemoved:
+                summary: A user removed a single contact
+                value:
+                  notificationType: CONTACT_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: User is not a trusted contact any longer
+                    user:
+                      userId: alice@alice.example.org
+                      targetUserId: bob@bob.example.org
+              shareWasAccepted:
+                summary: A recipient accepted a share
+                value:
+                  notificationType: SHARE_ACCEPTED
+                  resourceType: file
+                  shareType: user
+                  senderDomain: sender.example.org
+                  notification:
+                    message: Recipient accepted the share
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              shareWasUnshared:
+                summary: A provider removed a share
+                value:
+                  notificationType: SHARE_UNSHARED
+                  resourceType: file
+                  senderDomain: sender.example.org
+                  notification:
+                    file:
+                      providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+              userLeft:
+                summary: A user left the sending server
+                value:
+                  notificationType: USER_REMOVED
+                  shareType: user
+                  senderDomain: alice.example.org
+                  notification:
+                    message: User left the system
+                    user:
+                      userId: alice@alice.example.org
+              mlsWelcome:
+                summary: MLS Welcome envelope (illustrative content)
+                value:
+                  notificationType: MLS_WELCOME
+                  shareType: community
+                  senderDomain: cloud.example.org
+                  notification:
+                    community:
+                      mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
+                      userId: bob@cloud.example.org
+                      content: base64 MLS welcome
+              customType:
+                summary: An implementer-defined notification type
+                value:
+                  notificationType: EXAMPLE_CUSTOM_EVENT
+                  resourceType: file
+                  senderDomain: sender.example.org
+                  notification:
+                    message: Something happened
+                    file:
+                      customKey: customValue
+              ocmServerWasAdded:
+                summary: An OCM server was added to a federation
+                value:
+                  notificationType: OCM_SERVER_ADDED
+                  resourceType: federation
+                  senderDomain: ocm-server.example.org
+                  notification:
+                    message: Your OCM Server is now part of our federation
+                    federation:
+                      federationId: sciencemesh
+                      name: The ScienceMesh Directory
+                      url: https://cloud.example.org
+              ocmServerLeft:
+                summary: An OCM server left a federation
+                value:
+                  notificationType: OCM_SERVER_REMOVED
+                  resourceType: federation
+                  senderDomain: ocm-server.example.org
+                  notification:
+                    message: We are leaving this federation
+                    federation:
+                      federationId: sciencemesh
+                      name: The ScienceMesh Directory
+                      url: https://ocm-server.example.org
         description: The JSON object with a new notification
         required: true
       responses:
@@ -1252,14 +1351,11 @@ components:
                       `create`, `update`, or `delete` is present.
                     - `share` allows re-share rights on the resource.
                   items:
-                    type: string
-                    enum:
-                      - read
-                      - create
-                      - update
-                      - delete
-                      - write
-                      - share
+                    allOf:
+                      - $ref: "#/components/schemas/SharePermission"
+                      - not:
+                          enum:
+                            - view
                 requirements:
                   type: array
                   items:
@@ -1341,15 +1437,7 @@ components:
                     - `share` allows re-share rights on the resource. This only
                       applies to web apps that provide a mechanism for re-sharing.
                   items:
-                    type: string
-                    enum:
-                      - view
-                      - read
-                      - create
-                      - update
-                      - delete
-                      - write
-                      - share
+                    $ref: "#/components/schemas/SharePermission"
                 requirements:
                   type: array
                   minItems: 1
@@ -1548,9 +1636,9 @@ components:
           minLength: 1
           description: >
             Share type, according to the OCM IANA Registry for share types.
-            E.g. user, group, community, etc. Implementers MAY define
-            additional custom types, provided that they are registered in the
-            respective OCM IANA Registry.
+            E.g. user, group, community, etc. Implementers MAY define additional
+            custom types, provided that they are registered in the respective
+            OCM IANA Registry.
         providerId:
           type: string
           description: >
@@ -1587,74 +1675,339 @@ components:
             description: >
               Additional payload objects keyed by resource type or share type.
               Required fields are defined by the notification type.
-      example:
-        shareWasAccepted:
-          notificationType: SHARE_ACCEPTED
-          resourceType: file
-          shareType: user
-          senderDomain: sender.example.org
-          notification:
-            message: Recipient accepted the share
+      allOf:
+        - anyOf:
+            - required:
+                - resourceType
+            - required:
+                - shareType
+        - anyOf:
+            - $ref: "#/components/schemas/ShareStateNotification"
+            - $ref: "#/components/schemas/CollectionDeclinedNotification"
+            - $ref: "#/components/schemas/ReshareRequestNotification"
+            - $ref: "#/components/schemas/ShareRequestNotification"
+            - $ref: "#/components/schemas/UserRemovedNotification"
+            - $ref: "#/components/schemas/GroupRemovedNotification"
+            - $ref: "#/components/schemas/ContactRemovedNotification"
+            - $ref: "#/components/schemas/FederationMembershipNotification"
+            - $ref: "#/components/schemas/NotificationOfOtherType"
+    ShareStateNotification:
+      type: object
+      description: >
+        Payload constraints for share lifecycle events; see Share Identity
+        in the OCM Internet-Draft.
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_ACCEPTED
+            - SHARE_DECLINED
+            - SHARE_UNSHARED
+            - SHARE_CHANGE_PERMISSION
+        resourceType:
+          not:
+            enum:
+              - collection
+              - federation
+        notification:
+          type: object
+          required:
+            - file
+          properties:
             file:
-              providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
-        contactWasRemoved:
-          notificationType: CONTACT_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User is not a trusted contact any longer
-            user:
-              userId: alice@alice.example.org
-              targetUserId: bob@bob.example.org
-        userLeft:
-          notificationType: USER_REMOVED
-          shareType: user
-          senderDomain: alice.example.org
-          notification:
-            message: User left the system
-            user:
-              userId: alice@alice.example.org
-        ocmServerWasAdded:
-          notificationType: OCM_SERVER_ADDED
-          resourceType: federation
-          senderDomain: ocm-server.example.org
-          notification:
-            message: Your OCM Server is now part of our federation
-            federation:
-              federationId: sciencemesh
-              name: The ScienceMesh Directory
-              url: https://cloud.example.org
-        ocmServerLeft:
-          notificationType: OCM_SERVER_REMOVED
-          resourceType: federation
-          senderDomain: ocm-server.example.org
-          notification:
-            message: We are leaving this federation
-            federation:
-              federationId: sciencemesh
-              name: The ScienceMesh Directory
-              url: https://ocm-server.example.org
-        mlsWelcome:
-          notificationType: MLS_WELCOME
-          shareType: community
-          senderDomain: cloud.example.org
-          notification:
-            community:
-              mlsGroupId: 51dc30ddc473d43a6011e9ebba6ca770
-              userId: bob@cloud.example.org
-              content: base64 MLS welcome
-        requestShare:
-          notificationType: REQUEST_SHARE
-          resourceType: collection
-          shareType: user
-          senderDomain: alice.example.org
-          collectionId: research-data-123
-          notification:
+              type: object
+              required:
+                - providerId
+              properties:
+                providerId:
+                  type: string
+                  minLength: 1
+                  description: >
+                    Identifier assigned to this Share by its resource provider.
+                permissions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/SharePermission"
+    CollectionDeclinedNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - collectionId
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - SHARE_DECLINED
+        resourceType:
+          type: string
+          enum:
+            - collection
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
             collection:
-              owner: bob@bob.example.org
-              shareWith: alice@alice.example.org
-              permissions:
-              - read
+              type: object
+              required:
+                - shareWith
+              properties:
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
+    ReshareRequestNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - REQUEST_RESHARE
+        resourceType:
+          not:
+            enum:
+              - collection
+              - federation
+        notification:
+          type: object
+          required:
+            - file
+          properties:
+            file:
+              type: object
+              required:
+                - providerId
+                - shareWith
+              properties:
+                providerId:
+                  type: string
+                  minLength: 1
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
+                permissions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/SharePermission"
+    ShareRequestNotification:
+      type: object
+      required:
+        - notificationType
+        - resourceType
+        - collectionId
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - REQUEST_SHARE
+        resourceType:
+          type: string
+          enum:
+            - collection
+        notification:
+          type: object
+          required:
+            - collection
+          properties:
+            collection:
+              type: object
+              required:
+                - owner
+                - shareWith
+                - permissions
+              properties:
+                owner:
+                  $ref: "#/components/schemas/OCMAddress"
+                shareWith:
+                  $ref: "#/components/schemas/OCMAddress"
+                permissions:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/SharePermission"
+      not:
+        required:
+          - collectionSize
+    UserRemovedNotification:
+      type: object
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - USER_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
+        notification:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  $ref: "#/components/schemas/OCMAddress"
+              not:
+                required:
+                  - targetUserId
+      not:
+        required:
+          - resourceType
+    GroupRemovedNotification:
+      type: object
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - GROUP_REMOVED
+        shareType:
+          type: string
+          enum:
+            - group
+        notification:
+          type: object
+          required:
+            - group
+          properties:
+            group:
+              type: object
+              required:
+                - groupId
+              properties:
+                groupId:
+                  type: string
+                  minLength: 1
+      not:
+        required:
+          - resourceType
+    ContactRemovedNotification:
+      type: object
+      required:
+        - notificationType
+        - shareType
+        - notification
+      properties:
+        notificationType:
+          type: string
+          enum:
+            - CONTACT_REMOVED
+        shareType:
+          type: string
+          enum:
+            - user
+        notification:
+          type: object
+          required:
+            - user
+          properties:
+            user:
+              type: object
+              required:
+                - userId
+                - targetUserId
+              properties:
+                userId:
+                  description: >
+                    OCM Address of the actor. Its OCM Server Address equals
+                    senderDomain.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
+                targetUserId:
+                  description: >
+                    OCM Address of the removed contact at the receiving server.
+                  allOf:
+                    - $ref: "#/components/schemas/OCMAddress"
+      not:
+        required:
+          - resourceType
+    FederationMembershipNotification:
+      type: object
+      required: [notificationType, resourceType, notification]
+      not:
+        required: [shareType]
+      properties:
+        notificationType:
+          type: string
+          enum: [OCM_SERVER_ADDED, OCM_SERVER_REMOVED]
+        resourceType:
+          type: string
+          enum: [federation]
+        notification:
+          type: object
+          required: [federation]
+          properties:
+            federation:
+              type: object
+              required: [federationId, url]
+              properties:
+                federationId:
+                  type: string
+                  description: Matches federation.federationId in the sender's directory.
+                name:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+                  description: >
+                    The recipient's server URL for OCM_SERVER_ADDED, or the
+                    sender's server URL for OCM_SERVER_REMOVED, as defined in
+                    Federation Membership of the OCM Internet-Draft.
+                mlsGroupId:
+                  type: string
+    NotificationOfOtherType:
+      type: object
+      description: >
+        Other notification types satisfy the common envelope. Built-in types
+        cannot use this branch to bypass payload validation.
+      properties:
+        notificationType:
+          type: string
+          not:
+            enum:
+              - SHARE_ACCEPTED
+              - SHARE_DECLINED
+              - SHARE_UNSHARED
+              - SHARE_CHANGE_PERMISSION
+              - REQUEST_RESHARE
+              - REQUEST_SHARE
+              - USER_REMOVED
+              - CONTACT_REMOVED
+              - GROUP_REMOVED
+              - OCM_SERVER_ADDED
+              - OCM_SERVER_REMOVED
+    SharePermission:
+      type: string
+      description: >
+        A permission value of the webdav or webapp protocol. `view`
+        applies to webapp only.
+      enum:
+        - read
+        - create
+        - update
+        - delete
+        - write
+        - share
+        - view
     OCMServerAddress:
       type: string
       minLength: 1
