@@ -652,6 +652,322 @@ components:
             machines (e.g. no use of special characters) providing more
             information on the cause of the error.
           example: RESOURCE_NOT_FOUND
+    IPProtocolFields:
+      description: >
+        Credential-free protocol fields; required entries depend on context.
+      allOf:
+        - $ref: "#/components/schemas/ShareProtocolFields"
+        - type: object
+          # name is scalar metadata; every other member is a protocol entry.
+          properties:
+            name: {}
+          additionalProperties:
+            type: object
+            not:
+              required: [sharedSecret]
+    IPShareProtocol:
+      description: >
+        Full IP protocol payload, using the core fields without credentials.
+      allOf:
+        - $ref: "#/components/schemas/IPProtocolFields"
+        - required: [name]
+          properties:
+            webdav:
+              required: [uri, permissions]
+            webapp:
+              required: [uri, targets, permissions, requirements]
+    IPShareProvisioningRequest:
+      type: object
+      description: >
+        Share fields sent to {integrationAPI}/shares on a paired Protocol
+        Server before the core Share Creation Notification. Top-level name is
+        optional; protocol entries are credential-free. Unknown fields are open.
+      required:
+        - sender
+        - owner
+        - shareWith
+        - providerId
+        - shareType
+        - resourceType
+        - protocol
+      allOf:
+        - $ref: "#/components/schemas/ShareFields"
+      properties:
+        protocol:
+          $ref: "#/components/schemas/IPShareProtocol"
+      example:
+        shareWith: bob@receiver.example.org
+        name: analysis.ipynb
+        providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        owner: alice@cloud.example.org
+        sender: alice@cloud.example.org
+        shareType: user
+        resourceType: file
+        protocol:
+          name: multi
+          webdav:
+            uri: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+            permissions:
+            - read
+            - write
+            requirements:
+            - must-exchange-token
+          webapp:
+            uri: https://hub.example.org/services/ocm/open
+            targets:
+            - blank
+            permissions:
+            - write
+            requirements:
+            - must-exchange-token
+    IPShareProvisioningResponse:
+      type: object
+      description: >
+        Optional status and partial allocated protocol fields. Returned
+        permissions cannot override the Share's granted authority. The OCM
+        Server MUST ignore any sharedSecret in an ordinary allocation reply.
+      properties:
+        status:
+          type: string
+        protocol:
+          $ref: "#/components/schemas/IPProtocolFields"
+      example:
+        status: stored
+    IPTokenPreparationResponse:
+      type: object
+      description: >
+        Delegated Token Server preparation reply. Unlike ordinary provisioning,
+        this partial protocol payload may carry the minted sharedSecret.
+        The example credential is illustrative.
+      properties:
+        status:
+          type: string
+        protocol:
+          $ref: "#/components/schemas/ShareProtocolFields"
+      example:
+        protocol:
+          webdav:
+            sharedSecret: illustrative-minted-secret
+    IPShareRevocationRequest:
+      type: object
+      description: Share Revocation Request sent to {integrationAPI}/revoke.
+      required: [sender, providerId]
+      properties:
+        sender:
+          $ref: "#/components/schemas/OCMAddress"
+        providerId:
+          $ref: "#/components/schemas/ShareFields/properties/providerId"
+      example:
+        sender: alice@cloud.example.org
+        providerId: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+    IPShareRevocationResponse:
+      type: object
+      description: Optional status after an idempotent revocation.
+      properties:
+        status:
+          type: string
+      example:
+        status: revoked
+    IPIntrospectionRequest:
+      type: object
+      description: >
+        Form fields for application/x-www-form-urlencoded at the introspection
+        endpoint exchanged during pairing. The token is the credential exactly
+        as presented on the front channel.
+      required: [token]
+      properties:
+        token:
+          type: string
+      example:
+        token: shr-9wq4xkz7vmd2
+    OCMIPClaim:
+      type: object
+      description: >
+        Share information for self-contained access. Parties are bound by the
+        enclosing iss, sub and aud claims; they are not required here.
+      required: [protocol, providerId, resourceType]
+      properties:
+        protocol:
+          $ref: "#/components/schemas/IPShareProtocol"
+        providerId:
+          $ref: "#/components/schemas/ShareFields/properties/providerId"
+        resourceType:
+          $ref: "#/components/schemas/ShareFields/properties/resourceType"
+        name:
+          $ref: "#/components/schemas/ShareFields/properties/name"
+        shareType:
+          $ref: "#/components/schemas/ShareFields/properties/shareType"
+        expiration:
+          $ref: "#/components/schemas/ShareFields/properties/expiration"
+    IPAccessTokenHeader:
+      type: object
+      description: >
+        Decoded JOSE header for an IP access token. The algorithm MUST be
+        asymmetric and match the signatory key advertised by the OCM Server.
+        Excluding none structurally does not verify algorithm suitability,
+        signature validity, key provenance or trust.
+      required: [typ, kid, alg]
+      properties:
+        typ:
+          type: string
+          enum: [at+jwt]
+        kid:
+          type: string
+        alg:
+          type: string
+          not:
+            enum: [none]
+      example:
+        typ: at+jwt
+        alg: EdDSA
+        kid: cloud.example.org#key1
+    IPCommonClaims:
+      type: object
+      properties:
+        iss:
+          type: string
+          format: uri
+          description: >
+            HTTPS issuer URL identifying the Sending Server. Its authority is
+            the OCM Server Address. URI format is only a structural annotation.
+        sub:
+          type: string
+          description: Opaque local identifier of the Share owner at the issuer.
+        aud:
+          $ref: "#/components/schemas/OCMAddress"
+        exp:
+          type: integer
+          description: NumericDate bounding token or introspection validity.
+        client_id:
+          type: string
+          description: >
+            Provider-assigned identifier. In provisioned mode it equals the
+            Share's providerId, unlike the core TokenRequest client_id.
+        ocm_ip:
+          $ref: "#/components/schemas/OCMIPClaim"
+    IPTokenClaims:
+      description: >
+        Decoded RFC 9068 claims in both IP issuance modes. The audience is the
+        receiving principal. HTTPS, pairing, issuer/key and identity binding,
+        expiry and live authority require verification beyond these schemas.
+      allOf:
+        - $ref: "#/components/schemas/IPCommonClaims"
+        - type: object
+          required: [iss, sub, aud, iat, exp, jti, client_id]
+          properties:
+            iat:
+              type: integer
+              description: Token issuance NumericDate.
+            jti:
+              type: string
+              description: Token identifier as in RFC 9068.
+    IPProvisionedTokenClaims:
+      description: >
+        Provisioned token claims. client_id identifies the stored Share Record;
+        ocm_ip is forbidden so the token cannot mix integration modes.
+      allOf:
+        - $ref: "#/components/schemas/IPTokenClaims"
+        - not:
+            required: [ocm_ip]
+      example:
+        iss: https://cloud.example.org
+        sub: alice
+        aud: bob@receiver.example.org
+        client_id: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+        iat: 1781186460
+        exp: 1781190060
+        jti: f3b9c0aa-2f6e-4d57-9d24-6f0a1f6d9b11
+    IPSelfContainedTokenClaims:
+      description: >
+        Self-contained token claims. exp MUST NOT exceed the Share expiration
+        when present.
+      allOf:
+        - $ref: "#/components/schemas/IPTokenClaims"
+        - required: [ocm_ip]
+      example:
+        iss: https://cloud.example.org
+        sub: alice
+        aud: bob@receiver.example.org
+        client_id: receiver.example.org
+        iat: 1781186460
+        exp: 1781186760
+        jti: 0d9e3c4b-5a6f-4e21-8c37-2b1a9f8e7d65
+        ocm_ip:
+          providerId: 9b2e41d7-aa31-4a02-9f0d-3c5e8b7a6f10
+          resourceType: folder
+          name: dataset-2026
+          protocol:
+            name: multi
+            webdav:
+              uri: 9b2e41d7-aa31-4a02-9f0d-3c5e8b7a6f10
+              permissions:
+              - read
+    IPIntrospectionResponse:
+      description: >
+        Inactive, active provisioned or active self-contained introspection.
+        An active response requires exactly one of client_id and ocm_ip.
+        Active extensions remain open. Verify authentication, pairing and exp
+        before relying on the response.
+      oneOf:
+        - $ref: "#/components/schemas/IPInactiveIntrospectionResponse"
+        - $ref: "#/components/schemas/IPActiveProvisionedIntrospectionResponse"
+        - $ref: "#/components/schemas/IPActiveSelfContainedIntrospectionResponse"
+    IPInactiveIntrospectionResponse:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+          enum: [false]
+      additionalProperties: false
+      example:
+        active: false
+    IPActiveIntrospectionResponse:
+      allOf:
+        - $ref: "#/components/schemas/IPCommonClaims"
+        - type: object
+          required: [active, iss, sub, aud, exp]
+          properties:
+            active:
+              type: boolean
+              enum: [true]
+    IPActiveProvisionedIntrospectionResponse:
+      description: Illustrative active response naming a provisioned Share.
+      allOf:
+        - $ref: "#/components/schemas/IPActiveIntrospectionResponse"
+        - required: [client_id]
+          not:
+            required: [ocm_ip]
+      example:
+        active: true
+        iss: https://cloud.example.org
+        sub: alice
+        aud: bob@receiver.example.org
+        exp: 1781190060
+        client_id: 7c084226-d9a1-11e6-bf26-cec0c932ce01
+    IPActiveSelfContainedIntrospectionResponse:
+      allOf:
+        - $ref: "#/components/schemas/IPActiveIntrospectionResponse"
+        - required: [ocm_ip]
+          not:
+            required: [client_id]
+      example:
+        active: true
+        iss: https://cloud.example.org
+        sub: alice
+        aud: carol@legacy.example.com
+        exp: 1781186760
+        ocm_ip:
+          providerId: 4f6a2c81-77b0-4c0e-9e64-1d2f3a5b6c7d
+          resourceType: folder
+          name: dataset-2026
+          protocol:
+            name: multi
+            webdav:
+              uri: 4f6a2c81-77b0-4c0e-9e64-1d2f3a5b6c7d
+              permissions:
+              - read
+    # MLS
     KeyPackageEntry:
       type: object
       required:
@@ -1115,17 +1431,8 @@ components:
                 type: string
                 description: A human-readable name for the OCM Server.
                 example: My OCM Server
-    NewShare:
+    ShareFields:
       type: object
-      required:
-        - shareWith
-        - name
-        - providerId
-        - owner
-        - sender
-        - shareType
-        - resourceType
-        - protocol
       properties:
         shareWith:
           allOf:
@@ -1227,6 +1534,288 @@ components:
             server MAY use the `expiration` to signal that the resource represents
             a cached copy of a dataset that was made available for an efficient
             data transfer to the destination server.
+    ShareProtocolFields:
+      type: object
+      properties:
+        name:
+          type: string
+          description: >
+            The name of the protocol. Default: `multi`.
+            If `multi` is given, one or more protocol endpoints are expected
+            to be defined according to the optional properties specified below.
+            Otherwise, at least `webdav` is expected to be supported, and
+            its options MAY be given in the opaque `options` payload for
+            compatibility with v1.0 implementations (see examples). Note
+            though that this format is deprecated.
+            Warning: client implementers should be aware that v1.1+ servers
+            MAY support both `webdav` and `multi`, but v1.0 servers MAY
+            only support `webdav`.
+            This field may be removed in a future version of the spec.
+        options:
+          type: object
+          description: >
+            This property is now deprecated. Implementations are encouraged to
+            transition to the new optional properties defined below, such that
+            this field may be removed in a future version of the spec.
+        webdav:
+          type: object
+          properties:
+            accessTypes:
+              type: array
+              description: >
+                The type of access being granted to the remote resource.
+                If omitted, it defaults to `['remote']`.
+                - `remote` signals the recipient that the resource is available
+                  for remote access and interactive browsing.
+                - `datatx` signals the recipient to transfer the resource
+                  from the given URI. The recipient MAY delegate a third-party
+                  service to execute the data transfer on their behalf.
+              items:
+                type: string
+                enum:
+                  - remote
+                  - datatx
+            uri:
+              type: string
+              description: >
+                An URI to access the remote resource. The URI MAY be relative,
+                such as a key or a UUID, in which case the prefix exposed by the
+                `/.well-known/ocm` endpoint MUST be used to access the resource, or
+                it MAY be absolute, including a hostname.
+                In all cases, for a `folder` resource, the composed URI acts
+                as the root path, such that other files located within it MUST
+                be accessible by appending their relative path to that URI.
+            sharedSecret:
+              type: string
+              description: >
+                A secret to be used to access the resource, such as a bearer token.
+                To prevent leaking it in logs it MUST NOT appear in any URI.
+            permissions:
+              type: array
+              description: >
+                The permissions granted to the sharee.
+                - `read` allows read-only access including download of a copy.
+                - `create` allows creating new resources within the shared
+                  resource, e.g. in an upload-only folder.
+                - `update` allows updating existing resources.
+                - `delete` allows deleting resources.
+                - `write` allows create, update, and delete rights on the
+                  resource. It is kept for backwards compatibility and
+                  SHALL be interpreted as the union of `create`, `update`,
+                  and `delete` in any given permissions set. A recipient
+                  that only supports `write` SHOULD grant it when any of
+                  `create`, `update`, or `delete` is present.
+                - `share` allows re-share rights on the resource.
+              items:
+                allOf:
+                  - $ref: "#/components/schemas/SharePermission"
+                  - not:
+                      enum:
+                        - view
+            requirements:
+              type: array
+              items:
+                type: string
+                description: >
+                  A list of requirements that the recipient provider MUST fulfill
+                  to access the resource. Requirements are optional, but if it is
+                  present it MUST NOT be empty. A recipient provider MUST reject
+                  a share whose requirements it does not understand.
+                  The following requirements are currently supported:
+                  - `must-use-mfa` requires the user accessing the resource to be
+                    MFA-authenticated. This requirement MAY be used if the
+                    recipient provider exposes the `enforce-mfa` capability.
+                  - `must-exchange-token` requires the recipient to exchange the given
+                    `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
+                    Sending Server, in order to get a short-lived token to be used
+                    for subsequent access [RFC6749]. This requirement MAY be used if
+                    the Sending Server exposes the `exchange-token` capability and
+                    `tokenEndPoint`, and MUST be included when the Receiving Server
+                    advertises `must-exchange-token` in criteria.
+                enum:
+                  - must-use-mfa
+                  - must-exchange-token
+            size:
+              type: integer
+              description: >
+                The size of the resource to be transferred, useful especially
+                in case of `datatx` access type.
+        webapp:
+          type: object
+          properties:
+            uri:
+              type: string
+              description: >
+                An URI to a client-browsable view of the remote resource, such that
+                users may use a web application available at the sender site.
+                The URI MUST be absolute, including a hostname. In case the
+                underlying resource is a folder, the URI MUST act as a root path,
+                such that files located within the folder are made accessible in
+                the web app by appending their relative path to the URI.
+            targets:
+              type: array
+              minItems: 1
+              description: >
+                How the recipient should present the URI to the user.
+                This array is REQUIRED and MUST NOT be empty: a webapp
+                share without a target is invalid.
+                - "blank" signals the recipient to open the URI in a top-level
+                browsing context chosen by the receiver, such as a new window or
+                tab, or a full page navigation in the current window.
+                - "iframe" signals the recipient to embed the URI in an iframe within
+                  its own UI, when the Sending Server allows framing by the recipient.
+              items:
+                type: string
+                enum:
+                  - blank
+                  - iframe
+            permissions:
+              type: array
+              minItems: 1
+              description: >
+                The permissions granted to the sharee. This array is
+                REQUIRED and MUST NOT be empty.
+                - `view` allows access to the web app in view-only mode.
+                - `read` allows read and download access via the web app.
+                - `create` allows creating new resources via the web app.
+                - `update` allows updating existing resources via the web app.
+                - `delete` allows deleting resources via the web app.
+                - `write` allows full editing rights via the web app. It is
+                  kept for backwards compatibility and SHALL be interpreted
+                  as the union of `create`, `update`, and `delete` in any
+                  given permissions set.
+                - `share` allows re-share rights on the resource. This only
+                  applies to web apps that provide a mechanism for re-sharing.
+              items:
+                $ref: "#/components/schemas/SharePermission"
+            requirements:
+              type: array
+              minItems: 1
+              description: >
+                The requirements that the sharee MUST fulfill to access the
+                resource. This array is REQUIRED and MUST at least include
+                `must-exchange-token`. If multiple protocols are present in
+                the share payload, the requirements for the different
+                protocols MUST agree.
+                - `must-use-mfa` requires the user accessing the resource to be
+                  MFA-authenticated. This requirement MAY be used if the
+                  recipient provider exposes the `enforce-mfa` capability.
+                - `must-exchange-token` requires the recipient to exchange the given
+                  `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
+                  Sending Server, in order to get a short-lived token to be used
+                  for subsequent access [RFC6749].
+              items:
+                type: string
+                enum:
+                  - must-use-mfa
+                  - must-exchange-token
+            sharedSecret:
+              type: string
+              description: >
+                A secret for accessing the remote web app. To give access to the
+                remote app, the receiver MUST first exchange this value at the
+                Sending Server's `tokenEndPoint` using the Code Flow, then perform
+                an HTTP POST request to the given URI with the resulting bearer
+                token in a form field named `access_token`, along with another form
+                field named `expired_session_redirect_uri` that represents the
+                absolute HTTPS URI where the receiving server can restart access
+                to the web app when the browser session expires. Web apps that
+                do not support session refresh MAY ignore this field.
+                The shared secret MUST
+                NOT be exposed to the browser and MUST NOT appear in any URI. In a
+                multi-protocol share, requirements that affect shared access policy
+                MUST agree across the offered protocols.
+            appIconHint:
+              type: string
+              description: >
+                An optional string in the form of a media type (MIME type) that
+                describes the share as a whole, primarily intended as a way for
+                the receiving server to select an appropriate local icon for the
+                share. This is display metadata and MUST NOT be interpreted as
+                fetchable or executable content. It does not need to appear in any
+                of the `apps` media types, but SHOULD describe the primary shared
+                resource.
+            apps:
+              type: array
+              minItems: 1
+              description: >
+                An optional array of the web applications available at the
+                Sending Server to access the shared resource, useful in particular
+                when the resource is a folder whose files can be opened by different
+                web applications. The array MUST NOT contain more than one entry per
+                given `name`. The order of the entries MAY express a preference:
+                when multiple web applications can handle the same media type, the
+                receiver SHOULD consider the first matching entry as the default one.
+                All listed web applications are accessed through the same `uri`,
+                `sharedSecret`, `targets`, `permissions` and `requirements`.
+              items:
+                type: object
+                required:
+                  - name
+                  - mediaTypes
+                properties:
+                  name:
+                    type: string
+                    description: >
+                      A human-friendly name of the web application to be used
+                      in user interfaces when referring to this share.
+                  mediaTypes:
+                    type: array
+                    minItems: 1
+                    uniqueItems: true
+                    description: >
+                      The media (MIME) types that this web application can handle.
+                      This is a hint for receiver UI and routing decisions, and
+                      receivers MAY ignore values they do not understand.
+                      Unlike `appIconHint`, this describes formats the web
+                      application can open rather than the share-level icon hint.
+                    items:
+                      type: string
+        ssh:
+          type: object
+          properties:
+            accessTypes:
+              type: array
+              description: >
+                The type of access being granted to the remote resource.
+                If omitted, it defaults to `['remote']`.
+                - `remote` signals the recipient that the resource is available
+                  for remote access, e.g. via sshfs.
+                - `datatx` signals the recipient to transfer the resource from
+                  the given URI via scp. The recipient MAY delegate a third-party
+                  service to execute the data transfer on their behalf.
+              items:
+                type: string
+                enum:
+                  - remote
+                  - datatx
+            uri:
+              type: string
+              description: >
+                The full address to be used for ssh or scp access, in the form
+                `username@host.fqdn:port/resource/path`, where authentication is
+                expected to take place via public/private key.
+      additionalProperties:
+        type: object
+        description: >
+          Any optional additional protocols supported for this resource
+          MAY be provided here, along with their custom payload. Appropriate
+          capabilities SHOULD be advertised in order for a sender to ensure
+          the recipient can parse such customized payloads.
+    NewShare:
+      type: object
+      required:
+        - shareWith
+        - name
+        - providerId
+        - owner
+        - sender
+        - shareType
+        - resourceType
+        - protocol
+      allOf:
+        - $ref: "#/components/schemas/ShareFields"
+      properties:
         encryption:
           type: object
           description: >
@@ -1274,284 +1863,14 @@ components:
             - `webapp`, to access remote web applications
             - `ssh`, to access the data via SFTP/SCP
             Other custom protocols might be added in the future.
-          required:
-            - name
-          properties:
-            name:
-              type: string
-              description: >
-                The name of the protocol. Default: `multi`.
-                If `multi` is given, one or more protocol endpoints are expected
-                to be defined according to the optional properties specified below.
-                Otherwise, at least `webdav` is expected to be supported, and
-                its options MAY be given in the opaque `options` payload for
-                compatibility with v1.0 implementations (see examples). Note
-                though that this format is deprecated.
-                Warning: client implementers should be aware that v1.1+ servers
-                MAY support both `webdav` and `multi`, but v1.0 servers MAY
-                only support `webdav`.
-                This field may be removed in a future version of the spec.
-            options:
-              type: object
-              description: >
-                This property is now deprecated. Implementations are encouraged to
-                transition to the new optional properties defined below, such that
-                this field may be removed in a future version of the spec.
-            webdav:
-              type: object
-              required:
-                - uri
-                - sharedSecret
-                - permissions
+          allOf:
+            - $ref: "#/components/schemas/ShareProtocolFields"
+            - required: [name]
               properties:
-                accessTypes:
-                  type: array
-                  description: >
-                    The type of access being granted to the remote resource.
-                    If omitted, it defaults to `['remote']`.
-                    - `remote` signals the recipient that the resource is available
-                      for remote access and interactive browsing.
-                    - `datatx` signals the recipient to transfer the resource
-                      from the given URI. The recipient MAY delegate a third-party
-                      service to execute the data transfer on their behalf.
-                  items:
-                    type: string
-                    enum:
-                      - remote
-                      - datatx
-                uri:
-                  type: string
-                  description: >
-                    An URI to access the remote resource. The URI MAY be relative,
-                    such as a key or a UUID, in which case the prefix exposed by the
-                    `/.well-known/ocm` endpoint MUST be used to access the resource, or
-                    it MAY be absolute, including a hostname.
-                    In all cases, for a `folder` resource, the composed URI acts
-                    as the root path, such that other files located within it MUST
-                    be accessible by appending their relative path to that URI.
-                sharedSecret:
-                  type: string
-                  description: >
-                    A secret to be used to access the resource, such as a bearer token.
-                    To prevent leaking it in logs it MUST NOT appear in any URI.
-                permissions:
-                  type: array
-                  description: >
-                    The permissions granted to the sharee.
-                    - `read` allows read-only access including download of a copy.
-                    - `create` allows creating new resources within the shared
-                      resource, e.g. in an upload-only folder.
-                    - `update` allows updating existing resources.
-                    - `delete` allows deleting resources.
-                    - `write` allows create, update, and delete rights on the
-                      resource. It is kept for backwards compatibility and
-                      SHALL be interpreted as the union of `create`, `update`,
-                      and `delete` in any given permissions set. A recipient
-                      that only supports `write` SHOULD grant it when any of
-                      `create`, `update`, or `delete` is present.
-                    - `share` allows re-share rights on the resource.
-                  items:
-                    allOf:
-                      - $ref: "#/components/schemas/SharePermission"
-                      - not:
-                          enum:
-                            - view
-                requirements:
-                  type: array
-                  items:
-                    type: string
-                    description: >
-                      A list of requirements that the recipient provider MUST fulfill
-                      to access the resource. Requirements are optional, but if it is
-                      present it MUST NOT be empty. A recipient provider MUST reject
-                      a share whose requirements it does not understand.
-                      The following requirements are currently supported:
-                      - `must-use-mfa` requires the user accessing the resource to be
-                        MFA-authenticated. This requirement MAY be used if the
-                        recipient provider exposes the `enforce-mfa` capability.
-                      - `must-exchange-token` requires the recipient to exchange the given
-                        `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
-                        Sending Server, in order to get a short-lived token to be used
-                        for subsequent access [RFC6749]. This requirement MAY be used if
-                        the Sending Server exposes the `exchange-token` capability and
-                        `tokenEndPoint`, and MUST be included when the Receiving Server
-                        advertises `must-exchange-token` in criteria.
-                    enum:
-                      - must-use-mfa
-                      - must-exchange-token
-                size:
-                  type: integer
-                  description: >
-                    The size of the resource to be transferred, useful especially
-                    in case of `datatx` access type.
-            webapp:
-              type: object
-              required:
-                - uri
-                - sharedSecret
-                - targets
-                - permissions
-                - requirements
-              properties:
-                uri:
-                  type: string
-                  description: >
-                    An URI to a client-browsable view of the remote resource, such that
-                    users may use a web application available at the sender site.
-                    The URI MUST be absolute, including a hostname. In case the
-                    underlying resource is a folder, the URI MUST act as a root path,
-                    such that files located within the folder are made accessible in
-                    the web app by appending their relative path to the URI.
-                targets:
-                  type: array
-                  minItems: 1
-                  description: >
-                    How the recipient should present the URI to the user.
-                    This array is REQUIRED and MUST NOT be empty: a webapp
-                    share without a target is invalid.
-                    - "blank" signals the recipient to open the URI in a top-level
-                    browsing context chosen by the receiver, such as a new window or
-                    tab, or a full page navigation in the current window.
-                    - "iframe" signals the recipient to embed the URI in an iframe within
-                      its own UI, when the Sending Server allows framing by the recipient.
-                  items:
-                    type: string
-                    enum:
-                      - blank
-                      - iframe
-                permissions:
-                  type: array
-                  minItems: 1
-                  description: >
-                    The permissions granted to the sharee. This array is
-                    REQUIRED and MUST NOT be empty.
-                    - `view` allows access to the web app in view-only mode.
-                    - `read` allows read and download access via the web app.
-                    - `create` allows creating new resources via the web app.
-                    - `update` allows updating existing resources via the web app.
-                    - `delete` allows deleting resources via the web app.
-                    - `write` allows full editing rights via the web app. It is
-                      kept for backwards compatibility and SHALL be interpreted
-                      as the union of `create`, `update`, and `delete` in any
-                      given permissions set.
-                    - `share` allows re-share rights on the resource. This only
-                      applies to web apps that provide a mechanism for re-sharing.
-                  items:
-                    $ref: "#/components/schemas/SharePermission"
-                requirements:
-                  type: array
-                  minItems: 1
-                  description: >
-                    The requirements that the sharee MUST fulfill to access the
-                    resource. This array is REQUIRED and MUST at least include
-                    `must-exchange-token`. If multiple protocols are present in
-                    the share payload, the requirements for the different
-                    protocols MUST agree.
-                    - `must-use-mfa` requires the user accessing the resource to be
-                      MFA-authenticated. This requirement MAY be used if the
-                      recipient provider exposes the `enforce-mfa` capability.
-                    - `must-exchange-token` requires the recipient to exchange the given
-                      `sharedSecret` via a signed HTTPS request to tokenEndPoint at the
-                      Sending Server, in order to get a short-lived token to be used
-                      for subsequent access [RFC6749].
-                  items:
-                    type: string
-                    enum:
-                      - must-use-mfa
-                      - must-exchange-token
-                sharedSecret:
-                  type: string
-                  description: >
-                    A secret for accessing the remote web app. To give access to the
-                    remote app, the receiver MUST first exchange this value at the
-                    Sending Server's `tokenEndPoint` using the Code Flow, then perform
-                    an HTTP POST request to the given URI with the resulting bearer
-                    token in a form field named `access_token`, along with another form
-                    field named `expired_session_redirect_uri` that represents the
-                    absolute HTTPS URI where the receiving server can restart access
-                    to the web app when the browser session expires. Web apps that
-                    do not support session refresh MAY ignore this field.
-                    The shared secret MUST
-                    NOT be exposed to the browser and MUST NOT appear in any URI. In a
-                    multi-protocol share, requirements that affect shared access policy
-                    MUST agree across the offered protocols.
-                appIconHint:
-                  type: string
-                  description: >
-                    An optional string in the form of a media type (MIME type) that
-                    describes the share as a whole, primarily intended as a way for
-                    the receiving server to select an appropriate local icon for the
-                    share. This is display metadata and MUST NOT be interpreted as
-                    fetchable or executable content. It does not need to appear in any
-                    of the `apps` media types, but SHOULD describe the primary shared
-                    resource.
-                apps:
-                  type: array
-                  minItems: 1
-                  description: >
-                    An optional array of the web applications available at the
-                    Sending Server to access the shared resource, useful in particular
-                    when the resource is a folder whose files can be opened by different
-                    web applications. The array MUST NOT contain more than one entry per
-                    given `name`. The order of the entries MAY express a preference:
-                    when multiple web applications can handle the same media type, the
-                    receiver SHOULD consider the first matching entry as the default one.
-                    All listed web applications are accessed through the same `uri`,
-                    `sharedSecret`, `targets`, `permissions` and `requirements`.
-                  items:
-                    type: object
-                    required:
-                      - name
-                      - mediaTypes
-                    properties:
-                      name:
-                        type: string
-                        description: >
-                          A human-friendly name of the web application to be used
-                          in user interfaces when referring to this share.
-                      mediaTypes:
-                        type: array
-                        minItems: 1
-                        uniqueItems: true
-                        description: >
-                          The media (MIME) types that this web application can handle.
-                          This is a hint for receiver UI and routing decisions, and
-                          receivers MAY ignore values they do not understand.
-                          Unlike `appIconHint`, this describes formats the web
-                          application can open rather than the share-level icon hint.
-                        items:
-                          type: string
-            ssh:
-              type: object
-              properties:
-                accessTypes:
-                  type: array
-                  description: >
-                    The type of access being granted to the remote resource.
-                    If omitted, it defaults to `['remote']`.
-                    - `remote` signals the recipient that the resource is available
-                      for remote access, e.g. via sshfs.
-                    - `datatx` signals the recipient to transfer the resource from
-                      the given URI via scp. The recipient MAY delegate a third-party
-                      service to execute the data transfer on their behalf.
-                  items:
-                    type: string
-                    enum:
-                      - remote
-                      - datatx
-                uri:
-                  type: string
-                  description: >
-                    The full address to be used for ssh or scp access, in the form
-                    `username@host.fqdn:port/resource/path`, where authentication is
-                    expected to take place via public/private key.
-          additionalProperties:
-            type: object
-            description: >
-              Any optional additional protocols supported for this resource
-              MAY be provided here, along with their custom payload. Appropriate
-              capabilities SHOULD be advertised in order for a sender to ensure
-              the recipient can parse such customized payloads.
+                webdav:
+                  required: [uri, sharedSecret, permissions]
+                webapp:
+                  required: [uri, sharedSecret, targets, permissions, requirements]
           example:
             singleProtocolLegacy:
               name: webdav
