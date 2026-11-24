@@ -638,8 +638,7 @@ In both models, the membership is published in the same format at the
 same endpoint, so that a consumer of a Directory Service does not need
 to know which model is in use.
 
-Additionally, and for backwards compatibility with existing
-deployments, a Federation MAY be published by a third-party Directory
+Additionally, a Federation MAY be published by a third-party Directory
 Service on behalf of its members, as described in
 [Third-party Directory Service](#third-party-directory-service).
 
@@ -2785,7 +2784,7 @@ of the protocol that _can_ be used to assist operators in establishing
 trust.  For instance, invite flow can be used to establish that users
 know and have out of band connections with other users on an OCM server.
 
-Further more the [Directory Service](#directory-service) feature can be
+Furthermore the [Directory Service](#directory-service) feature can be
 used to establish a trusted federation.  In the third-party model, a
 central authority can be trusted to implement measures for auditing and
 adding only trusted servers into the directory; an Administrator who
