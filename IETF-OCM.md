@@ -1566,7 +1566,7 @@ described in [OCM-IP].
     [IANA Considerations](#iana-considerations)).
   - REQUIRED {schemeObject} (object) - an object keyed with the given
     scheme, containing the details of the encryption used.
-    For the "ocm-gpg" scheme, it MUST contain:
+    For the "ocm-pgp" scheme, it MUST contain:
     - fingerprints (array of strings) - one or more fingerprints of
       the public keys used to encrypt the resource.
     For the "ocm-mls" scheme, it MUST contain:
@@ -1635,7 +1635,10 @@ described in [OCM-IP].
     a bearer token.  To prevent leaking it in logs it
     MUST NOT appear in any URI.
   - OPTIONAL permissions (array of strings) -
-    The permissions granted to the sharee.  A subset of:
+    The permissions granted to the sharee.  If present, it MUST NOT
+    be empty.  If omitted, the permissions are unspecified and access
+    remains subject to the Sending Server's authorization.  A subset
+    of:
     - `read` allows read-only access including download of a copy.
     - `create` allows creating new Resources within the shared
       Resource, e.g. in an upload-only folder.
@@ -1650,7 +1653,8 @@ described in [OCM-IP].
     when any of `create`, `update`, or `delete` is present.
   - OPTIONAL requirements (array of strings) -
     The requirements that the sharee MUST fulfill to
-    access the Resource.  A subset of:
+    access the Resource.  If present, it MUST NOT be empty.  A subset
+    of:
     - `must-exchange-token` requires the recipient to
     exchange the given `sharedSecret` via a signed HTTPS request
     to the Sending Server's {tokenEndPoint} [RFC6749].
@@ -1730,11 +1734,12 @@ described in [OCM-IP].
       application, to be used in user interfaces when referring to
       this Share.
     - REQUIRED mediaTypes (array of strings) - The media types (MIME
-      types) that this web application can handle.  The array MUST
-      NOT be empty.  This can be any media type entries from the IANA
-      Media Type registry.  The receiver MAY use this as a hint for UI
-      or routing decisions, e.g. to show which web application opens
-      a given file, and MAY ignore values it does not understand.
+      types) that this web application can handle.  The array MUST NOT
+      be empty and MUST NOT contain duplicate strings.  This can be any
+      media type entries from the IANA Media Type registry.  The
+      receiver MAY use this as a hint for UI or routing decisions,
+      e.g. to show which web application opens a given file, and MAY
+      ignore values it does not understand.
       Unlike `appIconHint`, this describes formats the web
       application can open rather than the share-level icon hint.
       [RFC6838]
@@ -2214,7 +2219,10 @@ Directory](#mls-based-directory).
 
 To access the Resource, the Receiving Server MAY use multiple ways,
 depending on the body of the Share Creation Notification and the
-protocol required for access.  The procedure is as follows:
+protocol required for access.  A Receiving Server MUST reject a Share
+if it cannot understand or enforce a requirement of the protocol
+selected for access, and MUST NOT skip that requirement.  The
+procedure is as follows:
 
 1.  The receiver MUST extract the OCM Server Address from `sender`
     field of the received share, and MUST query the
@@ -3126,7 +3134,7 @@ an example response from `https://sender.example.org/ocm/jwks`:
 
 Given a Share Creation Notification request:
 
-<sourcecode type="http">
+<sourcecode type="http" anchor="core-share-request-example">
 POST /ocm/shares HTTP/1.1
 Host: receiver.example.org
 Content-Type: application/json

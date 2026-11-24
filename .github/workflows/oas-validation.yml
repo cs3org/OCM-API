@@ -33,3 +33,8 @@ jobs:
         run: |
           "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
             tests/test_extension_schemas.py
+
+      - name: Check core share schemas
+        run: |
+          "$(pipx environment --value PIPX_HOME)/venvs/openapi-spec-validator/bin/python" \
+            tests/test_share_schema.py
