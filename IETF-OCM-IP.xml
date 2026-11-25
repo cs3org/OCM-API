@@ -1487,9 +1487,6 @@ March 1997.</t>
 <t>[RFC8174] Leiba, B. "<eref target="https://datatracker.ietf.org/html/rfc8174">Ambiguity of Uppercase vs Lowercase in RFC 2119
 Key Words</eref>", May 2017.</t>
 
-<t>[RFC8615] Nottingham, M. "<eref target="https://datatracker.ietf.org/doc/html/rfc8615">Well-Known Uniform Resource Identifiers
-(URIs)</eref>", May 2019.</t>
-
 <t>[RFC9068] Bertocci, V., "<eref target="https://datatracker.ietf.org/doc/html/rfc9068">JSON Web Token (JWT) Profile for OAuth 2.0
 Access Tokens</eref>", October
 2021.</t>
