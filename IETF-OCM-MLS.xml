@@ -12,7 +12,7 @@
 ]>
 
 
-<rfc ipr="trust200902" docName="draft-ietf-ocm-mls-federated-groups-01" category="std" consensus="true" submissionType="IETF">
+<rfc ipr="trust200902" docName="draft-ietf-ocm-mls-federated-groups-00" category="std" consensus="true" submissionType="IETF">
   <front>
     <title abbrev="OCM MLS Federated Groups">Federated Groups in Open Cloud Mesh using Messaging Layer Security</title>
 
@@ -38,7 +38,7 @@
       </address>
     </author>
 
-    <date year="2026" month="November" day="16"/>
+    <date year="2026" month="November" day="25"/>
 
     <area>Applications and Real-Time</area>
     
@@ -78,12 +78,21 @@ capabilities for resources shared with federated groups.</t>
 
 <t>Open Cloud Mesh [OCM] currently supports sharing resources with
 individual users across federated servers and with groups on a single
-server.  This document defines a new <spanx style="verb">shareType</spanx>, <spanx style="verb">"federation"</spanx>, and
-registers it in the "OCM Share Types" registry defined by [OCM].  A
-<spanx style="verb">"federation"</spanx> share is addressed to a federated group identified by an
-OCM Address such as <spanx style="verb">research-group@receiver.example.org</spanx> whose
-membership spans multiple OCM servers, with group state managed through
-the MLS [RFC9420] epoch mechanism.</t>
+server.  This document specifies the mechanics of the <spanx style="verb">"community"</spanx>
+share type, registered in the "OCM Share Types" registry by this
+document, for the case where the Receiving Party is a federated group
+of users (a community): a <spanx style="verb">"community"</spanx> share is then addressed to a
+group identified by an OCM Address such as
+<spanx style="verb">research-group@receiver.example.org</spanx> whose membership spans multiple
+OCM servers, with group state managed through the MLS [RFC9420] epoch
+mechanism.</t>
+
+<t>This document further specifies how an MLS group can maintain the
+membership of a Federation of OCM Servers itself, which is the
+cryptographically guaranteed Directory Service model of [OCM]
+(<xref target="servers-federation-groups"/>).  The two uses of MLS share all of
+their machinery and differ only in what a leaf of the group represents:
+a user, or an OCM Server.</t>
 
 <t>In many Enterprise File Sync and Share (EFSS) systems, which constitute
 the vast majority of all OCM Servers, there is a tight coupling between
@@ -173,8 +182,9 @@ wrapped keys, is encoded using base64url (the URL- and filename-safe
 alphabet defined in [RFC4648], Section 5) with padding omitted.  A
 decoder MUST accept such a value whether or not padding is present.</t>
 
-<t>This document uses terminology from [OCM], [RFC9420] and
-[ietf-mls-virtual-clients].  Additional definitions:</t>
+<t>This document uses terminology from [OCM], [RFC9420],
+[ietf-mls-extensions] and [ietf-mls-virtual-clients].  Additional
+definitions:</t>
 
 <t><list style="symbols">
   <t><strong>Group</strong> - A Receiving Party identified by an OCM Address whose
@@ -205,9 +215,15 @@ creates a Group is its first Admin.  Only the MLS clients of Admins
 state (<xref target="admin-set"/>).</t>
   <t><strong>Admin Server</strong> - The home server of an Admin.  Admin Servers
 collectively queue proposals for the Group.</t>
+  <t><strong>OCM Community Component</strong> - The MLS application component
+identified by the <spanx style="verb">ocm_community</spanx> Component ID
+(<xref target="iana-considerations"/>).  Its data in the GroupContext carries the
+group's OCM Address and admin set (<xref target="admin-set"/>), and its component
+secret is used to derive the Group Key.</t>
   <t><strong>Group Key</strong> - A symmetric key derived from the current MLS epoch
-secret via the MLS Exporter, with the key length of the AEAD algorithm
-of the group's cipher suite.  Rotates with every epoch transition.</t>
+through the component-separated safe exporter defined in
+[ietf-mls-extensions], with the key length of the AEAD algorithm of the
+group's cipher suite.  Rotates with every epoch transition.</t>
   <t><strong>File Key (FK)</strong> - A random symmetric key used to encrypt a single
 shared resource.  Wrapped with the current Group Key and distributed to
 Member Servers via MLS Application Messages.  Re-wrapped under the new
@@ -228,6 +244,21 @@ circumstances.</t>
 enables adding an MLS client to a group asynchronously.  KeyPackages
 MUST be used only once, except for a designated last resort KeyPackage
 ([RFC9420] Section 16.8).</t>
+  <t><strong>Federation</strong> - As defined in [OCM]: a group of OCM Servers whose
+administrators have established mutual trust, identified by a
+<spanx style="verb">federationId</spanx> and published at the Directory Endpoint of its members.</t>
+  <t><strong>Servers Federation group</strong> - An MLS group whose members are the OCM
+Servers of a Federation, with exactly one leaf per member server, used
+to maintain that Federation's membership with cryptographic guarantees
+(<xref target="servers-federation-groups"/>).  Wherever this document says "Group"
+without qualification it means a federated group of users, as defined
+above, and never a Servers Federation group.</t>
+  <t><strong>Federation Admin Server</strong> - A member of a Servers Federation group
+whose MLS client is entitled to construct Commits for that group: the
+counterpart, for a Servers Federation group, of an Admin.</t>
+  <t><strong>Federation Owner Server</strong> - The member of a Servers Federation
+group currently arbitrating its Commits: the first Federation Admin
+Server in that group's admin set.</t>
 </list></t>
 
 </section>
@@ -256,7 +287,7 @@ publishing the user's KeyPackages.</t>
 <t>A basic credential carries no verifiable binding of its own; the binding
 between a user's OCM Address and their signature key is attested by
 authenticated delivery from the user's home server.  A KeyPackage
-fetched over TLS from the <spanx style="verb">&lt;endPoint&gt;/mls-key-packages</spanx> endpoint of the
+fetched over TLS from the <spanx style="verb">&lt;endPoint&gt;/mls/key-packages</spanx> endpoint of the
 server named in the credential's OCM Address, with the response signed
 using HTTP Signatures [RFC9421] verifying against the JWK Set [RFC7517]
 advertised in the <spanx style="verb">jwksUri</spanx> field of that server's OCM Discovery
@@ -284,6 +315,10 @@ an admin client and broadcasts it to all Member Servers.</t>
 are sent directly from the sending server to all current Member Servers,
 exactly like OCM share notifications; credential updates are sent to a
 single Member Server (<xref target="credential-update"/>).</t>
+  <t>Group state retrieval: Admin Servers retain the public group state of
+recent epochs and serve the ratchet tree to newly added Member Servers
+and missed Commits to Member Servers that have fallen behind
+(<xref target="group-state"/>).</t>
 </list></t>
 
 <t>All MLS messages are delivered to the <spanx style="verb">&lt;endPoint&gt;/notifications</spanx>
@@ -293,6 +328,12 @@ endpoint of each recipient server, authenticated with HTTP Signatures
 <t>For a Virtual Client, the user's home server MUST deliver messages sent
 to or by the Virtual Client to all of its Emulator Clients, as required
 by [ietf-mls-virtual-clients] Section 5.1.</t>
+
+<t>In a Servers Federation group (<xref target="servers-federation-groups"/>) the same
+arrangement applies with the member servers themselves in the place of
+the users' home servers: proposals go to every Federation Admin Server,
+the Federation Owner Server arbitrates Commits, and there is no FK
+distribution.</t>
 
 <t>Commits are constructed and signed by admin clients, but only the Commit
 accepted by the Group Owner Server takes effect; competing Commits for
@@ -358,7 +399,7 @@ arbitrated by the Group Owner Server.  Add proposals and Remove
 proposals targeting another user require admin approval; any member may
 remove themselves, and Update proposals are committed automatically.</t>
   <t><strong>Encryption is optional.</strong> MLS group management is useful
-independently of whether encryption is used.  A federation share MAY be
+independently of whether encryption is used.  A community share MAY be
 unencrypted, in which case the <spanx style="verb">encryption</spanx> field is omitted from the
 Share Creation Notification and the MLS layer provides only group
 membership management.</t>
@@ -402,20 +443,21 @@ Servers, at share creation and after every epoch transition
 (<xref target="fk-rewrap"/>).  Member Servers always hold the current wrapped FK for
 each resource and use their current Group Key to unwrap it at access
 time.</t>
-  <t><strong>Minimal protocol surface.</strong> The <spanx style="verb">shareType: "federation"</spanx> value
-already defined in the OCM specification is used without modification,
-with <spanx style="verb">shareWith</spanx> carrying the group's OCM Address.  A federation share
+  <t><strong>Minimal protocol surface.</strong> The <spanx style="verb">shareType: "community"</spanx> value
+registered by this document is used,
+with <spanx style="verb">shareWith</spanx> carrying the group's OCM Address.  A community share
 is otherwise a standard OCM share, carrying every field REQUIRED by
 [OCM] including the <spanx style="verb">protocol</spanx> object.  All new server-to-server
 messages use the existing <spanx style="verb">/notifications</spanx> endpoint with new
-<spanx style="verb">notificationType</spanx> values.</t>
+<spanx style="verb">notificationType</spanx> values; KeyPackages and public group state are
+retrieved through signed GET endpoints derived from <spanx style="verb">endPoint</spanx>.</t>
 </list></t>
 
 </section>
 <section anchor="discovery"><name>Discovery</name>
 
-<t>A server signals support for federation shares by including
-<spanx style="verb">"federation"</spanx> in the <spanx style="verb">shareTypes</spanx> array for a given resource type in
+<t>A server signals support for community shares by including
+<spanx style="verb">"community"</spanx> in the <spanx style="verb">shareTypes</spanx> array for a given resource type in
 its OCM discovery document at <spanx style="verb">/.well-known/ocm</spanx>:</t>
 
 <figure><sourcecode type="json"><![CDATA[
@@ -424,29 +466,38 @@ its OCM discovery document at <spanx style="verb">/.well-known/ocm</spanx>:</t>
   "apiVersion": "1.5.0",
   "endPoint": "https://cloud.example.org/ocm",
   "provider": "Example Cloud",
-  "resourceTypes": [
+  "resourceTypes": \[
     {
       "name": "file",
-      "shareTypes": ["user", "group", "federation"],
+      "shareTypes": \["user", "group", "community"\],
       "protocols": { "webdav": "/webdav/", "webdav-receive": {} }
     }
-  ]
+  \]
 }
 ]]></sourcecode></figure>
 
 <t>No additional discovery fields are introduced.  The notifications
 endpoint is derived as <spanx style="verb">&lt;endPoint&gt;/notifications</spanx> per the base OCM
 specification.  The KeyPackage endpoint is derived as
-<spanx style="verb">&lt;endPoint&gt;/mls-key-packages</spanx>.  For example, an <spanx style="verb">endPoint</spanx> of
+<spanx style="verb">&lt;endPoint&gt;/mls/key-packages</spanx>, and the group state endpoints as
+<spanx style="verb">&lt;endPoint&gt;/mls/ratchet-tree</spanx> and <spanx style="verb">&lt;endPoint&gt;/mls/commits</spanx>
+(<xref target="group-state"/>).  For example, an <spanx style="verb">endPoint</spanx> of
 <spanx style="verb">https://cloud.example.org/ocm</spanx> results in the KeyPackage endpoint
-<spanx style="verb">https://cloud.example.org/ocm/mls-key-packages</spanx>.</t>
+<spanx style="verb">https://cloud.example.org/ocm/mls/key-packages</spanx>.</t>
 
-<t>A server that advertises <spanx style="verb">"federation"</spanx> MUST be able to receive OCM
+<t>A server that participates in a Servers Federation group
+(<xref target="servers-federation-groups"/>) additionally advertises the
+<spanx style="verb">directoryEndPoint</spanx> field defined in [OCM], and publishes the
+Federation's <spanx style="verb">mlsGroupId</spanx> in the directory document exposed there.
+That field, and not a capability of its own, is what signals that the
+server exposes a Federation membership.</t>
+
+<t>A server that advertises <spanx style="verb">"community"</spanx> MUST be able to receive OCM
 Notifications, since all MLS lifecycle messages are delivered as
 notifications, and SHOULD include <spanx style="verb">"notifications"</spanx> in its
 <spanx style="verb">capabilities</spanx> array.  It MUST also advertise the <spanx style="verb">"http-sig"</spanx>
-capability and a <spanx style="verb">jwksUri</spanx>, since KeyPackage distribution requires HTTP
-Message Signatures in both directions.</t>
+capability and a <spanx style="verb">jwksUri</spanx>, since KeyPackage distribution and group
+state retrieval require HTTP Message Signatures in both directions.</t>
 
 </section>
 <section anchor="keypackage-distribution"><name>KeyPackage Distribution</name>
@@ -455,7 +506,7 @@ Message Signatures in both directions.</t>
 KeyPackages for its users and exposes them at:</t>
 
 <figure><artwork><![CDATA[
-GET <endPoint>/mls-key-packages
+GET <endPoint>/mls/key-packages
 ]]></artwork></figure>
 
 <t>The request has two REQUIRED query parameters:</t>
@@ -463,7 +514,8 @@ GET <endPoint>/mls-key-packages
 <t><list style="symbols">
   <t><spanx style="verb">userId</spanx> is the full OCM Address of the user whose KeyPackage is
 requested.</t>
-  <t><spanx style="verb">senderDomain</spanx> is the FQDN of the requesting OCM Server.</t>
+  <t><spanx style="verb">senderDomain</spanx> is the requesting server's OCM Server Address
+(host and optional port), as defined in [OCM].</t>
 </list></t>
 
 <t>Response:</t>
@@ -471,13 +523,13 @@ requested.</t>
 <figure><sourcecode type="json"><![CDATA[
 {
   "userId": "alice@cloud.example.org",
-  "keyPackages": [
+  "keyPackages": \[
     {
       "mediaType": "message/mls",
       "encoding": "base64url",
       "content": "<base64url-encoded MLS KeyPackage>"
     }
-  ]
+  \]
 }
 ]]></sourcecode></figure>
 
@@ -559,6 +611,165 @@ lifetime they accept ([RFC9420] Section 7.2).</t>
 Address, not the bare identifier that [OCM] calls <spanx style="verb">userID</spanx>; the full
 address is required because these messages routinely cross server
 boundaries.</t>
+
+</section>
+<section anchor="server-key-packages"><name>KeyPackages for OCM Servers</name>
+
+<t>In a Servers Federation group (<xref target="servers-federation-groups"/>) the MLS
+client is the OCM Server itself, and its credential identifies the
+server rather than one of its users.  A server that participates in
+such groups MUST expose KeyPackages for its own client at the same
+endpoint, selected by <spanx style="verb">serverId</spanx> instead of <spanx style="verb">userId</spanx>:</t>
+
+<figure><artwork><![CDATA[
+GET <endPoint>/mls/key-packages?serverId={serverUrl}
+]]></artwork></figure>
+
+<t>Response:</t>
+
+<figure><sourcecode type="json"><![CDATA[
+{
+  "serverId": "https://cloud.example.org",
+  "keyPackages": \[
+    {
+      "mediaType": "message/mls",
+      "encoding": "base64url",
+      "content": "<base64url-encoded MLS KeyPackage>"
+    }
+  \]
+}
+]]></sourcecode></figure>
+
+<t>The <spanx style="verb">serverId</spanx> value is the absolute URL of the OCM Server in the
+format [OCM] specifies for the <spanx style="verb">url</spanx> field of a directory document, and
+MUST equal the identity carried in the credential of every KeyPackage
+returned.  A server MUST reject a request whose <spanx style="verb">serverId</spanx> does not
+identify itself.  All other rules of this section apply unchanged: the
+request MUST be signed, KeyPackages MUST be one-time use except for a
+designated last resort KeyPackage, and the server MUST remove a
+KeyPackage once delivered.  A request MUST carry exactly one of
+<spanx style="verb">userId</spanx> and <spanx style="verb">serverId</spanx>.</t>
+
+</section>
+</section>
+<section anchor="group-state"><name>Group State Retrieval</name>
+
+<t>Admin Servers track the public state of every group their admins
+administer, as every server that routes or arbitrates handshake
+messages does (<xref target="mls-notification-types"/>).  They serve two things a
+Member Server may lack: the ratchet tree that a newly added Member
+Server needs to process its Welcome, and Commits that a Member Server
+has missed.</t>
+
+<t>An Admin Server MUST retain the ratchet tree of each epoch, and the
+Commit sent in that epoch together with the proposals it covers by
+reference, for at least the group's update deadline
+(<xref target="leaf-key-updates"/>) after the end of the epoch.</t>
+
+<t>Requests to both endpoints carry the REQUIRED query parameters
+<spanx style="verb">mlsGroupId</spanx>, the base64url-encoded MLS <spanx style="verb">group_id</spanx>, and <spanx style="verb">senderDomain</spanx>,
+the requesting server's OCM Server Address, and are authenticated like
+requests to the KeyPackage endpoint (<xref target="request-authentication"/>).
+Responses are signed exactly like KeyPackage responses
+(<xref target="response-authentication"/>), with the response key resolved through
+the <spanx style="verb">jwksUri</spanx> of the server the request was addressed to.  A server
+MUST serve a request only if the verified <spanx style="verb">senderDomain</spanx> matches a leaf
+credential's complete server address in that epoch: the server part of
+an OCM Address, or the host and optional port of a server URL, compared
+as defined in [OCM].  Otherwise, and when it does not retain
+that epoch, it MUST respond with 404 Not Found, so that neither the
+existence of a group nor its membership is disclosed to other servers.</t>
+
+<section anchor="ratchet-tree"><name>Ratchet Tree</name>
+
+<figure><artwork><![CDATA[
+GET <endPoint>/mls/ratchet-tree
+]]></artwork></figure>
+
+<t>The additional REQUIRED query parameter <spanx style="verb">epoch</spanx> is the decimal number
+of the epoch whose ratchet tree is requested.</t>
+
+<t>Response:</t>
+
+<figure><sourcecode type="json"><![CDATA[
+{
+  "mlsGroupId": "<base64url MLS group ID>",
+  "epoch": 42,
+  "ratchetTree": {
+    "encoding": "base64url",
+    "content": "<base64url ratchet_tree>"
+  }
+}
+]]></sourcecode></figure>
+
+<t><spanx style="verb">content</spanx> is the TLS serialisation of the <spanx style="verb">ratchet_tree</spanx> value defined
+in [RFC9420] Section 12.4.3.3, that is, the <spanx style="verb">extension_data</spanx> that a
+<spanx style="verb">ratchet_tree</spanx> extension would carry.</t>
+
+<t>A Member Server that receives an <spanx style="verb">MLS_WELCOME</spanx>
+(<xref target="mls-notification-types"/>) decrypts the GroupInfo, which does not
+require the tree, reads <spanx style="verb">group_id</spanx> and <spanx style="verb">epoch</spanx> from its GroupContext,
+requests the tree of that epoch from the server named in the
+notification's <spanx style="verb">senderDomain</spanx>, and then processes the Welcome as
+specified in [RFC9420] Section 12.4.3.1, which verifies the tree
+against the <spanx style="verb">tree_hash</spanx> in the GroupInfo.  If that server does not
+respond, the Member Server MAY request the tree from any other Admin
+Server, derived from the admin set (<xref target="admin-set"/>) in the same
+GroupContext.  In native client deployments the home server performs
+the request and relays the tree to the client; the client's
+verification against <spanx style="verb">tree_hash</spanx> does not depend on the channel.  A
+Member Server that cannot obtain the tree recovers through the rejoin
+procedure (<xref target="rejoin"/>), since its users already hold leaves in the
+group.</t>
+
+</section>
+<section anchor="commits"><name>Commits</name>
+
+<figure><artwork><![CDATA[
+GET <endPoint>/mls/commits
+]]></artwork></figure>
+
+<t>The additional REQUIRED query parameter <spanx style="verb">from</spanx> is the decimal number of
+the epoch in which the first requested Commit was sent, that is, the
+requester's current epoch.</t>
+
+<t>Response:</t>
+
+<figure><sourcecode type="json"><![CDATA[
+{
+  "mlsGroupId": "<base64url MLS group ID>",
+  "commits": \[
+    {
+      "epoch": 42,
+      "proposals": \[
+        "<base64url MLS PublicMessage carrying a Proposal>"
+      \],
+      "content": "<base64url MLS PublicMessage carrying the Commit>"
+    }
+  \]
+}
+]]></sourcecode></figure>
+
+<t>Each entry carries one Commit exactly as it was broadcast in
+<spanx style="verb">MLS_COMMIT</spanx> (<xref target="mls-notification-types"/>): <spanx style="verb">epoch</spanx> is the epoch in
+which the Commit was sent, <spanx style="verb">content</spanx> is the Commit, and <spanx style="verb">proposals</spanx>
+carries the proposals it covers by reference, under the same rules as
+in the notification.  Entries are in increasing epoch order, starting
+at <spanx style="verb">from</spanx>, without gaps.  The sequence ends at the latest Commit the
+server holds or at the Commit that removes the requester's last leaf,
+whichever comes first.  A server MAY stop after any entry, for example
+to bound the response size; the requester repeats the request from the
+epoch following the last entry.  An empty <spanx style="verb">commits</spanx> array means that
+no Commit has been sent in epoch <spanx style="verb">from</spanx>, that is, the requester is
+current.</t>
+
+<t>A Member Server that receives an <spanx style="verb">MLS_COMMIT</spanx> for an epoch later than
+the next expected one obtains the missing Commits from any Admin
+Server through this endpoint and processes them in epoch order before
+the Commit that revealed the gap.  Retrieved Commits are verified
+exactly like broadcast ones (<xref target="admins"/>).  If no Admin Server retains
+the missing epochs, the Member Server has drifted and recovers through
+the rejoin procedure (<xref target="rejoin"/>).</t>
 
 </section>
 </section>
@@ -643,7 +854,7 @@ by the Group Owner Server until another admin has been appointed.</t>
 <t>Removing an admin from the group and removing an admin from the admin
 set are distinct operations; when an admin's membership ends, a single
 Commit combines them (<xref target="admin-set"/>).  An admin MAY instead resign from
-the admin set while remaining a member: this is a GroupContextExtensions
+the admin set while remaining a member: this is an <spanx style="verb">AppDataUpdate</spanx>
 proposal only, and the resigning admin's own client MAY commit it.
 Removing an admin's membership is constrained by MLS: a Commit that
 removes its own committer is invalid ([RFC9420] Section 12.2).  A Commit
@@ -652,9 +863,10 @@ by an admin client of a different admin.</t>
 
 <section anchor="admin-set"><name>Group OCM Address and Admin Set</name>
 
-<t>The group's OCM Address and the admin set are part of the group state,
-carried in a GroupContext extension <spanx style="verb">ocm_federated_group</spanx> ([RFC9420]
-Section 13.4):</t>
+<t>The group's OCM Address and the admin set are application state carried
+by the OCM Community Component.  The component data is stored in
+the <spanx style="verb">app_data_dictionary</spanx> GroupContext extension defined by
+[ietf-mls-extensions]:</t>
 
 <figure><artwork><![CDATA[
 struct {
@@ -664,7 +876,7 @@ struct {
 struct {
   opaque group_ocm_address<V>;
   Admin admins<V>;
-} OCMFederatedGroup;
+} OCMCommunity;
 ]]></artwork></figure>
 
 <t>All addresses are UTF-8 encoded OCM Addresses.  The <spanx style="verb">group_ocm_address</spanx>
@@ -685,37 +897,45 @@ charlie) and server1 is the Group Owner Server; after bob leaves it is
 is the Group Owner Server.</t>
 
 <t>An admin client is any MLS client whose leaf credential identifies a
-user listed in <spanx style="verb">admins</spanx>.  Because this extension is part of the
+user listed in <spanx style="verb">admins</spanx>.  Because the component data is part of the
 GroupContext, it is agreed upon by all members through the MLS key
 schedule, every member can verify which clients are entitled to
 construct Commits and which server arbitrates them, and new members
 learn the group's OCM Address and admin set from the GroupInfo in their
-Welcome.  Changes to the admin set are made with a
-GroupContextExtensions proposal ([RFC9420] Section 12.1.7); such
-proposals MUST be explicitly approved by an admin, MUST be committed by
-an admin client, and MUST NOT change <spanx style="verb">group_ocm_address</spanx>.</t>
+Welcome.</t>
+
+<t>Changes to the admin set are made with an <spanx style="verb">AppDataUpdate</spanx> proposal
+([ietf-mls-extensions]) for the OCM Community Component.  The
+proposal's <spanx style="verb">update</spanx> field carries the complete new encoded
+<spanx style="verb">OCMCommunity</spanx> value.  A Commit MUST NOT contain more than one such
+proposal.  The proposal MUST be explicitly approved by an admin, MUST
+be committed by an admin client, and MUST NOT change
+<spanx style="verb">group_ocm_address</spanx>.</t>
 
 <t>The admin set and the group membership are coupled: an entry in <spanx style="verb">admins</spanx>
 is only meaningful while that admin's leaf is in the ratchet tree.  A
 Commit that removes an admin's leaf MUST therefore also include a
-GroupContextExtensions proposal deleting that admin from <spanx style="verb">admins</spanx>, and
-the Group Owner Server and all Member Servers MUST reject a Commit that
-would leave an entry in <spanx style="verb">admins</spanx> with no corresponding leaf in the tree.
-(A rejoin pair (<xref target="rejoin"/>) that replaces an admin's leaf does not
-trigger this rule, since the admin retains a leaf after the Commit.)
-Because a GroupContextExtensions proposal replaces the extension list
-wholesale ([RFC9420] Section 12.1.7), the proposal carries the complete
-new <spanx style="verb">OCMFederatedGroup</spanx> value, with the departing admin deleted and
-<spanx style="verb">group_ocm_address</spanx> unchanged.  A GroupContextExtensions proposal whose
-only change to the admin set is deleting admins whose leaves are removed
-in the same Commit requires no separate admin approval; it follows the
-approval status of the Remove proposals it accompanies, so that the
-self-removal of an admin can still be committed automatically.</t>
+corresponding <spanx style="verb">AppDataUpdate</spanx> proposal deleting that admin from
+<spanx style="verb">admins</spanx>, and the Group Owner Server and all Member Servers MUST reject
+a Commit that would leave an entry in <spanx style="verb">admins</spanx> with no corresponding
+leaf in the tree.  (A rejoin pair (<xref target="rejoin"/>) that replaces an admin's
+leaf does not trigger this rule, since the admin retains a leaf after
+the Commit.)  An <spanx style="verb">AppDataUpdate</spanx> proposal whose only change to the
+admin set is deleting admins whose leaves are removed in the same
+Commit requires no separate admin approval; it follows the approval
+status of the Remove proposals it accompanies, so that the self-removal
+of an admin can still be committed automatically.</t>
 
-<t>Clients implementing this document MUST list the <spanx style="verb">ocm_federated_group</spanx>
-extension type in the <spanx style="verb">capabilities.extensions</spanx> field of their
-KeyPackages, since GroupContext extensions must be supported by every
-member of the group ([RFC9420] Section 13.4).</t>
+<t>Every LeafNode in a KeyPackage used with this protocol MUST advertise
+support for the <spanx style="verb">app_data_dictionary</spanx> extension in
+<spanx style="verb">capabilities.extensions</spanx>, support for the <spanx style="verb">app_data_update</spanx> proposal in
+<spanx style="verb">capabilities.proposals</spanx>, and support for the OCM Community
+Component in the <spanx style="verb">app_components</spanx> component defined by
+[ietf-mls-extensions].  The GroupContext MUST require
+<spanx style="verb">app_data_dictionary</spanx> and <spanx style="verb">app_data_update</spanx> through the
+<spanx style="verb">required_capabilities</spanx> extension, require the OCM Community
+Component through its <spanx style="verb">app_components</spanx> component, and contain the
+encoded <spanx style="verb">OCMCommunity</spanx> value as that component's data.</t>
 
 </section>
 </section>
@@ -742,7 +962,7 @@ first admin's leaf is stale.</t>
   <t>Takeover: the home server of the next admin in the admin set MAY
 begin arbitrating Commits.  The first Commit it arbitrates SHOULD
 cover a Remove proposal evicting the stale first admin's leaf,
-together with the GroupContextExtensions proposal deleting that
+together with the <spanx style="verb">AppDataUpdate</spanx> proposal deleting that
 admin from the admin set as required by <xref target="admin-set"/>, constructed
 by one of its own admin clients.  This makes the takeover permanent
 through the normal succession rule.</t>
@@ -794,10 +1014,11 @@ trade-off relative to encrypted handshake messages is discussed in
 Security Considerations.</t>
 
 <t>The notification types defined in this document are group-scoped rather
-than share-scoped.  In accordance with [OCM], their payloads set
-<spanx style="verb">shareType</spanx> to <spanx style="verb">"federation"</spanx> and omit <spanx style="verb">resourceType</spanx> and the
-<spanx style="verb">providerId</spanx> field.  The <spanx style="verb">notification</spanx> object is REQUIRED and carries
-all MLS-specific parameters.  The <spanx style="verb">mlsGroupId</spanx> field carries the
+than share-scoped.  In accordance with [OCM], their payloads omit the
+<spanx style="verb">providerId</spanx> field, and set exactly one of <spanx style="verb">shareType</spanx> or
+<spanx style="verb">resourceType</spanx>, depending on the kind of group, as detailed below.  The
+<spanx style="verb">notification</spanx> object is REQUIRED and carries all MLS-specific
+parameters.  The <spanx style="verb">mlsGroupId</spanx> field carries the
 base64url-encoded MLS <spanx style="verb">group_id</spanx> as advisory routing information, used
 to dispatch the message to the right group state without parsing the
 MLS message; the authoritative <spanx style="verb">group_id</spanx> is the one inside the MLS
@@ -807,6 +1028,22 @@ Address: in particular, the <spanx style="verb">groupId</spanx> field of the app
 carried inside <spanx style="verb">MLS_APPLICATION</spanx> messages (<xref target="key-distribution"/>,
 <xref target="credential-update"/>) is the group's OCM Address, never the MLS
 <spanx style="verb">group_id</spanx>.</t>
+
+<t>Both kinds of group defined in this document use these notification
+types, and a recipient distinguishes them by the <spanx style="verb">shareType</spanx> or
+<spanx style="verb">resourceType</spanx> field and by the object of the same name in the
+<spanx style="verb">notification</spanx> object: for a federated group of users, <spanx style="verb">shareType</spanx> is
+<spanx style="verb">"community"</spanx>, <spanx style="verb">resourceType</spanx> is omitted, and the
+<spanx style="verb">notification.community</spanx> object is used; for a Servers Federation group
+(<xref target="servers-federation-groups"/>), <spanx style="verb">resourceType</spanx> is <spanx style="verb">"federation"</spanx>,
+<spanx style="verb">shareType</spanx> is omitted, and the <spanx style="verb">notification.federation</spanx> object
+carries a <spanx style="verb">federationId</spanx> field, and a <spanx style="verb">serverUrl</spanx> field wherever the
+federated-group form carries <spanx style="verb">userId</spanx>, consistently with the Federation
+Membership notifications of [OCM].  A recipient MUST reject a
+notification that carries both a <spanx style="verb">community</spanx> and a <spanx style="verb">federation</spanx> object,
+both a <spanx style="verb">shareType</spanx> and a <spanx style="verb">resourceType</spanx>, or an object that does not
+match its <spanx style="verb">shareType</spanx> or <spanx style="verb">resourceType</spanx>, and MUST similarly reject one
+that carries both <spanx style="verb">userId</spanx> and <spanx style="verb">serverUrl</spanx>.</t>
 
 <t>Since <spanx style="verb">MLS_PROPOSAL</spanx> is delivered only to Admin Servers and never
 broadcast to other Member Servers, Member Servers never observe pending
@@ -831,9 +1068,9 @@ added user.</t>
 {
   "notificationType": "MLS_WELCOME",
   "senderDomain": "othercloud.example.org",
-  "shareType": "federation",
+  "shareType": "community",
   "notification": {
-    "federation": {
+    "community": {
       "mlsGroupId": "<base64url MLS group ID>",
       "userId": "bob@othercloud.example.org",
       "content": "<base64url MLS Welcome wire format>"
@@ -842,43 +1079,43 @@ added user.</t>
 }
 ]]></sourcecode></figure>
 
-<t>The Welcome message MUST include the group's ratchet tree in a
-<spanx style="verb">ratchet_tree</spanx> extension ([RFC9420] Section 12.4.3.3).  By default a
-Welcome carries only a hash of the tree, and this document defines no
-other channel through which a newly added Member Server could obtain it.
-Member Servers depend on holding the current ratchet tree, both to
-derive the group membership and to process subsequent Commits.  Carrying
-the tree inside the Welcome also gives it the same confidentiality
-protection as the rest of the group state, as recommended by [RFC9420]
-Section 12.4.3.3.</t>
+<t>The Welcome message MUST NOT include a <spanx style="verb">ratchet_tree</spanx> extension.  The
+receiving Member Server obtains the ratchet tree of the Welcome's epoch
+from the sending server (<xref target="group-state"/>) and MUST do so before
+processing the Welcome ([RFC9420] Section 12.4.3.1); the <spanx style="verb">tree_hash</spanx> in
+the GroupInfo guarantees the integrity of the tree so obtained
+([RFC9420] Section 12.4.3.3).  Member Servers depend on holding the
+current ratchet tree, both to derive the group membership and to
+process subsequent Commits.  Keeping the tree out of the Welcome keeps
+the size of the notification independent of the size of the group.</t>
 
 <t>A Member Server processing a Welcome learns the group's OCM Address from
-the <spanx style="verb">ocm_federated_group</spanx> extension in the GroupContext (<xref target="admin-set"/>).
-It MUST reject a Welcome whose <spanx style="verb">group_ocm_address</spanx> is already bound to a
-different MLS <spanx style="verb">group_id</spanx>, unless the Welcome reinitialises the group as
-described in <xref target="reinit"/>.  This keeps the local wrapped FK store, keyed
-by <spanx style="verb">(resourceId, groupId)</spanx>, unambiguous.</t>
+the OCM Community Component data in the GroupContext (<xref target="admin-set"/>).
+It MUST reject a Welcome whose <spanx style="verb">group_ocm_address</spanx> is already bound to
+a different MLS <spanx style="verb">group_id</spanx>, unless the Welcome reinitialises the group
+as described in <xref target="reinit"/>.  This keeps the local wrapped FK store,
+keyed by <spanx style="verb">(resourceId, groupId)</spanx>, unambiguous.</t>
 
 </section>
 <section anchor="mlsproposal"><name>MLS_PROPOSAL</name>
 
 <t>Sent by a Member Server to the home server of every admin to propose a
-group change (for example Add, Remove, Update, GroupContextExtensions,
-or ReInit) on behalf of one of its users.  This notification is NOT
-broadcast to other Member Servers.  Each Admin Server queues received
-proposals, deduplicated by ProposalRef ([RFC9420] Section 5.2), for
-handling by its admin clients according to the policy in <xref target="admins"/>.
-Sending the proposal to all Admin Servers removes the dependency on any
-single server being available and lets whichever admin is online next
-act on it.</t>
+group change (for example Add, Remove, Update, AppDataUpdate,
+GroupContextExtensions, or ReInit) on behalf of one of its users.  This
+notification is NOT broadcast to other Member Servers.  Each Admin
+Server queues received proposals, deduplicated by ProposalRef
+([RFC9420] Section 5.2), for handling by its admin clients according to
+the policy in <xref target="admins"/>.  Sending the proposal to all Admin Servers
+removes the dependency on any single server being available and lets
+whichever admin is online next act on it.</t>
 
 <figure><sourcecode type="json"><![CDATA[
 {
   "notificationType": "MLS_PROPOSAL",
   "senderDomain": "cloud.example.org",
-  "shareType": "federation",
+  "shareType": "community",
   "notification": {
-    "federation": {
+    "community": {
       "mlsGroupId": "<base64url MLS group ID>",
       "content": "<base64url MLS PublicMessage carrying the Proposal>"
     }
@@ -901,7 +1138,8 @@ signed by an admin client before processing it, as specified in
 broadcast it.  Commits are ordered by the MLS epoch itself: each Commit
 advances the epoch by exactly one, so Member Servers MUST process
 Commits in epoch order, and a Commit arriving for an epoch later than
-the next expected one indicates one or more missed Commits.  Member
+the next expected one indicates one or more missed Commits, which the
+Member Server retrieves from an Admin Server (<xref target="group-state"/>).  Member
 Servers MUST apply the new epoch secret before sending any application
 data, per [RFC9420] Section 15.2.</t>
 
@@ -909,13 +1147,13 @@ data, per [RFC9420] Section 15.2.</t>
 {
   "notificationType": "MLS_COMMIT",
   "senderDomain": "cloud.example.org",
-  "shareType": "federation",
+  "shareType": "community",
   "notification": {
-    "federation": {
+    "community": {
       "mlsGroupId": "<base64url MLS group ID>",
-      "proposals": [
+      "proposals": \[
         "<base64url MLS PublicMessage carrying a Proposal>"
-      ],
+      \],
       "content": "<base64url MLS PublicMessage carrying the Commit>"
     }
   }
@@ -944,7 +1182,8 @@ the FKs of the resources it shares with the group (<xref target="fk-rewrap"/>), 
 on member removal MAY additionally rotate them according to its policy
 (<xref target="fk-rotation"/>).  Any Commit covering a Remove, Update, or
 GroupContextExtensions proposal MUST include an UpdatePath ([RFC9420]
-Section 12.4).</t>
+Section 12.4).  An <spanx style="verb">AppDataUpdate</spanx> proposal does not by itself require
+an UpdatePath ([ietf-mls-extensions]).</t>
 
 </section>
 <section anchor="mlsapplication"><name>MLS_APPLICATION</name>
@@ -962,9 +1201,9 @@ epoch ([RFC9420] Section 15).</t>
 {
   "notificationType": "MLS_APPLICATION",
   "senderDomain": "cloud.example.org",
-  "shareType": "federation",
+  "shareType": "community",
   "notification": {
-    "federation": {
+    "community": {
       "mlsGroupId": "<base64url MLS group ID>",
       "content": "<base64url MLS PrivateMessage wire format>"
     }
@@ -1008,18 +1247,18 @@ by the KeyPackage endpoint.</t>
 {
   "notificationType": "MLS_REJOIN",
   "senderDomain": "othercloud.example.org",
-  "shareType": "federation",
+  "shareType": "community",
   "notification": {
-    "federation": {
+    "community": {
       "mlsGroupId": "<base64url MLS group ID>",
-      "keyPackages": [
+      "keyPackages": \[
         {
           "userId": "bob@othercloud.example.org",
           "mediaType": "message/mls",
           "encoding": "base64url",
           "content": "<base64url-encoded MLS KeyPackage>"
         }
-      ]
+      \]
     }
   }
 }
@@ -1062,8 +1301,8 @@ Application Messages, and because MLS messages are bound to the current
 GroupContext, it cannot sign a valid Proposal with which to recover.  A
 drifted server detects its condition when an <spanx style="verb">MLS_COMMIT</spanx> fails to
 process against its local state, for example through a confirmation tag
-mismatch, or arrives for an epoch it cannot reach after Commit
-retransmission has been exhausted.</t>
+mismatch, or arrives for an epoch it cannot reach because no Admin
+Server retains the missed Commits (<xref target="group-state"/>).</t>
 
 <t>Recovery is mediated by an admin client through the normal Commit path:</t>
 
@@ -1092,7 +1331,8 @@ admin clients SHOULD commit it automatically, per the policy in
 <xref target="admins"/>.</t>
   <t>The Commit is arbitrated and broadcast as usual, and the drifted
 server receives one <spanx style="verb">MLS_WELCOME</spanx> per re-added user, restoring clean
-state from the Welcome's <spanx style="verb">ratchet_tree</spanx> extension.</t>
+state from the Welcome and the ratchet tree retrieved from its
+sender (<xref target="group-state"/>).</t>
 </list></t>
 
 <t>A single Commit recovers all of the drifted server's users at once.
@@ -1116,9 +1356,12 @@ stronger cipher suite.</t>
 group-changing proposals: it MUST be explicitly approved by an admin and
 MUST be committed by an admin client.  Per [RFC9420] Section 12.2, a
 ReInit proposal is committed alone.  The <spanx style="verb">extensions</spanx> field of the
-ReInit proposal MUST include an <spanx style="verb">ocm_federated_group</spanx> extension with
+ReInit proposal MUST include an <spanx style="verb">app_data_dictionary</spanx> extension whose
+<spanx style="verb">app_components</spanx> component requires the OCM Community Component
+and whose OCM Community Component data carries
 <spanx style="verb">group_ocm_address</spanx> unchanged; the admin set is normally carried over
-unchanged.</t>
+unchanged.  Its <spanx style="verb">required_capabilities</spanx> extension MUST continue to
+require <spanx style="verb">app_data_dictionary</spanx> and <spanx style="verb">app_data_update</spanx>.</t>
 
 <t>After the ReInit Commit is processed, the old group MUST NOT be used to
 send messages ([RFC9420] Section 12.4.2).  In particular, sending
@@ -1156,13 +1399,13 @@ entries carry over unchanged.</t>
 every resource it shares with the group under the new group's Group Key
 and redistribute the wrapped FKs to all Member Servers, exactly as for
 an epoch change (<xref target="fk-rewrap"/>).  The new group's Group Key differs from
-any key of the old group both through the fresh epoch secret and through
-the new <spanx style="verb">group_id</spanx> in the Exporter context, so no wrapped FK from the
-old group can be unwrapped in the new one.  Until the re-wrapped FKs
-arrive, Member Servers retain the old group's last Group Key under the
-same retention rule as for an epoch change.  Members SHOULD retain the
-resumption PSK of the old group's final epoch until the reinitialisation
-has completed ([RFC9420] Section 8.6).</t>
+any key of the old group both through the fresh component export secret
+and through the new <spanx style="verb">group_id</spanx> in the Group Key derivation context, so
+no wrapped FK from the old group can be unwrapped in the new one.  Until
+the re-wrapped FKs arrive, Member Servers retain the old group's last
+Group Key under the same retention rule as for an epoch change.
+Members SHOULD retain the resumption PSK of the old group's final epoch
+until the reinitialisation has completed ([RFC9420] Section 8.6).</t>
 
 </section>
 </section>
@@ -1175,28 +1418,34 @@ the new epoch secret before encrypting any application data, then
 derives the current Group Key:</t>
 
 <figure><artwork><![CDATA[
-group_key = MLS-Exporter("ocm-group-key", group_id_bytes, AEAD.Nk)
+component_secret = SafeExportSecret(ocm_community)
+group_key = ExpandWithLabel(
+  component_secret,
+  "group key",
+  group_id_bytes,
+  AEAD.Nk
+)
 ]]></artwork></figure>
 
+<t><spanx style="verb">SafeExportSecret</spanx> is the component-separated, forward-secure exporter
+defined by [ietf-mls-extensions].  It is invoked once per epoch for the
+OCM Community Component.  <spanx style="verb">ExpandWithLabel</spanx> is defined in
+[RFC9420] Section 8.  The <spanx style="verb">group_id_bytes</spanx> context is the raw MLS
+<spanx style="verb">group_id</spanx> of the group.</t>
+
 <t><spanx style="verb">AEAD.Nk</spanx> is the length in bytes of a key for the AEAD algorithm of the
-group's negotiated MLS cipher suite ([RFC9420] Section 9.1).  Deriving
-the Group Key at exactly this length makes it a valid key for the wrap
-AEAD (<xref target="file-key-wrapping"/>), which is the AEAD algorithm of the group's
-cipher suite, for every cipher suite, including those whose AEAD takes a
-16-byte key such as AES-128-GCM.</t>
+group's negotiated MLS cipher suite ([RFC9420] Section 9.1).  Expanding
+the component secret to exactly this length makes the Group Key valid
+for the wrap AEAD (<xref target="file-key-wrapping"/>), including cipher suites whose
+AEAD takes a 16-byte key such as AES-128-GCM.  Component separation and
+the <spanx style="verb">group_id_bytes</spanx> context bind the output to this application and
+group.  The Group Key changes with every epoch transition and cannot be
+derived by a party that did not participate in that epoch.</t>
 
-<t>The MLS Exporter ([RFC9420] Section 8.5) produces application-specific
-key material from the epoch secret without exposing the epoch secret
-itself.  The label <spanx style="verb">"ocm-group-key"</spanx> scopes the output to this
-application.  The <spanx style="verb">group_id_bytes</spanx> context, the raw MLS <spanx style="verb">group_id</spanx> of
-the group, further binds the output to this specific group.  The Group
-Key therefore changes with every epoch transition and cannot be derived
-by any party that did not participate in that epoch.</t>
-
-<t>Per [RFC9420] Section 8.5, the Group Key SHOULD be refreshed after each
-processed Commit.  Security-sensitive values derived from the epoch
-secret MUST be deleted as soon as they are consumed, per [RFC9420]
-Section 9.2.</t>
+<t>The Group Key MUST be derived after each Welcome or processed Commit.
+The component export secret and any intermediate values MUST be deleted
+as required by [ietf-mls-extensions] and [RFC9420] Section 9.2 after the
+Group Key has been derived.</t>
 
 <t>All MLS clients in the group independently derive the same Group Key for
 a given epoch.</t>
@@ -1215,6 +1464,15 @@ in the AEAD associated data MUST be the same.  This means that the
 <spanx style="verb">providerId</spanx> MUST NOT be reused as <spanx style="verb">resourceId</spanx>.  The sending server is
 responsible for maintaining this stable <spanx style="verb">resourceId</spanx> and MUST send it
 in the <spanx style="verb">encryption</spanx> object of the share payload (<xref target="share-creation"/>).</t>
+
+<t>The optional top-level <spanx style="verb">collectionId</spanx> in the share payload identifies a
+Collection of one or more resources grouped by the sending server.
+When the server shares two encrypted files in response to one
+<spanx style="verb">REQUEST_SHARE</spanx>, both shares carry the requested <spanx style="verb">collectionId</spanx>, but
+each file has its own <spanx style="verb">encryption.resourceId</spanx>.  FK wrapping and lookup
+use the file's <spanx style="verb">resourceId</spanx> and the group's OCM Address, not
+<spanx style="verb">collectionId</spanx>, even for a Collection containing only one resource
+(<xref target="file-key-wrapping"/>, <xref target="key-distribution"/>).</t>
 
 </section>
 <section anchor="file-key-wrapping"><name>File Key Wrapping</name>
@@ -1277,13 +1535,13 @@ groupId)</spanx>.</t>
 <section anchor="fk-rewrap"><name>FK Re-wrap on Epoch Change</name>
 
 <t>The Group Key changes with every epoch transition, whatever the reason
-for the transition: a Commit covering Add, Remove, Update, or
-GroupContextExtensions proposals, or an empty Commit, all advance the
-epoch.  To maintain the invariant that the current Group Key is always
-sufficient to unwrap the current wrapped FK, a sending server MUST,
-after processing an <spanx style="verb">MLS_COMMIT</spanx> for a group, or after joining the
-successor group of a reinitialisation via its Welcome (<xref target="reinit"/>), for
-every resource it shares with that group:</t>
+for the transition: a Commit covering Add, Remove, Update,
+AppDataUpdate, or GroupContextExtensions proposals, or an empty Commit,
+all advance the epoch.  To maintain the invariant that the current
+Group Key is always sufficient to unwrap the current wrapped FK, a
+sending server MUST, after processing an <spanx style="verb">MLS_COMMIT</spanx> for a group, or
+after joining the successor group of a reinitialisation via its Welcome
+(<xref target="reinit"/>), for every resource it shares with that group:</t>
 
 <t><list style="numbers" type="1">
   <t>Re-wrap the resource's current FK under the new Group Key, following
@@ -1299,7 +1557,7 @@ removal-triggered policy decision (<xref target="fk-rotation"/>).</t>
 <t>If the Commit added one or more members, the set of Member Servers may
 have grown.  The sending server MUST identify Member Servers that are
 new to the group and send them the Share Creation Notifications for its
-federation shares with the group, as described in <xref target="share-creation"/>, in
+community shares with the group, as described in <xref target="share-creation"/>, in
 addition to the wrapped FKs.  A server that joins the group after a
 share was created thereby receives both the share itself and a wrapped
 FK it can decrypt, since the <spanx style="verb">MLS_APPLICATION</spanx> is encrypted in an epoch
@@ -1336,13 +1594,13 @@ array, and MAY also carry a <spanx style="verb">credentials</spanx> array (<xref
 
 <figure><sourcecode type="json"><![CDATA[
 {
-  "keys": [
+  "keys": \[
     {
       "resourceId": "3a02538b-aa54-42f2-8853-a38996e211b1",
       "groupId": "research-group@receiver.example.org",
       "wrappedKey": "<base64url nonce || wrapped_file_key || tag>"
     }
-  ]
+  \]
 }
 ]]></sourcecode></figure>
 
@@ -1393,25 +1651,25 @@ the application data:</t>
 
 <figure><sourcecode type="json"><![CDATA[
 {
-  "credentials": [
+  "credentials": \[
     {
       "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
       "groupId": "research-group@receiver.example.org",
       "recipient": "othercloud.example.org",
       "sharedSecret": "<new transport credential>"
     }
-  ]
+  \]
 }
 ]]></sourcecode></figure>
 
 <t>Each entry identifies the share by its <spanx style="verb">providerId</spanx>, the group by its
-OCM Address in <spanx style="verb">groupId</spanx>, and the intended Member Server by its FQDN in
-<spanx style="verb">recipient</spanx>.  A Member Server MUST ignore entries whose <spanx style="verb">recipient</spanx> does
-not name itself.  Upon accepting an entry, the Member Server replaces
-the stored transport credential for that share; replacement follows the
-same <spanx style="verb">(epoch, generation)</spanx> supersede rule as wrapped FKs
-(<xref target="key-distribution"/>).  The sending server invalidates the old
-credential once the rotation has been delivered.</t>
+OCM Address in <spanx style="verb">groupId</spanx>, and the intended Member Server by its OCM
+Server Address in <spanx style="verb">recipient</spanx>.  A Member Server MUST ignore entries
+whose <spanx style="verb">recipient</spanx> does not name itself.  Upon accepting an entry, the
+Member Server replaces the stored transport credential for that share;
+replacement follows the same <spanx style="verb">(epoch, generation)</spanx> supersede rule as
+wrapped FKs (<xref target="key-distribution"/>).  The sending server invalidates the
+old credential once the rotation has been delivered.</t>
 
 <t>Encrypting the credential update in the current epoch guarantees that
 the removed member cannot read it, independent of transport protection:
@@ -1605,7 +1863,7 @@ not signalled in the protocol.</t>
 <section anchor="member-removal-ocm-notifications"><name>Member Removal: OCM Notifications</name>
 
 <t>Member removal requires no OCM-level notification by itself.  Because
-federation shares are addressed to the group (<xref target="share-creation"/>), each
+community shares are addressed to the group (<xref target="share-creation"/>), each
 Member Server observes the Remove Commit and re-evaluates which of its
 local users the share resolves to; a removed user loses access without
 any action by the sending server.  If the removed member's clients may
@@ -1627,10 +1885,10 @@ server.</t>
 each current Member Server, identified through the OCM Addresses in the
 ratchet tree's leaf credentials.  This is standard OCM server-to-server
 communication, with <spanx style="verb">shareWith</spanx> set to the group's OCM Address and
-<spanx style="verb">shareType</spanx> set to <spanx style="verb">"federation"</spanx>.  The share is addressed to the group
+<spanx style="verb">shareType</spanx> set to <spanx style="verb">"community"</spanx>.  The share is addressed to the group
 as the Receiving Party; no per-user notifications are sent.</t>
 
-<t>A federation share is a standard OCM share: every field that is REQUIRED
+<t>A community share is a standard OCM share: every field that is REQUIRED
 by [OCM], including the <spanx style="verb">protocol</spanx> object, is REQUIRED here too, and
 resource access follows the standard OCM resource access procedure
 driven by the <spanx style="verb">protocol</spanx> object.  For encrypted resources the protocol
@@ -1663,7 +1921,7 @@ matches the <spanx style="verb">shareWith</spanx> value and delivers the share t
 whose leaf credential appears in that group's ratchet tree.  On every
 subsequent <spanx style="verb">MLS_COMMIT</spanx> the receiving server MUST re-evaluate this
 resolution, so that local users added to the group gain access to
-existing federation shares, and removed users lose it, without any
+existing community shares, and removed users lose it, without any
 further OCM notifications.</t>
 
 <t>Addressing the share to the group also allows the receiving server to
@@ -1676,7 +1934,7 @@ its local wrapped FK store by <spanx style="verb">(resourceId, groupId)</spanx> 
 are applied to the correct entry.</t>
 
 <t>Because notifications can be delayed or reordered in transit, a
-federation share MAY arrive before the receiving server has processed
+community share MAY arrive before the receiving server has processed
 the Welcome or Commit that made it a Member Server of the group.  A
 receiving server that does not recognise the <spanx style="verb">shareWith</spanx> value as a
 known group SHOULD queue the share, or reject it in a way that causes
@@ -1686,7 +1944,7 @@ is transient.</t>
 
 <t>When an <spanx style="verb">MLS_COMMIT</spanx> adds one or more members to the group, the sending
 server MUST send each Member Server that is new to the group a Share
-Creation Notification for every federation share it has with that group,
+Creation Notification for every community share it has with that group,
 encrypted or not.  For encrypted resources this accompanies the
 re-wrapped FK (<xref target="fk-rewrap"/>).  A server that joins the group after a
 share was created thereby learns of the shares its users now have access
@@ -1698,7 +1956,7 @@ to without any further action by its users.</t>
 {
   "shareWith": "research-group@receiver.example.org",
   "resourceType": "file",
-  "shareType": "federation",
+  "shareType": "community",
   "sender": "alice@cloud.example.org",
   "owner": "alice@cloud.example.org",
   "providerId": "7c084226-d9a1-11e6-bf26-cec0c932ce01",
@@ -1708,7 +1966,7 @@ to without any further action by its users.</t>
     "webdav": {
       "uri": "experiment-data.tar",
       "sharedSecret": "<per-Member-Server secret>",
-      "permissions": ["read", "write"]
+      "permissions": \["read", "write"\]
     }
   },
   "encryption": {
@@ -1745,6 +2003,176 @@ sending server to each Member Server, referencing the share by its
 <spanx style="verb">providerId</spanx> as in base OCM.</t>
 
 </section>
+<section anchor="servers-federation-groups"><name>Servers Federation Groups</name>
+
+<t>[OCM] defines a Federation as a group of OCM Servers whose
+administrators have established mutual trust, and specifies two models
+for maintaining its membership: a peer-announced model, where each
+member publishes the membership it knows, and a cryptographically
+guaranteed model, which this section specifies.</t>
+
+<t>The model reuses the group machinery of this document with a single
+substitution: the members of the group are the OCM Servers of the
+Federation, not the users of a federated group.  What follows in this
+section stems from that substitution.</t>
+
+<section anchor="relationship-to-federated-groups"><name>Relationship to Federated Groups</name>
+
+<t>A Servers Federation group is not a Receiving Party.  No Share is ever
+addressed to it, no <spanx style="verb">shareWith</spanx> names it, and the Encryption Model of
+this document does not apply to it, as there is no shared resource and
+therefore no File Key.  Its only purpose is to answer one question -
+which OCM Servers are currently members of this Federation - with the
+guarantees MLS provides: all members agree on the answer at every
+epoch, and each can verify it without trusting any other member's
+configuration.</t>
+
+<t>The two kinds of group are independent.  A Federation maintained as a
+Servers Federation group MAY host any number of federated groups of
+users among its members, and a federated group of users MAY span
+servers that share no Federation.  Membership in a Servers Federation
+group is not a prerequisite for sending or receiving a share, and a
+server does not become a member of a federated group by virtue of
+being a member of the Federation.</t>
+
+</section>
+<section anchor="servers-federation-state"><name>Group State</name>
+
+<t>A Servers Federation group is an MLS group in which:</t>
+
+<t><list style="symbols">
+  <t>each member OCM Server has exactly one leaf node, held by the server
+acting as an MLS client on behalf of its administrator.  There are no
+per-user leaves and no Virtual Clients.</t>
+  <t>the credential at each leaf is a basic credential ([RFC9420] Section
+5.3) whose identity field is the UTF-8 encoded absolute URL of the OCM
+Server, in the format [OCM] specifies for the <spanx style="verb">url</spanx> field of a
+directory document.  This is the same string by which the Federation's
+directory identifies that server, so the group membership and the
+published membership are directly comparable.</t>
+  <t>the MLS <spanx style="verb">group_id</spanx> is the value published as <spanx style="verb">federation.mlsGroupId</spanx>
+in the directory document of every member ([OCM]).  As for any group in
+this document, it SHOULD be a fresh random value at creation, as
+recommended by [RFC9420] Section 11.</t>
+  <t>the Federation's identity and its set of Federation Admin Servers are
+carried in a GroupContext extension <spanx style="verb">ocm_servers_federation</spanx> ([RFC9420]
+Section 13.4), the counterpart of the OCM Community Component
+(<xref target="admin-set"/>):</t>
+</list></t>
+
+<figure><artwork><![CDATA[
+struct {
+  opaque server_url<V>;
+} FederationAdmin;
+
+struct {
+  opaque federation_id<V>;
+  opaque federation_name<V>;
+  FederationAdmin admins<V>;
+} OCMServersFederation;
+]]></artwork></figure>
+
+<t>All URLs are UTF-8 encoded absolute URLs of OCM Servers.  The
+<spanx style="verb">federation_id</spanx> field carries the Federation's <spanx style="verb">federationId</spanx> as
+defined in [OCM] and MUST NOT change for the lifetime of the group;
+<spanx style="verb">federation_name</spanx> carries its human-readable name and MAY change with a
+GroupContextExtensions proposal.</t>
+
+<t>The <spanx style="verb">admins</spanx> list governs Commit construction and arbitration exactly
+as the <spanx style="verb">admins</spanx> list of <xref target="admin-set"/> does: it is ordered by
+appointment, its first entry names the Federation Owner Server,
+succession is therefore automatic, and the list MUST NOT otherwise be
+reordered.  The coupling between the admin set and the membership, the
+failover procedure of <xref target="failover"/>, the leaf update rules of
+<xref target="leaf-key-updates"/>, and the rejoin and reinitialisation procedures of
+<xref target="rejoin"/> and <xref target="reinit"/> all apply unchanged, reading "Member Server"
+as "member OCM Server", "admin" as "Federation Admin Server", and
+"admin client" as "the MLS client of a Federation Admin Server".  As
+for a federated group, the group MUST have at least one Federation
+Admin Server at all times.</t>
+
+<t>A server MUST list the <spanx style="verb">ocm_servers_federation</spanx> extension type in the
+<spanx style="verb">capabilities.extensions</spanx> field of the KeyPackages it publishes under
+<xref target="server-key-packages"/>, since GroupContext extensions must be
+supported by every member of the group ([RFC9420] Section 13.4).</t>
+
+</section>
+<section anchor="membership-changes"><name>Membership Changes</name>
+
+<t>A change of Federation membership is an MLS group operation:</t>
+
+<t><list style="symbols">
+  <t>admitting an OCM Server is an Add proposal, committed by the MLS
+client of a Federation Admin Server, followed by an <spanx style="verb">MLS_WELCOME</spanx> to
+the admitted server.  As in <xref target="admins"/>, an Add MUST be explicitly
+approved by an administrator before it is committed: this leaves
+the same human-in-the-loop requirement introduced in [OCM] unchanged,
+and recorded here in the group state.</t>
+  <t>expelling an OCM Server is a Remove proposal, committed in the same
+way and subject to the same approval.  A server MAY always leave a
+Federation by proposing its own removal, which requires no approval.</t>
+</list></t>
+
+<t>Because the resulting epoch is agreed by every member, an expulsion
+takes effect for the whole Federation at once.  This is the guarantee
+the peer-announced model cannot offer, where an <spanx style="verb">OCM_SERVER_REMOVED</spanx>
+Notification only ever states that its sender itself is leaving, and
+an unwilling member cannot be expelled by the other members at all.</t>
+
+<t>The notifications that carry these operations are the <spanx style="verb">MLS_*</spanx> types of
+<xref target="mls-notification-types"/>, with <spanx style="verb">serverUrl</spanx> in place of <spanx style="verb">userId</spanx>.  For
+example, the Welcome delivered to a newly admitted server is:</t>
+
+<figure><sourcecode type="json"><![CDATA[
+{
+  "notificationType": "MLS_WELCOME",
+  "senderDomain": "ocm-server.example.org",
+  "resourceType": "federation",
+  "notification": {
+    "federation": {
+      "federationId": "sciencemesh",
+      "mlsGroupId": "<base64url MLS group ID>",
+      "serverUrl": "https://cloud.example.org",
+      "content": "<base64url MLS Welcome wire format>"
+    }
+  }
+}
+]]></sourcecode></figure>
+
+<t>As for a federated group, the Welcome MUST carry the group's ratchet
+tree in a <spanx style="verb">ratchet_tree</spanx> extension, since the admitted server needs it
+to derive the membership and to process subsequent Commits.</t>
+
+<t>The <spanx style="verb">OCM_SERVER_ADDED</spanx> notification of [OCM] SHOULD still be sent to a
+prospective member before it is admitted, and a server that leaves the
+group voluntarily SHOULD still send <spanx style="verb">OCM_SERVER_REMOVED</spanx> to the rest of
+the group, consistently with the peer-announced model of [OCM].  They
+remain useful because they notify the administrators of remote servers
+regardless whether they can process the corresponding MLS messages.
+An expulsion, by contrast, has no <spanx style="verb">OCM_SERVER_REMOVED</spanx> counterpart: the
+expelled server instead learns of its expulsion once it can no longer
+process the group's Commits.</t>
+
+</section>
+<section anchor="publishing-the-membership"><name>Publishing the Membership</name>
+
+<t>Every member of a Servers Federation group SHOULD publish the
+Federation at its Directory Endpoint as specified in [OCM], with
+<spanx style="verb">federationId</spanx> equal to the <spanx style="verb">federation_id</spanx> of the GroupContext
+extension, <spanx style="verb">mlsGroupId</spanx> equal to the group's <spanx style="verb">group_id</spanx>, and one entry
+in <spanx style="verb">servers</spanx> per leaf of the ratchet tree at the current epoch, whose
+<spanx style="verb">url</spanx> is the identity carried in that leaf's credential.  A member MUST
+refresh the published document after processing a Commit that changes
+the membership.</t>
+
+<t>The published document carries no signature of its own, as [OCM]
+specifies.  A consumer that is itself a member of the group derives the
+authoritative membership from the group state; a consumer that is not
+a member, such as a WAYF Page, is trusting the server it fetched the
+document from in either case.</t>
+
+</section>
+</section>
 <section anchor="trust-and-authentication"><name>Trust and Authentication</name>
 
 <t>The Authentication Service role ([RFC9420] Section 3) is fulfilled by
@@ -1759,13 +2187,13 @@ verifiable binding, the attestation lies in the delivery channel.</t>
 following hold:</t>
 
 <t><list style="symbols">
-  <t>it was fetched from the <spanx style="verb">&lt;endPoint&gt;/mls-key-packages</spanx> endpoint of the
+  <t>it was fetched from the <spanx style="verb">&lt;endPoint&gt;/mls/key-packages</spanx> endpoint of the
 server named in the credential's OCM Address, over TLS, with the
 response signed using HTTP Signatures [RFC9421] verifying against that
 server's JWKS [RFC7517];</t>
   <t>the OCM Address in the credential is identical to the <spanx style="verb">userId</spanx> the
 KeyPackage was requested for, which is the OCM Address of the user the
-requester intends to add; in particular, its host part names the server
+requester intends to add; its server part names the server
 the KeyPackage was fetched from; and</t>
   <t>the KeyPackage signature verifies with the <spanx style="verb">signature_key</spanx> of its
 LeafNode, proving possession of the private key ([RFC9420] Section
@@ -1806,7 +2234,7 @@ credential carrying a well-formed OCM Address.  The joiner accepts the
 bindings of those credentials transitively, on the basis that each was
 validated by an admin client when it was introduced.  It MAY
 additionally re-validate any leaf against the
-<spanx style="verb">&lt;endPoint&gt;/mls-key-packages</spanx> endpoint of its home server, but such
+<spanx style="verb">&lt;endPoint&gt;/mls/key-packages</spanx> endpoint of its home server, but such
 re-validation can fail benignly,
 since published KeyPackages rotate independently of leaves already in
 groups.</t>
@@ -1822,6 +2250,40 @@ that trusted server is outside the threat model.</t>
 <t>Users who require protection of their key material from their own server
 should choose a native client implementation where cryptographic
 operations occur on the user's device.</t>
+
+</section>
+<section anchor="servers-federation-group-credentials"><name>Servers Federation group credentials</name>
+
+<t>In a Servers Federation group (<xref target="servers-federation-groups"/>) the
+credential identifies an OCM Server rather than a user, so the AS role
+collapses onto the subject itself: a server attests its own identity.
+A KeyPackage for such a group is considered validated when all of the
+following hold:</t>
+
+<t><list style="symbols">
+  <t>it was fetched from the <spanx style="verb">&lt;endPoint&gt;/mls/key-packages</spanx> endpoint of the
+server named by the URL in the credential, over TLS, with the response
+signed using HTTP Signatures [RFC9421] verifying against that server's
+JWKS [RFC7517];</t>
+  <t>the URL in the credential is identical to the <spanx style="verb">serverId</spanx> the
+KeyPackage was requested for (<xref target="server-key-packages"/>), and its host
+and optional port identify the server it was fetched from; and</t>
+  <t>the KeyPackage signature verifies with the <spanx style="verb">signature_key</spanx> of its
+LeafNode.</t>
+</list></t>
+
+<t>This is the same channel binding as for a user credential, with the
+subject and the attesting party coinciding.  It therefore establishes
+only that the party controlling that server address and its keys asked
+to join.  It is not evidence that the server ought to be trusted: that
+judgement belongs to the administrators, as [OCM] requires, and in this
+model it is recorded in the group state by the admin approval of the
+Add (<xref target="servers-federation-groups"/>).</t>
+
+<t>The successor-credential policy above applies unchanged, with the
+server URL taking the place of the OCM Address: a credential replacing
+another MUST present the same URL, and members MUST reject the
+proposal or Commit otherwise.</t>
 
 </section>
 </section>
@@ -1905,7 +2367,7 @@ wrapped FKs, and any cached unwrapped FKs.  Key-reuse mode SHOULD only
 be used within formal federations with governance agreements that
 enforce this behaviour.</t>
 
-<t><strong>Two access-control layers.</strong> For an encrypted federation share, access
+<t><strong>Two access-control layers.</strong> For an encrypted community share, access
 is controlled at two independent layers: the per-server transport
 credential in the <spanx style="verb">protocol</spanx> object gates who can fetch the ciphertext,
 and the Group Key gates who can unwrap the FK and decrypt it.
@@ -1914,7 +2376,7 @@ credential provides defence in depth and is shared by all users on a
 Member Server.  The two layers can diverge: a server whose last group
 member was just removed may still hold a valid transport credential
 until the sending server revokes it, which is why revocation SHOULD
-accompany the <spanx style="verb">SHARE_UNSHARED</spanx> notification.  For unencrypted federation
+accompany the <spanx style="verb">SHARE_UNSHARED</spanx> notification.  For unencrypted community
 shares the transport credential is the only access control, exactly as
 in base OCM, and access-follows-membership then depends on the receiving
 server re-evaluating share resolution on every Commit
@@ -2018,7 +2480,7 @@ Delivery Service; this protocol deliberately departs from that
 recommendation because the servers performing the DS role must know the
 group's membership anyway: sending servers derive notification
 recipients from the ratchet tree, and receiving servers resolve
-federation shares to their local users.  No information is exposed to
+community shares to their local users.  No information is exposed to
 those servers beyond what their OCM duties already require, and
 transport protection (TLS and HTTP Signatures [RFC9421]) prevents
 exposure to outside observers.  Application Messages, which carry key
@@ -2032,7 +2494,7 @@ member and every Member Server can therefore enumerate all members and
 admins of the group and observe membership and admin-set changes over
 time.  This is an accepted privacy trade-off inherent to this design:
 servers need the membership information to route shares and
-notifications, resolve federation shares to local users, and enforce
+notifications, resolve community shares to local users, and enforce
 admin policy.  Federated groups do not provide anonymous membership or
 hidden administrator roles.  The information is not exposed by the
 protocol to servers outside the group, although an authorized member or
@@ -2040,11 +2502,12 @@ Member Server can disclose it, and transport protection prevents
 exposure to outside observers in transit.</t>
 
 <t><strong>Admin set integrity.</strong> The admin set and the group's OCM Address are
-carried in the GroupContext (<xref target="admin-set"/>), so they are covered by the
-MLS confirmation tag and agreed upon by all members of every epoch.  A
-malicious server cannot unilaterally appoint admins or seize the Group
-Owner Server role; changing the admin set requires a Commit constructed
-by an existing admin client.</t>
+carried as OCM Community Component data in the GroupContext
+(<xref target="admin-set"/>), so they are covered by the MLS confirmation tag and
+agreed upon by all members of every epoch.  A malicious server cannot
+unilaterally appoint admins or seize the Group Owner Server role;
+changing the admin set requires an <spanx style="verb">AppDataUpdate</spanx> proposal in a Commit
+constructed by an existing admin client.</t>
 
 <t><strong>Post-compromise security.</strong> Member Servers SHOULD periodically rotate
 their users' leaf keys via Update proposals to maintain post-compromise
@@ -2053,8 +2516,8 @@ eventually be removed from the group.</t>
 
 <t><strong>Key material deletion.</strong> Security-sensitive values MUST be deleted as
 soon as they are consumed, per [RFC9420] Section 9.2.  In particular,
-the exporter_secret used to derive the Group Key must not be retained
-after the Group Key has been derived.</t>
+the OCM component export secret and intermediate values used to derive
+the Group Key MUST NOT be retained after the Group Key has been derived.</t>
 
 <t><strong>KeyPackage reuse.</strong> KeyPackages MUST be one-time use, except for a
 designated last resort KeyPackage used when a user's single-use
@@ -2075,16 +2538,31 @@ SHOULD also rate-limit requests by verified <spanx style="verb">senderDomain</sp
 <t><strong>User enumeration.</strong> A server MUST only reply to HTTPS GET requests
 signed and verified as specified in <xref target="keypackage-distribution"/> and
 SHOULD implement rate limiting and other access control methods on the
-<spanx style="verb">&lt;endPoint&gt;/mls-key-packages</spanx> endpoint to avoid user enumeration.</t>
+<spanx style="verb">&lt;endPoint&gt;/mls/key-packages</spanx> endpoint to avoid user enumeration.</t>
+
+<t><strong>Group state retrieval.</strong> The ratchet trees and Commits that Admin
+Servers serve (<xref target="group-state"/>) are the public group state that every
+Member Server holds and that handshake messages already expose to it.
+They are served only to servers named in a leaf credential of the
+requested epoch, under the same authentication as KeyPackage requests,
+and requests from any other server are indistinguishable from requests
+for an unknown group, so nothing is disclosed to servers outside the
+group.  Integrity does not rest on the serving server: a retrieved tree
+is verified against the <spanx style="verb">tree_hash</spanx> in the GroupInfo ([RFC9420] Section
+12.4.3.3) and retrieved Commits are verified like broadcast ones.  A
+serving server can withhold state, which delays a join or a catch-up
+but cannot cause invalid state to be accepted; the requester turns to
+another Admin Server or to the rejoin procedure (<xref target="rejoin"/>).</t>
 
 </section>
 <section anchor="underlying-security-specifications"><name>Underlying Security Specifications</name>
 
 <t>This specification relies on the base Open Cloud Mesh protocol [OCM],
-the Messaging Layer Security protocol [RFC9420], HTTP Message Signatures
-[RFC9421], and JSON Web Keys and JWK Sets [RFC7517].  All security
-considerations in those specifications apply to implementations of this
-protocol.  The security and privacy considerations of the MLS
+the Messaging Layer Security protocol [RFC9420], the safe application
+interface and component model in [ietf-mls-extensions], HTTP Message
+Signatures [RFC9421], and JSON Web Keys and JWK Sets [RFC7517].  All
+security considerations in those specifications apply to implementations
+of this protocol.  The security and privacy considerations of the MLS
 architecture [RFC9750] also apply.</t>
 
 <t>Implementations using Virtual Clients additionally need to follow all
@@ -2098,6 +2576,18 @@ HPKE construction.</t>
 </section>
 <section anchor="iana-considerations"><name>IANA Considerations</name>
 
+<t>The OCM Community Component defined in <xref target="admin-set"/> is to be
+registered in the "MLS Component Types" registry defined by
+[ietf-mls-extensions]:</t>
+
+<t><list style="symbols">
+  <t>Value: 0x0006 (suggested)</t>
+  <t>Name: ocm_community</t>
+  <t>Where: GC, ES</t>
+  <t>Recommended: N</t>
+  <t>Reference: This document</t>
+</list></t>
+
 <t>The MLS Exporter label <spanx style="verb">"ocm-group-key"</spanx> used in the Group Key
 Derivation section is to be registered in the "MLS Exporter Labels"
 registry defined in [RFC9420] Section 17.8, to avoid collisions with
@@ -2109,13 +2599,13 @@ other applications using the MLS Exporter:</t>
   <t>Reference: This document</t>
 </list></t>
 
-<t>The GroupContext extension <spanx style="verb">ocm_federated_group</spanx> defined in
-<xref target="admin-set"/> is to be registered in the "MLS Extension Types" registry
-defined in [RFC9420] Section 17.3:</t>
+<t>The GroupContext extension <spanx style="verb">ocm_servers_federation</spanx> defined in
+<xref target="servers-federation-state"/> is to be registered in the "MLS Extension
+Types" registry defined in [RFC9420] Section 17.3:</t>
 
 <t><list style="symbols">
   <t>Value: TBD</t>
-  <t>Name: ocm_federated_group</t>
+  <t>Name: ocm_servers_federation</t>
   <t>Message(s): GC</t>
   <t>Recommended: N</t>
   <t>Reference: This document</t>
@@ -2139,21 +2629,20 @@ Mesh (OCM) Parameters" group:</t>
 
 <t>The following entry is to be registered in the "OCM Share Types"
 registry defined in [OCM], within the "Open Cloud Mesh (OCM)
-Parameters" group.  This document is the registering specification for
-the "federation" share type:</t>
+Parameters" group:</t>
 
 <figure><artwork><![CDATA[
    +============+===============+
    | Share Type | Reference     |
    +============+===============+
-   | federation | This document |
+   | community  | This document |
    +============+===============+
 ]]></artwork></figure>
 
 <t>The following entries are to be registered in the "OCM Share Payloads"
 registry defined in [OCM], within the "Open Cloud Mesh (OCM)
 Parameters" group.  They extend the existing "webdav", "webapp", and
-"ssh" protocols to the "federation" share type; the wire format of the
+"ssh" protocols to the "community" share type; the wire format of the
 share payload for these combinations is completely specified by this
 document together with [OCM] (see <xref target="share-creation"/>).  These
 registrations do not modify the protocols' own registrations:</t>
@@ -2162,8 +2651,8 @@ registrations do not modify the protocols' own registrations:</t>
    +===============+============+=====================+===============+
    | Resource Type | Share Type | Protocols           | Reference     |
    +===============+============+=====================+===============+
-   | file          | federation | webdav, webapp, ssh | This document |
-   | folder        | federation | webdav, webapp, ssh | This document |
+   | file          | community  | webdav, webapp, ssh | This document |
+   | folder        | community  | webdav, webapp, ssh | This document |
    +===============+============+=====================+===============+
 ]]></artwork></figure>
 
@@ -2175,8 +2664,8 @@ Parameters" group:</t>
    +=========+============+===============+
    | Scheme  | Share Type | Reference     |
    +=========+============+===============+
-   | ocm-pgp | federation | This document |
-   | ocm-mls | federation | This document |
+   | ocm-pgp | community  | This document |
+   | ocm-mls | community  | This document |
    +=========+============+===============+
 ]]></artwork></figure>
 
@@ -2196,14 +2685,6 @@ with the FK wrapping model needs to be defined.</t>
 Since every epoch transition triggers a re-wrap of every shared
 resource's FK (<xref target="fk-rewrap"/>), batching is load-bearing when many shares
 exist and epoch transitions are frequent.</t>
-  <t><strong>Commit retransmission.</strong> A missed Commit is detected directly from
-the MLS epoch: a Commit arriving for a later epoch than the next
-expected one indicates a gap.  A mechanism for requesting retransmission
-of missed Commits, from the Group Owner Server or any Admin Server,
-needs to be specified.  Retransmission is the first remedy for a gap;
-the rejoin procedure (<xref target="rejoin"/>) is the fallback when retransmitted
-Commits can no longer be applied. The proposed OCM Journaling mechanism
-can be useful in this context.</t>
 </list></t>
 
 </section>
@@ -2214,7 +2695,49 @@ version in the IETF datatracker.  It is meant to ease the review
 process and it shall be removed when going to RFC last call.
 The complete changelog is updated in the OCM-API GitHub repository.</t>
 
-<section anchor="working-group-version-01"><name>Working Group Version 01</name>
+<section anchor="wg-version-02"><name>WG Version 02</name>
+<t><list style="symbols">
+  <t>Specified Servers Federation groups: an MLS group whose members are
+the OCM Servers of a Federation, providing the cryptographically
+guaranteed Directory Service model of [OCM].  One leaf per member
+server, a credential identifying the server by the same URL its
+directory entry uses, a new <spanx style="verb">ocm_servers_federation</spanx> GroupContext
+extension, and Add and Remove Commits as the membership changes.
+The existing group machinery - admin set, failover, leaf updates,
+rejoin and reinitialisation - is reused unchanged.</t>
+  <t>Added a <spanx style="verb">serverId</spanx> selector to the KeyPackage endpoint, for the
+server-level MLS client of a Servers Federation group, and specified
+the corresponding credential validation.</t>
+  <t>Reused the <spanx style="verb">MLS_*</spanx> notification types for Servers Federation groups,
+with <spanx style="verb">resourceType</spanx> set to <spanx style="verb">federation</spanx> and a <spanx style="verb">federationId</spanx> in the
+<spanx style="verb">notification.federation</spanx> object, as the discriminator between the
+two kinds of group.</t>
+  <t>Renamed the share type for federated groups of users from
+<spanx style="verb">federation</spanx> to <spanx style="verb">community</spanx>, which this document now registers, as
+<spanx style="verb">federation</spanx> is registered by [OCM] as the resource type of a
+Federation of OCM Servers.
+The <spanx style="verb">MLS_*</spanx> notifications for federated groups of users accordingly
+carry <spanx style="verb">shareType</spanx> <spanx style="verb">community</spanx> and a <spanx style="verb">notification.community</spanx>
+object.  The corresponding share payload registrations are kept.</t>
+  <t>Removed the ratchet tree from the Welcome; newly added Member Servers
+retrieve it from an Admin Server.  Added retrieval of missed Commits
+from Admin Servers, closing the Commit retransmission open issue.</t>
+</list></t>
+
+</section>
+<section anchor="wg-version-01"><name>WG Version 01</name>
+<t><list style="symbols">
+  <t>Added authenticated requester discovery for KeyPackage requests while
+keeping the HTTP Message Signature <spanx style="verb">keyid</spanx> opaque.</t>
+  <t>Added nonce replay protection and request-bound response signatures
+for KeyPackage distribution.</t>
+  <t>Replaced the OCM-specific GroupContext extension and exporter label
+with the application component model and safe exporter defined by
+[ietf-mls-extensions].</t>
+</list></t>
+
+</section>
+<section anchor="wg-version-01-1"><name>WG Version 01</name>
 <t><list style="symbols">
   <t>Added authenticated requester discovery for KeyPackage requests while
 keeping the HTTP Message Signature <spanx style="verb">keyid</spanx> opaque.</t>
@@ -2223,7 +2746,7 @@ for KeyPackage distribution.</t>
 </list></t>
 
 </section>
-<section anchor="working-group-version-00"><name>Working Group Version 00</name>
+<section anchor="wg-version-00"><name>WG Version 00</name>
 <t><list style="symbols">
   <t>First Working Group version, adopted by the OCM Working Group.</t>
 </list></t>
@@ -2250,57 +2773,61 @@ introduced in this document.</t>
 
 <section anchor="normative-references"><name>Normative References</name>
 
-<t>[OCM] Lo Presti, G., de Jong, M.B., Baghbani, M. and Nordin, M.  "<eref target="https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/">Open
+<t>[OCM] Lo Presti, G., de Jong, M.B., Baghbani, M. and Nordin, M.  "[Open
 Cloud
-Mesh</eref>",
+Mesh](https://datatracker.ietf.org/doc/draft-ietf-ocm-open-cloud-mesh/)",
 Work in Progress, Internet-Draft.</t>
 
 <t>[ietf-mls-virtual-clients] Alwen, J., Kohbrok, K., McMillion, B.,
-Mularczyk, M. and Robert, R.  "<eref target="https://datatracker.ietf.org/doc/html/draft-ietf-mls-virtual-clients-01">MLS Virtual
-Clients</eref>",
+Mularczyk, M. and Robert, R.  "[MLS Virtual
+Clients](https://datatracker.ietf.org/doc/html/draft-ietf-mls-virtual-clients-01)",
 Work in Progress, Internet-Draft, draft-ietf-mls-virtual-clients-01.</t>
 
-<t>[RFC2119] Bradner, S.  "<eref target="https://datatracker.ietf.org/doc/html/rfc2119">Key words for use in RFCs to Indicate
-Requirement Levels</eref>",
+<t>[ietf-mls-extensions] Robert, R.  "[The Messaging Layer Security (MLS)
+Extensions](https://datatracker.ietf.org/doc/html/draft-ietf-mls-extensions-11)",
+Work in Progress, Internet-Draft, draft-ietf-mls-extensions-11.</t>
+
+<t>[RFC2119] Bradner, S.  "[Key words for use in RFCs to Indicate
+Requirement Levels](https://datatracker.ietf.org/doc/html/rfc2119)",
 March 1997.</t>
 
-<t>[RFC4648] Josefsson, S.  "<eref target="https://datatracker.ietf.org/doc/html/rfc4648">The Base16, Base32, and Base64 Data
-Encodings</eref>", October
+<t>[RFC4648] Josefsson, S.  "[The Base16, Base32, and Base64 Data
+Encodings](https://datatracker.ietf.org/doc/html/rfc4648)", October
 2006.</t>
 
-<t>[RFC7517] Jones, M., "<eref target="https://datatracker.ietf.org/doc/html/rfc7517">JSON Web Key
-(JWK)</eref>", May 2015.</t>
+<t>[RFC7517] Jones, M., "[JSON Web Key
+(JWK)](https://datatracker.ietf.org/doc/html/rfc7517)", May 2015.</t>
 
-<t>[RFC8174] Leiba, B.  "<eref target="https://datatracker.ietf.org/html/rfc8174">Ambiguity of Uppercase vs Lowercase in RFC 2119
-Key Words</eref>", May 2017.</t>
+<t>[RFC8174] Leiba, B.  "[Ambiguity of Uppercase vs Lowercase in RFC 2119
+Key Words](https://datatracker.ietf.org/html/rfc8174)", May 2017.</t>
 
-<t>[RFC9180] Barnes, R., Bhargavan, K., Lipp, B. and Wood, C. A.  "<eref target="https://datatracker.ietf.org/doc/html/rfc9180">Hybrid
-Public Key Encryption</eref>",
+<t>[RFC9180] Barnes, R., Bhargavan, K., Lipp, B. and Wood, C. A.  "[Hybrid
+Public Key Encryption](https://datatracker.ietf.org/doc/html/rfc9180)",
 February 2022.</t>
 
 <t>[RFC9420] Barnes, R., Beurdouche, B., Robert, R., Millican, J., Omara,
-E. and Cohn-Gordon, K.  "<eref target="https://datatracker.ietf.org/doc/html/rfc9420">The Messaging Layer Security (MLS)
-Protocol</eref>", July 2023.</t>
+E. and Cohn-Gordon, K.  "[The Messaging Layer Security (MLS)
+Protocol](https://datatracker.ietf.org/doc/html/rfc9420)", July 2023.</t>
 
-<t>[RFC9421] Backman, A., Richer, J. and Sporny, M.  "<eref target="https://datatracker.ietf.org/doc/html/rfc9421">HTTP Message
-Signatures</eref>", February
+<t>[RFC9421] Backman, A., Richer, J. and Sporny, M.  "[HTTP Message
+Signatures](https://datatracker.ietf.org/doc/html/rfc9421)", February
 2024.</t>
 
 </section>
 <section anchor="informative-references"><name>Informative References</name>
 
-<t>[RFC3552] Rescorla, E. and Korver, B.  "<eref target="https://datatracker.ietf.org/doc/html/rfc3552">Guidelines for Writing RFC Text
+<t>[RFC3552] Rescorla, E. and Korver, B.  "[Guidelines for Writing RFC Text
 on Security
-Considerations</eref>", BCP 72,
+Considerations](https://datatracker.ietf.org/doc/html/rfc3552)", BCP 72,
 July 2003.</t>
 
-<t>[RFC4918] Dusseault, L. M.  "<eref target="https://datatracker.ietf.org/doc/html/rfc4918">HTTP Extensions for Web Distributed
+<t>[RFC4918] Dusseault, L. M.  "[HTTP Extensions for Web Distributed
 Authoring and
-Versioning</eref>", June 2007.</t>
+Versioning](https://datatracker.ietf.org/doc/html/rfc4918)", June 2007.</t>
 
 <t>[RFC9750] Beurdouche, B., Rescorla, E., Omara, E., Inguva, S. and Duric,
-A.  "<eref target="https://datatracker.ietf.org/doc/html/rfc9750">The Messaging Layer Security (MLS)
-Architecture</eref>", April
+A.  "[The Messaging Layer Security (MLS)
+Architecture](https://datatracker.ietf.org/doc/html/rfc9750)", April
 2025.</t>
 
 </section>
@@ -2308,10 +2835,16 @@ Architecture</eref>", April
 <section anchor="acknowledgements"><name>Acknowledgements</name>
 
 <t>This work builds on the Open Cloud Mesh specification and the
-discussions in the OCM community.</t>
+discussions in the OCM community. In addition valuable feedback
+was received from the IETF MLS Working Group and in particular from
+Britta Hale, Konrad Kohbrok and Rohan Mahy.</t>
 
 <t>Work on this document has been funded by [Sovereign Tech Agency][sta]
-through the <eref target="https://www.sovereign.tech/programs/fund">Tech Fund</eref>, with a specific <eref target="https://www.sovereign.tech/tech/open-cloud-mesh">project</eref>.</t>
+through the [Tech Fund][sta-fund], with a specific [project][sta-ocm].</t>
+
+<t>[sta-ocm]: https://www.sovereign.tech/tech/open-cloud-mesh</t>
+
+<t>[sta-fund]: https://www.sovereign.tech/programs/fund</t>
 
 </section>
 
@@ -2330,746 +2863,895 @@ through the <eref target="https://www.sovereign.tech/programs/fund">Tech Fund</e
   </back>
 
 <!-- ##markdown-source:
-H4sIAAAAAAAAA9S9a3MbR5Ym/D1/RYX8QaIDoE3J8oWc6TBbF1ttW9KIcvvt
-6HAYBaBIVAuo4qAKpDBez2/fc8+TWQVK3bsb8c7E7oxFAFV5OXnyXJ7znOl0
-Gvq6X1enxZ+moSieV8tqW/bVsvhu2+6uu6JuilfXVVM8Wbe7ZfFT1a2KXVc3
-V/ifXXmF//Vjua+2xUW12G3rfh/K+Xxb3ZwW9149+an46ceLwTPvhWW7aMoN
-vHO5LS/7aV31l9N2sZlu1t30Ur89vaJvTz8/CQv491W73Z8WXb8Mob7enhb9
-dtf1Dz///JvPH4ZyW5Wnxfn19bqGr9Zt0xVlsyzeVOV6+rbeVOFdtb9tt8vT
-4kXTV9um6qdP8c0hdD188bdy3TYwmn3VwR/gWRv44rO3z0Mod/2q3Z7Cwkxh
-JbrT4qfj4iU8qG7gT0XBk/ipXryr/J/b7VXZ1P9FIzktLn5++ewt/b3alPX6
-tHhXNu233Q5GcdxV9AEs3Gmx6vvr7vSzzxbtsjruNu0avwCP+myDzw9xDN8d
-Fz+2xett1fW1G8Z39a6rrq+r7MN0ME+evXnpx3IlPzpet9f0m28XsD7Hi9XI
-uPiDz/SbIVmVP5dXqzm8yK9LuVrW6QfpYF63zRIlp91tF5Uf1QZ/+e01fdzR
-p7gQwyEl31i0mxCm02lRzmETywXs7ttV3RUgbLtN1fTFsrqsmwpFo6je91XT
-wSCKvi36VTWQ8QcgvEfF9bbt20W7DvCtbnd93W77wuSzYPksyg4EbVHVN3gW
-XpfbvoZ3tJdFtwKx7I6LgkZRd6FcrOrqBn7IBwhfe+gQFQ/g4MT3Fw/ePH9S
-fPPFw8+P4HWh5FfDMjXlVUVzW+PP4V143uBtsKnL4rLdFrBR5Xxddyt8B54J
-eCKsPv4j0ABlGgWckKJcbNuuy2dYbKrNHFZ5gjO9rdZr/L/w7AB71fTw//Fp
-/E14WV/pjK/qG1iIpu2LtlnDw4vbco/rIo+3XwV5/qq+nhTzXV+U666Fr9PR
-LOFQ/ReMRH67rGFra/gS/rpqFtv9NYoSjr4LoKrKgv7UXm3L6xXogjW8uMM1
-rfAJk6LD3S5hE+s1jE0W4LbuV4Wu6aJsQksPpR/PK30NfBHXb1nJv2Sxd7B/
-FWlJ0HYgdCQPZbip4PXrivZgsFk0BF4e2KgtSIu80E0JdN51Oa/XNYkTPgaE
-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
-q9Us7hzNv7XwIJ6vqAEA
+H4sIAAAAAAAAA9S963IbV5Ym+n8/RQb9Q2IFQFsXu1xUVx2zJcpWW7cjyeVT
+0dUhJIAkmSUgE4VMkEZ73M8+677X3pkgVXV6IqY7ZrotEMjc13X91rem02no
+635VnRZ/moaieF4tq23ZV8vi+22723RF3RRvNlVTPF21u2Xxququil1XN5f4
+n115if/1stxX2+J9tdht634fyvl8W12fFkdvnr4qXr18P3jmUVi2i6ZcwzuX
+2/Kin9ZVfzFtF+vpetVNL/Tb00v69vSrr8IC/n3ZbvenRdcvQ6g329Oi3+66
+/uFXX/3hq4eh3FblaXG22axq+GrdNl1RNsviXVWuph/qdRU+Vfubdrs8LV40
+fbVtqn76DN8cQtfDFz+Wq7aB0eyrDj6AZ63hi+cfnodQ7vqrdnsKCzOFlehO
+i1cnxWt4UN3AR0XBk3hVLz5V/uN2e1k29X/SSE6L9z+9Pv9An1frsl6dFp/K
+pv2u28EoTrqK/gALd1pc9f2mO/3yy0W7rE66dbvCL8Cjvlzj80Mcw/cnxcu2
+eLutur52w/i+3nXVZlNlf0wH8/T83Ws/lkv50cmq3dBvvlvA+pwsrkbGxX/4
+Ur8ZklX51/Lyag4v8utSXi3r9A/pYN62zRJPTrvbLio/qjX+8rsN/bmjv+JC
+DIeUfGPRrkOYTqdFOYdNLBewux+u6q6Aw7ZbV01fLKuLuqnwaBTVL33VdDCI
+om+L/qoanPH7cHiPi8227dtFuwrwrW632bTbvrDzWfD5LMoODtqiqq/xLrwt
+t30N72gviu4KjmV3UhQ0iroL5eKqrq7hh3yB8LWHLlFxHy5OfH9x/93zp8Uf
+Hj/86hheF0p+NSxTU15WNLcV/hzehfcN3gabuiwu2m0BG1XOV3V3he/AOwFP
+hNXHfwQaoEyjgBtSlItt23X5DIt1tZ7DKk9wpjfVaoX/F54dYK+aHv4/Po2/
+CS/rK53xZX0NC9G0fdE2K3h4cVPucV3k8farIM+/qjeTYr7ri3LVtfB1upol
+XKr/hJHIb5c1bG0NX8JfV81iu9/gUcLRdwFEVVnQR+3lttxcgSxYwYs7XNMK
+nzApOtztEjaxXsHYZAFu6v6q0DVdlE1o6aH043mlr4Ev4votK/mXLPYO9q8i
+KQnSDg4dnYcyXFfw+lVFezDYLBoCLw9s1BZOi7zQTQlk3qac16uajhM+Bg4T
+HfR03PlxPOE7sK6XyxUIjS9Q4m3b5W5BDw35Of/rv8O4//ofBSzRFoaGy8Xn
+nN+Cyxzfiy+EVV7CUV/uYLQ8+MGpgU+v6Q+NjFEuSov7g0cfBsbf0aNiV7Tb
+VIv6AmeMt2NdLa5AXCzoOuEHsyO45OtdAzfkaMbnt+j3m2oCg7yEo1HhssBe
+4HdJ/bynr3yAr3RH8p0tbOoevgEXUl87ofXFHy3KDk7KVYXPhX+m93qPN6vM
+VzzA2Hgh7sPp0+Edn8I3k+HyruEj4MmwEsslLCxeU5AtZeAzUi9hNDj/JY6x
+5EN1xt+EjVlc4e2fwb+qcru4YgX53ZYGCYtZ/VKuNysSlTOYRNtVRbxasLQl
+qMX1btXX8KWAT5aNmrhd4isshxXGdgUfXl6xrILT/td/B0GEcgiOTLVpQU3I
+HnXrk1zcXuy28LOt29Or9gYnhQ+yy1aoFMF3OFGAW16q6YBXHP5NOyqHq+67
+anUBQ4d7diWrGoaX/3JXbkvQ+TCXZzWsVA9WBD2jXsAsQdOu8MFyC8L9X3+V
+NVEzBN4sdshvvx3TcYWTcdPijtOpxLnwxsLr4IMAw6i3MCmQ9U213bPMqC8u
+YCFIDMJEb/D6l8WqKi/0YPNybCvUrLB23SnIeDxUE9CYeg545rDML3DRmn1x
+jrbMZlvDPj8HeVa83zcLeh+f+vvnz9+DDun2cC/Wna7UAowjMPh2fYVDLa7L
+roen/a0lrYNrDtNw6zzB4fGxLYu+vrzq4Qk7sLPgTsyr/qaqGhjqYlXjjuO7
+SzlVIMqrRQlzoPnxZ/D8CxIMIObrFdh9sBbVHCQKzOOihA0paV9B7dXrEtaO
+Hwur/oLuS92bwq5RG8HUYMLybrjO7QUodX4HCusuqhz8Io6Yxb6MmwaGayRL
+RMPHU4QLfw8OcoWHpOMFh33GN9rLxJjg18DoLk2um8Y1QZ0eS7lhdOVauiD8
+UJiRPpPkU5WqMjRhcXXgEq2WaFWcNTJ4Xtp1VfUdrQw/hhdrSWd+tYfvPweN
+vaw2q3aPt7NzUk6XG+ddxM2gLYf9kfFN2E56+irw0YD7vYL17Ew2yNps25Xu
+97QDgTahEePqo4mxhrlva9AdoIzm1VW5oiuAm04ydKKbUKC5XhzxM49wlcmk
+ITHhhAzogHa3WpKV0YAcBGtqW7Pa7stPFZ2WdVXyXsu+4iHwR+ckvECxiY8T
+34H2cdmi+QWaDo4lGLQ9iFg759HRKN7/8Oanl8/CBhat3a7TPQO9LjKkU62U
+Pqj1Awty4ECZlXQuYBiNfmV4qepOxwfnDFR8c1ltQ921KxOXyXpfbNu1exIe
+IN7wDVqsi3rDFhl+LaiS0NHKwIpXP73/gOvStWLCijD/c73t0R54KssDXpTI
+fNqxv/47OXjo3F3zN6dy5P/6H6J7cGD6FjCi6NldOIeBlCCx5cEdS4Kq5ltT
+qmwBZ8MfQJbqtEd0e89BFvNUQSfyqWY1wyomt3av4KyBJsVbA4vPT0ZRHZoW
+D3PV4O2G8Q3sIDhqcOxATomluK3W7TWtAFy7qlmSeXUSPvAtEgFLKhBehic8
+u0iwiSM3RG5ynR3Z4W3+/ItMEoWGTFotOTbuIuPq528lyzncdTuKz7wd6YPc
+0RAZZycD5rOtwOUhuw2XbE1+FG33BzZZ2l2fiooJ/RxfBjdmAU4EC+95hY+U
+AXq7K+hLYV135Gb2bbuUXU6+T+JCvg0Twa1C432BGhW9tcbt6iTdVjxg2e5+
+iPPljWnagZ+EVsGYUnFHLX1soGPHBxw3Gv/iHlf9AoYx/aG6blfXVXpm6Z40
++6AOAa7jNUwuyhBagZsS1Qp6ymwPmeOQOFgBDzzLEPyYtwkkTcWW8KcGbERS
+fuyQ+FEuK7ATVx1bWehB4fNkxXCFn1UrtIOjfUeqCI+Aeo3V8hSF5qbtwMfE
+nQWZS7/hl+N7r9p1ZR6M2EPlcl03bApxCKt4c9OQt45fC+V2XvcoQrriKdj7
+dS9qjIyyH+E23X/+47FzXeEE6Hml04UWX1BNzYIaPiKVqQMhNUYyy2z2v+1g
+y1b1J5YmtOYgotB7kBAYrMz33n/HJURbXV+rNj66HHCb9mrsh2ifr+qLarFH
+PzbeVZSotMpRXNIpBhOkxW2ntToVmYgSlz4h5yyaurxrwaTyYlvR+qkXXrMh
+eFFv8VziA/CwLWlNVHyjbRxIyPpPxaYS3Vmxk7Ct/r6DObKIBfkEerNc8bHm
+p0/CZlUu+DlXO1gZ1dertt2QlNGVk5NX4g1Dn/y6hR0oF2h6nIQzsMplGHjM
+WQPgc9YwDnT3aXN1knr+aQQ2rEnAT8Xn4vOEywFGO5zEXE7xT81OPoOvyBHk
+K1Iur8tmUZlqIZ+Ndp/8gO1u0Ud7M0opPvm0k4GMej3h9t3hNfAyBqws77mS
+AiKzGBa0nFcrVCU0qzVqqSXLV9IAyxb9QXWLRA5G5SYLB2eOT8xS3Rrz8+jg
+BPC5/76rYPs7DinBGi7K7bamgBTIBQ4gdRXsNBg/cFzxmlu0TW8nxpXpy0nM
+zs2MfUBnCchVY0+IpUZoqmt/9O/hDXp+W/ypOBR/ki/CIZiiEYsuAckWWARQ
+Axv9hhefFtwTORmDfeQobEH4LYPZhvGIdBUscB8jhhL9KSq6+vwdOBFNR34G
+PPxNE8b/Jhvp5RlcjCmOmO/j8x/j/oMeuAkuIElmVBTfuLkxiDc6TzpsK/D7
+wAjdXYAwJJsE5OeuwVcmP3r+Iwz8Z4rG6LXFX5MFh1EZfupEfHrv43DIpdMh
+F+mQ8VOZIm7K8x9ZIZDqq9dwe2tYUNhciSXS4RuP7kWBGcJgoGpg2vbxcAfK
+49XZX4K6zxwUgZuBtxkdGxg8bAAv9FSOWlGCD02SwUY1CWwQ4HN5T2FFNi0Y
+enHKYL1hoFXvLk9jWfblCcYhP1RbuA/tqr3cs6TA1UIvryuO0LE4mvD/LV6/
+of9+d/7//vTi3fkz/O/3P5y9fGn/wd8IR2xc8sdkZtovn7559er89TP+MXxa
+ZB/Bihzxlhy9efvhxZvXZy+PBr4liUk292qOtFQ924zRgITf/OvTt8WDx4Ei
+Yw8fPPjDX/+Do2TfPvj9Y/hvkF0NmwMU/uF/wvrsUeBXJVmMuP9gMdY9WCUT
+cp+u2pumQKkHS/dTs6LwX0/yl9TbTd2hK0L3bQ5+0DePUUq0eG5Bg+yqzPIN
+dbNY7Wjv8BDfgCqcohopexN1EzRU3paLT/yPGR2lj/Vyxg+UA6wnGmMREzyC
++laWjjyU3XZV3McT8NO7l1OaOQorTAlNu/KiCuVqcwVKoLdwB7mIsGKPv3n8
+LXqE7ysy1Iuvj/kSbEpW/C3oNQ68n8FpxBdv2SVF9QunlgOksgKw0GQIgJLG
+4IA+g7xmirEN4pXk/PTxlPK9ktDgxIc+J8G5tJZKAm+WZnubuytWDN/EEAM1
+3WkI0+J3vyO1+rvfFVOwrAfB59uCwxTuDfYVzhaQyUGCrKvIIVD1hLFgStuY
+p+/DweHOcDCcItEn3x9Q98GrezjSXX1J0bKeFTduL66VXngxrywOj4Znj4lb
+ESb0mid3qXGOD/gYdbQnQwzYnRZHJRh2lxgiBjtotZLzBu9S84ddOvFjMIgP
+f2aVGPh4oW0Fxh4mcUBswEjJpOnUD+tiLFdDkSt4e4n2OxomC5oZqcqOQ8Jo
+xFQYqWD9ydKWciYcEa2WFN5qtydHdFLwInNYhI9LN7hOvASnh8OTmgD858KT
+WVQzD0++aCxGxUZVEsUmM4cDiKtA30Nf7YRmlkaTYHZ4UH73uywYNJx1uOPi
+if7Mgl5qlFtixKJwLmTISSuO2ItjkIeNYuweDn8eEBMFaREuDKjDF0fiWx/8
+o4M5Q/jrH+pL2I7pCsT+SuxvGgvFKlmG8QK+YguBV5rXqXEXXPbW+WzOV9ta
+DoajY3zAv2fDIsZf0jAVWwMc1TiJcixxD2gcLrYRE47qXOCjxXmh9LLd+9Pc
+MVcTg93DM/KBZFvYIQJxdxJeoGgle6fnBHwSSurlzkVnxnkVPAl6sAhj81Sj
+N9u530YXW/ZQvx+iZ/v90LM9E8/2TbMadcHO2AW779287jj6brpe8lKbPKk5
+OOJJeinwzb7/66/0vSl8D3Nacar5TmUrDjf2zDzx+PUuqAi9RpsWpNuuckEW
+lejfsxWLL8Oj+FQTo/hfGziMcqM1luODiAv9RkhVIGWE28X6o2VZZ/FpxYtn
+mM6rQXNNcb1qTedJIg+FNdqmenBofE9bkNe/RCWDYm7MoTX3jhY7W9GJRdji
+wMWdUmQG6GT2vdwRAvvL3x34pxy9bg8uAzhAJGPVZ4tGvzoz5rsFn7S1IcDg
+4ERwfh6ssKL6BbP8sLPjAtRbNS4QiyMAW+4SBQgfrbPzs2dgwF5iAvFqLZ/a
+ooGIpRTwriZcyLvPcCVpDZLQmawDfGWJobFkOXQ5zXMxgAHrNnVgUP4f8pFt
+wSVZa8FCeHBIhGlXXNclrbTDmgmIh6A+76LXl/q08R3wgwOOMpyji0/TbYVP
+4EOavjywXwsaupVwyLoFIaLTiO4mI3/QmLDp06q+Mw+PYpBgQNPSvmnUqSSP
+slxNRnz2oE5jZ17jxLmMnTi9/LpJtpLmKHsPAub3Nk1gZZaIj+kkge1A2D+0
+KnfrjQQlcX6wvLB8mB67a24U8MbJwWLVmPLYkJYOrQpiBR+pH0/bRhsmlmq2
+WSRxNTjHFjSG9uICafTIHcgzjPhtthgMEOcQfgUyhVwz0Fs8TbzrhkUQUA3F
+w7bJbqJeWW8Q9oZmLZ4dWAL8FLyfUBbzuqGM+lULFsiTQYgAzTH4G0JG0DDA
+5aNDhP+QmCGsTtmwRWh/1g/oK5MiCRG44AB9KSzqLVgpuLCUVZcNE5/zdiOW
+Mg3iQrTzv4GyIbsnUDKuopCNS0eKYRIjOHBS9s0CpGLT7jpKhjtnN5APMq9Y
+lNA+tA0e4eoX8ippnujyw+tJfK4QMoHbCPo1Pifc936HurAPvjn5VlRshLKM
+zpW8zFMbcYZ2YfdObY8tGo1dcVWCAon2/BJsWLI66dhMcn8xzOIxegF+PW7M
+Zqc/lXBaxMicN8tNW8c8klg4PBcdloPnXEbP1SN8EhgSR1SS5GOX43xE2fgM
+LJndG8I4uBTIhDYMkZkOQQTTiI+6l+S46LGHBMxnIH9+xkvHkdwEsYYS+YjE
++5Fd+7/DNlgiBr0ixCCMYMcKxY5NOKxE5yGU8/ZaRCjHjsvi0ILnR6sYGHJn
+SbL70HMC75O7PRTcIWQ46deBySmGnabhTtklbHcUKQPTcyIX59AbJ4lJmU9j
+1HO4fSLiLI37FThgGfipcx3yhdOMuJ4lNWOcVxG+oFV6166qTmCfIQjqloUE
+LxgnzMSRRsSY4CpV6qIjiL55ONvBeDB8IRlzyV3eP3t/LICqQV7z/jP4m5c3
+QeXNIxTtFSNo1Z9AqCCYXwsKzvKPfv81/OhY0Zcd/zhoWJOBej2diC3NE++t
+eOssTWDWuBRfFOOj5wDv2XvLwCY/rhSQca9jHyP6pjCkpxjqaNBzw/UNWRBh
+y3Oalx3c34X76qj4/frk0XESGgN/AwTiaqne4E8fnk+/tSimN/HFvMVhwqAM
+QxKuGKgB/i6GaJdkRsCtwI0fYJw0UTGAiiDIGMPKUUKzR6GQ0DT9LmaB7qdc
+H3SRBfFJqm655IQkpRxLRV0udAYvCGsnAZHCA8Hw4o4OHzHcYvTxAK9w5cTx
+crEcjgAobE7CAPTGFBiSoM80BsExkYKTnPiC0GpQg/6Ckhe/a5FKi88cGrME
+K0PZFRGGpG5oFpm5I2oU4Wh8PO91dqJXNQgTdhFEi6qFJ+vgTAy4KmeDI+sj
+mfBoGCYFTOe1WFCsduGQPaGnyudBwYulvif3S/lwsrWCN15zYj2Y4ZzApaoW
+ubSYoVHxYi6lv5sOLuaMnYuqX6DZ0OL+f4BDab+d/Quc27doOfzpS1jTL+H1
+042swwxuWrQq6NzxCcLkgAG34xKls3NuKPwTvFoQTyxvA6cffvjw4W3xXife
+mQH5ACQCrfCejMRLMBU6Nnf+7ecf4RD3/M3ff/3g9yBKyyV8t6+7OKDZ324+
+dT9t65nIDhq7QX5kkM/qboGrsQ86OEqQaOiBMzP1suy9B3qmYXSQjyv9Aopi
+EHiLagmzgIdY7gal8iKRjozsJ5u0V7XFwXPSkqISUWjay2lUCTzv11/JYJzC
+4ZmWiTj/7TcW8rkCYvH+7P0YwEbLAeKl6ZIolAc3hgW8awsjY8vbnPd46FDe
+ITKDrwkbIWjtUWD8SqBCz94HPODbLTpmSzKlVi3HKROcTcT6jCqLR8dYO4E+
+KYWu7F6cFjMYxse37968ffP+7OWsSFA2huDxACI91xjjp4VjA0IDRR1FiQaR
+nBhRUiRyCjWQ7YUFhLsH79tWFRw+so7dsRiE57KIHL54uePoBetjnfG76uKQ
+Gn14PCEgyLr8xHiWorwu6xVJLJ43yJwkSokmnaBXzBDDmq9x8MjkQIg3OATQ
+IMQ7kcRfiteUl27ULWVIa4aVoRWeb9tyuQBvjhIXqEPhEqYhF5zF8x8T7JYc
+h7O3b1++eHqGyeNZPGYo00nKaJyDwMZUnWTnJEV6jaAjZCQW2EtGNAk62RT7
+lZ7KJ17R7DZLjtu4k1oGuWrJ0/GExh9O+YcSJP7e5QO3GICrQKacpmcN/yCl
+HOxbLpI0YnsREDkBI5DMF+4CTXpwsHGMTXWDZjzBMfJIGJ7Fmmwl9UfgB1ms
+joQ0OckXsJ4V4S5Bi6KvR6Oa0qhoegGRUx5ImgkMudteuSXrPQtes0nobVFv
+6Kypv5qqXVICmcoKTmUhSog8qNRkmRzQ0ALO5hHHaRC2EN2RrRpumQUkh03M
+jTwjRcJU0HPLAE+4zVpy8uIBV00cdv+KOxxuvhdgFgSR62uDFmv8uI8uocEk
+I9JOTyEqD6nLYeP7XgLx9HjQy5YiySSwD7jUhAUqDjiqxSEgaK8lNKDDnv8Y
+vDSBddIDnKPy6HKwPznfp8KVQW0WrOQnBJaGt2H0qCgCxCXBe55QcqAazbsR
+pj6CBWHEINmW9mg0MCvCRIO2eSahMUZPSvidloLFuD67QpO5odWBaV6AcMhf
+XaSvDmAA4TcaiodGCCqY/vB/OzbnWH5STp2LFemsriVQPBqTe/xkdACExKdq
+KlpYefkFqLmWUL6EgyRJ1Si6Ao1nRoygH8gVZxgYlt9w4OgtLMOYr/7g8UT9
+K1460VzLVspm1+0SbFbTEJyJRpGFELiBRuMITgSMbqu/MYarw1qBve4h6ToC
+o+lR04C+/FQQe/gJ7QKc0ANKpvhHVFogoZhIaFib9zWiU/No9Bqj+3M1GK38
+GFFTAfEFg7xXojnKCzx4ZEF35BfQm0lpIwjsxYcZ2zIERI9ZuBHA+dS8aEkj
+VynOpeFJkQWG1SH3Oq92p5zm4/NRSbo5V1Et7kMPCh0W4zVVHP0ixzrm8Ebu
+cR2lMt1ZGJYAAyQXylt0MhqawmgKhtDxEtQyWqpVwLRl01eXVAtYYeJfnaUy
+gLZFz57wSM/e82gTaz3i5+hVPofK7g2Y6egvSGCzTYscEicehAwpF6uNAFdj
+ucNCaPKFaU6dVsqj/K646J7UArpflCBoVQsOJoqvBEvkEq7DinDb4YviB3Am
+ZK2stkYdXIrxKegmVnTzmK2qG6XGye9+x4lYVwToMbTDontxAEnk5Ilv0+K+
+9i1YMIyMzaGliRIIvW6vZlCjUsAfa3k4n0eJR2I0GDEVD9qBtAznI+VRZHBT
+rAmW4PaSq/C5JVfFHSVX4fNKru4KfrlQFm+nmI5coJvUDlpwa6x4LiRAotHi
+OUMJSXhV/4gKXlVnZqDhKG6rkhvYbCiXwBRot0uC/tMv78Ikxi3k55OwDe/p
+JhSvcEa6eFxdl0DBHABpEhF9klE7CVK2ocFJ1nUS9qNva5FwRRMxM9DdrRgP
+6e4qKDQ1/82ElCilGDA0Gt5xaHQcv4VoUMvEayFkDEjIcFGmZHFIOt1NVo8n
+pUq6NqLPGVXNZqncYVp7PihBEy/pk2qKxlMayIGYyVBVGUOEJrp2QfNuIL2r
+BgTuKotLskctE+JLE8+kAJfKIYhtwgoBtBi6/DE+q5F0EmDZURRx8SENF5M4
+iJkmlBdnCTZQS5lJEDiQLGd+rNgFvaODtxrjwJRzA0kYfHSYYthpVSM+6GCk
+OhysWRTQeVINOFblK6vAWC4p86lGirJIcB6urOLsb5cEkTBdcsB7yF0GTuB/
+Th0PQZR9mRwxKeHdCfHDvtxesuugGAA6OGKUZCVNTwgrKxpgXe7DoDCKjYKf
+SM+kFXpk0BDuG/3nFraSrTFVRQkCQgtnVA0PmFcYgAXmSBhUOCpgPMVUkAjD
+S2oYM7GEX539BbY+7Borz5lEIK/VJs/i02Yx8yRAdrOWAxM2PFVk9GtnZVsG
+gpQikQRZ2TfduUFtaJyurNHzHxMUiwMf8cmjG5gbzSBTvMkcOJsruacyt+9F
+uU1HSmwsCBqsHrQWbLU58ppqTUFTKTArus30AARiDQNxQwgVZTgVIcD6vm6u
+wc8rFRE9DgWzMqLiUBlRGAKv3IK3Ir/bHICEqz2CSsqXNIh4SQp32IykEQvK
+a1ipc5qV94QUqHUrTstW3mHJOEAUhMPHAeMlQazvRUHq5g3XnNPQSMWwrS8v
+KY423weWFhflgjAsQmqDIrQGd5dBffYQwRC1iCAkq56RYwEDF3B3wFePIDkj
+CDF9q8LIDetJAu4KemJrv8uyiSmYTHk+VkgfR9Id9/HnESBW2+imhhST5aBb
+KeeCur1UlEsQHnQ2GfsVJPlbCirMYcHGriEIJfTXqhLXqeJj6rBueBBW+1jD
+FWFu6BiwTNA1IU48WYv3Yw46RVYTFx2X5MOB+u9gwmMkPBCfx2Z315PmG/Mg
+gmbfVBStVu0NQzzwqN6020+FFpUr7Mhq0nEgEpJrMQGv+QsTW4qdtJLLnMQN
+9SY7uBN8Bgjy+hKvWrcp1yrUDPIGz991aAiw5wyLIeuJxk5aAk7VvVTS7f+G
+C/o2QqlXmPBqXeJ0UKHurYHPUfYcCckyHDSBQzEfGsQg3hOGKYxhvGck5ZX+
+7F4XVi3elOsaZBBMLTldqNuSSlUf9eGAhDr87CX/UruSJTPlJeeoOcbxAy5x
+obE3J2+F/aEQVhgNYQ1viJT+iZ6lrUu0bDwUCLfIQ13ZhNWujvEoWvRwIB5l
+aBO2rcFB5Ew11wVmgbkPwz3l+ji8Bp8T1yokruWIDVCMj0URhydQduXtrrua
+YlHh8AsofAeBDwlVWyoabIQwtBH+ufyb4hUnhSnApJKNo47jyO5wF7JbTY3B
+jqeY7pBgupWxRQLyQxMmWisY8u2FpSBQtZrEs8CzQqViIaVuR5QxJMjRfKWJ
+In3eaZFw2VERXHCke0KpF3GRYjtLMSE/CIE8s5gjNUxAivMYM7dRlVrlq+OG
+jGJqEp/Lm8DWtlYRo+WhXIcRUUEmuk5+JtBi4VFAM0j8xL7VoJmPyHHMQpXr
+LEsIRqgLLQAaYjP/DVxULa594sFCEZibJk9xFSTv6sSaRHW/P/9gL+xSMTvT
+lOWM4pwRpxLO9MBT/mbVRYpT5LtIN4AUny1cSJkNFSdjpwWmj2m7vWBAuYjM
+zi0yNmKQChUV7t9Sh+RKr3tY0BMkG50iI0zzZbtYz05D+K//+q/ibx3cqF9D
+URwx/Ht5RGTA1QQ/Kjf1n+FCwQLDp0cPTr4++epowt/lVcCPjdEWeTA9bSK+
+hr8uPtYWv34uKDuizeQ/61yYWfK0+Ou/Ezntr/S/4e8IaMKfomyiX9CncX3o
+J0do32A5Om0z/kdcVCwyll/p+cQf/Voc3VTzZXmND/+S//NL/CX/51SICfCb
+vxW/0RPwf//1P8JvuHYhvG6dR+FWnm6LVCYarEh0THKwY6I7EkigcXw4NU5h
+RYKwoVdMzEqaVRHuCHxJvAHF+BvCrciyiNTzdyZeiZHfizadojZlOHz+DQ49
+dLMRxABHjeToTMhbtnuGicfZrWdshpdht+otTT0y+zseMVyCE3ejyUJOilzr
+27Lxd8HfUy/UEHLsTs+WWjRwbivAwndY4DBJyg749wlgfwbTIg2GJQqyOPb8
+KB+weo0qv5gj4QNz+sI7NbuElWDGoLt3aErCvxEDp0o9DQIoaIuf3aXso67A
+M19mtxypWNTCEvUy5HLSFfAhHsKyYqi+FBBKpF06AEeB09ykDyDaT44YsJRG
+stzkOyynkRxn5qmFRVIzIw+zKRD9sk6KJTuJzCms2NEsuGVlfLrhI3Ue7jQP
+/ApfimowInPVCQ8j9XQeygkjn4P+l6MgNFRf+Bc9cy8Szj8XUnbMcUmNkCtq
+I3SbhImC18eow4xJjUnS5IQwEK5nvRRQB98iolj+fqDoy99B6fcU4MXKALNR
+4GM45FimuUbzmkkhZvheug0ul3oAqS4gALcs4AnJ67iqecZIgmdEs2TPlK94
+T8yvnrwp3L9qhSbOCKvRXjj21SvussMWvRMs7EB186RQi5Vg6FTfDWQc69lP
+cR9GtCwx6aA+xefIVcF1jxqXkP0wLfyCsZPEP6OPUrFN8C/256mWA+A5iUv5
+p6MRdfrFF8U72c0UOotTp887JayNak3lgthuDrw8PPkeEVZwVo8MV8ajKQTe
+oV46vwHsx2V7zgQWlLYC/0BrDPGodpVSYVzhOOGPlMPi8gBGk18RZSJYcwxZ
+Nxtha2QlPiKsvI8o8Z5FWwMuVDqmiYoCFjcKyzYHTe2UahmcsGH04Epzavgr
+Pv+zT0hcoxnlCqux+JzPYJbwJzcfu2xOABLChwHj/nY4TD0FtEj4w0tlBeTZ
+cXnbTfn3XZXSnMzpjUkJeL49ZDHrCmA4RBziD7LfPAJ6Iq1JMfsOJnDVSknf
+7DtOzUx3tEbsnWPxQEcSNOQyxh8levQY3bL7c3A/NQgKAQNFwde9Do6L8kA/
+NFhQOYsvJb2JLh3TtBn0ayCGyBUcP1oMbypKFW9FfUH0IyWRpWCwrUNTRSFx
+hiyb3ffLPSlo1yaBhng8K/odWvoSdEWpH5f8Aq7jVUNkO7Cc7Y07MXLO3bni
+67GQQO222iBbKQZNFhK6xcQr6kCqI2E27Ys2ElJKxhwzers1p8yjKCITZLgs
+Z38h9Mi+4CAaBc9rUW3s+9OmbNuV7nrQW5zrBTq08LxtdUGerqB1Ej+VUMSq
+XLZqRuH9szcvWyZfwlBRfyLiUko3cnl5hrkAHCQouFjgIacIp+nfnYlQYaTJ
+a8rea+DqFgHrq0REXibVJYPrphFqVs5H36EpswPriv4lCmWKLm720bKGgffy
+oVzZoyewfvJJvLbuUxvBtG42u17+IlbEYJTuatKAzRIUWhOQByKlmM5r1peX
+fzxCn3dGmWQ5d+4qokVuazV9gWNQ455lSu/XS2SF3ki6U2zwY+UsuWFx2Fpe
+Lt9m8Ayz8fJ1Yb+y91PFI8fpZlM7evxwwkFgmemPMKPk4XSxnMeV+swVZ0lh
+HqtHUuNr8g8oGl1iCq0namSwYXznlUzb3/DsJKpyOaxWlAhDorx7tzMutsmw
+7INghwRcLviOaCL7ovmBG7ceIdBV9ZPZyyaMQxIjw6yNEe3JOVyLoy20TTej
+lYCEWB6goPjK0sGnxVq0ZDtp/jRFt9xLTf4yK5H6TNT71ycPgmxpWhM4tjjK
+TO6MdRF25qQ8HQTvLW5Ky6Fg7JBUySUyUTcTi1V9weSmrPEO/dQJu0BQD0yp
+5Iu7qeTrrQUQmYV/hxwF2elK4Uww6TExDnJgimFpfILDujEDgyF/IgdDOHIk
+DEd+CW9hYUiotUVcSLGsewDH8cWSIEvX3G7EK0sARVn/QShatt3OpZ+hoiIL
+10EKtjmhLTVyTtg8VLo2T2SNGyWbSB47p7jwboubTrAvDCNwsmu669LhYBih
++uWqJJvfRw0CTmFKxoh/j8jXLpKuYhK87+HPTOKG6n0O9sYnsAXkqHnTUVAD
+WPTNb5XzC0fH18emhByMay0jBNToAHnEpe/zJmUv6Htijrj8pV7v8Lr15Sro
+zzjpJiyRoyfk9ycPj8XGNn9bQqLOr00zHDxMj6wTzzzYVcTV4cjn1lV7i61k
+rZdgvzp57bPZE3PyQxn5FKOlHZuqdC48xFSIyL/F1Zeix+btDtMk3Afhiy+K
+PKzhKUZ+/UKyHT5o8dt/RxkPovgiq0SfoQGlj49xZh1KWGp4Lm2OMaDPvzUE
+GghuIoeSTg6rpsHCSLDQqgVHdJaaBCxqZ/xWjloyAAMGpmfp8yJE/48+44+y
+pj9tVxJnOBhH0Z/cmtb4nxFL4YSjLaP50bjy5Ry0EQKUfnr3UgNe/hAxA4Fw
+2urFio2n1MGcwZBcFXc5Elpmy5jPxt+JTedKr26/l6KGkVL1WOrrquRVLPtj
+mTivZiqLORlnryCmYPYcXxRJTjK8ZLtbVRL/izQe4gPuGgb3LU/FEuQXpY7T
+ZNSp8to4YUEKd7Ig5YQJOl3Ws073E8dSolrPimSMLF19VQBmVVQ2U6TDVoti
+wZz3fk+B5XcWWP71C5+4AS8zKVfFNpGfaLiScNU6VdlLlnF9rG7ujIOJCjo7
++Z4XOcQX31EYJ5YDwlYsu6vyUxUzyLTDID7RqPSBevIdY7exvRbI3lAYsblE
+aHZatItQuxVM5HSATxGVPVJJq0w32Hejk6IgihCg5Pu5Wi1a1bZWX8uPSl5N
+bChch4sxibRWUvfeKoKTkWmZrFCHacW7FKF1TM7BLxU4RXvJAF0zDyNOGHmB
+W9rROcJMsQEYUXjRqVVEmYcbcEULnL9yiby8mP9Ca4N0n9TAUNrrQrtWVM1S
+5Y5WxfkALyUnYrYxmgYHY/vBZ7omlh8dSs1IxT3RY+8jp+Hz4/diPW2rrBIZ
+C8lVQFg8cCwfC6skXxsQRYD1pDpKEG3shSTF6olhKV8O9FD+x/CpY5wfhBDV
++kvtWZI69mn7CB+TQJJX33rRiWYW+nzbomTmpn38vEPRsjUd7E5M1pAQmCBU
+dVX1kXg2grXi4T71wxXi1pAyfFMnQHYhx3IwrM7kCaAkJ/Ri6j43npspije9
+MckLMpWoyhx8Fm9uiKOMsV2JK/DmPP7qMSLWwU8HYzM6Co306eoVgopXUkiF
+Saw2Ymc5kB1TiYD9IsEMVnOdcjFQ/FCEyAcQIgetKp/aj8aFAz4cupbFjGZq
+ibElWBAIkGp2EXuqhdGssxOhJpa6ZNsOW23x6qfmkitaePHsTwJcwZfB1x4/
+ZOQJvw+njyiPcKdpNm6Y6bg/4rjJHPtN7bCZ/MAW4QOVW6LrX3cWEaAL5x+i
+Fpuy2KUMjtEXf3jy+OTRyaMJn5JaYk4zI5z9iKy8M1E3IXtF7Nt8QxEHErQU
+Dk9VImti7dKhtQw/n798+ubVOeE5Dqpd7crh6J1fNBetxrLMMNOACX4LB4dR
+/hJ0qWudQOJaDhQFTfC4e6LhiRO78hhjF4rkJV44eKakBAOAkdospyY6tVHd
+LsBP0e4jbfoO7tYDnb1IwDjc4OmUZvjJR7AJrgy7YeuH2ZKEN8mvJEkTPgjp
+PnIOgiWxrRCX5jV7EQ+eue9WVp2Mp1mHSF6d35W7uMuyQJ5mfzqviqWyboWo
+Thu4qFZ+5BP33/e64BNGVnbtF9TkMtctKYIfrfyGOiqdhZE7ICGadm5WGI0E
+rgbbSz4wDl4JiNBYa8n6Hj8jTczYDoeEWOGB52pqVHyRdSNoSSXIa21HdUhU
+C8bqH5TSuLsHhLSSffD9sZIsiqpQ6aNJaGU8QJugE2qVKJJiagu1uMTrou33
+3yDZZeojzngq8xUFyMZu/Dp9nr3iLfkxmuYySGxpZQTieqPjfbvrftvjcDF5
+8UY9eYprI8x+bywAjplJTUJq9kuLb0RMGKLxePhb/aPTXFnrjoe444MdHig3
+/oaY1rbIs+DpC8YdjcI5GrFujZLM7JiX1JK+zxCUyCbZ9PRsRltimg5uElNV
+0BTa7RJFGTijxBcaEA1LJ35iiZLLchObRXJHkYIahkioCgnhOiVr9eEzpltg
+v8itkChM9NMTSBCdfvL1qQ6dl5aqkVGHSDVxEt8Aid317UZ8JxTTdBLYGZOg
+FBXuo7mYJ8b+s3qSvh1zgVXZJ2OKVSeiI1utAeKZwzfoldwkuVpv+j3uO2M5
+BZjMxcGEQ2haXQQL+av7yc/XtU8MljjCutNKwM82RPR4M4e2vIY5/IgXj84M
+NiKofpGqNwqAzK2GkZzuhD1HdWLCYxulu8cfcUbWmQTrOFc6eopFGJ6P66pc
+CZoCTiAR3isi3ZceqaOUcpXFa46NGfNC5hcY608DCOyBsF7VCTNz2JitgLu3
+hPcqd1Ku40LUccW4jnNxpJcKwfSdUyMuU9iRqW1m1nSVjRL03Ozr4OT27aeq
+mVa/cFBuIqB6LBm+rrWbbtUvTmJtiBRxKbdFUG4L14NJSaRjTTpIt+tqz6Uv
+bJId4ilj7cyT1cJjniuXtURciXUw8bzet3axDcwkQ+1XCBdrmZwutibwP9De
+M/ojLWcWCWcj4qxnxaLHx3McTWBIWRbX5SeVDPnEKLLLLxztZ/m6HeE78rQ7
+EnftK+36wmsjA9T8DcF/UXL0WZss1wlwt8E+J7INt3fSzFtm5tPCzD1jm8JY
+a8zCt8b8nBZcak9p31Zu3FlKZy8Mj5zixc2bZ5IvzK0zuYKrxYIPzfOgqiFZ
+RrykwjVkwbYRwiNiGoUbHuQSGBAkIsU+cKrJO2CRoqFk+JY0EeEmXkJuh5oB
+r6/A2EacoAcn7mZgFRslftITSKBi1+3EZk2KyiOuiyHDLCwelTe7msN7SUp0
+PK394HikJ7emAyxPyWEtzj2zKMXaKUx6YGGT5ecHM0CapY8PHn778dkPP56/
++v8efv31gz98PDt/Dx99//TVx/c/nD38+puP50v6w4HE++9PHhx7SSMkGL9+
+ITd02EvYetV9XiNhR3yQdV4yuWXfHekqLCHRhsP6CqEjLXmx29L54nEoqyoL
+AUaS2Lhd19fAvBDkHzKnLejkvLjyTKjb7vlGWipewKbccl+DskspPBxXoKZq
+PpMv0NUv41xj/lxIw7TOHnP21JQAhjVhtLymT/PbERy44sEDu9ekGEGEICkx
+Wpg3IBkoJo5AHlz3QRdttVV8Ykyn2e3mQpVBHQ/3SUc6gmMsKHDA/BKpOXCY
+y4JfZcis1BAGa84tYsqxdxpJ+uouw9lIb7ilxNSlvI0jMpJxHL0isHrHMWvm
+Eoql9Dhh/qcDKZQDjq5ze7RPcqCKZMsmCqBqVXe9IN34nM8GUZKyi4TXlP8m
+Fxgtfm8aXlBndhI8MMDFJzuhSkOI4TElXEOVwoMVTewcQNzWf40gh4M9zZKI
+jfZCFVINDcj48RAmdrV/IjCQUoPRmnFyYe8V34RthKuMt7t+m/DUYIpvRfzX
+GUg/uid8zQg4etYkLDsThn0LRZV+6ll2+IAlhFIBFHAb38O/UjNpYjsAPgTC
+ccnlZvKh5GwrYi3nkxSHiTou77gFLWW5SuGv4FC+2tNlvQ1JZ1wc243KHaHw
+/pze6mHQW130PL5zj/Ai6bXOLVI/Z714mbrxdQr3Ma0+FcqO4yF7SEplRNLb
+DhoKe4p8Ra517gvqwEoJCZMYJAvNcsY3O26ljOeIep/FZS6m8aDQFvBEk+yo
+kp5dqN3jM++ctxhpRGDhi6SlgLreZHiRNEppBbwDBWNDLSNoiSnxim2Z8Y1K
+v0pcg6YNWFtN+6m7SWblYOn15GZ7wBCN2xbWLdfIcg5opgSmPr7jI9sY0rdp
+06shfZV/MyXYtBX8nsq5wXiuiWMl+g50aYdMKDIkbhWOh4uhTvHg483hlEjk
+1uJQiNg5sei9TM7dZCCpw2H6YK4I0hvJg7KgiRhOkvlSpj+VKmmT8sjWOP4l
+lkxEhS+cDtRlJXq6TwTqGC0pl0bEQNgkEiqKhIfdmteNRjzyNpjRKktYdLZM
+Zkoc8qk6YiY89mN4WXkEp0VvplYxO9tsnpV9yUdjZpec/Kao9vkt9BSZjQOf
+4XDkpGERxWBp7+UpVGuTwIIeLB9nuNBJ0UCfwdyEY43I+ZAeC52ycYv+ISIl
+o/YPSeDQDSlpmUtrvmU901Af43JbI1hRud3C0NhSgNYFBVnlHJMvoc5E3vlE
+Y0e9+he0t4edaV1913cBb78jYGU4kIC+9F4caF+qsQprQMrdRaVd45J7GVVg
+Z202lOL8uKxpScGNmKXdR2OSM9JsHurNKchC6c2FCQSpD8C+qBKA+Jc//+lJ
++I2X50kY+S47zPkvtI8EG4byEJi8zf0JR/vPiH9Im1TgEh7sqlRpRGc2eOUs
+sJHsldGhTTsQsgguZBF/r7BetW/R5KU6iu1SmUtEcq3FxBe0lIoz7T7RoePE
+gQJxGSr0PRCXvuFAvX0TgW2VI14ireovTCW1M/XW391WZSpFO+5jJy8yo5yD
+QKMn8DrOP1KikPyWKckaH2yY7LtpBF0O8j4SCpmMFPI9V2cJL6Ld52BK7pRF
+cv4eyQxG0U+mHcq7zjxcRjGNDJiC4En3DxqvDwEOXcmcnKFGjiwsZaEm7viN
+ByPBAUGWk7Ma5u08fvthzKTDgduCdIp/ezSJo4JluU8vmoClPJ8E+fJxbHMB
+L64Ho5YlfiIBMHy1ZlPJHdVn6uP0izwnGpb/fnFfvjjxL34UDr6YkXuJ6CXl
+tfeF8mw0Zr1mPEKb4f8jDmXmzw3l42GnjudTXoKzu+QQKV7W1SoSu7nsNQ4W
+uQE7bEy1w31PfEJkexeXXzg6XdSlip0OIy9+zGgQOsq5qw7YibaEtmq80XGh
+lbxtbhVhUeeYzWNQCTnq4FEJVAMDP+oitSMqa10uKzP8M5PDbESMIY6qkGML
++d6q2cx2QaTJTh4+lNmGd6MGAqwCwsyrDQEK+RBCFOhSNLzmDscC8UfUvr1e
+pJtZUp/p5rKdG+aeUHZodIyGxMOItjpRsELWsmlIWccctlhWvDylZB/lxd0F
+IW4rRBliThK0CNa/OpplNajUkhqJBBH4YyyR6+wx+rmWt4spRkwfWiRahpQR
+7tA5Yt3GgREdHtvHOqGorUZcCDr8gz5LPvoXEltVgF7iZY8sn/BrtSmhXZB4
+HA1D1uh+6kcnjqssmwYqbN34OeaZCpMpm/hbkjIMi4mXUpKW6piTrHaZ1JNj
+8jQOri4LWjoPYt1IqXYSCLM9EFJoE8/XlcaRlQnfDBA9IeLmdtyDgZvCDwib
+617iVlJ/IX8IXO2s6jmLv3BvkQUhT5u6clVjNAYf7eDmr3L1ykYIMJPbmdM9
+c6bgJSzqa2pt3aSFe1QAK2hh3zKUOW005RI8x9lhezya4IhI8dmbkyg6sSr4
+4NN2+cYOHhTBJkJlkT0rkcbBpLGxreGrTJvCPXCa9U63QYRo4nbIFaTDEcaX
+hUAygyk6LRxmmh/9mJIM2csnhQdOHpqjPhLV7+GJTqSwV7s/Y3EW+xxjCodD
+WWUff4+pUpiIT1Alsuq59PEBf9Ja+rDcH/kynmK2S4tdY93xJnQpE7ZDxfBQ
+Bx9pk2RdorgevFHKKDi3paLuNPCONwA90xUlcQ+WLjSLq3YrlEE6DxFfDDcv
+551AskO8dD9JAxBpf6BKx9loCcEaq4CVJeyLds4AerYM+epKhxOKGakAxbxN
+zVQYbiwoFmIuwHpoYecsFzWQd2ynEXcxjeB3CnBIb7jSPU2QkBxLutxh34QO
+lCyuAE12hXWTUzH0iCNsH5ZYnXSJL7AlRLBhZ2iAHhy12B9XqxLCsCsUiu6+
+2hSPJDDOdZUZyUpWlTJJKhWtxhV7ePFugqsbPuDymhG04tptspxGn5gIZD1D
+muJ3bpszOHi5uTktn08bQd0JtwdF/ey6UOoN64rKTrXIaQgPcKR6AEH3JCk5
+iyLGDSM5iN78h1gehFjD8VHSZE7CQ3yJDI+P+Wd5lVG5vjr7C71lXl3WTdJD
+XI6jdmylUWg2sPc+gVRU41OEMmSQqEDmAksu0dBHpsX4zGHd0+dZZvTjsbAq
+m6spe08SDJ34tDIvxt5jfDBiOJpeXlN3ObK49ITg8ShR1vJcnL8mXd26GFZA
+e+okPCIqEm7PxjdK2m6iG59BvgxYh3lmCxXSqw63lZPluGlV+naxsEWr4PSs
+Uex9wKOdniYJc7DjW5HrbRWpcQ/UR5A2bPRLZjIJj2HGP7Sr5XRORXz5JKWN
+pcnWpdi0mSDteMAXLGceaEbEd+QUXiReBjhkXpJj7Iae4PPmho61TuYkRwkI
+uFWMe75mN3XTxPuC27YYbqegHa0pHS1Hg4rOD4LYnQlg+o6mgYTsNFqVdxpn
+k4gIg0rl0HIODpkSDnUB5L2UPmKwxctq2l5caBXSDt9PT6KosnztqTR0LoWF
+8GsCQaIbcWDn4lRK10dRW+MSWSW9REQ343NFLJAbXS0Z8JSsdL7KCI3CpygA
+Mk23cH7tFtB/BETSUxJQZGFM289/VOdiqsTUfAQ86TYYnXzVtUukp0VXPLQ2
+F0Q5tOt2nEZMKLJD4N6ARFIXmw1bX0l0kDYlcZIPW+lM2IGmZmvw+onjzCZp
+MxkjHSdDsm52ZHhxpkn6YCUaF7UtY3yI+QPuUwJthqnCN2FCYOIRgPFli64Z
+6epuD0bZtm20jEp7udvqJM1GCFETyyzKrtuteX21Dd2QIKO7ld4CrFz8adJe
+huiIwcA9ALOPnXFzCGzav4AGzGGuhNoUI2q3UAM7aq63b+BKM1n4U6HMIuJx
+D1f6Egst2A25pdl7Cs1wJcwWKhIvAQacFjgwAfgBuN032AWbE00uRfTKlgEe
+tq2v4dDIR0Gedgj38wiv1g9aGD6ynqJDFhhN1JRD7ALkmEDsAMUCdCn1Fc1F
+YcqQwFfR5Myr350+AJV4MtKVGRPvWYy2Ecy4ERomXROM858ZSuQqgpEchFYc
+fsZ0dYTz4/X10CwPK8/QbUIq0j3BQdxWroUXUJdIcv3KtB80QAt6AFRlp4yD
+0rqZda+J5OzLHkjGyEqb+ce+vOSW9ukJO3iynpgHE6hsTAgAvQFqtR+8TTIG
+K8m7iQp6Qgxm0rI00o35Wj3rKKuBMiJfaTd7DcXn+84HhYGCBKmiKFDEWlv+
+M+m1GaJaxWnRHmFzEGuwcjW8AF7/FlTMcED3kivuJQpRy99C2YOHSPggYKrV
+UshkAvlLdCDlD0KCOeiiKByXrNw25X7VYslnqzU2M6WNN/4gZSntMyoLR5aP
+lJ8YN4mM8rOJFPm5Tj2famYg0LY3nfQYTKBWVdpjQDsa4IpaLR23vuWAvRBO
+T5WQ3ZF7aqLW83EPov3hLsoCzvBd1x1SrIgIgG1hohby/jFsh2BX2PENnriC
+7xHfFiUUrC+v+tRalauAZKriRgXXvp1NO2QTaLdUXnFd+UHVzt6kE6WiNRh4
+3bESlVh7QiX+prDJAAcHQhVKzyBLRsyGarttCebbW4yLRLb58wQhttStJdFc
+d23HInVaUMAaeYx2q3Ir5dKX6Z6oK+IUE0a2QuSroWkOm6HYpRttGjsJ431g
+dQVHsluTwkBOtKJx2eG+/isCCD8RcaR19zl4WSPNlT/Tga647kyU1C6uoxAf
+8dZuvWmyfvg0+bpcGaWQQLcRhalq49ELdiqNLvLGtvAQUWt+EHWX9s+Av6Zj
+ii0CY+Qjee/JIsY24xXHq/RERnKIsOsupv+xscyO4jdhtCGdy2CoRTrU+Fsd
+q9VWlsUs/jUTmaXy+/wUKZuoeZocrthEWLrFEtG0PjnydmIog8gnUPZaCCUu
+i6DGyVpJq31g8yJZhjcKUv7hVP9wzTUPguGyXHoomyUzG67JJOi33eLKtzPV
+wDWDsu0pIJilFAXNk0M/eIZlObt6DZ7VFnsL8oRAKIbhLMaIl3BjzE0jyfL2
+3Ruw4s9eziRFJd0KyFfr09q+TnLmaO/EkJ9RfqTZwUmeLWQRo7Fm0ZQRQQv7
+FR0AIQ7nFsvqdlOpmSL8nPca8mibWaCichXezOVXSQhT1fCZt00nCqDljJ7i
+7NLqR8FgolfYXRDCgVAI0dThs3iAnoEhcY7fAvak4maVeUCCADp5tR45mUsJ
+MsSQARlXyhVhqEJrLhsjX2Jy86ERRUh+S5JOlpU/BCoklgkGrMSDI92lgwZF
+fSjXungZImJJXPpk03ZCBpGVlIUkYUPVRp4fXBK0RfGMR2A9iG0ZRFsGDSrG
+l7ou5RxVUXJuh6FBdl4riqROHNLZiSZNrlM/QGH9SC3izxRPmZy4hTA2B6Me
+TTv33mBOlTvNkJ/WVCkPSmo7b+Aqxgmd5MwGefMqZAtwD2NKA89Agl+g23yA
+j9Ak1FHSXGySvyzS3MQvnTriws9nXKDvx84T83b+3S0DvIMaQc/EDeYy2aB1
+ZAi/eVbD7PhEfIlhL3IqHUuXGhG0nafkQvuS8LHaIHnzPYn5hkMt7wYNjqKG
+AIeZurgS2M8Fh93j77jVbI2n5DDBLiUhnlyNKv4BcZeXW2nc0wuCA4fB8wU5
+fdsbH4002IukKejNq8sw1lhxwhovhjNiztOjeriHqEZku92caRh6lyb6sao2
+ulK8Kbs+2xjq0soF7kh+YAkqfy+z+vL8uwpyzZkHkji+vo6AaYfBtQZzP4AE
+E8yeo/ZR8EAOpw8vMjsp3hemuhxCqnywU8gh2uAR4DkbnlQl+eXcVr7s3KaZ
+libB+DG+jd+UsEXd8UbQLzgc5TovEoB7Ej5RYT1yvd5Xa+rFUny6F8tjGlC5
+nteXu3bXOa2sVpGoZbJDsjzBgBw8UlCyjmWCRqKq1UojQQfd97Fn2MeJ5Bon
+ksqfFEm2cJKE784NEkJm5bvqBazJ8e3F/bJgqd0LC0g89HdZckh+gsX/CUsF
+3Jtd1WkyzykwDIMsd+zS8tKrWfeuuhgXAV9TkBbXhOrxqLEGcadmhVi+Si+4
+yBadDRfS0sawvYccSoPQxJ4NnjxFLyzX1CKUVtS31jtSmwOX1WgQ4QYGQaRX
+MSg5FwlJzpoMdCoD+UztrIdvXD3/36WZ/ykaoozXKNG9egPZXsLq6YPV0hkA
+2lvnAs7SSmQ5LyO9lAU7wjYlMfGsW6nfeqqVYlulUhQC+sPlzg245cmZZa/N
+rhgH4MyAVchkO4audEiiqM2skLdJaulEQMc6Z60Li8laSVxyYZKipUuq6pOf
+SdCSbc9IbDSutR9zQVFKTBstHg/i+W8p41YYi9OQ4t95PrwQj4Dzl2XHcIq9
+0Wcmlc0JVDxklc0+m+EKUNTPkFJuCj6eMk2KVI3I9nmiq3lCj0w5+jFQrczS
+qANSqh8NtphjvOVF/8eYibTunXm+4KeE3xYQlsG4rD495CgO5hAyFqOUBWis
++Wbak1kwnsR7naaXOUmiG65GLwpkFyoNaNXcghQAnfLZ8pbP5v8Eaft/P6Gc
+yXGrExD8Al2MiKVinlm4DgzzbLcJOVsidIJ3FY6TOJH4Ysv4IELupwH0PlJU
+8y01SmUPUIweeLutL+vGY4ckBES0bknhgbQAhe9N+fU2QY3EEV6b4k4RiHXi
+Ut1mQNE1ymQBEkJlQbopSrmYWRjUL+uNXVAZBsxrLhmGapkk8yhlEWSqqyyz
+OJUCCIvoONY8YelKPNsQY3wSlrEH24LETKFLPlPRqoRTQpQFt8SdOjwFD2gU
+5Dk+1B4xngeQ6eJ6w+bqZrB1HvdodILw2RyWaY1UgDqN1Z6z+5brEcOeYGiN
+zHjJELIoMdNgmr2iww1BeID80kJYLyLVP1XhN33w9efZhUpqzW1OyS1ShT+v
+ggT8owZ06vsz2VeChzLpHYvXZqigvWrnRghS1umfTDrXKAu4v69aRDkSybr+
+sqK44kQl6tilaN4sRNJfUQ9zQj51A9wT+/AIkBK3XF1EspYE62DpB+ud4iFP
+TGtgvYYLKZVgUiLff3nb9orpSNlGUCawHxPk2W1v/OxMXOH3neV47i622wMu
+YlZyZbGrRn76tuyvbhe2t9W9WInNXFtdWC3C4A3jZWzO5XYpTu91ZzvqQ8h5
+wiGnEQ5piIiiQxQkFoj10gIG2PIdCxHpjEyMpX21nwT9KlgaUz1V27LpuCuU
+5VkpOTCWdoUlfN2GBZZAUc9k7CnJBfsEOye7SCSjadabDLvXcSQ64J3Q8Fc6
++SdRvjp1PzZQIrGgB2qKh4LiFxdsGea0V3RfPf9qGWYpZGrm3pilsh1kRGSd
+jD7c5lp8ffzZlps7M/8TzLdbTKxkSe+KT79BXUMuEF1wRK+wz5S0iGBsRV/S
+TvgOTGVwB6PdYfs+ht2P7mydODC6jxiU5G6JQ2AS8cZwhzWGaNIr6CRTLFML
+g4W0Ha352+B2763P+vMf5eZ2kjG/rJGEMIntBYvtRUMuImv1i/e6TLAIROM+
+e/ohDv94xpWH1J0M3TZcewYrPCmw2n8Mg3GI2XtAKpvgOpLboo5cEI5bFLP7
+ilhyyWgRqDjF4VBdWePnrKZyvGLDAM4I8BBQopNe84owuIda2VOWUqJjiQU4
+GQ0gck5LM78lstBajaNsAlMUhZFT0yr6GPxXgxghGc+y1eVkooMr4lcm8WZ+
+bt5wM8H8FIT5eaJPwd7Ioi/gcN2U2yXY2dhB+lNNwjiOrSvy0PQBF/TRSXjm
+QI00Em7XR1NS6vP00TYeXjYxcEKpfoQOkspWXY9V3RBdJLZ2KPKh2xjm1b6l
+K4vGY00Zcoraq7WGbVpIi/Ie3LTbT9SgD4u0sQiBhxDQudBahgMyHK9u1O3v
+zv/tzYtErSvm/R8PqltbLLDr8DOuQ0mS45xC5pwASkFO2WKxWMhQ8j81xHLc
+a2HHCDJxIpeKRDeVtbVUBuiga6duQgllN3h/O+aStWFIXUbs7lV3mdwmvVwO
+cGjii6YYaq0CS4WZRuxj3bXrIxeluvKrIuTLFeVqk1+zCThX7qqSRTVRLy2h
+RecqF6XbGWlE9Nk6nc/K/5jU9GiHPvyfX+2//tEENo/jrt5+9K3b+/sdNjpu
+7/GnBgdHiEZiOwkoiFWQ1KRYb5SS+Psw/rJJcP1Yb0baM8RUisYjiix2zq40
+kzSK65QK3hBvM/mzHPRMh5JWk0XeGCIS7HZg14MaZJWshWBw+p8Mck8WIKcE
+AQrpxvpScJ0GFfnCYlpB7q9fDKp8wQNuCzzOVOEF69JPsbQZ7JO6c4VNh1ri
+fnM8yWMuYgjAPOp2KZWreG/yyNF9HtWxClmfzqNsQ3RRa25U291jew4dI8VI
+jZP3hX+WTk8yZdYjgQlpqKN0SZN+En1VEYyLK447H1w77FKoVhMZO7FS+vCy
+wg5+P1K42+TVuGwoW8tarC0qsViWIN0ENB4pzDbKRz6kRnKpdh2N0nzSGlsG
+Bk5J8ktjrWwkmqe4BFehCoVEJM5WIgmDBvCpPxQsf3TyUCDv9Dihp0gQzGH4
+cFz3TY9M4paqEZZKOSFNq/VxPLUg1dwL172jHBbSpnET6lPcWUZFKyvaRgxe
+q/HG4InW+/8mhVNc41eckTnAXSZfYsX4r1+I1BgiMNC0wVZmZE1E20HcDVzG
+U7S2sX0jMj6GjasUTBhQyi4tl8Rc3I6MahuyllgGV2KZTkOYVxhfoXWTJMtU
+bi21MDRobclGooVcWIykV0KuNH76/0DJd2nrxrR3AnHDOVJ5ekfUruhW7Mg7
+4TyTEjtjGxTCPJENbiX9WNw4Xth4qhWp8YBoZFHzXe1WncMwVrclWVXxW5wh
+xo6KAlGSiMOApUpOI1FFlsJpr3F5vl0SyW21CJO8uszOQ9aARd9JJY6U9RrP
+Zdo4hOmWIwBJS3vwt2ysioXo4SFa91lylY7UYBR9eRm0xIHhxZgFVMe4sayk
+TnNL4VFdMm3aERO3aZeSmAEcyeQhUyitBwWypB/CaM52pHRck+plf6X0AnhW
+s0WNSev8EkZphoFXtEy0l3u0ZzNb9nDnCqX+wsckyCwU09lTyuLP9bbHqten
+q4go14rSUqvumdyEuebF08watlkg9JqfNxV5KYZWBMV8ffKAuRFeUG/VZYwa
+sImcQUFdXi7vjt23Wt57i2slW5FDhBLfhKeYuSZ8WW6p7ZxE84sIumWhkOuE
+haV/R+cXPin11foe8J9KekRm5yGNfWxTRW8CB7a/on/K2YC/XVToP/NU4quY
+wyDn1LuOrfOQABIPUvxJSqksTpUttIfoRcpnkUZMLpIDQLUao+ztKcluUEes
+hMC+GzQYxK3HQiR8gCfwNBotC4fgRHvllNfarLJwHFw8ChjYE5XYZIEJ41ZB
+DUI5SsSNX4gU4UOOMTe0SRdjFJbRIDOYSkw1gzuRzc3ZN+wmm80jedyUlN14
+RfEZaQIuFw6KIvT8YsJ+XVnLe7+Q7sKoaxzjncqTXeQ82XhgHafEOPl13aeW
+8sTUuGHcuNtcxLkRi8EHj57xrBcJ7Mgq9mO9j0hcemiXEXMMMecb+vPUQ+dh
+QcBYwHXFWDCPTsS0antrWqmMyR7svLUmVNplU8ZCQa4xrXOWnR6jRsDQsIjv
+VJHcs4BQT17BSfjJoqSy60p9KGGeTBHhmfcMA/RxiGlCNnh9uqa2IO/SmHeu
+SIN8mkjlvCHRMOiiA+cOaKq0zap8kjzcUzZYmQQWNnxSFis+cjU61UbsKvnP
+rOWazF8M6yytqdaEZ9l6F2G6LI7QiiY8LhoE2d8O9L4BW9MR9jlqLWbwDTHG
+YmlXUhs5iFs/90IWliVE3HEsihV2YLIj8LhQBavvmUPmUySP66qeExseHeJC
+ZQ7ObJ2V2G66FM8EjRvc8UAWbAsfb8CSBHMPmdXSpnqF8oKTJTxd0bnhFcCY
+LvI+s4XsB0x3gXG/jqouLmjsuSl4Y2Gl0G4XFPIk452TJVP6GjW7UL/91Nh1
+7mbpJEssNrc5TNSJ0J1DeK2H5IOGkVk5ckFYo0pzko7SL6mnHTwiT3zfRR5I
+dzrcwtRnXIyq5kdA94H5Z0UbH4blq9UwBq3fNbx9S6mM9lySbE2v9obDQEkY
+7Bd0MLviTmI/Xhwn4axD8j/AJYjH0Wq2ZPWjTjJRxgIWKRxc1wTJy+y4d3ig
+uFUsbz5YL0KonxdpibWEwIOCRez5MRg2XkWtAB4dGS13wHw/y2OVn+18VV+W
+5qWn4rLu2MQQ1cfLEOIyLKVHlLqlKJE81flIWZ6de7euajVQHit90CnGvNi4
+7Qa2Dqg39nDVh8KfiTRkn4XkSxCBSBLq2jExi5ayNZokZNw2BiU0Dtqiz1Q1
+pWp6pU9bK8UCejVk1cl7rOQkJKjF6j0G95cwnxfPaCz7DQOV1xu2jPG1O0p7
+sU6apJ2yDzeJeyjyJC3C035s2towm0a6FrGXg+Tc+AYNmFqD60fz4iIDFqYH
+QEMFkZnZuhaiJcghFw6dS9MajcYkj0EUEpeCSeEsv7kchW1XJGo3TEa3zRW6
+bEvKzTYmtiIvG8Pcea0arSFyRyU2ugpJbWrCytb1g/t5r3Oy0GU58dbSInR3
+VVYdmp2Ar7kTFT3v2nX4vr2i99HJA1obfwpPzbTTE5TfI3WBOn/JY4Op5HLd
+6xzVR6Fl43yTbr2sbBvYH0Py1AlX6McjjNTqcIKvkWeSmOA4IZDRyHd8QUdN
+MQdlTGK5Gex/VOkZ26MeExhLuRIHPJ8YvOhNE4SNkE3veS1dGgY1cvZTRyoS
+hXGgnI92geEzS+q1qzyoEztT1exOYniU1W1ky6elHa9FK6hebR9991EeDgnA
+alaV15iCxVG3q7pF+12tebedA8ic1ECwEusJ8YingI+MkawdRDzGpqXuJMZC
+55CjKumr3msZLW+Z+FgN2soWs9QauYxbTqJTY0OQckMphURZ+Ck6VvEWcImo
+C0mykoyGHdi5CIniQLpgm1wAE17t+WhcQSUPIuImFhpmBs8f1IA7CslBFAlA
+HMSwzPo1x7fH9i45rcG5chEbiF7agGnB0Ud6oUlyKI43b39eYZZYKT1lV4ps
+V06UeWOEqdKp47fvfxwsPzX8RWwvo5p2zhHPhDFmxVTvHUjZfcsZuy+K80Yh
+ZMWrdlmtnL+Kc3xme6KXJsE475OicJiu0kbguBwJQCxVMdk5Vqoi+K2RapWC
+q1UwyhkYpTrWvAVGLK2B7Ex+lDf8sXhfXlTndEDf00f3UWwaguGYPbmPePD/
+WMD34PT+DPf4JTb8vR+KIn8iwSL4AMJvCDGgZ/vjfI/xEOwldH727OT1p3DM
+af9ZPgZjZbKnT9XkWU4URTWlxGwltwusjsh0XhxmOme/GlGynwgSs6hiIZ7F
++A73vphlSyDsJspaFMYPVdLnSBdiptdZJ7stbzKWpLyseyYLZ+sDqvSyJ/Ak
+PZIDwrhXak3hD0BKXiL11dVaXVm9OE112fa1gTqTlsUHknrUZpgXAZ2iZJP0
+2CKnmwhhUnwyysgIHC8SOQ9GoUGahIaMUrpeVQRxIMkELyNYfGxd50crEbNA
+v+3pPWXx4JsprgqtR7djftGz8/fTBw+/nX7/9BVX4NnI6XiJ18LNuQ5tFypq
+lkG7frPrWdnXXXIv8SFqSnxIZqz9LUkbsq7kw0fY2bo3x4nza/MqKPyc8G0c
+AWamn3pJWX52VqkxL8v4UiJ+J56fHt8dmXL5iRzrIz/JCauYepYKEu53Pa7O
+JFa+Z2yFJO044t6595HMDRnR9IFbSo88kFJ24ck4LQNkyLxOIlGpRsVr14HH
+kyis9p7ZgRRWfC6ZD4IF1gWl7L+YNi+WFKvkf03rpfQDMH4l5Ejauc7efBm7
+rl3wnaNIja4RIRbA8wpGAbe1W0wqdUVeK94KT2QF3tAWoQdoCQmjnFS8kmdL
+x0zEXuzPJGqVBjmhM1S6kIf572DM1T03o1VSQLblNMMBW7bbVrF+hoDUZm/M
+95YIpQ4fe3NNtlJrIbl4122ULzVeM1d+pSyKQY4VuWjiATOhaELWNUmRWXGi
+VGzENl3MgyQ0jSTJa2HaiBSP8x1Pz+9s+JxN1UEYKXpVNq7cKHm3j1ttKzo3
+ZZe8UpYkM8NrpBsgvC6F53HuigNjK55BPvi35GRG2q+K2nXrhGaV2T6znADv
+ihv+EtUlymimySRvWyqL+ApooQu2EJe24rNFu1rxRX4Rzdz0iUkLsaf2fWOe
+kFrimCehA+XTlglaNfysqQpZKqWZvfGko3ijuhz1jMxnM6TJPH//Abvbvzuf
+CReMPCN6qZImhielU6RjE0i4UhkQSillzHdrfJJuMNwg1XfMBNG2n3aboOS+
++KR73XAjDzp+CCrOx1WhQGPsgVvkmDRlFxVXXF8TxvXxZLRIQUBSz3HSKEZ/
+1vn8+sXwGXBeYDdSM6UTTjauZCqYkRzhMBpl0QstM+cGulhGMCfEBEuWltps
+RSZakpb0Iln8VA5qpX3guOoC7Ylm/GBFbysft1qCqDl+ePvjuVpRD75NGbgf
+HWtDu4v6lypGT33TyjJEYciZFm2jMiLz05l0hZP+nHTitzl6UZd8UW5Mfl+W
+9hgTB6M3nxc6mnCyZ50oBhIvbOKcajO/1U257w7bqXQjcc2u7XCH3E6dSPAj
+UvQN3PiJ4INd5a5oAeNwtVUsJVoxVB9wqEmcCI08tx9TGWJLLzlHCZn4oxOt
+kVDiqiS8OoqWuGqzmJqbksCanl4hh7y6R+5Uu+ooMn9hrZdwTDHfoGWIxf3n
+Px5zXwbpEcbuAz8NvyCf6IttRxgwdD56cWjOqPktC+3HdULve4FuN1arSMRT
++lvhD3KybnO8YRAr7OHOEppBTBwdQGlYwhXdNejE0ewNDVJzC52Kw9gdVuas
+0VPBn8eHMyzn2W0uc7zlQiSY1X0wLOVnqgBOZm9XAHYM34o+Lq0520UfcTri
+UOO3prKq9wUYj3/h//ljYc63Iu8b8lj5j7zBH+kj/ftmhaofJcYfYVD6aQm6
+VR/5/Ecc8tkZ96Q5thHKsajk7OcWjZwRWAkXUdFOsgoAELAGbgPYhVbaIUXn
+/JsVuD874tdPgt7ZWrm+xASiu703sfuKnkrw2+yPv8VJP0nn69zyJFrMElDm
+7DoYk3K88NqWHuNDwvdNcjBzQySNYCFL4gXjB5mcpVkPjFlG6s7crGa3Dose
+k1gHCSf0iDAXuc0XfwpbRRqJnmPPjp47gZkctdkTilrA5UOIXZOcCrCydCvh
+GZ30biRQe2zifr9UQyW6Pcf0lk54zpa7Bc/Kqb/0bMoMMrJxYSFz/heDpbLf
+BoI7vU9gkEk6N0HK+SpxVzRNT87j0AmfiQvVjlPHMeRUS0zFgvoRfE3JETfF
+OUUJuPcrmlIWxM69/M+IMEyoQYARQHDez8Iw8XuuV7yxBIzxyoWUVw4t9Tt4
+AzrlLq7Wm16pCCZUie7ZqZSXyhe34OfYlx4kkea0nQB3cYFoYrhOKrBz7KIm
+Uj/uD6JFRhIdyh97C5eFw/ITc0I5yKZIRgm+Z5TgI0lDZGdBR0Ez1vcjQeGx
+T6EfTrFkJsM7l6Nxhco6d3LafS7GWU6paGdhLs2BmB5vxCtgW+FZmrjB57pL
+kN6fQ4wL9FJTw/iIFNZqPDb+xsLded1qO0IJSgiJBPKia7qLrV4FkuCEnrDf
+g4hBc8EIxkn5HHIlwALsr2Sl8LEdt83lCifu0GOhiUkQ0o6plLRibQuDLrVv
+YDFk5ghBUvhKwkXQyIRJi2Mqal2Sc54lasDWDVhFgqfgphkPGzB8iYXufsAR
+R8Yf2Mm45p4J2uAV+BFvC0EoiqfiCWQdfy64ACRYQmE8GTgZVD4PPQw0J0Le
+JdFlrZgZ2RXF481LmrpzXzCOjHmYAPsFxHAjgAVJ6Wl8wtM76SsDHSvKsolZ
+6dv/DvUIhctG6/A1CyxOkWwwFdCzdzLShS2jSxrk8FgYBecqZ7gFriMu/Z0U
+Zbt00kC7xAXtEud5qD9gAQtK5UKLLaUQn9PmVrEpzRwCiJFlezMcymc0p4tZ
+Yc7vSRWeIWJLsjJIM8OJRU8qTmu0mcVxiHKU7HosbqQc+SFGVzZ9Eo+MpDwP
+yLrNcekeDq5agWeA+arI4ylIF6xJczSCHB3HuEMp6owLm/XaDnrSKYooplZ5
+aTEU6JvlHG5URxbDdbvacahheFrhZagx45lQaUlJXBQrfIU5b2mEAxJ2iAE6
+jU1d0GkgDtSLgTXSPQlIeIHfm6N8ZxJGEC8whTcbuAAvum6noGFKv/ryDVQC
+aPuNNuL69YvB3oMfP2Tn2VYJCHpAAjT2lhDLxgYEJ9ru6zCFzTg50tdjLfYS
+eLYGKFQwUqoJ7v4Qw30guTQEQJxlGMdB+8vUzsko6hOLQbnBI7viyOFiVF1G
+lYT7MOBddAtDvIvkr+VrPVhakqL/9v7Na41XeVM8DE2+WANy692nJuPIeKBM
+cBMjQiMrgEPC2OMjoplmBXPGHSBxOs3JC/DpsdzfyAPiqLDc/lH51cOvH307
+n5bl14+njx9ePJx+++3Xj6blo2//8IdvqocPHswfRCKBy8g6gH54uV1ccZeU
+75QQZJztXtYHNjUjLOAYxP/6X8OABnzWl5eOWQh20FHf542KPAvQaPB6rdKA
+ApHOc24V5ujrcIbes+uYM3SJ6eHy9uTPh/MgQcV/0tTmwLFMFL6LjcnxU9XG
+575rA+PC5K9ssSh2zhkZTB17Vvxt1/VTLZmWcCGnjIN+k+KqQ6HI4X/G35nJ
+wzfZL11g5rx93iQvolR48LiOFBSCdchkJuPT2DYRRe1RRqJ3J+YRh4Nk6uLG
+cYmH4mDMSkhvcrAADN1aMzSxappZDWEBj17Sv448fIPD4CElTVHmpiJhbpLz
+B/u7amln892fENSGlOGq+qVeaLEGT1io7QhmVa6Y+umUjBiyQOJ8uPxB+Tal
+wmWpLZgl2Gymz1V9ic7JKNmUF/OJC0DG/GESLCGYj9XCSs+EvScRusm0Apze
+jZlytYXjEIIQL7FKU2e+IgI8etKT+HrpN09l7tIalg5ApNXIvhspNhRa70mY
+hSEBsTWjRoIUpC+RQw+dLUQuKyFzzFoc0tgnj6hf4x2sXO2uB9ttSo8NQ5XY
+1WskKa0vm5a8Iw9zFF+MTg1bt8K+zHQCVsdPJj23mhMTnEHceFLT0VGnXHLL
+8qB3RnZI1efqow/qpWM2KWjCIwmuPP8RZALabB+MFu5pLGyNZCZDzcgi9Q5q
+RA6fsNQfy0iRG8zMsS1dH/HShS4hz7eZuzcsAQHH87aWopYhWGIr98poRroY
+L1QplIeWRD8Jnyw7ZUSYoHWGcbpUoEzFdwhmCpIyIjcgsnJ4l5q0TbJavfRh
+thrEpg3ClEAlVuwkEAcHSTP2stHk1OGww4cT0P4PbxqNc/B+iC5KKTuU1qK4
+ogZ78Xm2r8FPdCTlqk6icsn4QcWfOq+Oz4UW1GIUTKIs0WCbW+d0lqkSnWmx
+XKXbWCEul3GHMztAblGT3mZ1M27vKnMaMe/ezY458VSbY8aksLjkdu/AmHQ/
+HbEpI/YE7bvfL7769vHDh99Ml38oH0wfPKi+mc4v4J+LavHV4g+PHi6qr/4b
+bErrm3cH6RZ9mZ1JRoSSCUrBqBFBMGpweqKyFPnEJ0M6gXgIzsQFi/jPwWd2
+kO9MLdhY8IyXnRz/VMTK47HSWz7xj7F1mI3QJXNkjjSB0qAFaZQTfxc5crkh
+JfMgFyBV20YqZCxLDWvAvctzqn0pmKVFYdNjVM5eKJ8CrdyTID+kxpwcIHYI
+rnGDKSpuQYEHr+LGQzQH4E6Nkntz0ws0S72U0wicBlU9OlAuKlzm8wipzsSk
+8DKlvLJiViSdqcpeoPMjNjhmVJZURJM3bLL1VUhL25yGf8zORtxq0leZIzEC
+ljjcN3G+p8T8tsTo05ZCc0T4sr0kcKYsz/4AZStJOlo0ivZRFe4+8VN4TbQL
+WU1lCrroHNIZyD0lDKG4O4EWuC1wWFdlRylkBiemBc9o+97HiNGB+BYX9bOn
+LiJTumeOCFPSBglvOlWgDYIKEkogBcztOYm6FPOYDsBDV4BN5PS2ZdDRMzLQ
+iLRNbLWIa3L8NR7SI/wixaG2bdHFBCutWSLPqOam7THyrpjDuS8Yx+NJdJTw
+ZLaLdiVNpSmIF5wt5iWDjmWmPxqFDCb9oRDkJqm/AX5mIo3L42wRihUxoeGh
+S/aKLTbAta6q69Jc6DjCGD7gtJLPiw9DBwa+64odW7NpmDjM8ujHzA7BbVEk
+Bp5kU7i1dCNa4gZA8aQYKpsdAWFzcwsoJa8BSAkAHo8Nbgz0w0+GV6ge9Jgf
+Gp8jjzmALRuFI4QAxvdNNZ8OTe2JRwdd4eo3ailPiRFSoz0RBVMrg6iKHjKa
+1Zu1JHi8F3zyqUSEQJf3f67mz87+zEHJx3948C3igd8///B2goOEMUwKOKkn
+UjeeeAnhrqEL72PqPNh68jNu8SUGTNOu2RC1CtsHf3US+fOqXcajPs/zfyg+
+MWOHYI6NEifXGhegJcQbMiTZbTFaLz4ZVhsO7/caX7y3+tIOnQJQDPNy8Umh
+momsvwDrItQd142RqeHEY/p+rVGXyEwOzcvlpqeoGcrO2+VmlJZhTBrS/O91
+Q6noBFgy9P8zMmzyf0KATby0GgYQRqTVqKSaeFEVMFLwaHRlPkP6CLyMB5SC
+4Nylj7KNzi+dw7wWInIf5ZbyNMEMy4+X+YDMesBRONnIpQ1OQHJJgZK/CFKT
+4urGloZkoyMlASl/zSdCt6ZVNSTkNWt4Er4ZndFug4B7nf105LrI0g0vS6S3
+cnQlApptma+qgLNVU0ePaqtE2jURrYWRK0GxHkZTaN0D45vXTkhZL5UElGvE
+g1zzkhA0jmQUUjCdi/VnRRzSBGxdfhK71cpfNCBiJwa7cHAJb+72B3X7a+5f
+hKlg6UbjAtYYMxgUMd8z2kaMBgYOunQZ04Ym0BIZD080x4eltTchyc5W+iFq
+R5m1lyEOiGnUyrgF1ShKhdTJe8VCR8VC5/OVtqBm6lui2MpCz2B1Z0DrQ2jq
+NScRygZL6a0+H88M5W+TNAtBYS0uzpFquYf67+Dv4ZMx4wSb4lEISU/QULIG
+NG4UL14SV68CpYUinSW3RYC18MPhzILl1ofYdbPWJjmM3Z1mqenNxfhHesiD
+HF1sUOKPDyYsXvA/IkbY/4/BZe8PsLH4I4dGPT4+8P6Hh9//UN//8J95/8P8
+/dIVzirCbsEjsTnIIEDK92YNtC+4XEfPmHvoMKiXwDtjoULwd7tLm+DGh8MW
+D3rhagU8AiTgi9rZV9kRk7h61DeISblpRrgL0GmTYIRmA660GYE/ZjJWRWwS
+todF8li2yECY2L2BIXKk8GlqXneAUAuxHtFiMGlVItfEeaidqDFiqJEqwSA8
+7QNRVQxF1RBH1hORnRLUdRxxifBalZX3350jvOH89bPzZ8eCrlV5l0rVuovo
+Zdf+hRGWQvFCkijBXzDoMKfDO42P9ZUbqE5EamWWR/COcoWwXZLwihEmEk1G
+KzpF40DrSq2JBtdIQjAPsleGJHMymSiIZTdCnn6IMSEjItfT13Lq2q8lpgUw
+Eh/ySDwf0wvwe1qMXGn1tnLRUzzMnsJhe4RbXu5WJfxirwdJXC+uYLWQvuN2
+by+yFLbLDxoXhXK2a35AFXCCaXLTClnMz5EMCjRba4n4FyJDBks9lgcR5+f7
+4WnRUUVb9iFDf8er3cyO5J+z+f3csicH99A/ZFJwoCE+hmS5yianz8b4KHy5
+B/z647geeX1Yj7xWPfLa6xB8FKK4b9Mhr3MdYkUh6CP8a+yqfHdFwCE1IEPx
+ItYXD9ymCkKI+DZHwzNET49XrTmDL0RbTw1l97vM/kpKr19cWBFoSEyZ5ch4
+JgZUwULdqGG05oNC2qXXjAKiUZr2xMnTs5LYtWeJ+FdpYwYhuVMg2bB6wBXP
+lY0bDYentQR44El4qnKmNNxzZz8F0zirP3j+HtApbbN0hilTPYn+4spNzRFh
+xR9iVuAey5WisDoyJygEZRQBBLIjZpzIf1WfoAwpOddgNBikvijBIIf5Xkj6
+pc76cuDNHdItJYdMWter9kUMUT+iQgIa9kIKVwgEhgfd1FieJXh1oUsnO53X
+QahuyFJH9GLO2yThok8gRBNtfKG54D5B91OdRFAyVD38Pl+TrqI7NCwA3cEJ
+B8RgWh7qiwPQ1QKjZK0VHQh+RsZwPlyE6Gciol/wlLGysHCgNWBKb7PGNhOt
+M6paRJwYVN4yhcog6BbQ0V/ZBWOXJYwHoxEHy2anlKfEc2lUYE6T01OQA1Fb
+72YEl5IeSpHokxwpH6xHoDXB9UN2qPlJYWUf7gtgBwexn6Ov5c1dbCfGX33H
+B/wU/zClcAQRQBX337xF6X/28ph097bKrE+89GBWYHOZBUIYPBfvkkmeZed6
+3SpEEzIAPVa58mpyGSbevsjtEu8YXhYUnMzke8H9Dy4qTX9J3ZeUdxeXWLfV
+lNq2d72jXgPEYu843YLzy/X6fqqqTWI1FmQ1vhCKGaKwazB/xUFkagEXkhhq
+tExv5WDzpj9lH4OQtFsNTN7vPh66zIK1nrz4FDfuQxVODGaOnXtdktKgLjms
+UW6mJTGVnelntowPlOHDyktQhCXqRPqk6pSSvAyrt3jYFVRTRnPbNymmTKs8
+DnSc2hWeSyIrZPpwlXLpUW82r7kxaxdrpVg5UK1HEoSqt75G3/j6wwsu+VCf
+jMTmVOL3Uye0thVScZLkwwPpu4l6kmvJSY8XcnHjhiwPf08TQ4Ea79bNoMzc
+pWZytWDJGIIg79mwCJaYdz1y4jmCkbL0N8Mav+5lmnCLRX4cm47wrF7IhifW
+UNwDbw9F4UQBut4QZNmCeqGBxgz3P0GfJ6jPgz/eC75Q7TFMRvQr9sOlaqpI
+riR1rMmQD0pesKLtuM0IS3VpxOs65wSbdJM5h8xIUl2kphiroCxaxhVZmgOT
+Emnr12l2VzHl+WrhUsa0EBIrruyMeZDpvbbtZkv8Vgp6LYbSF0lfxHGUyP26
+XBKehJJj6OEtp1ftwogkhFasG4263CMmEswLorbHva5jMDGvJmQ69qDdh0B/
+xASsht3HlR1GFZPCPbMi1OCzaD+cEvi2kPokrpA163a8pYO6PwLlSf+QNFQ/
+iuGccCwsi9PNXS+NTFVIzARr70vmhautS0/gqDobnzFrgcduRY9rnzhBQgbi
+irg25KxqLzkiYVzonIdaKPIwD4SSA0SGCIjsHS7TgyKLzwJFhnK0IXyZYLgO
+dREPkSSJWkXIfcB2PktO8jKq28imDsFNg8NkOlFCVx3Wy7rByGKS73BTrbAn
+MC7EMrdE5A71FCdBp2ZRc7NGOqycUvSZT3TpkdRR3Dxdy7swxOOHTqtcQ1nM
+iP3p40+v6f8+y9x/OcCzLxMGspl1JzXBopRU4Ys8QP3rF9kARqOvnbgIPP3b
+YtwuzMDh7NEi64nnAvLurEswGId90vBeu3E7LJVze5P8uWAz+la2QMWBpqfp
+PPi6nq7q70jfSRkQNjC1r89cx1UjSePC3e6AsJHqFpAeWkL7FokVn+DJxSND
+xzXZU5JcmDw4UXSEk2tS+Z3MHT8/FW+SE0u9YJuQV+wFnKVAHIjCMReJLelA
+5WnSif9hwTQtbTuR6r8UppBgMj8Lz4Dd564j3dUwSSuxwUGKrkuUS7BjLwI6
+2iycaUuAOYwU5KiHWEVa64XR72Egf8DKeyIw39F6YmyhRpMy0jUPKJ4V93FC
+RkgeDPsTz/WxJK1htzfG+5xB2T5cVSkeHJFyhsghek4uuMACn5UqnxH0jFaa
+T8K6xv7huBRX7Y2IfVezHREVCYWUdaE7ofAh5SdGQXudcLCM6BNqSUhCtAyS
+PR1RStp+yru4N4kS8bGr0DaFVw1Rg1hzVnGlKE/RD5GrJ+FWigFN6Jmdq7X/
+zrSgUqJBMyIu2PQrs8bTubQ6bG2C4EsWPOBHKLZHCksUAaQFJuGw/uXJvTWk
+BBPJ4pWo0bqM1QJgYK+s1WVGzO+6sVrO2ezqjXt2a6TaGrYaVP9ycLaqll3h
++h65Z+DGJx2ReurUfUXBXrT6LG2qwUPE1i5Bzi4x9sCWICUnVPi+10Nak1PC
+KpNPhTPUhCYy5oNma6yCrH5hFwn0zKeqQWg+AufFAiTkanbVtD9mWkWCzhF3
+n1y2ix26hp5LHmkasAQW5ahY6pF+wYIPYkh6lTZsxmkXmLkGU+gX76HA/UeY
+qe5Lpza418gHE5IqVvdaJp/iUm0JscWFxAREpD7gjtXKCJdodkFGd8YrrFrZ
+GwRUBMQPDN0ObHOOciU14/3YemkDAd0rihm4prXS0h5e6w13jp8mnsMl+XLm
+UFrcJ/c+JhrIMAO/06a8Thg1+3Cx25IgQqWZWAGo/HkrkpuecaSQCxx18GDi
+MEbOIV/u6u7KWAjFRRoFOlGtKD4CvV+7fJpinyosU0oZE7/2pk0yRQReJ9/j
+Nhc8YhkJ0Z7qiSmH31ySnkIK8YgPmlTkdFcOVOhjPgk2i9pyaRuRWDte+4vi
+rcPItOZrxSfMUmwpSVfmGiu3RomEAvmqmBCO502zOlRUQxQt2vjWqyTRC3cU
+lCLTVG5HUjUCdV/wXf4GBwi9KqPppt0bNBvg2XLsoR9YG3lX2jA8o0QxHlMH
+i/ayqSWHMiJoMBP1qTEoihphIAp2lXfSaC2oQKDumVHhptxrQBnrUoPaJWqP
+UPWSOyTUxIiaGYJKKhsi8UYKN6o3zpt1cVE9MtsuerMQBDA63iqV4pbWcRkB
+DrxdbPn/PNaAGSRSN0bRlEiFxIFPiDaoAnsEjqTuwpCDif2/MO7/xRLIgZPC
+kbcMbjZxOO2WnJ5brf2awiGY2WtEZ4WUeWicX+T/Dy0TKKWtA4CylIxdl+HU
+eXkWYK2cLC9UlseIjTOV2X9IXHpOgXBbP4rjKpd1Uq1AHt2g4tLuxT9SGWns
+HujU4g8xE8R/MV8XP45OLv+N7gj+oVzVi+q78UrKI7iSn/Gtf7IY9AhxkPgL
+jLRuazSapkSr2JdbezC5VfAlrjy1n1A+RKo9j26q+bK8ti/BJyCyb3vweIUo
+Ojx8iabqVtEf/xR/4wxZKoo9wlK9ownynYDxeSTdsrGW9DeaQNz0OIV/mo7l
+qANJw9MHqw47H+gf9J9uBdh5xu9i14qHX3+DXStiqetvCbXK4Gyi5NCcpWCn
+NNiQhY9CIj4U6qwOLvZ1m3dkDSf5aErBmIg4Qdo6kasuObdfr7Ed76JwmdLy
+GuQ3xfRR62IsGQ1igiQEadkYe71FmvX4BJAtK5IPrmsZiqQtR0/YmtGpJtMR
+Y+I0TDMUuMVKcFhxirETgw9FBORjjE0ffsOn8b7OBFkxr2JoSjd2hl9ToLHC
+hzMKZ8td+1WOYpjKPA92RiEFxCLyFlryAmnJw0Fa8lMYseuRcgTm0yw5fjMi
+PZsdPf3hDP7fw6+mb9+8/MuDR199bZE3Pn2cgEhbQ9Rpp2HYfm60MlIwjx5d
+3a0PkKU6olTE3xs8gLIxmq/JiHeHIO6TnLM1CM2MZfr+WaooAtMI4KTejqAo
+Ik8Gs745vo6kacsbFN5WJMSmmOfF7wnew3W7uPkWGw6p1wI6GHtZj/s0Bd2n
+WgAFaqiJjy1qWU1mCoxfcenrqqKfs7+NvX9v0D4ky8pi0OpG5LwXowBsDOGT
+X7NInSupxU+6ZZTkkzqP/AvLzz+PyTiuP8AQO/9tGhN1rJW730JQUcG3BAO5
+7gllbH+s6yuv4Y5D5IzjoUbgacd2SEWCpMZUe463wOWT7qHchwJzeqsu5F07
+0ESJeXLkBtpUoNQQz73DjD//Tp0jypGJx7fZ8as7BxygXDucNDTQOw1oJXV2
+mDoKVt7uHs8IBMLNL7x+qDRfSd/kwh1v1a1LZO6SY0kP0KhKWp5BEYO+7ndM
+N+zGnPgoheLI/A4IYiLuFgdce8HISTss2fIqguJ+RpmkQXJlp7T59dXaGjti
+fMiNT4soV3xxcFXhID+3F8Ryl5GzyPOQS1zmmQcuJHqvyYSKoAs+dYH+YtMm
+rhdrkdop3DxAzpFBv/jm0XGQUR7M2RB+NfaXTWkctSWWYAzgC9rbQ/pBk5e1
+2W03FEvhzoxNd0NlolVBNKA4pGng8+T3kKgMWT6u9unW18nyTWPJpaNhQNNB
+xELHAXbrN3oJ7pyGO2U02BiLwlQORMQpMnDprrmLaN2b92AQitgGVxO5WEV0
+UV/utp4CDu/zJ+oTCuOPx9bBwckZcpNyNFjkQR88NuiUgLxhjybybWZnG18c
+JEq2blMxotc++0lEY1JJFnh15js7XHHTuiHFWhUSK+jDD8cdsuMOtiFBCLpa
+SkFVIbRbF94w7UNjVS/Zzuy8ohhHgi4ZTGiOIMVtv0NrCAxKfmwKknVzcY0d
+31NSZVRXULj2t7suNhwiPI/ybwErgo84TVpRx9PPNLESYsabQtHXhjBThAsw
+dAEjmaQBjr1IsEyDNFCik9gqw0gW7WOw7Ca87Fo0Omzvn3HJsLE2AxROwpQt
+IBcK7nkaNEjKd4L2BdPeJ9NHurYFJEiTgDYb1P3+YH8FvAdzCv/Cx+9e6n5F
+Fh3rKcGmXm7muz7Ss9125egGysA2Sevi+y5tHSOd1K0AVz6i7+Je3+vcY5LI
+vWUSJGhtejDeFGMn2Jlx4P5IPK9iNTFwGp0R3YdhcwP8lGNv8XmYEomn9gTc
+ju8laqrNvYaLECHPcj6NEgSFlXZr3dupTvUJeWox4ZpVNEtssDeyWmqfjrFE
+8AsZEH+wgbpM3K99PD/c0ahTOLm7jGfUwdtpl+D8gDLpSlBY08FihjkWufcf
+4wrODnD+PTp5fCz8akxqiDkwd1jHmoeGLHMj1Zuu0Yl0MOFhfITjSw1MfnOz
+o8k9CSM/imOOjU+Gf0KDQf6YPZRlRidvhCnICsavPZFCS1CxcDNZcR++uV1m
+LbMUCrNknGM8sMl+u6+zzR9iq1W7+sajjXA7ARiP9dOyO/kkGQauycyGgIfq
+arcuMchQLikcQPxaSvQrz2cTNvjTNNLjQplheW1n1IBe8NhdbKvh+haR1tvO
+614Os+gGBaukD4IpJSeK1KS21tJsw3yPTEYIydDbKvzjQo0WAxHuDnmvc6Jt
+0MWrjmZguetb9LYX0fykcdlekMVEPuEcY8QyJGvIttusSNJK8ovMNDqKnXQV
+Tf0XZjDD2D+1LY8URrQO+jm2CaCRoJISKi8seSHL6Ndf8WOKnIg/i1+P5QsE
+GuAMYdaSw94mz+Hvwprjt2N7DjJANXtv8GQ8STjTo8TZPcJdPRrYBBiJpGU4
+Qml+dECyHTHwh78pdgD/QJWF2gYXqTubPIQEfOCiw8yK8lR4tKEcYO9xYZlE
+19t6/qkUzoBlwGtH6dIk20snhM7yIYkbhXK/3ygPW5gtyg1XZaHnGbvFZoRC
+4JK8LRefiNUVM0TmCxP8HzZOEGl4BDbyRTwDTFY7rhzAgkZo+hxdVWpaxmor
+A2C49RrtnEw6w4NvSes/lUoQRJSxZEm1mXffM/vSiHnIwMSD0Cvjn7Mw+VdY
+gKNCaUJpIfhyZfYlMkp9xnnRbjD8Q02C/Xz+8umbV+czDbzySIzbjY0IaujB
+0ouvHA1Ju6TGVoSBQNbX9obEktWMqDRo1FmcFtJkutSqJTLkWIqDcIRPpqu2
+3fiiYKzIU/YFp0ripZVyOAwqY61FtTVGQF596QA3JYj5ajW+8IpNHlt6zzV3
+IwR13Y6p03x9GS8Isf7Fm0QEphSqpFmDJnJbhkSm9EKNI2FSVmDcGtHxaG57
+Q8xmSwgaEzTwDImuiks9OPy0nbAMuxXelsDdtyvG7lhjb4Iu+bBaXxjbTbTA
+zbGnbRyLeCm/YstNfKVQCo4iLP3H9+fv/nz+7uO781dv/nz+bJbmNShGQWRf
+tHdis7MRScnmWFqCiwoTZxkLD981WJBAjdASkkc+uhXB7OUq+ShBJ6JQzIA0
+5ioZb8luYCm63ufOYl10v343I0Eoigd7ZfsHTelveKcES0sn5Cd0fbBtKtJ0
+UoMP9PikwWysi2Qhr8iBiIagMHBT3SDwKb3NsDqDnKcfjqYqnWDwycpnLQY8
+NPslAuLudKgdG8k5uhfGnJz7lsuheQMSn9VhEzCkLu2uYkow+klZp4MobV88
+cylEW2T8+lXfb7rTL7+8hchWcjwjD9e1v8GyTHZp/zSS4VM3bFxL60OyhFkG
+1QoIb5AeFvLRR/zIaVzfwCjfeMYD1n2gQhxr/pG7t621DXFIMDZ1NWDsr+rZ
+s2cDSD31hZQ8JTuWVgmkUM8S0bpZ2VmqHXT4KXpTwGQc+Oit2A4b4TR9ua3h
+wCevJGTGmGhxTAh9gr70rdk9Vd+oLIszZaN4L0xPGJC72K182fKe12gfzeSY
+c4DHoHjv1XVED9vo729ix7I9hTl9W5e0fwYeSOGsgr06c0I9447FsBWGoscW
+xjnEXMppElIliFSXRlAHymB7FRP4SmMtKyMJftR6sOOxAqPqLZt6mjiKNlYI
+55mlNhauTFFLYjdm2YVC9MUzi6GcK9wdFkQjUN6gYKkcMjcWbgV1RmcZn3nE
+Ykl6UzS4CzpzMZ30QboqMUrEZx9NdfL1MAQk+qGbWdcFqzN3IKgi7aioJbec
+8OK4mihsC8gkyVa+YxcJMzvZL7IHKKiCVKPy7bAIlkWlht0WE1ybllCnMkgk
+zMjj1L/H5AZmprXEXuwjyoDIpoWY4cIx432GZ0Q4ljaDG7X9PTciNhLBDHzp
+i2NRUqaVU2yPYOXZ4FXYzSVWtivquSx+PvvL8+JtiawIhE+TNEWMFeMFUgbd
+/13elTW3cSTp9/oVHXqxqAEokrpsancjqMOyZB0MkjN6sBzLBtAkYJJoBhoQ
+zTn++1Z+eVRWd4Mi7dnYh/XDDCkC3XVkZeX5fTQUWwdGZ4xHewatQD3cyJ0e
+of2W5GUv0Z9wdxIeH3XXZFhmf5I+pdbn6WhRu+KCDL5eT+gR+r2jfjuZieXE
+bUrSeUudZ655aNfPisnRzKkr5TvBu33lcgloa/raaMaazccY5DVtVEBk6kOS
+jTMkt7xB3Il2iyAk0QpIIc0YH5tfzTc0j4kXCP257dQ9ifO8okMCZfY3RjjP
+Ig/kI6Z5sgdkfA0Kie7wIfcOBarpXKkfHA4WVTjAb6RsV9mDLX38H/Hq2yfd
+9l8Po8p56B3mdndbpXmaDPE3LVSb1Qnxm6P3hw5ElW8hqh6IG1ApXdJPR0f7
+xaFuSWOR4u0oTZytg2Jw1fyp7+/d558P+QvPnmw/+/Lrc4kntwD9WzmOWeNo
+hlVDi+2MgboduCqN45BLa1rNx/5NoiMEfJjmy99bCDQMp0wnk+eO/AONFS5A
+J1mgPMzR2b3ncFqGrWiIU3oso56B89j+yCiw0iz7Pqrwj8hFIcEaVzr6lI1E
+AmVCyhMCbvm+5M/21uY2hT0OlAxSFtUNzYQJDXa8/3IByUKg15ji54pqOhxn
+eO8of2rqG7v8+QDQQtH+JJy2kTOpVPvIa2sflOQnRl3DqTaJYvqPG43leXmt
+xiELNVaaNpYEWlkDk2BbBDJeFqezOZfiiIRodzjJSUldgKXy8dIX8tnGpZUc
+NqSaVYrpwLjM1IgJtic7MdHRBvx/6oJJd2c8QXEbl3Qxtd7Dritc4ElN1GVU
+C3SqjAz2Zpa01CiL2LpbMJq2SWPrcCV5lZZyKtPp3iVPNh9tbqdoRunPMtfh
+Oc0YtSHKKthDyCJA3obSmESCwXfwIFwVvwI2FAcpqHhDLmx9YtNSK9C0URXs
+duRJA0ISP7KgGKKtaeitxclaI8tR1KfUgpNHHsAAgvdR+ThbehxKjZMB17vh
+mHAKgQ8e21jP2V0QRgotn5eHBWtmd5tJoTAmdPIM37TDYqVLBpg/s18up3Zv
+ItTguurkxjeqbLelwkvJ1fsWInOKVjMl2S1dKNEJD0iXSLqPftMeMx031TeK
+qWkZjHamWAc3dC8SNIZyLoA91SSsyW5CapnGI+78iuxnrW339gcHb8dToHXP
+OPbLp0HrpARfWOTOg8Vpkl621S7aBEQgtj0QpBN6DHNQJavWOPbOxH3kXseg
+ISLQ6cW9fycs51TSK/EIHiTlSTT477QT+zDzE2eOB8+oc7pwq5L7Jjnade+l
+s7P5mJbYcezaq7UEqNPplioa8g5PY2ICWIHcGk7k5CaQefK5Y3Ummlduf9Bh
+uVZTZWSNV9v1QO8aer8oGdjE8XYPSQ24mLjqD5h4YsQljYayLAoTt6AhqqE+
+DCl9LIG/DG5v9bV0OeOZg5csvWQGeETp1xlV87jRcaqBY0zpnvHGu4BXuIqp
+82th8EOtijDdzaS8yEMNpfXU4kWsoL9w1FeSEOdS+CCF853C5KiEcnVh2Vrn
+X4eKTnYEHD5n5keBHZ8V7lbgW5AKfFlg0vUi1U0hn7VIbBlNrgWHhdHLRTKQ
+uUq2AYK40uq1Xq530YSb3ZjcXnpcVH6Ozjc9r14tQbVBz11OqayDlzvuxF8b
+KYs1oLnEcZTY5zzeqvkbgmIsJq50EkfNR4embX4QUyKSOIJ2hhRAVswaXCy9
+HkdN18u0wXGjtaEgd1YhZDdEje5rXrGvvvhfG5ANr2lS3VCeM/JNbrzJVkwU
+vTnyqEMUGNCKU82lpokka6RXgwU71RPWHJAGazZzTxLFeAgtpEq2ftfy/8Sd
+FAOdqsE6/lqfL2lmd/iTvmTq+F/nS/aOqd+H5GfdxotM0tTKUgssDWveZonr
+0nrTAMwgguWLBvt25N/vIiLu1iqka/sfZUYf4/cwcWOKJKshwAIMzxNW9jgK
+yXhGT+MLbmm1KKnivgmGg1ck+xyx65pzeF5Bli4CRAvLZPDNGTXV1rjT+U1S
+xlpRnTFnSHIPldBzluJxiM7c5YDEb6vJKaecGbTRPOA8iO8DkObPyIZLgTrn
+DNh5scx0NymdebSW3NWjRR7GN9SV4pDdZOOSzyGt0RkSn6M5xbrQCVkyiwY2
+Q/ORrfjIbu65Gc1zUOy4fsM/Pv1Gkz44k77omPTcMtJLIIci4P5QA/PZ8sWH
+Ensp/XZXYYa/85ayIXMyXv0nsnYyaJZHT57sSDHbbB6HOJMQJuMiJiS6Js8a
+vZW/eUZCX16f44ci+yd5qoQ31OIJzKp5mlQf1e1IGrARxKnweDckYPUJ0w8Y
+OkBFrVmSWTTDx8KuAhog8fK/O1R3tJkc4TPuvJAxAF6sE/bqUBgvdz61GF2j
+h2Pgo1NxWu5CV/KhuK3n0PsEUgDPesEaQ2VU7R+9oeJoMiupdYGLQaXfms1P
+KGFG1X0r7q1w1lNoxnHI1umQt10GSr9F9RdVs9SSYJOT4Skpoa+VqjYdcYaw
+FVQJ45CU14qcF63FuORnAz5p1yQMZGUqO9eAkQvQ6Sd1e2Ren8ThkfFKty2u
+004kSxbWNWXoMRQzsIPp1J653cBskaRFaC0JTUZnXmr6ky2m0nzbuB2wzhdZ
+LfYgMPug3zdLBPGRAuhnhTU7F/teE6MDAQrPMTRnlPE6jd4H/Qu5LAptdTUF
+Rw1fwimVQ1gzBDzimOrqhdw+1h6rvTkUsYs34cUlbhjhO5qnPHPw2r9epLad
+6vdpuWqkZcOt3lCvw2TZE0LyRUnAT8nfWGlZTGY9squHkjhptkKPPm2bZbyY
+I0F6sETkW40JJLoTlIMwJKbSRCG7LyA42oYDo05c/kxJyFXlm0pfaUpFvRy5
+up3npqIpKw2od5KJtKKWmGFxICdWTsQk3igDRfOI1nl1zkUI59fKnwqIC6hd
+qeATknnaRpC58BGMf1iWIBal741Q1REfUv1OPVRi9bogpA0EQVeuv5BtR4N7
+I8J+KmHDkCXz2ePsbyn1HrGUHiuaZlSatNfwEed+tTCRKG/RF+DiMHW+WWyW
+0d/XgtzAQOfLqrmZ2dFrW3cywXwoQb1U1grbt4WG5piSGmJ/EF3kDlirTSao
+3/sR0tgzqgLVe4Kk6UkJzWGRIHDuVxbFa9pFyTBLljhze6XYT+pj0BABmUUz
+XHK9fFM7ViBu8FW5mAyx52Pm+IlvWg7TzTtUwwXxzIqhuWAyWJzsOSVfz1s0
+KPH8e09UcPH18OKu2tRSij6KAqk01eOJ7kHhqs4y5ABQ82vpaI2xwSziFHdE
+GYA+Hq4kq17uGguiQ+Ee6CbnQhCPBGFbS6FfrqEVJW0zUUvAeAUKhHHyqiPC
+rDAjZhMj4QfEE+OUEIpPu5VWULLlQMUlE+gycYGkv/IggbBRCa5Lr2fduxpl
+4jCkmU8W5KCkYYoimSuUnBQtVCA/X+CMFHaAKKoQmVMXzpH/JrVkYc2GYqfl
+uTskQ4tZhTjTSTWsT078LU9ezxUdiQwqX/3W+Iccypof0rTOG4ESOnQbmzkR
+UZBVMgMfAnYL5nK8iuTi77BsHcV7tMaWRGGi1ebYlMW5WY2ekc1Hmi3wrXpV
+xbuRke/oABZ6AHk7QTtIeBSgJ4ovQTHSuCDiqrjVZ1XIbgFPc94b4uZLoNNA
+Fpyr4xgfcKX10QSsDTTqBejCczheqqohKXqzxb2cz9iBbPhKjaLy4EG7X/DB
+A0AMvL5gCib9d663yj9s+AqB7y6xXJgjEffQeMk6P8pv/tV2lBL8NEKcm6IB
+SbPxMcqfkTwaAXmHMRNIJ16L/FDNlLiedPFmAUfxMtnH47TtfFSX0NODYHXW
+mNMQ9yIqlcFvL5AJwls0TOsvwHRSqTmuofZZ4D2VleASi4LPPVOK2X75ZVYt
+TwhuZPiV5yy3WhOdRdo1T53yFeEOPnu0ff5v2lLdOocCsOSOY4dCsofxvuXA
+clm1ZMuhR0c+kK4cX1Cj9YKjjsg+pY2ndn2l82JGirMOIL4AjuQcBvCQDJNW
+wdI9ASoirm6CYj5m67DLSUVB2g83Ie2TiZRd/cv1aPvhBrR9Dq8xKlXTy0BA
+9935xJEsacf3nMw1BP889UDTUb1awADiaAHiUaD7Dsy9xAY9uQg1B2ipRRnv
+IXP5cccI/j6k8OhKWe/VEykIKG8BLdLhhm+hmCmdROAwtfoxdNVd1Znw8TM5
+DdkHA57F5IWmvENjfyoo8jWnslBAkkvRIOQREsJ3yb+VUzcyJidTGcS9DS8J
+SUDGQbNcIGhfa1zZnz/MiHERn4vF3DMXO7yT6gTRyhm5L5fUsQiCADU/KJWU
+IRLnMPtyfdCq8kqyH0Q+zmnl0gwCHGq4vwpEQh7vbyD1UBB8pdIQQjAxkvpg
+2QM7ERxhbRG8ED4xo15YudXV9NqfWYXFF5g6wbS+CcddEO8coFUSO08Z1gsh
+L1FvxJ3FcBTBXAcgKydzLS0K2YFtWigDSQi2EgqciuVJVAYr1cyc6GYdEvqA
+7qVAeO06a9zW58KiSp8QvG9KC8JojMr9/Bqn+6UL5CrLVDzXBwKS3LeE3PKS
+GlA0v+t4qftAosSmahgEIQElKzOPrtQ67GUq722RmBD0yu/QspOuVb/rDe2E
+EkVlEDAWv2tyNkkpymnzBwGeWF7C4yZvH3VYlcH1Xj/PYuJGJq3V1WeCsuIb
+jjKIbeleBnaSwmMGlogWGrIk1dmfbsN8+2a04K7OPDjU5qmYxXM3xvUvmUUa
+MV2357Moi2zl2ZuGotaWZhVDjkiPZqYy1ZY4fk4NP+LW+Oy4jKjp34eEpHTm
+eJ/DwfI11fBNTjYGcWf/llFi+qTE4jDKDUgNXMnGbwpXPhVuIydaZ5wfwsYI
+tBjl35HzYZ6wFTzLbArDtFE42ehqCyL3EEp5lI/Fn18zbq9nMErJHULfg15n
+RsiBXzR3Cc7sDc1KvDR0BAYH9l9rv1GGISo4WgyEO4E0pMcmv+0q3vbRuYzb
+/0IKvPv6BXjtFGGm513apGj707N4cmYEhQRXmcSBsyop3V63CPNCAug1CNWg
+kzA+Pl6S+zUKjTQ7hPgnfLe0cAzCDS8UY0RcoZscV3rQRBCM1A+VJRWCMPyC
+GIF4uJpbpI1JScV8PSUHkIsafCb4P1W+Ym7g0aivGXFtJhlXtZDZNWQiXzGQ
+dUQM0Q9LAM2dVHnWBEAc8G0kaT/aA0ocR2G5IRZKio4aFxC4QWIgaCi0qEh3
+SXUuoT9FPYSftcBRxYjJ7CFHTAgQfQxYzxa24Gi8hVTPe4fTCrEGF2LlEDy9
+qxPtBppPPAz14szC/Y3qKy0Q0tDCstY60bIDRyH2IXmqQ18FlQqN+u6SnhIm
+BfbQ1udFVnGWEB+kfa/vBN9PveMbIppoL7mkZEUTDIgCekvuqzldUlrVbZaq
+9IAwAga/u9MN2MJpUS8q2y+VD0Zqm5OnjZgiFOnE6GENreK+R6iIjxSmCDZg
++4SJ8jGjxaw6oeQpwdkLNoixVU2MNpaA5DF19vARvGLAqqRMSOxf8TtLfBEb
+bMPjgz7IlVxzo4bzOSdF6V9qjyEFbxdoFRWdMk9za60FaCA0qiuRtyzmFvpU
+Fy2Rqq7n/QhCj1NZOOoS+aFcosGKaGJ2q5VZJe3rlN6M6/ZwkTj7xbx9ZrSL
+95Wkdvi2t8UVOlTszgFwQ1QJCeJIgjK5n5BFNqJgUsAnK2AUAQtqdsF1+05F
+GPczN9X5mkq1713Zt/UiuB4EAduXnBv5y9qCkFeSpKii9CU5ysFp1hHxXZOY
+Q3Fey5vKEYPuq02sdZW58vp5XaTCVo4whRRhcvaU11xNVgRc6urDANcK8aBL
+CZ82p8ICDpDmIisf8ZGBlmhhCWpP34gyb68X1Yx+ZSmpRskSxIUrMUjFzzUd
+oXx8ZIPNx9eIu7ZxJgpgMLTyLILIgOleCYp9TytCw+4CnugrcC5yUmHRd3LA
+jGw2FxU9Vj5gKOOWyHknmt0yNvC84FOPcWwC6qoRRIY3SvSqfFWgpNr+LVds
+AzXGODglZk5zAfQe7mIvv9azCd+/tM8c2HBlpbyCgmEq06a8xknU5HMt8YUl
+gNlYrZR2jeRJu8In7Sh2g8l3+ymEzJACdLTFaU/H6X5lc9n7Seo6ehtov1r0
+q80nmzuDDosCrDfGNSqdmSzhe7m5FaBb8DLLNIIA5PbiJh/e6uydLYlyCMWI
+oaPEpX1sAfaELDJSDLE5XH978JwNWKRPsiAWGn51qHkMXSurUnF5Me7wpYwJ
+Zdl9Vyw8RE7r79pVTpd2guPCe8Rbo45/ofBlK8NxkygT231pvj6NKoCFb8Oa
+xOOKcwI0tH1bRpONFks2Nhd64S59jhQgIbi6JLdbb37RWa+46lhsUYrcZWUQ
+Pk0kYAfk7IZUK0N2qmg4KySaVheIHpAREo2p61S5QH/yAArB6k/Jf88K6Pox
+lp5u/rAh92wLwGtsrTasMTsIXwqiMdPeqWjGsa5ktGKCwxEu2P3Dn1NlMzn3
+2np/MkNGEpubiOyzNjjZOf+tg+ptHIonMM2I3QPukcXXUt16BRvj+JXrP7sq
+FWw170ynLekboqXacavyM+LczBhqd0+X9pR28zSJecJKYUsrYeRMZ7+RH5Jo
+JkFaflp1cdawdz9p1tQU1ziPkEN/qVLMesyUopF8Sc7ByoHAnFq4Wfzxr7Nm
+JsVWS6vnlRQG5W+Zc/RCNDpNkig9ZiS8ZDaxGD57soWyXcG1bJwuDNP2dBBS
+m1L+tSeXiwRfqlI3+PS2o/e8o5Vctp7jsw7EOkFuCkSUa2u3GG4qMvBHH4Ve
+hBuePKTvPDQ56fqr8nq3E7qSIiUfZQ9WEpJm1raLGHYroyJq1OfpsgnzrlkF
+qVX01G0yAK2rwv1bN2naTFsfb1b2X2aMxTdZoW5GTTkxdDiIlrSoy5/fPyLJ
+iA+6oc9gQ6taGi7zWjFvmNbYiPeACfSFOfX6Z4QfX37ICPwSa0vRzKgO8mvB
+BdJauD1swFRzQp+wiP1Ruy4BjaDRtrIqY9feztGArM4yrxxWXD19SCZPFgZI
+qc60ffRTk5XltnRNUB1kp4jrqL6CPII8rFY9hq+Me50GrpkrtH/1RDfoGkz+
+iK5WlcOOE2QYLNAWfj3pdSv96y4+RRts/Cics14xbqwo53YxcWHzmKoVpOKG
+a8alCZwBeitSI7tmwlEIzRUDCXR3WmSi2qopsqw83XEeGWLZQE9hh1WPvuvO
+n7TPcfpXAjzcN7BZOKx8ASyXHmOryZzX8+sLCjS4cdaLEPXlpGrjAZKC0iqX
+1nlHt4avpawSwavz3X03m9TFl+fkAZ9OW9VsVkMVujKh1bwJir9PRdzu8Dt+
+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
 
 -->
 
