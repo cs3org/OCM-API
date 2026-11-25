@@ -53,11 +53,17 @@ jobs:
         id: convert
         run: |
           for doc in IETF-*.md; do
-            echo Converting ${doc} to XML: >> /tmp/result
-            kramdown-rfc ${doc} > ${doc/md/xml} 2>> /tmp/result || true
-            echo Validating ${doc/md/xml} for RFC generation: >> /tmp/result
+            echo Converting ${doc} to XML... >> /tmp/result
+            sed '
+              /^~~~/,/^~~~/b
+              /^<sourcecode type="http">/,/^<\/sourcecode>/b
+              s/\[/\\[/g; s/\]/\\]/g
+            ' ${doc} > ${doc/md/mdk}
+            kramdown-rfc ${doc/md/mdk} > ${doc/md/xml} 2>> /tmp/result || true
+            echo Validating ${doc/md/xml} for RFC generation... >> /tmp/result
             xml2rfc ${doc/md/xml} >> /tmp/result
-            rm -rf ${doc/md/txt}
+            rm -rf ${doc/md/txt} ${doc/md/mdk}
+            echo ${doc} completed. >> /tmp/result
           done
           cat /tmp/result
           echo "result<<EOF" >> $GITHUB_OUTPUT
